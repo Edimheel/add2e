@@ -339,7 +339,15 @@ function defenseCompilation(effect, type, tags) {
   }
 }
 
-function combatCompilation(effect, type, tags, rules) {
+function armorClassTarget(effect, context = {}) {
+  const requested = norm(effect.armorClassTarget ?? effect.armor_class_target ?? effect.target);
+  if (["naturel", "natural"].includes(requested)) return "naturel";
+  if (["total", "all", "tout"].includes(requested)) return "total";
+  const sourceType = norm(context.sourceItem?.type ?? context.sourceItem?.system?.type);
+  return ["armure", "armor"].includes(sourceType) ? "naturel" : "total";
+}
+
+function combatCompilation(effect, type, tags, rules, modifiers, context = {}) {
   if (["attack_bonus", "hit_bonus", "damage_bonus", "combat_bonus", "attack_damage_bonus", "weapon_magic_bonus"].includes(type)) {
     const attack = number(effect.attackBonus, effect.hitBonus, effect.bonusToucher, effect.toucher,
       type !== "damage_bonus" ? effect.bonus ?? effect.value : null);
@@ -347,6 +355,37 @@ function combatCompilation(effect, type, tags, rules) {
       type === "damage_bonus" ? effect.bonus ?? effect.value : null);
     if (attack) tags.add(`bonus_attaque:${signed(attack)}`);
     if (damage) tags.add(`bonus_degats:${signed(damage)}`);
+  }
+  if (ARMOR_BONUS_TYPES.has(type)) {
+    const rawValue = number(effect.bonus, effect.value, effect.amount, effect.armorClassBonus, effect.acBonus);
+    if (Number.isFinite(rawValue) && rawValue !== 0) {
+      const bonus = Math.abs(rawValue);
+      const target = armorClassTarget(effect, context);
+      const priority = Math.max(1, Math.floor(number(effect.priority) ?? 100));
+      rules.push({
+        source: "magic-item-catalogue",
+        kind: "armor_class_bonus",
+        type,
+        value: bonus,
+        armorClassTarget: target,
+        priority
+      });
+      modifiers.push({
+        domain: "armor-class",
+        target,
+        operation: "add",
+        value: -bonus,
+        priority,
+        stacking: { mode: "stack", group: null },
+        conditions: {},
+        metadata: {
+          label: effect.label ?? effect.name ?? "Bonus de classe d’armure",
+          producer: "magic-item-catalogue",
+          effectType: type,
+          armorClassTarget: target
+        }
+      });
+    }
   }
   if (["conditional_attack_bonus", "conditional_damage_bonus"].includes(type)) {
     const value = number(effect.value, effect.bonus, effect.amount);
@@ -387,7 +426,7 @@ export function compileDefinition(effect = {}, context = {}) {
   socialCompilation(effect, type, tags, rules, modifiers);
   fixedArmorClassCompilation(effect, type, tags, rules);
   defenseCompilation(effect, type, tags);
-  combatCompilation(effect, type, tags, rules);
+  combatCompilation(effect, type, tags, rules, modifiers, context);
 
   if (type === "regeneration") {
     const points = Math.max(0, Math.floor(number(effect.points, effect.value, effect.amount) ?? 0));
