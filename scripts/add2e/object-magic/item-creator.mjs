@@ -8,7 +8,8 @@ import {
   add2eMagicNumber,
   add2eMagicOptionalNumber,
   add2eMagicSigned,
-  add2eObjectMagicEscapeHtml
+  add2eObjectMagicEscapeHtml,
+  add2eObjectMagicNormalizeTag
 } from "./core.mjs";
 import { ADD2E_MAGIC_CREATOR_PROFILES } from "./profiles.mjs";
 import {
@@ -29,6 +30,14 @@ import {
   add2eMagicCreatorForm,
   add2eMagicCreatorState
 } from "./catalogue-editor.mjs";
+
+const ADD2E_MAGIC_ARMOR_BONUS_POWER_TYPES = new Set([
+  "armor_class_bonus",
+  "armor_bonus",
+  "ac_bonus",
+  "defense_bonus",
+  "protection_bonus"
+]);
 
 let hooksInstalled = false;
 
@@ -310,6 +319,44 @@ function add2eMagicBuilderCreatorSanitizeBase(baseItem, profile, name) {
   return source;
 }
 
+function add2eMagicBuilderArmorPowerBonuses(powers = []) {
+  const bonuses = [];
+  for (const power of powers) {
+    for (const effect of Array.isArray(power?.effects) ? power.effects : []) {
+      const type = add2eObjectMagicNormalizeTag(effect?.type ?? effect?.kind ?? effect?.category);
+      if (!ADD2E_MAGIC_ARMOR_BONUS_POWER_TYPES.has(type)) continue;
+      const value = add2eMagicOptionalNumber(
+        effect?.bonus
+        ?? effect?.value
+        ?? effect?.amount
+        ?? effect?.armorClassBonus
+        ?? effect?.acBonus
+      );
+      if (Number.isFinite(value) && value !== 0) bonuses.push(Math.abs(value));
+    }
+  }
+  return bonuses;
+}
+
+function add2eMagicBuilderResolveArmorBonusSource(result, powers = []) {
+  const powerBonuses = add2eMagicBuilderArmorPowerBonuses(powers);
+  if (!powerBonuses.length) return result;
+  if (powerBonuses.length > 1) {
+    throw new Error("Le bonus de CA est défini par plusieurs pouvoirs. Conservez un seul pouvoir de bonus d’armure.");
+  }
+  const powerBonus = powerBonuses[0];
+  const fieldBonus = Math.abs(add2eMagicNumber(result?.bonusCA, 0));
+  if (fieldBonus && fieldBonus !== powerBonus) {
+    throw new Error(`Le bonus de CA du champ (${fieldBonus}) diffère de celui du pouvoir (${powerBonus}). Utilisez une seule valeur.`);
+  }
+  return {
+    ...result,
+    bonusCA: 0,
+    armorBonusSource: "power",
+    armorBonusValue: powerBonus
+  };
+}
+
 function add2eMagicBuilderCanonicalDefenseModifiers(itemData, profileKey, type, result, baseStats) {
   itemData.flags ??= {};
   itemData.flags.add2e ??= {};
@@ -322,15 +369,14 @@ function add2eMagicBuilderCanonicalDefenseModifiers(itemData, profileKey, type, 
   const sourceKind = type === "armure" ? "armor" : "equipment";
   const defenseBonus = Number(baseStats?.bonusCA ?? 0) + Number(result?.bonusCA ?? 0);
   if (Number.isFinite(defenseBonus) && defenseBonus !== 0) {
-    const magnitude = Math.abs(defenseBonus);
     generated.push({
       id: "magic-item-builder:armor-class:bonus",
       domain: "armor-class",
       target,
       operation: "add",
-      value: -magnitude,
-      priority: 100 + magnitude,
-      stacking: { mode: "unique-source", group: `armor-class:${target}:source-bonus` },
+      value: -Math.abs(defenseBonus),
+      priority: 100,
+      stacking: { mode: "stack", group: null },
       conditions: { equipped: true },
       source: { kind: sourceKind, name: itemData.name },
       metadata: {
@@ -444,6 +490,8 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
   });
   itemData.flags.add2e.magicItemBuilder = {
     version: ADD2E_MAGIC_ITEM_BUILDER_VERSION,
+    armorBonusSource: result.armorBonusSource ?? (result.bonusCA ? "field" : null),
+    armorBonusValue: result.armorBonusValue ?? Math.abs(Number(result.bonusCA) || 0),
     generatedTags: application === "porteur"
       ? [
           result.bonusToucher ? `bonus_attaque:${add2eMagicSigned(result.bonusToucher)}` : "",
@@ -530,6 +578,12 @@ export async function add2eMagicBuilderCreateMagicItem(directory = null) {
     ui.notifications.error(error.message);
     return null;
   }
+  let canonicalResult;
+  try { canonicalResult = add2eMagicBuilderResolveArmorBonusSource(result, catalogueSelection.powers); }
+  catch (error) {
+    ui.notifications.error(error.message);
+    return null;
+  }
   let baseItem = null;
   if (profile.baseType) {
     if (!result.baseUuid) {
@@ -552,7 +606,7 @@ export async function add2eMagicBuilderCreateMagicItem(directory = null) {
     itemData = add2eMagicBuilderCreatorSpellbookData(profile, name);
   } else if (baseItem) {
     itemData = add2eMagicBuilderCreatorSanitizeBase(baseItem, profile, name);
-    add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, result, baseItem);
+    add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, canonicalResult, baseItem);
   } else {
     itemData = {
       name,
@@ -576,7 +630,7 @@ export async function add2eMagicBuilderCreateMagicItem(directory = null) {
       effects: [],
       flags: { add2e: {} }
     };
-    add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, result, null);
+    add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, canonicalResult, null);
     if (profileKey === "parchemin") {
       itemData.system.arcaneDocument = { schema: 1, kind: "spell-scroll", personal: false, spells: [] };
       itemData.flags.add2e.arcaneDocumentKind = "spell-scroll";
