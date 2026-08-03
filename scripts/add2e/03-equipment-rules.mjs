@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags harmonisés
-// Version : 2026-08-03-canonical-armor-restrictions-v8
+// Version : 2026-08-03-canonical-armor-restrictions-v9
 // Source principale : Items "classe" embarqués sur l'acteur.
 // Schéma canonique des tags d'équipement :
 // - arme / armure / bouclier
@@ -50,7 +50,7 @@ function add2eToEquipArray(value) {
     return s.split(/[,;\n|]+/).map(x => x.trim()).filter(Boolean);
   }
   if (value && typeof value === "object") {
-    for (const key of ["value", "list", "lists", "items", "tags", "effectTags", "allowedTags", "forbiddenTags", "armorAllowed", "armures_autorisees", "weaponsAllowed", "armes_autorisees"]) {
+    for (const key of ["value", "list", "lists", "items", "tags", "effectTags", "allowedTags", "forbiddenTags", "weaponsAllowed", "armes_autorisees"]) {
       if (value[key] !== undefined && value[key] !== null) return add2eToEquipArray(value[key]);
     }
   }
@@ -66,10 +66,6 @@ function add2ePushEquipTag(target, rawTag) {
     ["type_arme_", "type_arme:"],
     ["famille_arme_", "type_arme:"],
     ["arme_", "type_arme:"],
-    ["type_armure_", "type_armure:"],
-    ["categorie_armure_", "type_armure:"],
-    ["armure_", "type_armure:"],
-    ["type_bouclier_", "type_bouclier:"],
     ["slug_", "slug:"]
   ];
   for (const [prefix, replacement] of variants) {
@@ -78,8 +74,6 @@ function add2ePushEquipTag(target, rawTag) {
 
   if (tag.startsWith("arme:")) target.add("type_arme:" + tag.slice(5));
   if (tag.startsWith("famille_arme:")) target.add("type_arme:" + tag.slice(13));
-  if (tag.startsWith("armure:")) target.add("type_armure:" + tag.slice(7));
-  if (tag.startsWith("categorie_armure:")) target.add("type_armure:" + tag.slice(17));
 }
 
 function add2ePushEquipTags(target, raw) {
