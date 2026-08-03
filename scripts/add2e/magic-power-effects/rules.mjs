@@ -361,19 +361,14 @@ function combatCompilation(effect, type, tags, rules, modifiers, context = {}) {
     if (Number.isFinite(rawValue) && rawValue !== 0) {
       const bonus = Math.abs(rawValue);
       const target = armorClassTarget(effect, context);
-      const priority = Math.max(1, Math.floor(number(effect.priority) ?? (100 + bonus)));
-      const stacking = {
-        mode: "unique-source",
-        group: `armor-class:${target}:source-bonus`
-      };
+      const priority = Math.max(1, Math.floor(number(effect.priority) ?? 100));
       rules.push({
         source: "magic-item-catalogue",
         kind: "armor_class_bonus",
         type,
         value: bonus,
         armorClassTarget: target,
-        priority,
-        stacking
+        priority
       });
       modifiers.push({
         domain: "armor-class",
@@ -381,7 +376,7 @@ function combatCompilation(effect, type, tags, rules, modifiers, context = {}) {
         operation: "add",
         value: -bonus,
         priority,
-        stacking,
+        stacking: { mode: "stack", group: null },
         conditions: {},
         metadata: {
           label: effect.label ?? effect.name ?? "Bonus de classe d’armure",
