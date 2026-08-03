@@ -51,7 +51,7 @@ export * from "./object-magic/profiles.mjs";
 export * from "./object-magic/catalogue-editor.mjs";
 export * from "./object-magic/item-creator.mjs";
 
-const ADD2E_MAGIC_POWER_READABLE_SHEET_VERSION = "2026-08-03-readable-canonical-bonus-cards-v1";
+const ADD2E_MAGIC_POWER_READABLE_SHEET_VERSION = "2026-08-03-readable-canonical-bonus-cards-v2";
 
 function add2eMagicBoolean(value) {
   if (value === true || value === 1) return true;
@@ -409,6 +409,8 @@ Object.assign(globalThis, {
 });
 
 installReadableMagicSheetPowers();
+Hooks.once("init", installReadableMagicSheetPowers);
+Hooks.once("ready", installReadableMagicSheetPowers);
 installCanonicalMagicCreatorButtonHooks();
 installMagicEnchantmentBuilderHooks();
 installMagicItemCreatorHooks();
