@@ -128,52 +128,38 @@
         <div class="a2e-stat"><label>Formule</label><input type="text" name="system.charges.rechargeFormula" value="{{item.system.charges.rechargeFormula}}" placeholder="1d6"></div>
       </div>
       {{#with (add2eMagicSheetPowers item) as |powers|}}
-        <ol class="a2e-power-list">
-          {{#each powers as |p|}}
-            {{#unless (eq (lookup p.canonicalizedEffects 0) "armor-class")}}
-              <li class="a2e-power-entry">
+        {{#if powers.length}}
+          <ol class="a2e-power-list">
+            {{#each powers as |p|}}
+              <li class="a2e-power-entry" {{#if p._add2eVirtualArmorClass}}data-add2e-virtual-power="armor-class"{{/if}}>
                 <details open>
                   <summary>
                     <img src="{{#if p.img}}{{p.img}}{{else}}icons/svg/aura.svg{{/if}}" alt="">
                     <div><b>{{p._add2eName}}</b><div class="a2e-power-badges"><span class="a2e-power-badge">{{p._add2eKindLabel}}</span><span class="a2e-power-badge">{{p._add2eCategoryLabel}}</span><span class="a2e-power-badge">{{p._add2eAutomationLabel}}</span></div></div>
                     <span>Coût {{p._add2eCost}}</span>
-                    {{#if @root.editable}}<div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>{{/if}}
+                    {{#if @root.editable}}
+                      {{#if p._add2eVirtualArmorClass}}
+                        {{#if p._add2eHasStoredPower}}<div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>{{/if}}
+                      {{else}}
+                        <div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>
+                      {{/if}}
+                    {{/if}}
                   </summary>
                   <div class="a2e-power-details">
-                    {{#if p.description}}<div>{{{p.description}}}</div>{{/if}}
-                    {{#if p._add2eHasParameters}}<pre class="a2e-power-json">{{p._add2eParametersJson}}</pre>{{/if}}
-                    {{#if p._add2eHasEffects}}<pre class="a2e-power-json">{{p._add2eEffectsJson}}</pre>{{/if}}
+                    {{#if p._add2eVirtualArmorClass}}
+                      <div class="a2e-power-canonical"><b>Bonus de CA : {{signedNumber p._add2eCanonicalArmorBonus}}</b><span>Ce bonus est lu directement dans le modificateur canonique de cet Item et s’applique automatiquement lorsqu’il est équipé.</span></div>
+                    {{else}}
+                      {{#if p.description}}<div>{{{p.description}}}</div>{{/if}}
+                      {{#if p._add2eHasParameters}}<pre class="a2e-power-json">{{p._add2eParametersJson}}</pre>{{/if}}
+                      {{#if p._add2eHasEffects}}<pre class="a2e-power-json">{{p._add2eEffectsJson}}</pre>{{/if}}
+                    {{/if}}
                     <div class="a2e-power-meta"><span><b>Activation :</b> {{p._add2eActivationLabel}}</span><span><b>Source :</b> {{p._add2eSourceLabel}}</span></div>
                   </div>
                 </details>
               </li>
-            {{/unless}}
-          {{/each}}
-          {{#each @root.item.flags.add2e.modifiers as |modifier|}}
-            {{#if (eq modifier.id "magic-item-builder:armor-class:bonus")}}
-              <li class="a2e-power-entry" data-add2e-virtual-power="armor-class">
-                <details open>
-                  <summary>
-                    <img src="{{#if @root.item.img}}{{@root.item.img}}{{else}}icons/svg/shield.svg{{/if}}" alt="">
-                    <div><b>Bonus magique d’armure ou de bouclier</b><div class="a2e-power-badges"><span class="a2e-power-badge">Catalogue canonique</span><span class="a2e-power-badge">Défense</span><span class="a2e-power-badge">Automatique</span></div></div>
-                    <span>Coût 0</span>
-                    {{#if @root.editable}}
-                      {{#each @root.item.system.pouvoirs as |storedPower storedIndex|}}
-                        {{#if (eq (lookup storedPower.canonicalizedEffects 0) "armor-class")}}
-                          <div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{storedIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{storedIndex}});"><i class="fas fa-trash"></i></button></div>
-                        {{/if}}
-                      {{/each}}
-                    {{/if}}
-                  </summary>
-                  <div class="a2e-power-details">
-                    <div class="a2e-power-canonical"><b>Bonus de CA : {{signedNumber (subtract 0 modifier.value)}}</b><span>Ce bonus est lu directement dans le modificateur canonique de cet Item et s’applique automatiquement lorsqu’il est équipé.</span></div>
-                    <div class="a2e-power-meta"><span><b>Activation :</b> Équipée</span><span><b>Source :</b> {{#if modifier.source.name}}{{modifier.source.name}}{{else}}{{@root.item.name}}{{/if}}</span></div>
-                  </div>
-                </details>
-              </li>
-            {{/if}}
-          {{/each}}
-        </ol>
+            {{/each}}
+          </ol>
+        {{else}}<p><em>Aucun pouvoir configuré.</em></p>{{/if}}
       {{/with}}
       <div class="a2e-power-drop-zone" ondragenter="event.preventDefault();this.classList.add('is-dragover');" ondragover="event.preventDefault();event.stopPropagation();this.classList.add('is-dragover');" ondragleave="this.classList.remove('is-dragover');" ondrop="this.classList.remove('is-dragover');globalThis.add2eMagicBuilderDropPower?.(event,this.closest('form').dataset.itemUuid);"><b>Déposez ici un sort à transformer en pouvoir</b></div>
     </section>
