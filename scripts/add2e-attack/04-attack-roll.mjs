@@ -45,7 +45,7 @@ import {
   add2eCreateAttackChatCards
 } from "./04i-attack-roll-chat-card.mjs";
 
-const ADD2E_ATTACK_VERSION = "2026-08-01-canonical-transformation-thac0-v5";
+const ADD2E_ATTACK_VERSION = "2026-08-03-canonical-armor-classification-v6";
 const ADD2E_ATTACK_SNAPSHOT_VERSION = "2026-07-24-attack-resolution-snapshot-v1";
 const ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS = 1500;
 
@@ -192,29 +192,37 @@ function add2eResolveTargetArmorClass({ cible, actor, arme, isTouchAttack }) {
   return { caBaseCible, caSourceCible, caComputedDetails };
 }
 
-function add2eResolveArmorAdjustment({ cible, arme, caBaseCible }) {
-  let armorType = caBaseCible;
-  if (cible.items) {
-    const wornArmor = cible.items.find(item => item.type === "armure"
-      && item.system.equipee
-      && !item.name.toLowerCase().includes("bouclier")
-      && !item.name.toLowerCase().includes("heaume")
-      && !item.name.toLowerCase().includes("casque"));
-    if (wornArmor && typeof wornArmor.system.ac === "number") armorType = Number(wornArmor.system.ac);
-  }
-
-  armorType = Math.max(2, Math.min(10, Math.round(Number(armorType))));
-  if (!Array.isArray(arme.system.ajustement_ca)) return 0;
-  const index = Math.max(0, Math.min(8, armorType - 2));
-  return index < arme.system.ajustement_ca.length ? Number(arme.system.ajustement_ca[index]) || 0 : 0;
-}
-
 function add2eCombatEngine() {
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
   if (!engine || typeof engine.createModifier !== "function" || typeof engine.resolve !== "function") {
     throw new Error("Le résolveur canonique ADD2E des modificateurs de combat n’est pas disponible.");
   }
   return engine;
+}
+
+function add2eResolveArmorAdjustment({ cible, arme, caBaseCible }) {
+  let armorType = caBaseCible;
+  const engine = add2eCombatEngine();
+  if (typeof engine.itemEquipped !== "function"
+    || typeof engine.isShieldItem !== "function"
+    || typeof engine.isHelmetItem !== "function") {
+    throw new Error("Le profil canonique d’armure ADD2E n’est pas disponible pour l’ajustement arme/armure.");
+  }
+
+  const wornArmor = Array.from(cible?.items ?? []).find(item => {
+    const type = String(item?.type ?? "").toLowerCase();
+    return ["armure", "armor"].includes(type)
+      && engine.itemEquipped(item)
+      && engine.isShieldItem(item) !== true
+      && engine.isHelmetItem(item) !== true;
+  });
+  const armorClass = Number(wornArmor?.system?.ac);
+  if (Number.isFinite(armorClass)) armorType = armorClass;
+
+  armorType = Math.max(2, Math.min(10, Math.round(Number(armorType))));
+  if (!Array.isArray(arme.system.ajustement_ca)) return 0;
+  const index = Math.max(0, Math.min(8, armorType - 2));
+  return index < arme.system.ajustement_ca.length ? Number(arme.system.ajustement_ca[index]) || 0 : 0;
 }
 
 function add2eDeduplicateCombatModifiers(modifiers = []) {
