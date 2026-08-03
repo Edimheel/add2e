@@ -1,15 +1,58 @@
 // scripts/add2e/item-sheet-registration.mjs
 // ADD2E — Enregistrement strict des fiches d'items spécialisées.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
-// Version : 2026-07-31-readable-magic-power-editor-v2
+// Version : 2026-08-03-canonical-power-source-v1
 
 import { Add2eItemSheet } from "../add2e-item-sheet.mjs";
 globalThis.Add2eItemSheet = Add2eItemSheet;
 
 const POWER_FIELDS = ["pouvoirs", "powers", "pouvoirsMagiques", "magicalPowers"];
 const MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
-const EDITOR_VERSION = "2026-07-31-readable-magic-power-editor-v2";
-const NORMALIZER_VERSION = "2026-07-23-magic-item-data-normalizer-v2";
+const EDITOR_VERSION = "2026-08-03-canonical-power-source-v1";
+const NORMALIZER_VERSION = "2026-08-03-canonical-power-source-v1";
+const BUILDER_MODIFIER_IDS = new Set([
+  "magic-item-builder:attack:bonus",
+  "magic-item-builder:damage:bonus",
+  "magic-item-builder:armor-class:bonus",
+  "magic-item-builder:armor-class:fixed"
+]);
+const BONUS_DEFINITIONS = Object.freeze({
+  attack: Object.freeze({
+    marker: "attack",
+    label: "Bonus au toucher",
+    name: "Bonus magique au toucher",
+    category: "combat",
+    effectType: "attack_bonus"
+  }),
+  damage: Object.freeze({
+    marker: "damage",
+    label: "Bonus aux dégâts",
+    name: "Bonus magique aux dégâts",
+    category: "combat",
+    effectType: "damage_bonus"
+  }),
+  armor: Object.freeze({
+    marker: "armor-class",
+    label: "Bonus de CA",
+    name: "Bonus magique d’armure ou de bouclier",
+    category: "defense",
+    effectType: "armor_class_bonus"
+  }),
+  fixedArmor: Object.freeze({
+    marker: "armor-class-fixed",
+    label: "CA fixe",
+    name: "Classe d’armure magique fixe",
+    category: "defense",
+    effectType: "fixed_armor_class"
+  })
+});
+const ATTACK_TYPES = new Set(["attack_bonus", "hit_bonus", "combat_bonus", "attack_damage_bonus", "weapon_magic_bonus"]);
+const DAMAGE_TYPES = new Set(["damage_bonus", "combat_bonus", "attack_damage_bonus", "weapon_magic_bonus"]);
+const ARMOR_TYPES = new Set(["armor_class_bonus", "armor_bonus", "ac_bonus", "defense_bonus", "protection_bonus"]);
+const FIXED_ARMOR_TYPES = new Set([
+  "fixed_armor_class", "armor_class_fixed", "armor_class_base", "fixed_ac", "ac_fixed",
+  "classe_armure_fixe", "classe_armure_base", "ca_fixe", "ca_base", "defense_base"
+]);
 
 function add2eItemsCollection() { return foundry?.documents?.collections?.Items ?? globalThis.Items; }
 function add2eItemDocumentClass() { return foundry?.documents?.Item ?? globalThis.Item; }
@@ -97,6 +140,74 @@ function rawPowers(system = {}) {
   }
   return [];
 }
+function powerField(system = {}) {
+  for (const field of POWER_FIELDS) if (system[field] !== undefined) return field;
+  return "pouvoirs";
+}
+function effectArray(power) {
+  const raw = power?.effects;
+  if (Array.isArray(raw)) return raw.filter(effect => effect && typeof effect === "object");
+  if (raw && typeof raw === "object") return Object.values(raw).filter(effect => effect && typeof effect === "object");
+  return [];
+}
+function firstOptional(...values) { for (const value of values) { const candidate = optionalNumber(value); if (candidate !== null) return candidate; } return null; }
+
+function effectBonusValues(effect = {}) {
+  const type = norm(effect.type ?? effect.kind ?? effect.category);
+  const values = {};
+  if (ATTACK_TYPES.has(type)) {
+    const value = firstOptional(effect.attackBonus, effect.hitBonus, effect.bonusToucher, effect.toucher, type !== "damage_bonus" ? effect.bonus ?? effect.value : null);
+    if (Number.isFinite(value) && value !== 0) values.attack = value;
+  }
+  if (DAMAGE_TYPES.has(type)) {
+    const value = firstOptional(effect.damageBonus, effect.bonusDegats, effect.degats, type === "damage_bonus" ? effect.bonus ?? effect.value : null);
+    if (Number.isFinite(value) && value !== 0) values.damage = value;
+  }
+  if (ARMOR_TYPES.has(type)) {
+    const value = firstOptional(effect.bonus, effect.value, effect.amount, effect.armorClassBonus, effect.acBonus);
+    if (Number.isFinite(value) && value !== 0) values.armor = Math.abs(value);
+  }
+  if (FIXED_ARMOR_TYPES.has(type)) {
+    const value = firstOptional(effect.value, effect.amount, effect.armorClass, effect.armor_class, effect.ac, effect.ca, effect.fixedCA, effect.fixedAc, effect.base);
+    if (Number.isFinite(value)) values.fixedArmor = value;
+  }
+  return values;
+}
+function powerBonusSummary(power) {
+  const result = { attack: 0, damage: 0, armor: 0, fixedArmor: null };
+  for (const effect of effectArray(power)) {
+    const values = effectBonusValues(effect);
+    result.attack += Number(values.attack) || 0;
+    result.damage += Number(values.damage) || 0;
+    result.armor += Number(values.armor) || 0;
+    if (Number.isFinite(values.fixedArmor)) result.fixedArmor = result.fixedArmor === null ? values.fixedArmor : Math.min(result.fixedArmor, values.fixedArmor);
+  }
+  return result;
+}
+function itemPowerBonusSummary(item) {
+  const result = { attack: 0, damage: 0, armor: 0, fixedArmor: null };
+  for (const power of rawPowers(item?.system ?? {})) {
+    const values = powerBonusSummary(power);
+    result.attack += values.attack;
+    result.damage += values.damage;
+    result.armor += values.armor;
+    if (Number.isFinite(values.fixedArmor)) result.fixedArmor = result.fixedArmor === null ? values.fixedArmor : Math.min(result.fixedArmor, values.fixedArmor);
+  }
+  return result;
+}
+function powerFieldValue(item, key) {
+  const value = itemPowerBonusSummary(item)[String(key ?? "")];
+  return value === null || value === undefined ? "" : value;
+}
+function powerValueLabel(power) {
+  const values = powerBonusSummary(power);
+  const labels = [];
+  if (values.attack) labels.push(`${BONUS_DEFINITIONS.attack.label} ${signed(values.attack)}`);
+  if (values.damage) labels.push(`${BONUS_DEFINITIONS.damage.label} ${signed(values.damage)}`);
+  if (values.armor) labels.push(`${BONUS_DEFINITIONS.armor.label} ${signed(values.armor)}`);
+  if (Number.isFinite(values.fixedArmor)) labels.push(`${BONUS_DEFINITIONS.fixedArmor.label} ${values.fixedArmor}`);
+  return labels.join(" · ");
+}
 
 const CATEGORY_LABELS = { attribute: "Caractéristiques", charges: "Charges", combat: "Combat", consumable: "Consommable", control: "Contrôle", curse: "Malédiction", defense: "Défense", destruction: "Destruction", detection: "Détection", environment: "Environnement", healing: "Guérison", holy: "Sacré", illusion: "Illusion", immunity: "Immunité", light: "Lumière", movement: "Déplacement", negation: "Négation", poison: "Poison", protection: "Protection", random: "Aléatoire", ranged: "Distance", resistance: "Résistance", restriction: "Restriction", scroll: "Parchemin", social: "Social", spell: "Sort", summoning: "Invocation", survival: "Survie", transformation: "Transformation" };
 function categoryLabel(value) { return CATEGORY_LABELS[norm(value)] ?? String(value ?? "Autre"); }
@@ -106,10 +217,27 @@ function activationLabel(value) { if (!value) return "—"; if (typeof value ===
 function sheetPowers(item) {
   return powerStore(item).entries.map((power, index) => ({ power, index })).filter(entry => entry.power && typeof entry.power === "object").map(({ power, index }) => {
     const parameters = power.parameters && typeof power.parameters === "object" ? power.parameters : {};
-    const effects = Array.isArray(power.effects) ? power.effects : power.effects && typeof power.effects === "object" ? Object.values(power.effects) : [];
+    const effects = effectArray(power);
     const section = String(power.source?.section ?? "").trim();
     const page = String(power.source?.page ?? "").trim();
-    return { ...power, _add2eIndex: index, _add2eName: String(power.name ?? power.nom ?? power.label ?? `Pouvoir ${index + 1}`).trim(), _add2eCost: Math.max(0, Number(power.cout ?? power.cost ?? power.chargeCost ?? 0) || 0), _add2eKindLabel: power.catalogueId || power.kind === "catalogue" ? "Catalogue canonique" : "Sort lié", _add2eCategoryLabel: categoryLabel(power.category), _add2eAutomationLabel: automationLabel(power.automation), _add2eActivationLabel: activationLabel(power.activation), _add2eHasParameters: Object.keys(parameters).length > 0, _add2eParametersJson: format(parameters), _add2eHasEffects: effects.length > 0, _add2eEffectsJson: format(effects), _add2eSourceLabel: [section, page ? `page ${page}` : ""].filter(Boolean).join(", ") || "—" };
+    const canonicalValueLabel = powerValueLabel(power);
+    return {
+      ...power,
+      _add2eIndex: index,
+      _add2eName: String(power.name ?? power.nom ?? power.label ?? `Pouvoir ${index + 1}`).trim(),
+      _add2eCost: Math.max(0, Number(power.cout ?? power.cost ?? power.chargeCost ?? 0) || 0),
+      _add2eKindLabel: power.catalogueId || power.kind === "catalogue" ? "Catalogue canonique" : "Sort lié",
+      _add2eCategoryLabel: categoryLabel(power.category),
+      _add2eAutomationLabel: automationLabel(power.automation),
+      _add2eActivationLabel: activationLabel(power.activation),
+      _add2eHasParameters: Object.keys(parameters).length > 0,
+      _add2eParametersJson: format(parameters),
+      _add2eHasEffects: effects.length > 0,
+      _add2eEffectsJson: format(effects),
+      _add2eSourceLabel: [section, page ? `page ${page}` : ""].filter(Boolean).join(", ") || "—",
+      _add2eHasCanonicalValue: Boolean(canonicalValueLabel),
+      _add2eCanonicalValueLabel: canonicalValueLabel
+    };
   });
 }
 
@@ -169,14 +297,13 @@ function itemHasMagicSignals(source) {
   const system = source?.system ?? {}, enchantment = system.enchantement, charges = system.charges;
   return MAGIC_ITEM_TYPES.has(magicItemType(source)) && Boolean(system.magique === true || system.magic === true || (enchantment && typeof enchantment === "object" && !Array.isArray(enchantment)) || rawPowers(system).length || number(charges?.max, 0) > 0 || number(charges?.value, 0) > 0 || source?.flags?.add2e?.magicItemProfile || source?.flags?.add2e?.magicPowerCatalogue || source?.flags?.add2e?.magicItemBuilder);
 }
-function firstOptional(...values) { for (const value of values) { const candidate = optionalNumber(value); if (candidate !== null) return candidate; } return null; }
 function enchantmentFromSource(source) {
   const system = source?.system ?? {}, type = magicItemType(source), raw = system.enchantement && typeof system.enchantement === "object" && !Array.isArray(system.enchantement) ? clone(system.enchantement) : {};
   const application = ["source", "porteur"].includes(String(raw.application ?? "").trim()) ? String(raw.application).trim() : type === "arme" ? "source" : "porteur";
   const bonusToucher = number(raw.bonusToucher ?? raw.bonus_toucher, 0), bonusDegats = number(raw.bonusDegats ?? raw.bonus_degats, 0), bonusCA = number(raw.bonusCA ?? raw.bonus_ca, 0), caFixe = optionalNumber(raw.caFixe ?? raw.ca_fixe);
   const currentHit = firstOptional(system.bonus_hit, system.bonus_toucher, system.hit_bonus, system.attack_bonus), currentDamage = firstOptional(system.bonus_dom, system.bonus_degats, system.damage_bonus, system.degats_bonus), currentCA = firstOptional(system.bonus_ac, system.bonus_ca, system.ac_bonus, system.ca_bonus);
   const rawBase = raw.baseStats && typeof raw.baseStats === "object" ? raw.baseStats : {};
-  return { ...raw, schema: 1, baseUuid: String(raw.baseUuid ?? source?.flags?.add2e?.baseItemUuid ?? "").trim(), baseName: String(raw.baseName ?? source?.flags?.add2e?.baseItemName ?? "").trim(), baseType: String(raw.baseType ?? source?.flags?.add2e?.baseItemType ?? "").trim(), application, bonusToucher, bonusDegats, bonusCA, caFixe, baseStats: { bonusToucher: number(rawBase.bonusToucher, currentHit === null ? 0 : type === "arme" && application === "source" ? currentHit - bonusToucher : currentHit), bonusDegats: number(rawBase.bonusDegats, currentDamage === null ? 0 : type === "arme" && application === "source" ? currentDamage - bonusDegats : currentDamage), bonusCA: number(rawBase.bonusCA, currentCA === null ? 0 : currentCA - bonusCA), caFixe: optionalNumber(rawBase.caFixe) } };
+  return { ...raw, schema: 2, baseUuid: String(raw.baseUuid ?? source?.flags?.add2e?.baseItemUuid ?? "").trim(), baseName: String(raw.baseName ?? source?.flags?.add2e?.baseItemName ?? "").trim(), baseType: String(raw.baseType ?? source?.flags?.add2e?.baseItemType ?? "").trim(), application, bonusToucher, bonusDegats, bonusCA, caFixe, baseStats: { bonusToucher: number(rawBase.bonusToucher, currentHit === null ? 0 : type === "arme" && application === "source" ? currentHit - bonusToucher : currentHit), bonusDegats: number(rawBase.bonusDegats, currentDamage === null ? 0 : type === "arme" && application === "source" ? currentDamage - bonusDegats : currentDamage), bonusCA: number(rawBase.bonusCA, currentCA === null ? 0 : currentCA - bonusCA), caFixe: optionalNumber(rawBase.caFixe) } };
 }
 function passivePower(power) {
   const automation = norm(power?.automation); if (automation && automation !== "automatic") return false;
@@ -203,7 +330,7 @@ function compatibilityTags(effect = {}, power = {}) {
 }
 function normalizePowerCompatibility(power) {
   if (!power || typeof power !== "object" || !passivePower(power)) return clone(power);
-  const effects = Array.isArray(power.effects) ? power.effects : power.effects && typeof power.effects === "object" ? Object.values(power.effects) : [];
+  const effects = effectArray(power);
   if (!effects.length) return clone(power);
   let changed = false;
   const normalizedEffects = effects.map(effect => {
@@ -219,32 +346,135 @@ function normalizedCharges(system = {}) {
   let value = Math.max(0, Math.trunc(number(raw.value ?? raw.current ?? raw.actuel, 0))), max = Math.max(0, Math.trunc(number(raw.max ?? raw.maximum, 0))); if (value > max) max = value; value = Math.min(value, max);
   return { ...clone(raw), value, max, ...(raw.rechargeable === true || raw.recharge === "rechargeable" ? { rechargeable: true, recharge: "rechargeable", rechargeFormula: String(raw.rechargeFormula ?? raw.formula ?? "1d6").trim() || "1d6" } : {}) };
 }
+
+function builderModifierValue(source, key) {
+  const modifiers = Array.isArray(source?.flags?.add2e?.modifiers) ? source.flags.add2e.modifiers : [];
+  const id = ({ attack: "magic-item-builder:attack:bonus", damage: "magic-item-builder:damage:bonus", armor: "magic-item-builder:armor-class:bonus", fixedArmor: "magic-item-builder:armor-class:fixed" })[key];
+  const modifier = modifiers.find(entry => entry?.id === id) ?? null;
+  if (!modifier) return null;
+  if (key === "fixedArmor") return optionalNumber(modifier?.value?.max);
+  const value = optionalNumber(modifier.value);
+  return key === "armor" && Number.isFinite(value) ? Math.abs(value) : value;
+}
+function legacyMagicBonusValues(source, enchantment) {
+  const system = source?.system ?? {}, type = magicItemType(source), base = enchantment.baseStats ?? {};
+  const currentHit = firstOptional(system.bonus_hit, system.bonus_toucher, system.hit_bonus, system.attack_bonus);
+  const currentDamage = firstOptional(system.bonus_dom, system.bonus_degats, system.damage_bonus, system.degats_bonus);
+  const currentArmor = firstOptional(system.bonus_ac, system.bonus_ca, system.ac_bonus, system.ca_bonus);
+  const currentFixed = firstOptional(system.ca_fixe, system.caFixe, system.fixedCA, system.fixed_ac, system.ac_fixe, system.acFixe);
+  const attack = firstOptional(enchantment.bonusToucher, builderModifierValue(source, "attack"), type === "arme" && currentHit !== null ? currentHit - number(base.bonusToucher, 0) : currentHit);
+  const damage = firstOptional(enchantment.bonusDegats, builderModifierValue(source, "damage"), type === "arme" && currentDamage !== null ? currentDamage - number(base.bonusDegats, 0) : currentDamage);
+  const armor = firstOptional(enchantment.bonusCA, builderModifierValue(source, "armor"), currentArmor !== null ? currentArmor - number(base.bonusCA, 0) : null);
+  const fixedModifier = builderModifierValue(source, "fixedArmor");
+  const fixedArmor = firstOptional(enchantment.caFixe, fixedModifier, currentFixed !== null && currentFixed !== optionalNumber(base.caFixe) ? currentFixed : null);
+  return {
+    attack: Number.isFinite(attack) && attack !== 0 ? attack : null,
+    damage: Number.isFinite(damage) && damage !== 0 ? damage : null,
+    armor: Number.isFinite(armor) && armor !== 0 ? Math.abs(armor) : null,
+    fixedArmor: Number.isFinite(fixedArmor) ? fixedArmor : null
+  };
+}
+function powerMarkers(power) { return list(power?.canonicalizedEffects).map(value => norm(value).replace(/_/g, "-")).filter(Boolean); }
+function generatedEffect(key, value) {
+  if (key === "attack") return { type: BONUS_DEFINITIONS.attack.effectType, attackBonus: Number(value) };
+  if (key === "damage") return { type: BONUS_DEFINITIONS.damage.effectType, damageBonus: Number(value) };
+  if (key === "armor") return { type: BONUS_DEFINITIONS.armor.effectType, bonus: Math.abs(Number(value)) };
+  return { type: BONUS_DEFINITIONS.fixedArmor.effectType, value: Number(value) };
+}
+function generatedPower(key, value) {
+  const definition = BONUS_DEFINITIONS[key];
+  return {
+    schema: 2,
+    kind: "catalogue",
+    name: definition.name,
+    label: definition.name,
+    category: definition.category,
+    automation: "automatic",
+    activation: { type: "passive", trigger: "equipped" },
+    parameters: {},
+    effects: [generatedEffect(key, value)],
+    compatibility: {},
+    validation: {},
+    source: { section: "Migration canonique ADD2E" }
+  };
+}
+function ensurePowerValue(powers, key, value) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) return powers;
+  const alreadyStored = powers.some(power => {
+    const summary = powerBonusSummary(power);
+    return key === "fixedArmor" ? Number.isFinite(summary.fixedArmor) : Number(summary[key]) !== 0;
+  });
+  if (alreadyStored) return powers;
+  const marker = BONUS_DEFINITIONS[key].marker;
+  const markerIndex = powers.findIndex(power => powerMarkers(power).includes(marker));
+  if (markerIndex >= 0) {
+    const power = clone(powers[markerIndex]);
+    power.effects = [...effectArray(power), generatedEffect(key, value)];
+    power.canonicalizedEffects = powerMarkers(power).filter(entry => entry !== marker);
+    powers[markerIndex] = power;
+    return powers;
+  }
+  powers.push(generatedPower(key, value));
+  return powers;
+}
+function removeBuilderModifiers(source) {
+  const modifiers = Array.isArray(source?.flags?.add2e?.modifiers) ? source.flags.add2e.modifiers : [];
+  return modifiers.filter(modifier => !BUILDER_MODIFIER_IDS.has(String(modifier?.id ?? "")) && modifier?.metadata?.producer !== "magic-item-builder");
+}
+function cleanLegacyMagicTags(system = {}, generatedTags = []) {
+  const generated = new Set(list(generatedTags).map(value => String(value ?? "").trim().toLowerCase()).filter(Boolean));
+  return list(system.effectTags ?? system.effets ?? system.effects)
+    .map(value => String(value ?? "").trim())
+    .filter(Boolean)
+    .filter(tag => !generated.has(tag.toLowerCase()))
+    .filter(tag => !/^(bonus_attaque|bonus_toucher|bonus_degats):[+-]?\d/i.test(tag));
+}
+
 function magicItemNormalization(source) {
   if (!itemHasMagicSignals(source)) return null;
-  const system = source.system ?? {}, enchantment = enchantmentFromSource(source), type = magicItemType(source), base = enchantment.baseStats, sourceMode = enchantment.application === "source";
-  const legacyHit = type === "arme" ? base.bonusToucher + (sourceMode ? enchantment.bonusToucher : 0) : enchantment.bonusToucher, legacyDamage = type === "arme" ? base.bonusDegats + (sourceMode ? enchantment.bonusDegats : 0) : enchantment.bonusDegats, legacyCA = base.bonusCA + enchantment.bonusCA, legacyFixedCA = enchantment.caFixe ?? base.caFixe ?? null;
-  const previousGenerated = new Set(list(source?.flags?.add2e?.magicItemBuilder?.generatedTags).map(value => String(value ?? "").trim().toLowerCase()).filter(Boolean));
-  const preservedEffectTags = list(system.effectTags ?? system.effets ?? system.effects).map(value => String(value ?? "").trim()).filter(Boolean).filter(tag => !previousGenerated.has(tag.toLowerCase()));
-  const generatedTags = [];
-  if (enchantment.application === "porteur") { if (enchantment.bonusToucher) generatedTags.push(`bonus_attaque:${signed(enchantment.bonusToucher)}`); if (enchantment.bonusDegats) generatedTags.push(`bonus_degats:${signed(enchantment.bonusDegats)}`); }
-  const patch = {};
-  setProperty(patch, "system.enchantement", enchantment);
-  if (type === "arme") { setProperty(patch, "system.bonus_hit", legacyHit); setProperty(patch, "system.bonus_dom", legacyDamage); }
-  else { setProperty(patch, "system.bonus_toucher", legacyHit); setProperty(patch, "system.bonus_degats", legacyDamage); }
-  setProperty(patch, "system.bonus_ac", legacyCA); setProperty(patch, "system.bonus_ca", legacyCA); setProperty(patch, "system.ca_fixe", legacyFixedCA); setProperty(patch, "system.caFixe", legacyFixedCA); setProperty(patch, "system.effectTags", mergeUnique(preservedEffectTags, generatedTags)); setProperty(patch, "system.magique", true);
-  const charges = normalizedCharges(system); if (charges) setProperty(patch, "system.charges", charges);
-  for (const field of POWER_FIELDS) {
-    const raw = system[field]; if (raw === undefined) continue;
-    if (Array.isArray(raw)) setProperty(patch, `system.${field}`, raw.map(normalizePowerCompatibility));
-    else if (raw && typeof raw === "object") setProperty(patch, `system.${field}`, Object.fromEntries(Object.entries(raw).map(([key, power]) => [key, normalizePowerCompatibility(power)])));
-    break;
-  }
+  const system = source.system ?? {};
+  const enchantment = enchantmentFromSource(source);
+  const type = magicItemType(source);
+  const base = enchantment.baseStats;
+  const legacy = legacyMagicBonusValues(source, enchantment);
+  const field = powerField(system);
+  let powers = rawPowers(system).map(normalizePowerCompatibility);
+  for (const key of ["attack", "damage", "armor", "fixedArmor"]) powers = ensurePowerValue(powers, key, legacy[key]);
+
+  const cleanEnchantment = {
+    ...clone(enchantment),
+    schema: 2,
+    bonusToucher: 0,
+    bonusDegats: 0,
+    bonusCA: 0,
+    caFixe: null,
+    baseStats: clone(base)
+  };
   const currentBuilder = source?.flags?.add2e?.magicItemBuilder && typeof source.flags.add2e.magicItemBuilder === "object" ? source.flags.add2e.magicItemBuilder : {};
-  setProperty(patch, "flags.add2e.magicItemBuilder", { ...clone(currentBuilder), version: NORMALIZER_VERSION, generatedTags: mergeUnique(generatedTags) }); setProperty(patch, "flags.add2e.magicItemBuilderVersion", NORMALIZER_VERSION);
+  const patch = {};
+  setProperty(patch, "system.enchantement", cleanEnchantment);
+  setProperty(patch, `system.${field}`, powers);
+  setProperty(patch, "system.magique", true);
+  if (type === "arme") {
+    setProperty(patch, "system.bonus_hit", number(base.bonusToucher, 0));
+    setProperty(patch, "system.bonus_dom", number(base.bonusDegats, 0));
+  } else {
+    setProperty(patch, "system.bonus_toucher", 0);
+    setProperty(patch, "system.bonus_degats", 0);
+  }
+  setProperty(patch, "system.bonus_ac", number(base.bonusCA, 0));
+  setProperty(patch, "system.bonus_ca", number(base.bonusCA, 0));
+  setProperty(patch, "system.ca_fixe", optionalNumber(base.caFixe));
+  setProperty(patch, "system.caFixe", optionalNumber(base.caFixe));
+  setProperty(patch, "system.effectTags", cleanLegacyMagicTags(system, currentBuilder.generatedTags));
+  const charges = normalizedCharges(system); if (charges) setProperty(patch, "system.charges", charges);
+  setProperty(patch, "flags.add2e.modifiers", removeBuilderModifiers(source));
+  setProperty(patch, "flags.add2e.magicItemBuilder", { ...clone(currentBuilder), version: NORMALIZER_VERSION, generatedTags: [], generatedModifiers: [] });
+  setProperty(patch, "flags.add2e.magicItemBuilderVersion", NORMALIZER_VERSION);
   return patch;
 }
 function shouldNormalizeUpdate(change = {}) {
-  const prefixes = ["system.enchantement", "system.bonus_hit", "system.bonus_dom", "system.bonus_toucher", "system.bonus_degats", "system.bonus_ac", "system.bonus_ca", "system.ca_fixe", "system.caFixe", "system.charges", "system.magique", "system.magic", ...POWER_FIELDS.map(field => `system.${field}`), "flags.add2e.magicItemBuilder", "flags.add2e.magicPowerCatalogue"];
+  const prefixes = ["system.enchantement", "system.bonus_hit", "system.bonus_dom", "system.bonus_toucher", "system.bonus_degats", "system.bonus_ac", "system.bonus_ca", "system.ca_fixe", "system.caFixe", "system.charges", "system.magique", "system.magic", ...POWER_FIELDS.map(field => `system.${field}`), "flags.add2e.modifiers", "flags.add2e.magicItemBuilder", "flags.add2e.magicPowerCatalogue"];
   return flattenedPaths(change).some(path => prefixes.some(prefix => path === prefix || path.startsWith(`${prefix}.`)));
 }
 function normalizeMagicItemCreate(item) {
@@ -254,8 +484,21 @@ function normalizeMagicItemCreate(item) {
 function normalizeMagicItemUpdate(item, change = {}, options = {}) {
   if (options?.add2eMagicItemDataNormalizer === true || !MAGIC_ITEM_TYPES.has(String(item?.type ?? "").toLowerCase()) || !shouldNormalizeUpdate(change)) return;
   const source = clone(item?.toObject?.() ?? item?._source ?? {}), merged = merge(source, expand(change)), patch = magicItemNormalization(merged); if (!patch) return;
-  for (const key of Object.keys(change)) if (["system.enchantement.", "system.bonus_hit", "system.bonus_dom", "system.bonus_toucher", "system.bonus_degats", "system.bonus_ac", "system.bonus_ca", "system.ca_fixe", "system.caFixe", "system.effectTags", "system.charges", "system.magique", "flags.add2e.magicItemBuilder", "flags.add2e.magicItemBuilderVersion"].some(prefix => key === prefix || key.startsWith(prefix))) delete change[key];
+  for (const key of Object.keys(change)) if (["system.enchantement.", "system.bonus_hit", "system.bonus_dom", "system.bonus_toucher", "system.bonus_degats", "system.bonus_ac", "system.bonus_ca", "system.ca_fixe", "system.caFixe", "system.effectTags", "system.charges", "system.magique", "flags.add2e.modifiers", "flags.add2e.magicItemBuilder", "flags.add2e.magicItemBuilderVersion"].some(prefix => key === prefix || key.startsWith(prefix))) delete change[key];
   const normalized = merge(expand(change), patch); for (const key of Object.keys(change)) delete change[key]; Object.assign(change, normalized); options.add2eMagicItemDataNormalizer = true;
+}
+async function migrateCanonicalPowerSources() {
+  if (!game.user?.isGM) return;
+  const activeGM = game.users?.activeGM ?? Array.from(game.users ?? []).find(user => user.active && user.isGM);
+  if (activeGM && String(activeGM.id) !== String(game.user.id)) return;
+  const documents = [...Array.from(game.items ?? []), ...Array.from(game.actors ?? []).flatMap(actor => Array.from(actor.items ?? []))];
+  for (const item of documents) {
+    const source = clone(item?.toObject?.() ?? item?._source ?? {});
+    const patch = magicItemNormalization(source);
+    if (!patch) continue;
+    try { await item.update(patch, { add2eMagicItemDataNormalizer: true, add2eMagicItemBuilder: true, add2eInternal: true, render: false }); }
+    catch (error) { console.error("[ADD2E][MAGIC_ITEM][POWER_SOURCE_MIGRATION]", { item: item?.name, itemId: item?.id, error }); }
+  }
 }
 
 export function add2eRegisterClassItemSheet() {
@@ -265,11 +508,16 @@ export function add2eRegisterClassItemSheet() {
   if (DSC?.registerSheet && ItemDocument) { try { DSC.registerSheet(ItemDocument, "add2e", Add2eItemSheet, options); } catch (error) { console.warn("[ADD2E][SHEETS] DocumentSheetConfig classe non appliqué, fallback Items.registerSheet conservé.", error); } }
   console.log("[ADD2E][SHEETS] Fiche Item.classe enregistrée :", Add2eItemSheet?.name);
 }
-function registerHelper() { if (typeof Handlebars !== "undefined" && !Handlebars.helpers.add2eMagicSheetPowers) Handlebars.registerHelper("add2eMagicSheetPowers", item => sheetPowers(item)); }
+function registerHelper() {
+  if (typeof Handlebars === "undefined") return;
+  Handlebars.registerHelper("add2eMagicSheetPowers", item => sheetPowers(item));
+  Handlebars.registerHelper("add2eMagicPowerFieldValue", (item, key) => powerFieldValue(item, key));
+}
 
 globalThis.add2eRegisterClassItemSheet = add2eRegisterClassItemSheet;
 globalThis.add2eMagicBuilderEditPower = editPower;
 globalThis.add2eMagicBuilderSheetPowers = sheetPowers;
+globalThis.add2eMagicPowerFieldValue = powerFieldValue;
 globalThis.add2eNormalizeMagicItemData = async itemOrUuid => {
   const item = itemOrUuid?.documentName === "Item" ? itemOrUuid : await resolveItem(itemOrUuid); if (!item) return false;
   const patch = magicItemNormalization(clone(item.toObject?.() ?? item._source ?? {})); if (!patch) return false;
@@ -286,3 +534,4 @@ Hooks.on("preCreateActor", (actor, data = {}) => {
 Hooks.on("preCreateItem", item => normalizeMagicItemCreate(item));
 Hooks.on("preUpdateItem", (item, change, options = {}) => normalizeMagicItemUpdate(item, change, options));
 Hooks.once("init", () => { registerHelper(); console.log("ADD2e | Initialisation du système..."); add2eRegisterClassItemSheet(); });
+Hooks.once("ready", () => { migrateCanonicalPowerSources().catch(error => console.error("[ADD2E][MAGIC_ITEM][POWER_SOURCE_MIGRATION_READY]", error)); });
