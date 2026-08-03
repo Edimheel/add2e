@@ -2,13 +2,16 @@
 
 import {
   VERSION, EFFECT_FLAG, INTERNAL_EFFECT_OPTION, INTERNAL_NORMALIZE_OPTION,
-  cataloguePowers, clone, currentTick, equal, itemUsable, powerArray
+  cataloguePowers, clone, currentTick, equal, itemUsable, norm, number, powerArray
 } from "./runtime.mjs";
 import {
   compilePower, compiledFromRules, rulesOf, uniqueChanges, uniqueModifiers, uniqueTags
 } from "./rules.mjs";
 
 const NORMALIZE_LOCK = new Set();
+const ARMOR_BONUS_TYPES = new Set([
+  "armor_class_bonus", "armor_bonus", "ac_bonus", "defense_bonus", "protection_bonus"
+]);
 const changeSignature = change => `${String(change?.key ?? "")}|${Number(change?.mode ?? 0)}|${String(change?.value ?? "")}|${Number(change?.priority ?? 0)}`;
 const modifierSignature = modifier => JSON.stringify([
   modifier?.domain, modifier?.target, modifier?.operation, modifier?.value,
@@ -103,6 +106,70 @@ function sourceItemForEffect(effect) {
     ?? null;
 }
 
+function armorBonusPowerValues(item) {
+  const values = [];
+  for (const power of cataloguePowers(item)) {
+    for (const effect of Array.isArray(power?.effects) ? power.effects : []) {
+      const type = norm(effect?.type ?? effect?.kind ?? effect?.category);
+      if (!ARMOR_BONUS_TYPES.has(type)) continue;
+      const value = number(effect?.bonus, effect?.value, effect?.amount, effect?.armorClassBonus, effect?.acBonus);
+      if (Number.isFinite(value) && value !== 0) values.push(Math.abs(value));
+    }
+  }
+  return values;
+}
+
+async function normalizeItemArmorBonusSource(item) {
+  const powerBonuses = armorBonusPowerValues(item);
+  if (!powerBonuses.length) return { changed: false, reason: "no-power-bonus" };
+  if (powerBonuses.length !== 1) {
+    console.error("[ADD2E][MAGIC_POWER_EFFECTS][ARMOR_BONUS_DUPLICATE_POWERS]", {
+      item: item?.name,
+      itemId: item?.id,
+      powerBonuses
+    });
+    return { changed: false, reason: "multiple-power-bonuses" };
+  }
+
+  const modifiers = Array.from(item?.flags?.add2e?.modifiers ?? []);
+  const builderBonuses = modifiers.filter(modifier => modifier?.domain === "armor-class"
+    && modifier?.operation === "add"
+    && modifier?.metadata?.producer === "magic-item-builder");
+  if (!builderBonuses.length) return { changed: false, reason: "power-only" };
+  if (builderBonuses.length !== 1) {
+    console.error("[ADD2E][MAGIC_POWER_EFFECTS][ARMOR_BONUS_DUPLICATE_FIELDS]", {
+      item: item?.name,
+      itemId: item?.id,
+      builderBonuses
+    });
+    return { changed: false, reason: "multiple-field-bonuses" };
+  }
+
+  const powerBonus = powerBonuses[0];
+  const fieldBonus = Math.abs(Number(builderBonuses[0].value) || 0);
+  if (fieldBonus !== powerBonus) {
+    console.error("[ADD2E][MAGIC_POWER_EFFECTS][ARMOR_BONUS_CONFLICT]", {
+      item: item?.name,
+      itemId: item?.id,
+      fieldBonus,
+      powerBonus
+    });
+    return { changed: false, reason: "conflicting-values" };
+  }
+
+  const retainedModifiers = modifiers.filter(modifier => modifier !== builderBonuses[0]);
+  const generatedModifiers = Array.from(item?.flags?.add2e?.magicItemBuilder?.generatedModifiers ?? [])
+    .filter(id => String(id) !== String(builderBonuses[0].id ?? "magic-item-builder:armor-class:bonus"));
+  await item.update({
+    "system.enchantement.bonusCA": 0,
+    "flags.add2e.modifiers": retainedModifiers,
+    "flags.add2e.magicItemBuilder.armorBonusSource": "power",
+    "flags.add2e.magicItemBuilder.armorBonusValue": powerBonus,
+    "flags.add2e.magicItemBuilder.generatedModifiers": generatedModifiers
+  }, { [INTERNAL_EFFECT_OPTION]: true, add2eInternal: true, render: false });
+  return { changed: true, reason: "migrated-to-power", value: powerBonus };
+}
+
 export async function removeItemEffects(item, actorOverride = null) {
   const actor = actorOverride ?? actorForItem(item);
   if (!actor) return { deleted: 0 };
@@ -114,6 +181,7 @@ export async function removeItemEffects(item, actorOverride = null) {
 export async function syncItem(item) {
   const actor = actorForItem(item);
   if (!actor || !item?.id) return { ok: false, reason: "item-not-embedded" };
+  await normalizeItemArmorBonusSource(item);
   const existing = existingForItem(actor, item.id);
   const desired = new Map();
   if (itemUsable(item)) {
