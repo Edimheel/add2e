@@ -632,13 +632,28 @@ export function installModifierResolver(Engine) {
     },
 
     isShieldItem(item) {
-      const text = this.itemText(item);
-      return text.includes("bouclier") || text.includes("shield");
+      if (typeof this.armorIsShield !== "function") {
+        throw new Error("Le profil canonique des boucliers ADD2E n’est pas installé.");
+      }
+      return this.armorIsShield(item) === true;
     },
 
     isHelmetItem(item) {
-      const text = this.itemText(item);
-      return text.includes("heaume") || text.includes("casque") || text.includes("helmet");
+      const system = item?.system ?? {};
+      const values = new Set([
+        system.type_armure,
+        system.categorie,
+        system.structure,
+        ...this.toArray(system.tags)
+      ].map(value => this.normalizeTag(value)).filter(Boolean));
+      return values.has("casque")
+        || values.has("heaume")
+        || values.has("armure:casque")
+        || values.has("armure:heaume")
+        || values.has("type_armure:casque")
+        || values.has("type_armure:heaume")
+        || values.has("structure:casque")
+        || values.has("structure:heaume");
     },
 
     bonusFromName(item) {
