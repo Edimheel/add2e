@@ -16,7 +16,7 @@
     .a2e-body{flex:1;min-height:0;overflow-y:auto}.a2e-rich-editor{min-height:130px;padding:8px 10px;border:1px solid var(--a2e-soft);border-radius:8px;background:#fffdf7}.a2e-rich-editor .editor{min-height:150px}.a2e-rich-editor .editor-content{min-height:130px}
     .a2e-drop-zone{display:grid;place-items:center;min-height:76px;margin-top:10px;padding:10px;border:2px dashed var(--a2e-border);border-radius:8px;background:rgba(255,255,255,.55);text-align:center}.a2e-drop-zone.is-dragover{background:#eef7e7}
     .add2e-arcane-entry-list,.a2e-power-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}.add2e-arcane-entry{display:grid;grid-template-columns:38px minmax(0,1fr) 75px 150px 42px;gap:8px;align-items:center;padding:7px;border:1px solid var(--a2e-soft);border-radius:7px;background:#fffaf0}
-    .a2e-power-entry{border:1px solid var(--a2e-soft);border-radius:8px;background:#fffdf7;overflow:hidden}.a2e-power-entry summary{display:grid;grid-template-columns:38px minmax(0,1fr) auto 38px;gap:8px;align-items:center;padding:8px;cursor:pointer;list-style:none}.a2e-power-entry summary::-webkit-details-marker{display:none}.a2e-power-entry img{width:34px;height:34px;object-fit:cover;border:1px solid var(--a2e-border);border-radius:5px}.a2e-power-description{padding:8px 12px;border-top:1px solid var(--a2e-soft)}.a2e-power-remove{width:32px;height:30px;padding:0}
+    .a2e-power-entry{border:1px solid var(--a2e-soft);border-radius:8px;background:#fffdf7;overflow:hidden}.a2e-power-entry summary{display:grid;grid-template-columns:38px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px;cursor:pointer;list-style:none}.a2e-power-entry summary::-webkit-details-marker{display:none}.a2e-power-entry img{width:34px;height:34px;object-fit:cover;border:1px solid var(--a2e-border);border-radius:5px}.a2e-power-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}.a2e-power-badge{padding:2px 6px;border:1px solid var(--a2e-soft);border-radius:999px;background:#f5ead0;font-size:.72em;font-weight:700}.a2e-power-actions{display:flex;gap:5px}.a2e-power-actions button{width:32px;height:30px;padding:0}.a2e-power-details{display:grid;gap:8px;padding:8px 12px;border-top:1px solid var(--a2e-soft)}.a2e-power-canonical{display:grid;gap:3px;padding:8px 10px;border:1px solid var(--a2e-soft);border-radius:7px;background:#fff4d7}.a2e-power-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:.82em;opacity:.78}.a2e-power-json{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.78em}
     .a2e-charge-bar{height:13px;margin-top:8px;border:1px solid var(--a2e-border);border-radius:999px;background:#d8c9aa;overflow:hidden}.a2e-charge-bar span{display:block;height:100%;width:calc(({{charges.value}} / {{#if charges.max}}{{charges.max}}{{else}}1{{/if}}) * 100%);max-width:100%;background:linear-gradient(90deg,#765018,#d49a32)}
     .a2e-recharge{display:grid;grid-template-columns:auto minmax(180px,1fr) auto;gap:8px;align-items:end;margin-top:10px}.a2e-recharge-status{min-height:34px;padding:7px;border:1px solid var(--a2e-soft);border-radius:6px;background:#fffdf7;font-weight:700}
     details.a2e-technical{margin-top:8px}details.a2e-technical summary{cursor:pointer;font-weight:800;color:#6f6258}
@@ -123,13 +123,40 @@
       <div class="content hidden" data-tab="pouvoirs">
         <section class="a2e-card">
           <h3><i class="fas fa-wand-magic-sparkles"></i> Pouvoirs et sorts</h3>
-          {{#if pouvoirs.length}}
-            <ol class="a2e-power-list">
-              {{#each pouvoirs as |p idx|}}
-                <li class="a2e-power-entry"><details><summary><img src="{{#if p.img}}{{p.img}}{{else}}icons/svg/aura.svg{{/if}}" alt=""><strong>{{#if p.name}}{{p.name}}{{else}}{{p.nom}}{{/if}}</strong><span>Coût {{#if p.cout}}{{p.cout}}{{else}}{{p.cost}}{{/if}}</span><button type="button" class="a2e-power-remove" data-power-index="{{idx}}" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,Number(this.dataset.powerIndex));"><i class="fas fa-trash"></i></button></summary><div class="a2e-power-description">{{#if p.description}}{{{p.description}}}{{else}}<em>Aucune description.</em>{{/if}}</div></details></li>
-              {{/each}}
-            </ol>
-          {{else}}<p><em>Aucun pouvoir configuré.</em></p>{{/if}}
+          {{#with (add2eMagicSheetPowers item) as |powers|}}
+            {{#if powers.length}}
+              <ol class="a2e-power-list">
+                {{#each powers as |p|}}
+                  <li class="a2e-power-entry" {{#if p._add2eVirtualModifier}}data-add2e-virtual-power="{{p._add2eVirtualModifierKey}}"{{/if}}>
+                    <details open>
+                      <summary>
+                        <img src="{{#if p.img}}{{p.img}}{{else}}icons/svg/aura.svg{{/if}}" alt="">
+                        <div><strong>{{p._add2eName}}</strong><div class="a2e-power-badges"><span class="a2e-power-badge">{{p._add2eKindLabel}}</span><span class="a2e-power-badge">{{p._add2eCategoryLabel}}</span><span class="a2e-power-badge">{{p._add2eAutomationLabel}}</span></div></div>
+                        <span>Coût {{p._add2eCost}}</span>
+                        {{#if @root.editable}}
+                          {{#if p._add2eVirtualModifier}}
+                            {{#if p._add2eHasStoredPower}}<div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>{{/if}}
+                          {{else}}
+                            <div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>
+                          {{/if}}
+                        {{/if}}
+                      </summary>
+                      <div class="a2e-power-details">
+                        {{#if p._add2eVirtualModifier}}
+                          <div class="a2e-power-canonical"><b>{{p._add2eCanonicalValueLabel}}</b><span>{{p._add2eCanonicalDescription}}</span></div>
+                        {{else}}
+                          {{#if p.description}}<div>{{{p.description}}}</div>{{/if}}
+                          {{#if p._add2eHasParameters}}<pre class="a2e-power-json">{{p._add2eParametersJson}}</pre>{{/if}}
+                          {{#if p._add2eHasEffects}}<pre class="a2e-power-json">{{p._add2eEffectsJson}}</pre>{{/if}}
+                        {{/if}}
+                        <div class="a2e-power-meta"><span><b>Activation :</b> {{p._add2eActivationLabel}}</span><span><b>Source :</b> {{p._add2eSourceLabel}}</span></div>
+                      </div>
+                    </details>
+                  </li>
+                {{/each}}
+              </ol>
+            {{else}}<p><em>Aucun pouvoir configuré.</em></p>{{/if}}
+          {{/with}}
           {{#unless isArcaneDocument}}
             {{#if (eq (lowercase system.sousType) "potion")}}
               <fieldset class="add2e-potion-spell-manager" data-item-uuid="{{item.uuid}}"><legend>Contenu de la potion</legend><div class="add2e-potion-spell-drop-zone a2e-drop-zone" tabindex="0"><b>Déposez ici le sort de la potion</b></div></fieldset>
@@ -145,10 +172,10 @@
           <h3><i class="fas fa-burst"></i> Effets portés</h3>
           <input type="hidden" name="system.enchantement.application" value="porteur">
           <div class="a2e-grid-4">
-            <div class="a2e-stat"><label>Bonus toucher</label><input type="number" name="system.enchantement.bonusToucher" value="{{#if system.enchantement.bonusToucher}}{{system.enchantement.bonusToucher}}{{else}}{{system.bonus_toucher}}{{/if}}"></div>
-            <div class="a2e-stat"><label>Bonus dégâts</label><input type="number" name="system.enchantement.bonusDegats" value="{{#if system.enchantement.bonusDegats}}{{system.enchantement.bonusDegats}}{{else}}{{system.bonus_degats}}{{/if}}"></div>
-            <div class="a2e-stat"><label>Bonus CA</label><input type="number" name="system.enchantement.bonusCA" value="{{#if system.enchantement.bonusCA}}{{system.enchantement.bonusCA}}{{else}}{{system.bonus_ac}}{{/if}}"></div>
-            <div class="a2e-stat"><label>CA fixe</label><input type="number" name="system.enchantement.caFixe" value="{{#if system.enchantement.caFixe}}{{system.enchantement.caFixe}}{{else}}{{system.ca_fixe}}{{/if}}"></div>
+            <div class="a2e-stat"><label>Bonus toucher</label><input type="number" name="system.enchantement.bonusToucher" value="{{system.enchantement.bonusToucher}}"></div>
+            <div class="a2e-stat"><label>Bonus dégâts</label><input type="number" name="system.enchantement.bonusDegats" value="{{system.enchantement.bonusDegats}}"></div>
+            <div class="a2e-stat"><label>Bonus CA</label><input type="number" name="system.enchantement.bonusCA" value="{{system.enchantement.bonusCA}}"></div>
+            <div class="a2e-stat"><label>CA fixe</label><input type="number" name="system.enchantement.caFixe" value="{{system.enchantement.caFixe}}"></div>
           </div>
           <details class="a2e-technical"><summary>Marqueurs techniques</summary><div class="a2e-grid-2" style="margin-top:8px"><div class="a2e-field"><label>Tags</label><textarea name="system.tags" rows="4">{{#each tags}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</textarea></div><div class="a2e-field"><label>Effect tags</label><textarea name="system.effectTags" rows="4">{{#each effectTags}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</textarea></div></div></details>
         </section>
