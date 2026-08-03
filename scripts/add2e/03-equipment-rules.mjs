@@ -1,8 +1,8 @@
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags harmonisés
-// Version : 2026-07-01-monster-unrestricted-weapons-v6
+// Version : 2026-08-03-canonical-armor-classification-v7
 // Source principale : Items "classe" embarqués sur l'acteur.
-// Schéma conseillé des tags d'équipement :
+// Schéma canonique des tags d'équipement :
 // - arme / armure / bouclier
 // - type_arme:<type> / type_armure:<type> / type_bouclier:<type>
 // - slug:<nom_normalise>
@@ -28,6 +28,17 @@ function add2eNormalizeEquipTag(value) {
     .replace(/[’']/g, "")
     .replace(/[\s\-]+/g, "_")
     .replace(/_+/g, "_");
+}
+
+function add2eEquipmentEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine
+    || typeof engine.isShieldItem !== "function"
+    || typeof engine.isHelmetItem !== "function"
+    || typeof engine.itemEquipped !== "function") {
+    throw new Error("Le profil canonique d’équipement ADD2E n’est pas installé.");
+  }
+  return engine;
 }
 
 function add2eToEquipArray(value) {
@@ -126,46 +137,46 @@ function add2eGetActorClassSystem(actor) {
   return add2eClassSystemFromItem(add2eGetActorClassItem(actor), actor);
 }
 
+function add2eIsShield(item) {
+  return add2eEquipmentEngine().isShieldItem(item) === true;
+}
+
+function add2eIsHelmet(item) {
+  return add2eEquipmentEngine().isHelmetItem(item) === true;
+}
+
 function add2eGetItemEquipTags(item) {
   const tags = new Set();
   const sys = item?.system ?? {};
   const documentType = String(item?.type ?? "").toLowerCase();
-  const nameNorm = add2eNormalizeEquipTag(item?.name ?? sys.nom ?? "");
+  const nameNorm = add2eNormalizeEquipTag(item?.name ?? "");
 
   add2ePushEquipTags(tags, sys.tags);
-  add2ePushEquipTags(tags, sys.tag);
-  add2ePushEquipTags(tags, sys.effectTags);
-  add2ePushEquipTags(tags, sys.effecttags);
-  add2ePushEquipTags(tags, sys.effets);
-  add2ePushEquipTags(tags, sys.effects);
   add2ePushEquipTags(tags, item?.flags?.add2e?.tags);
 
   if (documentType === "arme" || documentType === "weapon") {
     tags.add("arme");
     if (nameNorm) tags.add(`slug:${nameNorm}`);
-    add2ePushEquipTags(tags, sys.type_arme);
-    add2ePushEquipTags(tags, sys.famille_arme);
+    const weaponType = add2eNormalizeEquipTag(sys.type_arme);
+    const weaponFamily = add2eNormalizeEquipTag(sys.famille_arme);
+    if (weaponType) tags.add(`type_arme:${weaponType}`);
+    if (weaponFamily) tags.add(`type_arme:${weaponFamily}`);
   }
 
   if (documentType === "armure" || documentType === "armor") {
-    const isShield =
-      sys.bouclier === true ||
-      tags.has("bouclier") ||
-      tags.has("type_armure:bouclier") ||
-      tags.has("type_bouclier:tour") ||
-      tags.has("type_bouclier:lourd") ||
-      tags.has("type_bouclier:rond") ||
-      tags.has("type_bouclier:bois") ||
-      nameNorm.includes("bouclier") ||
-      add2eNormalizeEquipTag(sys.categorie ?? "").includes("bouclier");
-
-    if (isShield) tags.add("bouclier");
+    if (add2eIsShield(item)) tags.add("bouclier");
+    else if (add2eIsHelmet(item)) tags.add("casque");
     else tags.add("armure");
 
     if (nameNorm) tags.add(`slug:${nameNorm}`);
-    add2ePushEquipTags(tags, sys.type_armure);
-    add2ePushEquipTags(tags, sys.type_bouclier);
-    add2ePushEquipTags(tags, sys.categorie);
+    const armorType = add2eNormalizeEquipTag(sys.type_armure);
+    const shieldType = add2eNormalizeEquipTag(sys.type_bouclier);
+    const category = add2eNormalizeEquipTag(sys.categorie);
+    const structure = add2eNormalizeEquipTag(sys.structure);
+    if (armorType) tags.add(`type_armure:${armorType}`);
+    if (shieldType) tags.add(`type_bouclier:${shieldType}`);
+    if (category) tags.add(`categorie_armure:${category}`);
+    if (structure) tags.add(`structure:${structure}`);
   }
 
   return [...tags].filter(Boolean);
@@ -203,19 +214,7 @@ function add2eCheckItemTagRestriction(item, restriction = {}) {
 }
 
 function add2eItemNameNorm(item) {
-  return add2eNormalizeEquipTag(item?.name ?? item?.system?.nom ?? "");
-}
-
-function add2eIsShield(item) {
-  const tags = new Set(add2eGetItemEquipTags(item));
-  const name = add2eItemNameNorm(item);
-  return tags.has("bouclier") || tags.has("type_armure:bouclier") || name.includes("bouclier");
-}
-
-function add2eIsHelmet(item) {
-  const tags = new Set(add2eGetItemEquipTags(item));
-  const name = add2eItemNameNorm(item);
-  return tags.has("heaume") || tags.has("casque") || name.includes("heaume") || name.includes("casque");
+  return add2eNormalizeEquipTag(item?.name ?? "");
 }
 
 function add2eLegacyAllowsItemByNameOrTag(item, allowedRaw, kind) {
@@ -374,7 +373,7 @@ function add2eCheckEquippedItemsForClassActivity(actor, className) {
   if (!classe) return { ok: true, reason: "class-not-present", className, failures: [] };
   const failures = [];
   for (const item of actor?.items ?? []) {
-    if (!item?.system?.equipee) continue;
+    if (!add2eEquipmentEngine().itemEquipped(item)) continue;
     const type = String(item.type ?? "").toLowerCase();
     if (type !== "arme" && type !== "armure") continue;
     const kind = type === "arme" ? "arme" : "armure";
@@ -388,24 +387,14 @@ function add2eGetThiefActivityRawArmorTags(item) {
   const system = item?.system ?? {};
   return [
     ...add2eToEquipArray(system.tags),
-    ...add2eToEquipArray(system.tag),
-    ...add2eToEquipArray(system.effectTags),
-    ...add2eToEquipArray(system.effecttags),
-    ...add2eToEquipArray(system.effets),
-    ...add2eToEquipArray(system.effects),
-    ...add2eToEquipArray(item?.flags?.add2e?.tags),
-    ...add2eToEquipArray(item?.flags?.add2e?.effectTags)
+    ...add2eToEquipArray(item?.flags?.add2e?.tags)
   ].map(tag => String(tag).trim()).filter(Boolean);
 }
 
 function add2eIsThiefActivityBodyArmor(item) {
-  if (item?.system?.equipee !== true) return false;
+  if (!add2eEquipmentEngine().itemEquipped(item)) return false;
   if (!["armure", "armor"].includes(String(item?.type ?? "").toLowerCase())) return false;
-
-  const tags = new Set(add2eGetThiefActivityRawArmorTags(item));
-  if (tags.has("bouclier") || tags.has("type_armure:bouclier") || tags.has("heaume") || tags.has("casque")) return false;
-  if ([...tags].some(tag => tag.startsWith("type_bouclier:") || tag.startsWith("type_heaume:") || tag.startsWith("type_casque:"))) return false;
-  return true;
+  return !add2eIsShield(item) && !add2eIsHelmet(item);
 }
 
 function add2eCheckThiefActivityEquipmentAllowed(actor) {
@@ -418,7 +407,8 @@ function add2eCheckThiefActivityEquipmentAllowed(actor) {
     if (!add2eIsThiefActivityBodyArmor(item)) continue;
 
     const itemTags = add2eGetThiefActivityRawArmorTags(item);
-    if (itemTags.includes("type_armure:cuir")) continue;
+    const armorType = add2eNormalizeEquipTag(item?.system?.type_armure);
+    if (armorType === "cuir" || itemTags.includes("type_armure:cuir")) continue;
 
     failures.push({
       itemId: item.id,
