@@ -310,6 +310,59 @@ function add2eMagicBuilderCreatorSanitizeBase(baseItem, profile, name) {
   return source;
 }
 
+function add2eMagicBuilderCanonicalDefenseModifiers(itemData, profileKey, type, result, baseStats) {
+  itemData.flags ??= {};
+  itemData.flags.add2e ??= {};
+  const current = Array.isArray(itemData.flags.add2e.modifiers)
+    ? add2eMagicClone(itemData.flags.add2e.modifiers)
+    : [];
+  const retained = current.filter(modifier => modifier?.metadata?.producer !== "magic-item-builder");
+  const generated = [];
+  const target = type === "armure" ? "naturel" : "total";
+  const sourceKind = type === "armure" ? "armor" : "equipment";
+  const defenseBonus = Number(baseStats?.bonusCA ?? 0) + Number(result?.bonusCA ?? 0);
+  if (Number.isFinite(defenseBonus) && defenseBonus !== 0) {
+    generated.push({
+      id: "magic-item-builder:armor-class:bonus",
+      domain: "armor-class",
+      target,
+      operation: "add",
+      value: -defenseBonus,
+      priority: 100,
+      stacking: { mode: "stack", group: null },
+      conditions: { equipped: true },
+      source: { kind: sourceKind, name: itemData.name },
+      metadata: {
+        label: `${itemData.name} — bonus de CA`,
+        producer: "magic-item-builder",
+        profile: profileKey
+      }
+    });
+  }
+  const fixedRaw = result?.caFixe ?? baseStats?.caFixe ?? null;
+  const fixedCA = fixedRaw === null || fixedRaw === undefined || fixedRaw === "" ? null : Number(fixedRaw);
+  if (Number.isFinite(fixedCA)) {
+    generated.push({
+      id: "magic-item-builder:armor-class:fixed",
+      domain: "armor-class",
+      target,
+      operation: "minmax",
+      value: { max: fixedCA },
+      priority: 300,
+      stacking: { mode: "lowest", group: `armor-class:${target}:fixed-equipment` },
+      conditions: { equipped: true },
+      source: { kind: sourceKind, name: itemData.name },
+      metadata: {
+        label: `${itemData.name} — CA fixe ${fixedCA}`,
+        producer: "magic-item-builder",
+        profile: profileKey
+      }
+    });
+  }
+  itemData.flags.add2e.modifiers = [...retained, ...generated];
+  return generated.map(modifier => modifier.id);
+}
+
 function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, result, baseItem = null) {
   const system = itemData.system ??= {};
   const type = profile.itemType;
@@ -332,7 +385,7 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
   system.tags = add2eMagicMergeUniqueValues(system.tags, profile.tags);
   system.effectTags = add2eMagicMergeUniqueValues(system.effectTags, profile.tags);
   const enchantement = {
-    schema: 1,
+    schema: 2,
     baseUuid: String(baseItem?.uuid ?? ""),
     baseName: String(baseItem?.name ?? ""),
     baseType: String(baseItem?.type ?? ""),
@@ -352,8 +405,10 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
     system.bonus_toucher = result.bonusToucher;
     system.bonus_degats = result.bonusDegats;
   }
-  system.bonus_ac = baseStats.bonusCA + result.bonusCA;
-  system.ca_fixe = result.caFixe ?? baseStats.caFixe ?? null;
+  for (const key of [
+    "bonus_ac", "bonus_ca", "ca_bonus", "ac_bonus", "protectionBonus", "protection_bonus",
+    "ca_fixe", "caFixe", "fixedCA", "fixed_ac", "ac_fixe", "acFixe"
+  ]) delete system[key];
   if (application === "porteur") {
     if (result.bonusToucher) system.effectTags = add2eMagicMergeUniqueValues(system.effectTags, `bonus_attaque:${add2eMagicSigned(result.bonusToucher)}`);
     if (result.bonusDegats) system.effectTags = add2eMagicMergeUniqueValues(system.effectTags, `bonus_degats:${add2eMagicSigned(result.bonusDegats)}`);
@@ -374,6 +429,7 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
   }
   itemData.flags ??= {};
   itemData.flags.add2e ??= {};
+  const generatedModifierIds = add2eMagicBuilderCanonicalDefenseModifiers(itemData, profileKey, type, result, baseStats);
   Object.assign(itemData.flags.add2e, {
     magicItemProfile: profileKey,
     magicItemBuilderVersion: ADD2E_MAGIC_ITEM_BUILDER_VERSION,
@@ -392,7 +448,8 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
           result.bonusToucher ? `bonus_attaque:${add2eMagicSigned(result.bonusToucher)}` : "",
           result.bonusDegats ? `bonus_degats:${add2eMagicSigned(result.bonusDegats)}` : ""
         ].filter(Boolean)
-      : []
+      : [],
+    generatedModifiers: generatedModifierIds
   };
 }
 
