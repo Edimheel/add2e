@@ -319,12 +319,35 @@ function add2eMagicBuilderCreatorSanitizeBase(baseItem, profile, name) {
   return source;
 }
 
-function add2eMagicBuilderArmorPowerBonuses(powers = []) {
+function add2eMagicBuilderArmorPowerType(effect) {
+  return ADD2E_MAGIC_ARMOR_BONUS_POWER_TYPES.has(
+    add2eObjectMagicNormalizeTag(effect?.type ?? effect?.kind ?? effect?.category)
+  );
+}
+
+function add2eMagicBuilderTemplateParameterKeys(value, keys = new Set()) {
+  if (Array.isArray(value)) {
+    value.forEach(entry => add2eMagicBuilderTemplateParameterKeys(entry, keys));
+    return keys;
+  }
+  if (value && typeof value === "object") {
+    Object.values(value).forEach(entry => add2eMagicBuilderTemplateParameterKeys(entry, keys));
+    return keys;
+  }
+  if (typeof value !== "string") return keys;
+  for (const match of value.matchAll(/@([A-Za-z0-9_]+)/g)) keys.add(match[1]);
+  return keys;
+}
+
+function add2eMagicBuilderCanonicalizeArmorBonusPowers(powers = []) {
+  const normalized = add2eMagicClone(powers ?? []);
   const bonuses = [];
-  for (const power of powers) {
-    for (const effect of Array.isArray(power?.effects) ? power.effects : []) {
-      const type = add2eObjectMagicNormalizeTag(effect?.type ?? effect?.kind ?? effect?.category);
-      if (!ADD2E_MAGIC_ARMOR_BONUS_POWER_TYPES.has(type)) continue;
+  for (const power of normalized) {
+    const effects = Array.isArray(power?.effects) ? power.effects : [];
+    const templates = Array.isArray(power?.effectTemplates) ? power.effectTemplates : [];
+    const armorEffects = effects.filter(add2eMagicBuilderArmorPowerType);
+    const armorTemplates = templates.filter(add2eMagicBuilderArmorPowerType);
+    for (const effect of armorEffects) {
       const value = add2eMagicOptionalNumber(
         effect?.bonus
         ?? effect?.value
@@ -334,25 +357,34 @@ function add2eMagicBuilderArmorPowerBonuses(powers = []) {
       );
       if (Number.isFinite(value) && value !== 0) bonuses.push(Math.abs(value));
     }
+    if (!armorEffects.length && !armorTemplates.length) continue;
+    power.effects = effects.filter(effect => !add2eMagicBuilderArmorPowerType(effect));
+    power.effectTemplates = templates.filter(effect => !add2eMagicBuilderArmorPowerType(effect));
+    const parameterKeys = add2eMagicBuilderTemplateParameterKeys(armorTemplates);
+    if (power.parameters && typeof power.parameters === "object" && !Array.isArray(power.parameters)) {
+      for (const key of parameterKeys) delete power.parameters[key];
+    }
+    power.canonicalizedEffects = add2eMagicMergeUniqueValues(power.canonicalizedEffects, "armor-class");
   }
-  return bonuses;
+  return { powers: normalized, bonuses };
 }
 
 function add2eMagicBuilderResolveArmorBonusSource(result, powers = []) {
-  const powerBonuses = add2eMagicBuilderArmorPowerBonuses(powers);
-  if (!powerBonuses.length) return result;
-  if (powerBonuses.length > 1) {
+  const canonical = add2eMagicBuilderCanonicalizeArmorBonusPowers(powers);
+  if (canonical.bonuses.length > 1) {
     throw new Error("Le bonus de CA est défini par plusieurs pouvoirs. Conservez un seul pouvoir de bonus d’armure.");
   }
-  const powerBonus = powerBonuses[0];
+  const powerBonus = canonical.bonuses[0] ?? 0;
   const fieldBonus = Math.abs(add2eMagicNumber(result?.bonusCA, 0));
-  if (fieldBonus && fieldBonus !== powerBonus) {
+  if (fieldBonus && powerBonus && fieldBonus !== powerBonus) {
     throw new Error(`Le bonus de CA du champ (${fieldBonus}) diffère de celui du pouvoir (${powerBonus}). Utilisez une seule valeur.`);
   }
   return {
-    ...result,
-    bonusCA: 0,
-    armorBonusSource: "power"
+    result: {
+      ...result,
+      bonusCA: powerBonus || fieldBonus
+    },
+    powers: canonical.powers
   };
 }
 
@@ -438,7 +470,7 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
     application,
     bonusToucher: result.bonusToucher,
     bonusDegats: result.bonusDegats,
-    bonusCA: result.bonusCA,
+    bonusCA: 0,
     caFixe: result.caFixe,
     baseStats
   };
@@ -489,7 +521,6 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
   });
   itemData.flags.add2e.magicItemBuilder = {
     version: ADD2E_MAGIC_ITEM_BUILDER_VERSION,
-    armorBonusSource: result.armorBonusSource ?? (result.bonusCA ? "field" : null),
     generatedTags: application === "porteur"
       ? [
           result.bonusToucher ? `bonus_attaque:${add2eMagicSigned(result.bonusToucher)}` : "",
@@ -576,12 +607,13 @@ export async function add2eMagicBuilderCreateMagicItem(directory = null) {
     ui.notifications.error(error.message);
     return null;
   }
-  let canonicalResult;
-  try { canonicalResult = add2eMagicBuilderResolveArmorBonusSource(result, catalogueSelection.powers); }
+  let canonical;
+  try { canonical = add2eMagicBuilderResolveArmorBonusSource(result, catalogueSelection.powers); }
   catch (error) {
     ui.notifications.error(error.message);
     return null;
   }
+  const canonicalResult = canonical.result;
   let baseItem = null;
   if (profile.baseType) {
     if (!result.baseUuid) {
@@ -634,7 +666,7 @@ export async function add2eMagicBuilderCreateMagicItem(directory = null) {
       itemData.flags.add2e.arcaneDocumentKind = "spell-scroll";
     }
   }
-  add2eMagicCatalogueAttachToItemData(itemData, catalogueSelection.powers, catalogueSelection.catalogue);
+  add2eMagicCatalogueAttachToItemData(itemData, canonical.powers, catalogueSelection.catalogue);
   if (folder) itemData.folder = folder;
   const ItemClass = CONFIG?.Item?.documentClass ?? globalThis.Item;
   const created = await ItemClass.create(itemData, { renderSheet: true });
