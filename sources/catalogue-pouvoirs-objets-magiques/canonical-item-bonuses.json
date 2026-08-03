@@ -1,0 +1,175 @@
+{
+  "schema": 2,
+  "catalogueId": "add2e-gdm-magic-powers",
+  "version": "2026-08-03-canonical-item-bonuses-v1",
+  "extends": "../catalogue-pouvoirs-objets-magiques.json",
+  "status": "canonical-item-bonus-powers",
+  "source": {
+    "book": "Mécanique canonique ADD2E",
+    "sections": [
+      "Bonus des objets magiques"
+    ]
+  },
+  "principles": {
+    "notObjectTemplates": true,
+    "powersAreReusable": true,
+    "generatorMayOnlyOfferCompatiblePowers": true,
+    "valuesAreStoredOnlyInSystemPowers": true
+  },
+  "powers": [
+    {
+      "id": "canonical_magic_attack_bonus",
+      "label": "Bonus au toucher",
+      "category": "combat",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "passive",
+        "trigger": "equipped"
+      },
+      "automation": "automatic",
+      "parameters": {
+        "value": {
+          "type": "integer",
+          "required": true,
+          "label": "Bonus au toucher",
+          "description": "Valeur ajoutée aux jets d’attaque tant que l’objet est équipé.",
+          "placeholder": "1"
+        }
+      },
+      "effects": [
+        {
+          "type": "attack_bonus",
+          "label": "Bonus au toucher",
+          "value": "@value"
+        }
+      ],
+      "source": {
+        "section": "Mécanique canonique ADD2E"
+      },
+      "description": "Ajoute un bonus ou un malus aux jets d’attaque du porteur lorsque l’objet est équipé."
+    },
+    {
+      "id": "canonical_magic_damage_bonus",
+      "label": "Bonus aux dégâts",
+      "category": "combat",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "passive",
+        "trigger": "equipped"
+      },
+      "automation": "automatic",
+      "parameters": {
+        "value": {
+          "type": "integer",
+          "required": true,
+          "label": "Bonus aux dégâts",
+          "description": "Valeur ajoutée aux dégâts tant que l’objet est équipé.",
+          "placeholder": "1"
+        }
+      },
+      "effects": [
+        {
+          "type": "damage_bonus",
+          "label": "Bonus aux dégâts",
+          "value": "@value"
+        }
+      ],
+      "source": {
+        "section": "Mécanique canonique ADD2E"
+      },
+      "description": "Ajoute un bonus ou un malus aux dégâts du porteur lorsque l’objet est équipé."
+    },
+    {
+      "id": "canonical_magic_armor_bonus",
+      "label": "Bonus de CA",
+      "category": "defense",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "passive",
+        "trigger": "equipped"
+      },
+      "automation": "automatic",
+      "parameters": {
+        "value": {
+          "type": "integer",
+          "min": 1,
+          "required": true,
+          "label": "Bonus de CA",
+          "description": "Nombre de points retirés à la classe d’armure tant que l’objet est équipé.",
+          "placeholder": "1"
+        }
+      },
+      "effects": [
+        {
+          "type": "armor_class_bonus",
+          "label": "Bonus de CA",
+          "value": "@value"
+        }
+      ],
+      "source": {
+        "section": "Mécanique canonique ADD2E"
+      },
+      "description": "Améliore la classe d’armure du porteur lorsque l’objet est équipé."
+    },
+    {
+      "id": "canonical_magic_fixed_armor_class",
+      "label": "CA fixe",
+      "category": "defense",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "passive",
+        "trigger": "equipped"
+      },
+      "automation": "automatic",
+      "parameters": {
+        "value": {
+          "type": "integer",
+          "required": true,
+          "label": "Classe d’armure fixe",
+          "description": "Classe d’armure imposée par l’objet tant qu’il est équipé.",
+          "placeholder": "5"
+        }
+      },
+      "effects": [
+        {
+          "type": "fixed_armor_class",
+          "label": "Classe d’armure fixe",
+          "value": "@value"
+        }
+      ],
+      "source": {
+        "section": "Mécanique canonique ADD2E"
+      },
+      "description": "Impose une classe d’armure fixe au porteur lorsque l’objet est équipé."
+    }
+  ],
+  "coverage": {
+    "coverageMode": "canonical-item-bonus-mechanics",
+    "generatorIntegration": true,
+    "powerCount": 4
+  }
+}
