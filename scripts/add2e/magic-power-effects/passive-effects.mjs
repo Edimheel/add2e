@@ -94,6 +94,15 @@ export const existingForItem = (actor, itemId) => Array.from(actor?.effects ?? [
   .filter(effect => effect.flags?.add2e?.[EFFECT_FLAG] === true
     && String(effect.flags.add2e.sourceItemId ?? "") === String(itemId ?? ""));
 
+function sourceItemForEffect(effect) {
+  const actor = effect?.parent?.documentName === "Actor" ? effect.parent : null;
+  const itemId = String(effect?.flags?.add2e?.sourceItemId ?? "");
+  if (!actor || !itemId) return null;
+  return actor.items?.get?.(itemId)
+    ?? Array.from(actor.items ?? []).find(item => String(item?.id ?? "") === itemId)
+    ?? null;
+}
+
 export async function removeItemEffects(item, actorOverride = null) {
   const actor = actorOverride ?? actorForItem(item);
   if (!actor) return { deleted: 0 };
@@ -109,7 +118,7 @@ export async function syncItem(item) {
   const desired = new Map();
   if (itemUsable(item)) {
     cataloguePowers(item).forEach((power, index) => {
-      const compiled = compilePower(power);
+      const compiled = compilePower(power, { sourceItem: item });
       if (!compiled) return;
       const data = effectData(item, power, index, compiled);
       desired.set(data.flags.add2e.magicPowerKey, data);
@@ -166,7 +175,7 @@ export async function normalizeEffectDocument(effect) {
       .filter(modifier => !oldModifierSignatures.has(modifierSignature(modifier)));
     const baseTags = Array.from(effect.flags?.add2e?.tags ?? effect.flags?.add2e?.effectTags ?? [])
       .filter(tag => !oldTags.has(String(tag)));
-    const compiled = compiledFromRules(rulesOf(effect));
+    const compiled = compiledFromRules(rulesOf(effect), { sourceItem: sourceItemForEffect(effect) });
     const changes = uniqueChanges([...baseChanges, ...compiled.changes]);
     const modifiers = uniqueModifiers([...baseModifiers, ...compiled.modifiers]);
     const tags = uniqueTags([...baseTags, ...compiled.tags]);
