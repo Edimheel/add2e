@@ -1,6 +1,6 @@
 // ADD2E — Effects Engine / résolveur générique de modificateurs.
 // Compatible Foundry V13/V14/V15.
-// Version : 2026-08-03-canonical-armor-defense-v1
+// Version : 2026-08-03-canonical-armor-defense-v2
 
 import {
   ADD2E_MODIFIER_DOMAINS,
@@ -691,12 +691,6 @@ export function installModifierResolver(Engine) {
         const match = tag.match(/^(?:bonus_ca|bonus_ac|protection|protection_ca):([+\-]?\d+)$/);
         if (match) bonus += Math.abs(Number(match[1]) || 0);
       }
-      if (!bonus && this.looksMagical(item)) {
-        const text = this.itemText(item);
-        if (text.includes("anneau") || text.includes("bague") || text.includes("cape") || text.includes("protection")) {
-          bonus = this.bonusFromName(item);
-        }
-      }
       return bonus;
     },
 
@@ -710,19 +704,11 @@ export function installModifierResolver(Engine) {
         return Number.isFinite(ca) ? ca : null;
       }
 
-      const text = this.itemText(item);
       let ca = this.readNumber(
         system.ca_fixe, system.caFixe, system.fixedCA, system.fixed_ac, system.ac_fixe, system.acFixe
       );
       for (const tag of this.itemTags(item)) {
         const match = tag.match(/^(?:ca_fixe|ca_fixe_autres|ac_fixe|fixed_ca|classe_armure):([+\-]?\d+)$/);
-        if (match) ca = Number(match[1]);
-      }
-      if (!Number.isFinite(ca)
-        && (type === "objet" || type === "object" || type === "equipment")
-        && (text.includes("bracelet") || text.includes("bracer"))) {
-        const match = String(item?.name ?? system.nom ?? "").match(/(?:ca|classe\s+d[’']?armure|ac)\s*([\-]?\d+)/i)
-          || String(item?.name ?? system.nom ?? "").match(/\b([\-]?\d+)\b\s*$/);
         if (match) ca = Number(match[1]);
       }
       return Number.isFinite(ca) ? ca : null;
