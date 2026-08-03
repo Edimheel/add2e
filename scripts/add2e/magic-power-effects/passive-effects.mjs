@@ -164,7 +164,6 @@ async function normalizeItemArmorBonusSource(item) {
     "system.enchantement.bonusCA": 0,
     "flags.add2e.modifiers": retainedModifiers,
     "flags.add2e.magicItemBuilder.armorBonusSource": "power",
-    "flags.add2e.magicItemBuilder.armorBonusValue": powerBonus,
     "flags.add2e.magicItemBuilder.generatedModifiers": generatedModifiers
   }, { [INTERNAL_EFFECT_OPTION]: true, add2eInternal: true, render: false });
   return { changed: true, reason: "migrated-to-power", value: powerBonus };
