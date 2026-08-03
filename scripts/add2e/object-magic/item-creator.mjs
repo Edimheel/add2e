@@ -352,8 +352,7 @@ function add2eMagicBuilderResolveArmorBonusSource(result, powers = []) {
   return {
     ...result,
     bonusCA: 0,
-    armorBonusSource: "power",
-    armorBonusValue: powerBonus
+    armorBonusSource: "power"
   };
 }
 
@@ -491,7 +490,6 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
   itemData.flags.add2e.magicItemBuilder = {
     version: ADD2E_MAGIC_ITEM_BUILDER_VERSION,
     armorBonusSource: result.armorBonusSource ?? (result.bonusCA ? "field" : null),
-    armorBonusValue: result.armorBonusValue ?? Math.abs(Number(result.bonusCA) || 0),
     generatedTags: application === "porteur"
       ? [
           result.bonusToucher ? `bonus_attaque:${add2eMagicSigned(result.bonusToucher)}` : "",
