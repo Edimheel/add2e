@@ -256,6 +256,33 @@ function add2eMagicCreatorDirectoryRoot(app, html) {
   return element?.jquery ? element[0] : element;
 }
 
+function add2eLockMagicCreatorBonusFields(app, html) {
+  queueMicrotask(() => {
+    const root = add2eMagicCreatorDirectoryRoot(app, html);
+    const form = root?.querySelector?.(".add2e-magic-item-create-form");
+    if (!form) return;
+    const fields = ["bonusToucher", "bonusDegats", "bonusCA", "caFixe"];
+    for (const name of fields) {
+      const field = form.querySelector(`[name="${name}"]`);
+      if (!field) continue;
+      field.value = name === "caFixe" ? "" : "0";
+      field.disabled = true;
+      field.readOnly = true;
+      field.setAttribute("aria-readonly", "true");
+      field.title = "Cette valeur est définie uniquement par les pouvoirs canoniques sélectionnés.";
+    }
+    const group = form.querySelector("[data-add2e-application-group]");
+    if (group && !group.querySelector("[data-add2e-canonical-power-note]")) {
+      const note = document.createElement("p");
+      note.dataset.add2eCanonicalPowerNote = "true";
+      note.style.margin = "6px 0 0";
+      note.style.opacity = ".78";
+      note.textContent = "Les bonus sont définis uniquement par les pouvoirs canoniques sélectionnés ci-dessous.";
+      group.appendChild(note);
+    }
+  });
+}
+
 function add2eInstallCanonicalMagicCreatorButton(app, html) {
   const root = add2eMagicCreatorDirectoryRoot(app, html);
   if (!root?.querySelector) return false;
@@ -284,6 +311,7 @@ function add2eInstallCanonicalMagicCreatorButton(app, html) {
 function installCanonicalMagicCreatorButtonHooks() {
   if (add2eMagicCreatorButtonHooksInstalled) return;
   add2eMagicCreatorButtonHooksInstalled = true;
+  Hooks.on("renderApplicationV2", add2eLockMagicCreatorBonusFields);
   Hooks.on("renderItemDirectory", add2eInstallCanonicalMagicCreatorButton);
   Hooks.on("renderSidebarTab", (app, html) => {
     const id = String(app?.options?.id ?? app?.id ?? app?.constructor?.name ?? "").toLowerCase();
