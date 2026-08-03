@@ -1,5 +1,6 @@
 // ADD2E — Effects Engine / résolveur générique de modificateurs.
 // Compatible Foundry V13/V14/V15.
+// Version : 2026-08-03-canonical-armor-defense-v1
 
 import {
   ADD2E_MODIFIER_DOMAINS,
@@ -673,6 +674,15 @@ export function installModifierResolver(Engine) {
 
     itemDefenseBonus(item) {
       const system = item?.system ?? {};
+      const type = String(item?.type ?? "").toLowerCase();
+      if (type === "armure" || type === "armor") {
+        const enchantement = isObject(system.enchantement) ? system.enchantement : {};
+        const baseStats = isObject(enchantement.baseStats) ? enchantement.baseStats : {};
+        const baseBonus = this.readNumber(baseStats.bonusCA) ?? 0;
+        const magicBonus = this.readNumber(enchantement.bonusCA) ?? 0;
+        return Math.abs(Number(baseBonus) + Number(magicBonus));
+      }
+
       let bonus = Math.abs(this.readNumber(
         system.bonus_ca, system.bonus_ac, system.ca_bonus, system.ac_bonus,
         system.protectionBonus, system.protection_bonus
@@ -682,9 +692,8 @@ export function installModifierResolver(Engine) {
         if (match) bonus += Math.abs(Number(match[1]) || 0);
       }
       if (!bonus && this.looksMagical(item)) {
-        const type = String(item?.type ?? "").toLowerCase();
         const text = this.itemText(item);
-        if (type === "armure" || type === "armor" || text.includes("anneau") || text.includes("bague") || text.includes("cape") || text.includes("protection")) {
+        if (text.includes("anneau") || text.includes("bague") || text.includes("cape") || text.includes("protection")) {
           bonus = this.bonusFromName(item);
         }
       }
@@ -694,6 +703,13 @@ export function installModifierResolver(Engine) {
     itemFixedCA(item) {
       const system = item?.system ?? {};
       const type = String(item?.type ?? "").toLowerCase();
+      if (type === "armure" || type === "armor") {
+        const enchantement = isObject(system.enchantement) ? system.enchantement : {};
+        const baseStats = isObject(enchantement.baseStats) ? enchantement.baseStats : {};
+        const ca = this.readNumber(enchantement.caFixe, baseStats.caFixe);
+        return Number.isFinite(ca) ? ca : null;
+      }
+
       const text = this.itemText(item);
       let ca = this.readNumber(
         system.ca_fixe, system.caFixe, system.fixedCA, system.fixed_ac, system.ac_fixe, system.acFixe
