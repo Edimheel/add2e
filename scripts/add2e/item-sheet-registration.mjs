@@ -1,15 +1,15 @@
 // scripts/add2e/item-sheet-registration.mjs
 // ADD2E — Enregistrement strict des fiches d'items spécialisées.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
-// Version : 2026-08-03-canonical-power-source-v1
+// Version : 2026-08-03-canonical-power-source-v2
 
 import { Add2eItemSheet } from "../add2e-item-sheet.mjs";
 globalThis.Add2eItemSheet = Add2eItemSheet;
 
 const POWER_FIELDS = ["pouvoirs", "powers", "pouvoirsMagiques", "magicalPowers"];
 const MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
-const EDITOR_VERSION = "2026-08-03-canonical-power-source-v1";
-const NORMALIZER_VERSION = "2026-08-03-canonical-power-source-v1";
+const EDITOR_VERSION = "2026-08-03-canonical-power-source-v2";
+const NORMALIZER_VERSION = "2026-08-03-canonical-power-source-v2";
 const BUILDER_MODIFIER_IDS = new Set([
   "magic-item-builder:attack:bonus",
   "magic-item-builder:damage:bonus",
@@ -17,34 +17,10 @@ const BUILDER_MODIFIER_IDS = new Set([
   "magic-item-builder:armor-class:fixed"
 ]);
 const BONUS_DEFINITIONS = Object.freeze({
-  attack: Object.freeze({
-    marker: "attack",
-    label: "Bonus au toucher",
-    name: "Bonus magique au toucher",
-    category: "combat",
-    effectType: "attack_bonus"
-  }),
-  damage: Object.freeze({
-    marker: "damage",
-    label: "Bonus aux dégâts",
-    name: "Bonus magique aux dégâts",
-    category: "combat",
-    effectType: "damage_bonus"
-  }),
-  armor: Object.freeze({
-    marker: "armor-class",
-    label: "Bonus de CA",
-    name: "Bonus magique d’armure ou de bouclier",
-    category: "defense",
-    effectType: "armor_class_bonus"
-  }),
-  fixedArmor: Object.freeze({
-    marker: "armor-class-fixed",
-    label: "CA fixe",
-    name: "Classe d’armure magique fixe",
-    category: "defense",
-    effectType: "fixed_armor_class"
-  })
+  attack: Object.freeze({ marker: "attack", label: "Bonus au toucher", name: "Bonus magique au toucher", category: "combat", effectType: "attack_bonus" }),
+  damage: Object.freeze({ marker: "damage", label: "Bonus aux dégâts", name: "Bonus magique aux dégâts", category: "combat", effectType: "damage_bonus" }),
+  armor: Object.freeze({ marker: "armor-class", label: "Bonus de CA", name: "Bonus magique d’armure ou de bouclier", category: "defense", effectType: "armor_class_bonus" }),
+  fixedArmor: Object.freeze({ marker: "armor-class-fixed", label: "CA fixe", name: "Classe d’armure magique fixe", category: "defense", effectType: "fixed_armor_class" })
 });
 const ATTACK_TYPES = new Set(["attack_bonus", "hit_bonus", "combat_bonus", "attack_damage_bonus", "weapon_magic_bonus"]);
 const DAMAGE_TYPES = new Set(["damage_bonus", "combat_bonus", "attack_damage_bonus", "weapon_magic_bonus"]);
@@ -151,6 +127,7 @@ function effectArray(power) {
   return [];
 }
 function firstOptional(...values) { for (const value of values) { const candidate = optionalNumber(value); if (candidate !== null) return candidate; } return null; }
+function firstNonZero(...values) { for (const value of values) { const candidate = optionalNumber(value); if (candidate !== null && candidate !== 0) return candidate; } return null; }
 
 function effectBonusValues(effect = {}) {
   const type = norm(effect.type ?? effect.kind ?? effect.category);
@@ -362,9 +339,9 @@ function legacyMagicBonusValues(source, enchantment) {
   const currentDamage = firstOptional(system.bonus_dom, system.bonus_degats, system.damage_bonus, system.degats_bonus);
   const currentArmor = firstOptional(system.bonus_ac, system.bonus_ca, system.ac_bonus, system.ca_bonus);
   const currentFixed = firstOptional(system.ca_fixe, system.caFixe, system.fixedCA, system.fixed_ac, system.ac_fixe, system.acFixe);
-  const attack = firstOptional(enchantment.bonusToucher, builderModifierValue(source, "attack"), type === "arme" && currentHit !== null ? currentHit - number(base.bonusToucher, 0) : currentHit);
-  const damage = firstOptional(enchantment.bonusDegats, builderModifierValue(source, "damage"), type === "arme" && currentDamage !== null ? currentDamage - number(base.bonusDegats, 0) : currentDamage);
-  const armor = firstOptional(enchantment.bonusCA, builderModifierValue(source, "armor"), currentArmor !== null ? currentArmor - number(base.bonusCA, 0) : null);
+  const attack = firstNonZero(enchantment.bonusToucher, builderModifierValue(source, "attack"), type === "arme" && currentHit !== null ? currentHit - number(base.bonusToucher, 0) : currentHit);
+  const damage = firstNonZero(enchantment.bonusDegats, builderModifierValue(source, "damage"), type === "arme" && currentDamage !== null ? currentDamage - number(base.bonusDegats, 0) : currentDamage);
+  const armor = firstNonZero(enchantment.bonusCA, builderModifierValue(source, "armor"), currentArmor !== null ? currentArmor - number(base.bonusCA, 0) : null);
   const fixedModifier = builderModifierValue(source, "fixedArmor");
   const fixedArmor = firstOptional(enchantment.caFixe, fixedModifier, currentFixed !== null && currentFixed !== optionalNumber(base.caFixe) ? currentFixed : null);
   return {
@@ -500,6 +477,31 @@ async function migrateCanonicalPowerSources() {
     catch (error) { console.error("[ADD2E][MAGIC_ITEM][POWER_SOURCE_MIGRATION]", { item: item?.name, itemId: item?.id, error }); }
   }
 }
+function renderPowerBackedFields(app, html) {
+  const item = app?.document ?? app?.item ?? app?.object ?? null;
+  if (item?.documentName !== "Item" || !MAGIC_ITEM_TYPES.has(String(item.type ?? "").toLowerCase())) return;
+  queueMicrotask(() => {
+    const root = html instanceof HTMLElement ? html : html?.[0] instanceof HTMLElement ? html[0] : app?.element?.jquery ? app.element[0] : app?.element;
+    if (!root?.querySelectorAll) return;
+    const fields = {
+      bonusToucher: "attack",
+      bonusDegats: "damage",
+      bonusCA: "armor",
+      caFixe: "fixedArmor"
+    };
+    for (const [fieldName, key] of Object.entries(fields)) {
+      for (const field of root.querySelectorAll(`[name="system.enchantement.${fieldName}"]`)) {
+        const value = powerFieldValue(item, key);
+        field.value = value === null || value === undefined ? "" : String(value);
+        field.setAttribute("value", field.value);
+        field.disabled = true;
+        field.readOnly = true;
+        field.setAttribute("aria-readonly", "true");
+        field.title = "Valeur fournie par le pouvoir canonique. Modifiez le pouvoir pour changer ce bonus.";
+      }
+    }
+  });
+}
 
 export function add2eRegisterClassItemSheet() {
   const options = { types: ["classe"], makeDefault: true, canConfigure: true, canBeDefault: true, label: "ADD2E | Fiche Classe" }, ItemsCollection = add2eItemsCollection();
@@ -533,5 +535,7 @@ Hooks.on("preCreateActor", (actor, data = {}) => {
 });
 Hooks.on("preCreateItem", item => normalizeMagicItemCreate(item));
 Hooks.on("preUpdateItem", (item, change, options = {}) => normalizeMagicItemUpdate(item, change, options));
+Hooks.on("renderApplicationV2", renderPowerBackedFields);
+Hooks.on("renderItemSheet", renderPowerBackedFields);
 Hooks.once("init", () => { registerHelper(); console.log("ADD2e | Initialisation du système..."); add2eRegisterClassItemSheet(); });
 Hooks.once("ready", () => { migrateCanonicalPowerSources().catch(error => console.error("[ADD2E][MAGIC_ITEM][POWER_SOURCE_MIGRATION_READY]", error)); });
