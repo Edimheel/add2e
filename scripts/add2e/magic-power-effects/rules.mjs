@@ -58,6 +58,10 @@ const MOVEMENT_WEIGHT_STEP_TYPES = new Set([
   "movement_weight_step_penalty", "weight_step_movement_penalty"
 ]);
 
+const ARMOR_BONUS_TYPES = new Set([
+  "armor_class_bonus", "armor_bonus", "ac_bonus", "defense_bonus", "protection_bonus"
+]);
+
 const MOVEMENT_TARGET_ALIASES = Object.freeze({
   ground: "ground", sol: "ground", terrestre: "ground", marche: "ground", walking: "ground",
   flight: "flight", fly: "flight", vol: "flight", aerien: "flight", aerienne: "flight",
@@ -335,7 +339,15 @@ function defenseCompilation(effect, type, tags) {
   }
 }
 
-function combatCompilation(effect, type, tags, rules) {
+function armorClassTarget(effect, context = {}) {
+  const requested = norm(effect.armorClassTarget ?? effect.armor_class_target ?? effect.target);
+  if (["naturel", "natural"].includes(requested)) return "naturel";
+  if (["total", "all", "tout"].includes(requested)) return "total";
+  const sourceType = norm(context.sourceItem?.type ?? context.sourceItem?.system?.type);
+  return ["armure", "armor"].includes(sourceType) ? "naturel" : "total";
+}
+
+function combatCompilation(effect, type, tags, rules, modifiers, context = {}) {
   if (["attack_bonus", "hit_bonus", "damage_bonus", "combat_bonus", "attack_damage_bonus", "weapon_magic_bonus"].includes(type)) {
     const attack = number(effect.attackBonus, effect.hitBonus, effect.bonusToucher, effect.toucher,
       type !== "damage_bonus" ? effect.bonus ?? effect.value : null);
@@ -344,9 +356,41 @@ function combatCompilation(effect, type, tags, rules) {
     if (attack) tags.add(`bonus_attaque:${signed(attack)}`);
     if (damage) tags.add(`bonus_degats:${signed(damage)}`);
   }
-  if (["armor_class_bonus", "armor_bonus", "ac_bonus", "defense_bonus", "protection_bonus"].includes(type)) {
-    const value = number(effect.bonus, effect.value, effect.amount, effect.armorClassBonus, effect.acBonus);
-    if (value) tags.add(`bonus_ca:${signed(value)}`);
+  if (ARMOR_BONUS_TYPES.has(type)) {
+    const rawValue = number(effect.bonus, effect.value, effect.amount, effect.armorClassBonus, effect.acBonus);
+    if (Number.isFinite(rawValue) && rawValue !== 0) {
+      const bonus = Math.abs(rawValue);
+      const target = armorClassTarget(effect, context);
+      const priority = Math.max(1, Math.floor(number(effect.priority) ?? (100 + bonus)));
+      const stacking = {
+        mode: "unique-source",
+        group: `armor-class:${target}:source-bonus`
+      };
+      rules.push({
+        source: "magic-item-catalogue",
+        kind: "armor_class_bonus",
+        type,
+        value: bonus,
+        armorClassTarget: target,
+        priority,
+        stacking
+      });
+      modifiers.push({
+        domain: "armor-class",
+        target,
+        operation: "add",
+        value: -bonus,
+        priority,
+        stacking,
+        conditions: {},
+        metadata: {
+          label: effect.label ?? effect.name ?? "Bonus de classe d’armure",
+          producer: "magic-item-catalogue",
+          effectType: type,
+          armorClassTarget: target
+        }
+      });
+    }
   }
   if (["conditional_attack_bonus", "conditional_damage_bonus"].includes(type)) {
     const value = number(effect.value, effect.bonus, effect.amount);
@@ -374,7 +418,7 @@ function combatCompilation(effect, type, tags, rules) {
   }
 }
 
-export function compileDefinition(effect = {}) {
+export function compileDefinition(effect = {}, context = {}) {
   const type = ruleType(effect);
   const tags = new Set(list(effect.tags ?? effect.effectTags).map(String).filter(Boolean));
   const rules = [];
@@ -387,7 +431,7 @@ export function compileDefinition(effect = {}) {
   socialCompilation(effect, type, tags, rules, modifiers);
   fixedArmorClassCompilation(effect, type, tags, rules);
   defenseCompilation(effect, type, tags);
-  combatCompilation(effect, type, tags, rules);
+  combatCompilation(effect, type, tags, rules, modifiers, context);
 
   if (type === "regeneration") {
     const points = Math.max(0, Math.floor(number(effect.points, effect.value, effect.amount) ?? 0));
@@ -411,7 +455,9 @@ export function compileDefinition(effect = {}) {
 
   if (Array.isArray(effect.rules)) rules.push(...clone(effect.rules));
   else if (effect.rule && typeof effect.rule === "object") rules.push(clone(effect.rule));
-  if (type && type !== "charges" && !MOVEMENT_TYPES.has(type) && !["reaction_bonus", "reaction_modifier", "reaction_minimum"].includes(type)) {
+  if (type && type !== "charges" && !MOVEMENT_TYPES.has(type)
+    && !ARMOR_BONUS_TYPES.has(type)
+    && !["reaction_bonus", "reaction_modifier", "reaction_minimum"].includes(type)) {
     rules.push({ source: "magic-item-catalogue", type, ...clone(effect) });
   }
   return {
@@ -424,7 +470,7 @@ export function compileDefinition(effect = {}) {
   };
 }
 
-export function compilePower(power, { requirePassive = true } = {}) {
+export function compilePower(power, { requirePassive = true, sourceItem = null } = {}) {
   if (requirePassive && !passivePower(power)) return null;
   const tags = new Set();
   const rules = [];
@@ -433,7 +479,7 @@ export function compilePower(power, { requirePassive = true } = {}) {
   const modifiers = [];
   const handledTypes = [];
   for (const effect of Array.isArray(power?.effects) ? power.effects : []) {
-    const compiled = compileDefinition(effect);
+    const compiled = compileDefinition(effect, { sourceItem });
     if (compiled.type) handledTypes.push(compiled.type);
     compiled.tags.forEach(tag => tags.add(tag));
     rules.push(...compiled.rules);
@@ -453,13 +499,13 @@ export function compilePower(power, { requirePassive = true } = {}) {
     : null;
 }
 
-export function compiledFromRules(rules = []) {
+export function compiledFromRules(rules = [], { sourceItem = null } = {}) {
   const tags = [];
   const changes = [];
   const modifiers = [];
   const normalizedRules = [];
   for (const rule of rules) {
-    const compiled = compileDefinition(rule);
+    const compiled = compileDefinition(rule, { sourceItem });
     tags.push(...compiled.tags);
     changes.push(...compiled.changes);
     modifiers.push(...compiled.modifiers);
