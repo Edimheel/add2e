@@ -2,16 +2,13 @@
 
 import {
   VERSION, EFFECT_FLAG, INTERNAL_EFFECT_OPTION, INTERNAL_NORMALIZE_OPTION,
-  cataloguePowers, clone, currentTick, equal, itemUsable, norm, number, powerArray
+  cataloguePowers, clone, currentTick, equal, itemUsable, powerArray
 } from "./runtime.mjs";
 import {
   compilePower, compiledFromRules, rulesOf, uniqueChanges, uniqueModifiers, uniqueTags
 } from "./rules.mjs";
 
 const NORMALIZE_LOCK = new Set();
-const ARMOR_BONUS_TYPES = new Set([
-  "armor_class_bonus", "armor_bonus", "ac_bonus", "defense_bonus", "protection_bonus"
-]);
 const changeSignature = change => `${String(change?.key ?? "")}|${Number(change?.mode ?? 0)}|${String(change?.value ?? "")}|${Number(change?.priority ?? 0)}`;
 const modifierSignature = modifier => JSON.stringify([
   modifier?.domain, modifier?.target, modifier?.operation, modifier?.value,
@@ -106,146 +103,6 @@ function sourceItemForEffect(effect) {
     ?? null;
 }
 
-function armorBonusPowerType(effect) {
-  return ARMOR_BONUS_TYPES.has(norm(effect?.type ?? effect?.kind ?? effect?.category));
-}
-
-function templateParameterKeys(value, keys = new Set()) {
-  if (Array.isArray(value)) {
-    value.forEach(entry => templateParameterKeys(entry, keys));
-    return keys;
-  }
-  if (value && typeof value === "object") {
-    Object.values(value).forEach(entry => templateParameterKeys(entry, keys));
-    return keys;
-  }
-  if (typeof value !== "string") return keys;
-  for (const match of value.matchAll(/@([A-Za-z0-9_]+)/g)) keys.add(match[1]);
-  return keys;
-}
-
-function canonicalizeArmorBonusPowers(powers = []) {
-  const normalized = clone(powers ?? []);
-  const bonuses = [];
-  let changed = false;
-  for (const power of normalized) {
-    const effects = Array.isArray(power?.effects) ? power.effects : [];
-    const templates = Array.isArray(power?.effectTemplates) ? power.effectTemplates : [];
-    const armorEffects = effects.filter(armorBonusPowerType);
-    const armorTemplates = templates.filter(armorBonusPowerType);
-    for (const effect of armorEffects) {
-      const value = number(effect?.bonus, effect?.value, effect?.amount, effect?.armorClassBonus, effect?.acBonus);
-      if (Number.isFinite(value) && value !== 0) bonuses.push(Math.abs(value));
-    }
-    if (!armorEffects.length && !armorTemplates.length) continue;
-    changed = true;
-    power.effects = effects.filter(effect => !armorBonusPowerType(effect));
-    power.effectTemplates = templates.filter(effect => !armorBonusPowerType(effect));
-    const parameterKeys = templateParameterKeys(armorTemplates);
-    if (power.parameters && typeof power.parameters === "object" && !Array.isArray(power.parameters)) {
-      for (const key of parameterKeys) delete power.parameters[key];
-    }
-    const canonicalized = Array.isArray(power.canonicalizedEffects) ? power.canonicalizedEffects.map(String) : [];
-    power.canonicalizedEffects = [...new Set([...canonicalized, "armor-class"])];
-  }
-  return { powers: normalized, bonuses, changed };
-}
-
-function canonicalArmorBonusModifier(item, value, existing = null) {
-  const type = norm(item?.type ?? item?.system?.type);
-  const target = ["armure", "armor"].includes(type) ? "naturel" : "total";
-  const sourceKind = target === "naturel" ? "armor" : "equipment";
-  return {
-    ...(existing ? clone(existing) : {}),
-    id: "magic-item-builder:armor-class:bonus",
-    domain: "armor-class",
-    target,
-    operation: "add",
-    value: -Math.abs(value),
-    priority: 100,
-    stacking: { mode: "stack", group: null },
-    conditions: { equipped: true },
-    source: {
-      ...(existing?.source ?? {}),
-      kind: sourceKind,
-      id: String(item?.id ?? ""),
-      uuid: String(item?.uuid ?? ""),
-      name: String(item?.name ?? "Objet magique")
-    },
-    metadata: {
-      ...(existing?.metadata ?? {}),
-      label: `${item?.name ?? "Objet magique"} — bonus de CA`,
-      producer: "magic-item-builder",
-      profile: String(item?.flags?.add2e?.magicItemProfile ?? item?.type ?? "objet")
-    }
-  };
-}
-
-async function normalizeItemArmorBonusSource(item) {
-  const rawPowers = Array.isArray(item?.system?.pouvoirs) ? item.system.pouvoirs : [];
-  const canonical = canonicalizeArmorBonusPowers(rawPowers);
-  if (!canonical.bonuses.length) return { changed: false, reason: "no-power-bonus" };
-  if (canonical.bonuses.length !== 1) {
-    console.error("[ADD2E][MAGIC_POWER_EFFECTS][ARMOR_BONUS_DUPLICATE_POWERS]", {
-      item: item?.name,
-      itemId: item?.id,
-      powerBonuses: canonical.bonuses
-    });
-    return { changed: false, reason: "multiple-power-bonuses" };
-  }
-
-  const powerBonus = canonical.bonuses[0];
-  const enchantmentBonus = Math.abs(number(item?.system?.enchantement?.bonusCA) ?? 0);
-  if (enchantmentBonus && enchantmentBonus !== powerBonus) {
-    console.error("[ADD2E][MAGIC_POWER_EFFECTS][ARMOR_BONUS_CONFLICT]", {
-      item: item?.name,
-      itemId: item?.id,
-      fieldBonus: enchantmentBonus,
-      powerBonus
-    });
-    return { changed: false, reason: "conflicting-values" };
-  }
-
-  const modifiers = Array.from(item?.flags?.add2e?.modifiers ?? []);
-  const builderBonuses = modifiers.filter(modifier => modifier?.domain === "armor-class"
-    && modifier?.operation === "add"
-    && modifier?.metadata?.producer === "magic-item-builder");
-  if (builderBonuses.length > 1) {
-    console.error("[ADD2E][MAGIC_POWER_EFFECTS][ARMOR_BONUS_DUPLICATE_MODIFIERS]", {
-      item: item?.name,
-      itemId: item?.id,
-      builderBonuses
-    });
-    return { changed: false, reason: "multiple-item-modifiers" };
-  }
-  const existing = builderBonuses[0] ?? null;
-  const existingBonus = existing ? Math.abs(Number(existing.value) || 0) : 0;
-  if (existingBonus && existingBonus !== powerBonus) {
-    console.error("[ADD2E][MAGIC_POWER_EFFECTS][ARMOR_BONUS_CONFLICT]", {
-      item: item?.name,
-      itemId: item?.id,
-      modifierBonus: existingBonus,
-      powerBonus
-    });
-    return { changed: false, reason: "conflicting-values" };
-  }
-
-  const modifier = canonicalArmorBonusModifier(item, powerBonus, existing);
-  const retainedModifiers = modifiers.filter(entry => !builderBonuses.includes(entry));
-  const generatedModifiers = Array.from(item?.flags?.add2e?.magicItemBuilder?.generatedModifiers ?? [])
-    .map(String)
-    .filter(id => id && id !== modifier.id);
-  generatedModifiers.push(modifier.id);
-  await item.update({
-    "system.enchantement.bonusCA": 0,
-    "system.pouvoirs": canonical.powers,
-    "flags.add2e.modifiers": [...retainedModifiers, modifier],
-    "flags.add2e.magicItemBuilder.generatedModifiers": [...new Set(generatedModifiers)],
-    "flags.add2e.magicItemBuilder.-=armorBonusSource": null
-  }, { [INTERNAL_EFFECT_OPTION]: true, add2eInternal: true, render: false });
-  return { changed: true, reason: "migrated-to-item-modifier", value: powerBonus };
-}
-
 export async function removeItemEffects(item, actorOverride = null) {
   const actor = actorOverride ?? actorForItem(item);
   if (!actor) return { deleted: 0 };
@@ -257,7 +114,6 @@ export async function removeItemEffects(item, actorOverride = null) {
 export async function syncItem(item) {
   const actor = actorForItem(item);
   if (!actor || !item?.id) return { ok: false, reason: "item-not-embedded" };
-  await normalizeItemArmorBonusSource(item);
   const existing = existingForItem(actor, item.id);
   const desired = new Map();
   if (itemUsable(item)) {
