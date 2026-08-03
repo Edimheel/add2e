@@ -51,6 +51,11 @@ export * from "./object-magic/profiles.mjs";
 export * from "./object-magic/catalogue-editor.mjs";
 export * from "./object-magic/item-creator.mjs";
 
+const ADD2E_MAGIC_ARMOR_MODIFIER_ID = "magic-item-builder:armor-class:bonus";
+const add2eMagicOriginalSheetPowers = typeof globalThis.add2eMagicBuilderSheetPowers === "function"
+  ? globalThis.add2eMagicBuilderSheetPowers
+  : null;
+
 function add2eMagicBoolean(value) {
   if (value === true || value === 1) return true;
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -235,6 +240,70 @@ export function add2eMagicObjectConfiguredPowerEntries(item) {
     .filter(entry => add2eObjectPowerOnUsePath(entry.power));
 }
 
+function add2eMagicCanonicalEffectKey(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, "-");
+}
+
+function add2eMagicPowerRepresentsCanonicalArmor(power) {
+  const raw = power?.canonicalizedEffects;
+  const values = Array.isArray(raw) ? raw : raw ? [raw] : [];
+  return values.some(value => add2eMagicCanonicalEffectKey(value) === "armor-class");
+}
+
+function add2eMagicCanonicalArmorModifier(item) {
+  const flags = item?.flags ?? item?._source?.flags ?? {};
+  const modifiers = Array.isArray(flags?.add2e?.modifiers) ? flags.add2e.modifiers : [];
+  return modifiers.find(modifier => modifier?.id === ADD2E_MAGIC_ARMOR_MODIFIER_ID)
+    ?? modifiers.find(modifier => modifier?.domain === "armor-class"
+      && modifier?.operation === "add"
+      && modifier?.metadata?.producer === "magic-item-builder")
+    ?? null;
+}
+
+function add2eMagicCanonicalArmorSheetPowers(item) {
+  const sourceRows = typeof add2eMagicOriginalSheetPowers === "function"
+    ? add2eMagicOriginalSheetPowers(item)
+    : [];
+  const rows = Array.isArray(sourceRows) ? sourceRows.map(row => add2eMagicClone(row)) : [];
+  const modifier = add2eMagicCanonicalArmorModifier(item);
+  if (!modifier) return rows;
+
+  const value = Math.abs(Number(modifier.value) || 0);
+  if (!value) return rows;
+  const storedIndex = rows.findIndex(add2eMagicPowerRepresentsCanonicalArmor);
+  const stored = storedIndex >= 0 ? rows[storedIndex] : null;
+  const virtual = {
+    ...(stored ?? {}),
+    img: stored?.img || item?.img || "icons/svg/shield.svg",
+    _add2eIndex: stored?._add2eIndex ?? -1,
+    _add2eName: stored?._add2eName || "Bonus magique d’armure ou de bouclier",
+    _add2eCost: stored?._add2eCost ?? 0,
+    _add2eKindLabel: "Catalogue canonique",
+    _add2eCategoryLabel: "Défense",
+    _add2eAutomationLabel: "Automatique",
+    _add2eActivationLabel: "Équipée",
+    _add2eSourceLabel: String(modifier?.source?.name ?? item?.name ?? "Item"),
+    _add2eHasParameters: false,
+    _add2eHasEffects: false,
+    _add2eVirtualArmorClass: true,
+    _add2eHasStoredPower: storedIndex >= 0,
+    _add2eCanonicalArmorBonus: value
+  };
+  if (storedIndex >= 0) rows[storedIndex] = virtual;
+  else rows.push(virtual);
+  return rows;
+}
+
+function installCanonicalArmorSheetPowerHelper() {
+  if (typeof Handlebars === "undefined") return false;
+  Handlebars.registerHelper("add2eMagicSheetPowers", item => add2eMagicCanonicalArmorSheetPowers(item));
+  globalThis.add2eMagicBuilderSheetPowers = add2eMagicCanonicalArmorSheetPowers;
+  return true;
+}
+
 async function add2eExecuteObjectMagicPowerGuarded(actor, itemSource, power, index, sheet = null) {
   if (!add2eMagicItemPowerUsable(itemSource)) {
     ui.notifications?.warn?.(`${itemSource?.name ?? "L’objet magique"} doit être équipé pour utiliser ce pouvoir.`);
@@ -313,6 +382,7 @@ Object.assign(globalThis, {
   add2eMagicPowerGeneratedId,
   add2eMagicObjectPowerDisplayName,
   add2eMagicObjectPowerActivation,
+  add2eMagicBuilderSheetPowers: add2eMagicCanonicalArmorSheetPowers,
   add2eUiCollectObjectMagicGroups,
   add2eUiCollectObjectMagicPowers,
   add2eUiBuildObjectMagicSection,
@@ -327,6 +397,8 @@ Object.assign(globalThis, {
   add2eCreateMagicItem: add2eMagicBuilderCreateMagicItem
 });
 
+installCanonicalArmorSheetPowerHelper();
+Hooks.once("init", installCanonicalArmorSheetPowerHelper);
 installCanonicalMagicCreatorButtonHooks();
 installMagicEnchantmentBuilderHooks();
 installMagicItemCreatorHooks();
