@@ -1,5 +1,10 @@
 // scripts/add2e-attack/03-attack-rules.mjs
 // ADD2E — Règles et helpers de résolution d’attaque.
+// Version : 2026-08-03-canonical-position-shield-v1
+
+import {
+  add2eAttackComputeCharacterDisplayedCA
+} from "./04d-attack-roll-defense.mjs";
 
 export function add2eNormalizeAttackTag(value) {
   let tag = String(value ?? "")
@@ -125,7 +130,6 @@ export function add2eTagSetMatches(tags, matcher) {
 
   return false;
 }
-
 
 export function add2eNormalizeAngleDeg(angle) {
   const n = Number(angle);
@@ -288,7 +292,6 @@ export function add2eGetBackArcInfo(attackerToken, targetToken) {
   };
 }
 
-
 export function add2eBuildManualPositionInfo(zone, autoInfo = {}) {
   const normalized = String(zone || "front").trim().toLowerCase();
 
@@ -366,32 +369,23 @@ export function add2eResolveSelectedPositionInfo(selectedZone, autoInfo) {
   return add2eBuildManualPositionInfo(z, autoInfo);
 }
 
-export function add2eGetEquippedShieldForAttack(actor) {
-  return actor?.items?.find?.(i => {
-    const name = String(i?.name ?? "").toLowerCase();
-    const sys = i?.system ?? {};
-    return i?.type === "armure" && sys.equipee && (
-      name.includes("bouclier") ||
-      String(sys.categorie ?? sys.category ?? "").toLowerCase().includes("bouclier") ||
-      String(sys.properties ?? sys.proprietes ?? "").toLowerCase().includes("bouclier")
-    );
-  }) ?? null;
-}
-
 export function add2eGetShieldIgnoredCAAdjustment(actor) {
-  const shield = add2eGetEquippedShieldForAttack(actor);
-  if (!shield) return { value: 0, label: "", item: null };
-
-  const ac = Number(shield.system?.ac) || 0;
-  const bonusAc = Number(shield.system?.bonus_ac) || 0;
-
-  // Dans la fiche, le bouclier fait : CA -= ac ; CA += bonus_ac.
-  // Pour l'ignorer, on retire ce bénéfice en sens inverse.
-  const value = Math.max(0, ac - bonusAc);
+  const defense = add2eAttackComputeCharacterDisplayedCA(actor, {
+    source: "attack-position-shield",
+    consumer: "attack-rules",
+    ignoreShield: false,
+    ignoresShield: false
+  });
+  const resolution = defense?.resolution ?? {};
+  const value = Math.max(0, Number(resolution.shieldBonus) || 0);
+  const labels = (resolution.shieldSources ?? [])
+    .map(source => String(source ?? "").replace(/:[+\-]?\d+(?:\.\d+)?$/, ""))
+    .filter(Boolean);
   return {
     value,
-    label: shield.name,
-    item: shield
+    label: labels.join(", "),
+    item: null,
+    resolution
   };
 }
 
@@ -642,7 +636,6 @@ export async function add2eConsumeOneUseWeaponAfterAttack(actor, arme) {
     console.warn("[ADD2E][ATTAQUE][ARME USAGE UNIQUE][ERREUR SUPPRESSION]", err);
   }
 }
-
 
 export function add2eNormalizeAttackSkillKey(value) {
   return add2eNormalizeAttackTag(value)
