@@ -1,11 +1,11 @@
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags harmonisés
-// Version : 2026-08-03-canonical-armor-classification-v7
+// Version : 2026-08-03-canonical-armor-restrictions-v8
 // Source principale : Items "classe" embarqués sur l'acteur.
 // Schéma canonique des tags d'équipement :
 // - arme / armure / bouclier
 // - type_arme:<type> / type_armure:<type> / type_bouclier:<type>
-// - slug:<nom_normalise>
+// - slug:<nom_normalise> pour les armes uniquement
 // Règle multiclassée AD&D 2e :
 // - équipement : autorisé si au moins une classe l'autorise ;
 // - activités de voleur : test indépendant sur l'armure de corps équipée
@@ -126,7 +126,7 @@ function add2eClassSystemFromItem(classItem, actor = null) {
   const itemSystem = add2eDeepClone(classItem?.system ?? {}) || {};
   const details = actor && !add2eActorIsMulticlass(actor) ? add2eDeepClone(actor?.system?.details_classe ?? {}) || {} : {};
   const merged = foundry?.utils?.mergeObject ? foundry.utils.mergeObject(details, itemSystem, { inplace: false, recursive: true }) : { ...details, ...itemSystem };
-  const ruleFields = ["weaponRestriction", "armorRestriction", "armorAllowed", "armures_autorisees", "weaponsAllowed", "armes_autorisees", "shieldAllowed", "tags"];
+  const ruleFields = ["weaponRestriction", "armorRestriction", "weaponsAllowed", "armes_autorisees", "tags"];
   for (const field of ruleFields) if (add2eHasUsefulValue(itemSystem[field])) merged[field] = add2eDeepClone(itemSystem[field]);
   merged.__classItemId = classItem?.id ?? null;
   merged.__classItemName = classItem?.name ?? null;
@@ -149,13 +149,13 @@ function add2eGetItemEquipTags(item) {
   const tags = new Set();
   const sys = item?.system ?? {};
   const documentType = String(item?.type ?? "").toLowerCase();
-  const nameNorm = add2eNormalizeEquipTag(item?.name ?? "");
 
   add2ePushEquipTags(tags, sys.tags);
   add2ePushEquipTags(tags, item?.flags?.add2e?.tags);
 
   if (documentType === "arme" || documentType === "weapon") {
     tags.add("arme");
+    const nameNorm = add2eNormalizeEquipTag(item?.name ?? "");
     if (nameNorm) tags.add(`slug:${nameNorm}`);
     const weaponType = add2eNormalizeEquipTag(sys.type_arme);
     const weaponFamily = add2eNormalizeEquipTag(sys.famille_arme);
@@ -168,7 +168,6 @@ function add2eGetItemEquipTags(item) {
     else if (add2eIsHelmet(item)) tags.add("casque");
     else tags.add("armure");
 
-    if (nameNorm) tags.add(`slug:${nameNorm}`);
     const armorType = add2eNormalizeEquipTag(sys.type_armure);
     const shieldType = add2eNormalizeEquipTag(sys.type_bouclier);
     const category = add2eNormalizeEquipTag(sys.categorie);
@@ -213,30 +212,25 @@ function add2eCheckItemTagRestriction(item, restriction = {}) {
   return { ok: false, reason: "no-match", matchedForbidden: null, matchedAllowed: null, matchedOverride: null, itemTags, allowedTags, forbiddenTags, overrideForbiddenTags };
 }
 
-function add2eItemNameNorm(item) {
-  return add2eNormalizeEquipTag(item?.name ?? "");
-}
-
-function add2eLegacyAllowsItemByNameOrTag(item, allowedRaw, kind) {
+function add2eLegacyAllowsWeaponByNameOrTag(item, allowedRaw) {
   const allowed = add2eToEquipArray(allowedRaw).map(add2eNormalizeEquipTag).filter(Boolean);
   const itemTags = new Set(add2eGetItemEquipTags(item));
-  const itemName = add2eItemNameNorm(item);
+  const itemName = add2eNormalizeEquipTag(item?.name ?? "");
 
-  if (!allowed.length) return { ok: false, reason: "legacy-empty-allow" };
-  if (allowed.includes("toutes") || allowed.includes("toute") || allowed.includes("all")) return { ok: true, reason: "legacy-all" };
-  if (allowed.includes("aucune") || allowed.includes("aucun") || allowed.includes("none")) return { ok: false, reason: "legacy-none" };
+  if (!allowed.length) return { ok: false, reason: "legacy-empty-weapon-allow" };
+  if (allowed.includes("toutes") || allowed.includes("toute") || allowed.includes("all")) return { ok: true, reason: "legacy-all-weapons" };
+  if (allowed.includes("aucune") || allowed.includes("aucun") || allowed.includes("none")) return { ok: false, reason: "legacy-no-weapons" };
 
-  const matched = allowed.find(a =>
-    itemTags.has(a) ||
-    itemTags.has(`${kind}:${a}`) ||
-    itemTags.has(`type_${kind}:${a}`) ||
-    itemTags.has(`type_arme:${a}`) ||
-    itemTags.has(`type_armure:${a}`) ||
-    itemTags.has(`type_bouclier:${a}`) ||
-    itemTags.has(`slug:${a}`) ||
-    itemName === a
+  const matched = allowed.find(tag =>
+    itemTags.has(tag)
+    || itemTags.has(`arme:${tag}`)
+    || itemTags.has(`type_arme:${tag}`)
+    || itemTags.has(`slug:${tag}`)
+    || itemName === tag
   );
-  return matched ? { ok: true, reason: "legacy-match", matchedAllowed: matched } : { ok: false, reason: "legacy-no-match", allowed, itemTags: [...itemTags] };
+  return matched
+    ? { ok: true, reason: "legacy-weapon-match", matchedAllowed: matched }
+    : { ok: false, reason: "legacy-weapon-no-match", allowed, itemTags: [...itemTags] };
 }
 
 function add2eCheckEquipmentAllowedForClassSystem(classe, item, kind) {
@@ -244,16 +238,14 @@ function add2eCheckEquipmentAllowedForClassSystem(classe, item, kind) {
   if (kind === "arme") {
     const restriction = classe?.weaponRestriction ?? {};
     if (add2eHasTagRestriction(restriction)) return { ...add2eCheckItemTagRestriction(item, restriction), classe, classeLabel, mode: "weaponRestriction" };
-    return { ...add2eLegacyAllowsItemByNameOrTag(item, classe?.armes_autorisees ?? classe?.weaponsAllowed ?? [], "arme"), classe, classeLabel, mode: "legacy-weapon" };
+    return { ...add2eLegacyAllowsWeaponByNameOrTag(item, classe?.armes_autorisees ?? classe?.weaponsAllowed ?? []), classe, classeLabel, mode: "legacy-weapon" };
   }
   if (kind === "armure") {
-    const restriction = classe?.armorRestriction ?? {};
-    if (add2eHasTagRestriction(restriction)) return { ...add2eCheckItemTagRestriction(item, restriction), classe, classeLabel, mode: "armorRestriction" };
-    if (add2eIsShield(item)) {
-      const shieldAllowed = classe?.shieldAllowed === true || add2eToEquipArray(classe?.armorAllowed ?? classe?.armures_autorisees ?? []).map(add2eNormalizeEquipTag).some(v => ["toutes", "toute", "all", "bouclier", "boucliers"].includes(v));
-      return { ok: !!shieldAllowed, reason: shieldAllowed ? "legacy-shield-allowed" : "legacy-shield-forbidden", classe, classeLabel, mode: "legacy-armor" };
+    const restriction = classe?.armorRestriction ?? null;
+    if (!add2eHasTagRestriction(restriction)) {
+      throw new Error(`${classeLabel} : armorRestriction canonique absente ou invalide.`);
     }
-    return { ...add2eLegacyAllowsItemByNameOrTag(item, classe?.armorAllowed ?? classe?.armures_autorisees ?? [], "armure"), classe, classeLabel, mode: "legacy-armor" };
+    return { ...add2eCheckItemTagRestriction(item, restriction), classe, classeLabel, mode: "armorRestriction" };
   }
   return { ok: true, reason: "no-kind", classe, classeLabel, mode: "none" };
 }
@@ -540,10 +532,8 @@ try { globalThis.add2eHasUsefulValue = add2eHasUsefulValue; } catch (_e) {}
 try { globalThis.add2eGetActorClassItem = add2eGetActorClassItem; } catch (_e) {}
 try { globalThis.add2eHasTagRestriction = add2eHasTagRestriction; } catch (_e) {}
 try { globalThis.add2eCheckItemTagRestriction = add2eCheckItemTagRestriction; } catch (_e) {}
-try { globalThis.add2eItemNameNorm = add2eItemNameNorm; } catch (_e) {}
 try { globalThis.add2eIsShield = add2eIsShield; } catch (_e) {}
 try { globalThis.add2eIsHelmet = add2eIsHelmet; } catch (_e) {}
-try { globalThis.add2eLegacyAllowsItemByNameOrTag = add2eLegacyAllowsItemByNameOrTag; } catch (_e) {}
 try { globalThis.add2eCheckEquipmentAllowedForClassSystem = add2eCheckEquipmentAllowedForClassSystem; } catch (_e) {}
 try { globalThis.add2eFindActorClassSystemByName = add2eFindActorClassSystemByName; } catch (_e) {}
 try { globalThis.add2eThiefClassLevel = add2eThiefClassLevel; } catch (_e) {}
