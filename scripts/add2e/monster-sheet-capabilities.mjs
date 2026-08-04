@@ -1,9 +1,9 @@
 // ADD2E — Affichage détaillé des monstres
-// Version : 2026-07-11-v6-single-monster-sheet
+// Version : 2026-08-04-canonical-monster-morale-v7
 // But : séparer les capacités informatives MJ des effets système activables.
 // Foundry V13/V14/V15 : la feuille de monstre unique est enregistrée dans scripts/monster-sheet.mjs.
 
-const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-07-11-v6-single-monster-sheet";
+const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-08-04-canonical-monster-morale-v7";
 globalThis.ADD2E_MONSTER_CAPABILITIES_VERSION = ADD2E_MONSTER_CAPABILITIES_VERSION;
 
 function esc(value) {
@@ -85,6 +85,62 @@ function capCard(cap, system = false) {
     </div>`;
 }
 
+function canonicalMoraleBase(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (value && typeof value === "object") {
+    for (const candidate of [value.score, value.value, value.base, value.total]) {
+      const numeric = Number(candidate);
+      if (Number.isFinite(numeric)) return numeric;
+    }
+    return null;
+  }
+  const text = String(value ?? "").trim();
+  if (!/^[+-]?\d+(?:[.,]\d+)?$/.test(text)) return null;
+  const numeric = Number(text.replace(",", "."));
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function resolveMonsterMorale(actor) {
+  const raw = actor?.system?.morale;
+  const base = canonicalMoraleBase(raw);
+  if (!Number.isFinite(base)) {
+    return {
+      base: null,
+      total: null,
+      display: String(raw ?? "").trim() || "—",
+      resolution: null
+    };
+  }
+
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (typeof engine?.resolve !== "function") {
+    throw new Error("Le résolveur canonique ADD2E du moral n’est pas disponible.");
+  }
+
+  const resolution = engine.resolve(actor, {
+    domain: "morale",
+    target: "score",
+    base,
+    context: {
+      type: "monster-morale",
+      source: "monster-sheet-capabilities",
+      consumer: "application-v2"
+    }
+  });
+  const total = Number(resolution?.total);
+  if (!Number.isFinite(total)) throw new Error("La résolution canonique du moral a renvoyé une valeur invalide.");
+  const adjustment = total - base;
+  return {
+    base,
+    total,
+    adjustment,
+    display: adjustment === 0 ? String(total) : `${total} (base ${base}, ${adjustment >= 0 ? "+" : ""}${adjustment})`,
+    resolution
+  };
+}
+
+globalThis.add2eResolveMonsterMorale = resolveMonsterMorale;
+
 function installStyles() {
   const id = "add2e-monster-capabilities-style";
   if (document.getElementById(id)) return;
@@ -144,6 +200,7 @@ function buildCapTab(actor) {
 
 function buildDetails(actor) {
   const s = actor?.system ?? {};
+  const morale = resolveMonsterMorale(actor);
   return `
     <section class="add2e-monster-panel add2e-monster-details-readonly">
       <h2>Résumé complet du monstre</h2>
@@ -155,7 +212,7 @@ function buildDetails(actor) {
         ${infoCard("Régime", s.diet)}
         ${infoCard("Nombre apparaissant", s.numberAppearing)}
         ${infoCard("Intelligence", s.intelligence)}
-        ${infoCard("Moral", s.morale)}
+        ${infoCard("Moral", morale.display)}
         ${infoCard("Trésor", s.treasure)}
         ${infoCard("PX", s.xp)}
         ${infoCard("Sauvegardes", s.savingThrows)}
