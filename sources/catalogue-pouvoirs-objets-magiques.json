@@ -124,7 +124,7 @@
       "effects": [
         {
           "type": "armor_class_bonus",
-          "bonus": "@value"
+          "bonus": "@bonus"
         }
       ],
       "source": {
