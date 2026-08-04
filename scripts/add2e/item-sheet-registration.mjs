@@ -102,18 +102,6 @@ function addDeletion(update, source, path, sourceKey) {
   if (!hasOwn(source, sourceKey)) return;
   update[path] = forcedDeletion();
 }
-function mergeUnique(...values) {
-  const result = [];
-  const seen = new Set();
-  for (const raw of values) for (const value of list(raw)) {
-    const text = String(value ?? "").trim();
-    const key = text.toLowerCase();
-    if (!text || seen.has(key)) continue;
-    seen.add(key);
-    result.push(text);
-  }
-  return result;
-}
 
 function defaultActorTokenLink(actor, data = {}) {
   const type = String(actor?.type ?? data?.type ?? "").trim().toLowerCase();
@@ -535,11 +523,9 @@ function buildCanonicalPowerMigration(source) {
     "flags.add2e.modifiers": removeBuilderModifiers(source),
     "flags.add2e.magicItemBuilder": {
       ...clone(currentBuilder),
-      version: MIGRATION_VERSION,
       generatedTags: [],
       generatedModifiers: []
     },
-    "flags.add2e.magicItemBuilderVersion": MIGRATION_VERSION,
     [`flags.add2e.${MIGRATION_FLAG}`]: MIGRATION_VERSION
   };
 
@@ -641,7 +627,7 @@ globalThis.add2eMagicBuilderEditPower = editPower;
 globalThis.add2eMagicBuilderSheetPowers = sheetPowers;
 globalThis.add2eMagicPowerFieldValue = powerFieldValue;
 globalThis.add2eMigrateCanonicalPowerSources = migrateCanonicalPowerSources;
-globalThis.add2eNormalizeMagicItemData = async itemOrUuid => {
+globalThis.add2eMigrateMagicItemData = async itemOrUuid => {
   const item = itemOrUuid?.documentName === "Item" ? itemOrUuid : await resolveItem(itemOrUuid);
   if (!item) return false;
   const update = buildCanonicalPowerMigration(clone(item.toObject?.() ?? item._source ?? {}));
@@ -650,7 +636,7 @@ globalThis.add2eNormalizeMagicItemData = async itemOrUuid => {
   return true;
 };
 globalThis.ADD2E_MAGIC_POWER_SHEET_EDITOR_VERSION = EDITOR_VERSION;
-globalThis.ADD2E_MAGIC_ITEM_DATA_NORMALIZER_VERSION = MIGRATION_VERSION;
+globalThis.ADD2E_MAGIC_ITEM_DATA_MIGRATION_VERSION = MIGRATION_VERSION;
 registerHelpers();
 
 Hooks.on("preCreateActor", (actor, data = {}) => {
