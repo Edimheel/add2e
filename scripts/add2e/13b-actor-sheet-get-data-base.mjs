@@ -267,6 +267,58 @@ function add2eSheetMovementData(actor) {
   return foundry.utils.deepClone(movement);
 }
 
+function add2eSheetCharismaSocialData(actor) {
+  const followersResolver = globalThis.add2eResolveCharismaFollowers;
+  const loyaltyResolver = globalThis.add2eResolveCharismaLoyalty;
+  const reactionResolver = globalThis.add2eResolveCharismaReaction;
+  if (
+    typeof followersResolver !== "function"
+    || typeof loyaltyResolver !== "function"
+    || typeof reactionResolver !== "function"
+  ) {
+    throw new Error("Les résolveurs canoniques ADD2E de réaction, loyauté et compagnons ne sont pas disponibles.");
+  }
+
+  const followers = followersResolver(actor, {
+    source: "actor-sheet-charisma-followers",
+    consumer: "application-v2"
+  });
+  const loyalty = loyaltyResolver(actor, {
+    source: "actor-sheet-charisma-loyalty",
+    consumer: "application-v2"
+  });
+  const reaction = reactionResolver(actor, {
+    source: "actor-sheet-charisma-reaction",
+    consumer: "application-v2"
+  });
+
+  return {
+    followers: {
+      base: Number(followers?.base) || 0,
+      maximum: Math.max(0, Math.trunc(Number(followers?.maximum) || 0)),
+      adjustment: Math.trunc(Number(followers?.adjustment) || 0),
+      modifiers: add2eSheetAppliedModifierRows(followers?.resolution),
+      description: "Nombre maximum de compagnons d’armes après résolution canonique du Charisme et des modificateurs applicables."
+    },
+    loyalty: {
+      base: Number(loyalty?.base) || 0,
+      baseChance: Number(loyalty?.baseChance) || 0,
+      charismaAdjustment: Math.trunc(Number(loyalty?.charismaAdjustment) || 0),
+      permanentAdjustment: Math.trunc(Number(loyalty?.permanentAdjustment) || 0),
+      threshold: Math.max(0, Math.min(100, Math.trunc(Number(loyalty?.threshold) || 0))),
+      modifiers: add2eSheetAppliedModifierRows(loyalty?.resolution),
+      description: "Seuil final du test de loyauté après Charisme, effets actifs, objets et autres modificateurs canoniques."
+    },
+    reaction: {
+      charismaAdjustment: Math.trunc(Number(reaction?.charismaAdjustment) || 0),
+      permanentAdjustment: Math.trunc(Number(reaction?.permanentAdjustment) || 0),
+      adjustment: Math.trunc(Number(reaction?.adjustment) || 0),
+      modifiers: add2eSheetAppliedModifierRows(reaction?.resolution),
+      description: "Ajustement final de réaction initiale après Charisme, effets actifs, objets et autres modificateurs canoniques."
+    }
+  };
+}
+
 export function add2ePrepareActorSheetBaseData({ sheet, data }) {
   const actor = sheet.actor;
   const sys = data.actor.system;
@@ -344,6 +396,7 @@ export function add2ePrepareActorSheetBaseData({ sheet, data }) {
     data.abilityDerived[carac] = derived;
     sys[carac] = derived.total;
   }
+  data.abilityDerived.charisme.social = add2eSheetCharismaSocialData(actor);
 
   data.canExceptionalStrength = data.abilityDerived.force?.exceptionalStrengthEligible === true;
   if (data.canExceptionalStrength && (sys.force_ex === undefined || sys.force_ex === null)) sys.force_ex = 0;
