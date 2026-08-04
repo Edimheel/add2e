@@ -1,4 +1,4 @@
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-04-canonical-thief-skill-consumer-v19";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-04-canonical-thief-skill-aliases-v20";
 
 const THIEF_ORDER = [
   "pickpocket",
@@ -30,7 +30,6 @@ const THIEF_ALIASES = {
   open_locks: "crochetage_serrures",
   open_lock: "crochetage_serrures",
   crochetage: "crochetage_serrures",
-  ouverture_serrures: "crochetage_serrures",
   find_remove_traps: "detection_pieges",
   find_traps: "detection_pieges",
   remove_traps: "detection_pieges",
