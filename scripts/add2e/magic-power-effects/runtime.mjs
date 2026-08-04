@@ -1,7 +1,7 @@
 // ADD2E — Pouvoirs d'objets magiques / socle partagé.
 // Compatible Foundry V13/V14/V15.
 
-export const VERSION = "2026-07-22-magic-power-effects-modular-v1";
+export const VERSION = "2026-08-04-magic-power-effects-canonical-generated-v2";
 export const SPELL_PACK_ID = "add2e.sorts";
 export const EFFECT_FLAG = "magicItemCatalogueEffect";
 export const TIME_SETTING = "add2e.worldTimeTick";
@@ -140,7 +140,8 @@ export function powerArray(item) {
     .filter(power => power && typeof power === "object");
 }
 
-export const cataloguePowers = item => powerArray(item).filter(power => power.kind === "catalogue");
+export const cataloguePowers = item => powerArray(item)
+  .filter(power => power.kind === "catalogue" || power.kind === "generated");
 
 export function itemUsable(item) {
   try {
