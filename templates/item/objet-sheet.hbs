@@ -1,30 +1,30 @@
-<form class="{{cssClass}} add2e-objet-sheet {{#if isMagicItem}}add2e-magic-object{{else}}add2e-standard-object{{/if}}" autocomplete="off" data-item-uuid="{{item.uuid}}">
+<form class="{{cssClass}} add2e-objet-sheet add2e-item-ui {{#if isMagicItem}}is-magic{{else}}is-equipment{{/if}}" autocomplete="off" data-item-uuid="{{item.uuid}}">
   <style>
-    .add2e-objet-sheet{--a2e-border:#8b5e34;--a2e-soft:rgba(91,52,25,.22);--a2e-title:#3b2414;--a2e-card:#fffaf0;color:#2f241c;display:flex;flex-direction:column;height:100%}
-    .add2e-magic-object{--a2e-border:#765018;--a2e-soft:rgba(118,80,24,.3);--a2e-title:#4d300a;--a2e-card:#fffaf0}
-    .add2e-objet-sheet input,.add2e-objet-sheet textarea,.add2e-objet-sheet select{width:100%;background:rgba(255,255,255,.88);border:1px solid var(--a2e-soft);border-radius:6px;padding:4px 6px;color:#1f1a16}
-    .a2e-object-hero{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;padding:12px;border:2px solid var(--a2e-border);border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ead9b7);box-shadow:0 2px 8px rgba(0,0,0,.18);margin-bottom:10px}
-    .add2e-magic-object .a2e-object-hero{background:linear-gradient(135deg,#fff8df,#ddc17a)}
-    .a2e-object-hero img{width:110px;height:110px;object-fit:contain;border-radius:10px;border:2px solid var(--a2e-border);background:#1f1a16;cursor:pointer}
-    .a2e-title-row{display:flex;align-items:center;gap:8px}.a2e-title-row input{font-size:1.65em;font-weight:800;color:var(--a2e-title);border:0;border-bottom:2px solid var(--a2e-soft);border-radius:0;background:rgba(255,255,255,.35)}
-    .a2e-kind-label{white-space:nowrap;padding:5px 9px;border:1px solid var(--a2e-border);border-radius:999px;background:rgba(255,255,255,.58);font-weight:800;color:var(--a2e-title)}
-    .a2e-grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.a2e-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.a2e-grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.a2e-grid-5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-    .a2e-card{background:var(--a2e-card);border:1px solid var(--a2e-soft);border-radius:10px;padding:10px;margin-bottom:10px}.a2e-card h3{margin:0 0 8px;color:var(--a2e-title);border-bottom:1px solid var(--a2e-soft);padding-bottom:5px;font-size:1.08em;font-weight:800}
-    .a2e-field label,.a2e-stat label{display:block;font-size:.76em;text-transform:uppercase;letter-spacing:.04em;color:#6f6258;font-weight:800;margin-bottom:3px}.a2e-stat{background:rgba(255,255,255,.56);border:1px solid var(--a2e-soft);border-radius:8px;padding:7px}
-    .a2e-checks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.a2e-checks label{display:flex;align-items:center;gap:6px;padding:6px;border:1px solid var(--a2e-soft);border-radius:8px;background:rgba(255,255,255,.55);font-weight:700}.a2e-checks input{width:auto}
-    .a2e-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0 0 10px;border:1px solid var(--a2e-border);border-radius:8px;overflow:hidden;background:rgba(255,255,255,.45)}.a2e-tabs .item{padding:9px 6px;text-align:center;border-right:1px solid var(--a2e-soft);font-weight:800}.a2e-tabs .item:last-child{border-right:0}.a2e-tabs .item.active{background:var(--a2e-border);color:#fff8e7}
-    .a2e-body{flex:1;min-height:0;overflow-y:auto}.a2e-rich-editor{min-height:130px;padding:8px 10px;border:1px solid var(--a2e-soft);border-radius:8px;background:#fffdf7}.a2e-rich-editor .editor{min-height:150px}.a2e-rich-editor .editor-content{min-height:130px}
-    .a2e-drop-zone{display:grid;place-items:center;min-height:76px;margin-top:10px;padding:10px;border:2px dashed var(--a2e-border);border-radius:8px;background:rgba(255,255,255,.55);text-align:center}.a2e-drop-zone.is-dragover{background:#eef7e7}
-    .add2e-arcane-entry-list,.a2e-power-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}.add2e-arcane-entry{display:grid;grid-template-columns:38px minmax(0,1fr) 75px 150px 42px;gap:8px;align-items:center;padding:7px;border:1px solid var(--a2e-soft);border-radius:7px;background:#fffaf0}
-    .a2e-power-entry{border:1px solid var(--a2e-soft);border-radius:8px;background:#fffdf7;overflow:hidden}.a2e-power-entry summary{display:grid;grid-template-columns:38px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px;cursor:pointer;list-style:none}.a2e-power-entry summary::-webkit-details-marker{display:none}.a2e-power-entry img{width:34px;height:34px;object-fit:cover;border:1px solid var(--a2e-border);border-radius:5px}.a2e-power-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}.a2e-power-badge{padding:2px 6px;border:1px solid var(--a2e-soft);border-radius:999px;background:#f5ead0;font-size:.72em;font-weight:700}.a2e-power-actions{display:flex;gap:5px}.a2e-power-actions button{width:32px;height:30px;padding:0}.a2e-power-details{display:grid;gap:8px;padding:8px 12px;border-top:1px solid var(--a2e-soft)}.a2e-power-canonical{display:grid;gap:3px;padding:8px 10px;border:1px solid var(--a2e-soft);border-radius:7px;background:#fff4d7}.a2e-power-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:.82em;opacity:.78}.a2e-power-json{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.78em}
-    .a2e-charge-bar{height:13px;margin-top:8px;border:1px solid var(--a2e-border);border-radius:999px;background:#d8c9aa;overflow:hidden}.a2e-charge-bar span{display:block;height:100%;width:calc(({{charges.value}} / {{#if charges.max}}{{charges.max}}{{else}}1{{/if}}) * 100%);max-width:100%;background:linear-gradient(90deg,#765018,#d49a32)}
-    .a2e-recharge{display:grid;grid-template-columns:auto minmax(180px,1fr) auto;gap:8px;align-items:end;margin-top:10px}.a2e-recharge-status{min-height:34px;padding:7px;border:1px solid var(--a2e-soft);border-radius:6px;background:#fffdf7;font-weight:700}
-    details.a2e-technical{margin-top:8px}details.a2e-technical summary{cursor:pointer;font-weight:800;color:#6f6258}
-    @media(max-width:700px){.a2e-grid-5,.a2e-grid-4,.a2e-grid-3,.a2e-checks{grid-template-columns:repeat(2,minmax(0,1fr))}.a2e-object-hero{grid-template-columns:88px minmax(0,1fr)}.a2e-object-hero img{width:88px;height:88px}.a2e-recharge{grid-template-columns:1fr}}
+    .add2e-objet-sheet.add2e-item-ui{--accent:#8a6526;--accent-dark:#543a0d;--line:rgba(112,80,26,.24);--panel:rgba(255,251,240,.96);--field:rgba(255,255,255,.92);--text:#332b20;display:flex;flex-direction:column;height:100%;gap:10px;color:var(--text);padding:2px}
+    .add2e-objet-sheet.is-equipment{--accent:#5d6872;--accent-dark:#343d45;--line:rgba(70,80,88,.22);--panel:rgba(248,250,251,.96)}
+    .add2e-objet-sheet *{box-sizing:border-box}
+    .add2e-objet-sheet input,.add2e-objet-sheet textarea,.add2e-objet-sheet select{width:100%;min-height:34px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--field);color:#24211d;box-shadow:inset 0 1px 2px rgba(0,0,0,.04)}
+    .add2e-objet-sheet input:focus,.add2e-objet-sheet textarea:focus,.add2e-objet-sheet select:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 18%,transparent);outline:0}
+    .add2e-objet-sheet input:disabled,.add2e-objet-sheet input[readonly]{background:rgba(239,237,229,.86);color:var(--accent-dark);font-weight:800;opacity:1;cursor:default}
+    .a2e-item-hero{display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 12%,white),var(--panel));box-shadow:0 3px 10px rgba(0,0,0,.1)}
+    .a2e-item-hero>img{width:92px;height:92px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#242321;cursor:pointer}
+    .a2e-title-row{display:flex;align-items:center;gap:8px}.a2e-title-row input{min-width:0;border:0;border-bottom:2px solid var(--line);border-radius:0;background:transparent;font-size:1.45em;font-weight:900;color:var(--accent-dark);box-shadow:none}.a2e-kind-pill{flex:0 0 auto;padding:5px 9px;border:1px solid var(--accent);border-radius:999px;background:color-mix(in srgb,var(--accent) 10%,white);color:var(--accent-dark);font-size:.8em;font-weight:900;white-space:nowrap}
+    .a2e-grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.a2e-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.a2e-grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.a2e-grid-5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+    .a2e-field label,.a2e-stat label{display:block;margin:0 0 3px;font-size:.72em;font-weight:900;letter-spacing:.045em;text-transform:uppercase;color:#756f64}.a2e-stat{padding:7px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.55)}
+    .a2e-checks{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.a2e-checks label{display:flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.58);font-weight:800}.a2e-checks input{width:auto;min-height:0;margin:0}
+    .a2e-tabs{position:sticky;top:0;z-index:3;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:0;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:rgba(250,248,241,.96);box-shadow:0 2px 7px rgba(0,0,0,.06);backdrop-filter:blur(4px)}.a2e-tabs .item{padding:8px 5px;text-align:center;border-right:1px solid var(--line);font-weight:900;color:var(--accent-dark)}.a2e-tabs .item:last-child{border-right:0}.a2e-tabs .item.active{background:var(--accent);color:white;text-shadow:0 1px 1px rgba(0,0,0,.2)}
+    .a2e-body{flex:1;min-height:0;overflow-y:auto;padding-right:2px}.a2e-card{padding:11px;border:1px solid var(--line);border-radius:11px;background:var(--panel);box-shadow:0 2px 7px rgba(0,0,0,.06);margin-bottom:10px}.a2e-card h3{display:flex;align-items:center;gap:7px;margin:0 0 9px;padding-bottom:6px;border-bottom:1px solid var(--line);color:var(--accent-dark);font-size:1.02em;font-weight:900}
+    .a2e-rich-editor{min-height:120px;padding:8px;border:1px solid var(--line);border-radius:8px;background:white}.a2e-rich-editor .editor{min-height:130px}.a2e-rich-editor .editor-content{min-height:115px}
+    .a2e-drop-zone{display:grid;place-items:center;min-height:58px;margin-top:9px;padding:9px;border:1px dashed var(--accent);border-radius:9px;background:color-mix(in srgb,var(--accent) 5%,white);text-align:center;color:var(--accent-dark)}.a2e-drop-zone.is-dragover{background:color-mix(in srgb,var(--accent) 14%,white)}
+    .add2e-arcane-entry-list,.a2e-power-list{display:grid;gap:6px;margin:0;padding:0;list-style:none}.add2e-arcane-entry{display:grid;grid-template-columns:36px minmax(0,1fr) 70px 135px 36px;gap:8px;align-items:center;padding:7px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.7)}
+    .a2e-power-entry{border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.72);overflow:hidden}.a2e-power-compact{display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 7px 6px 11px}.a2e-power-compact strong{flex:1;color:var(--accent-dark);font-size:1em}.a2e-power-entry summary{display:grid;grid-template-columns:34px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:7px 8px;cursor:pointer;list-style:none}.a2e-power-entry summary::-webkit-details-marker{display:none}.a2e-power-entry summary img{width:32px;height:32px;object-fit:cover;border:1px solid var(--line);border-radius:6px}.a2e-power-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}.a2e-power-badge{padding:1px 6px;border:1px solid var(--line);border-radius:999px;background:rgba(250,244,228,.92);font-size:.68em;font-weight:800}.a2e-power-actions{display:flex;gap:4px}.a2e-power-actions button{display:grid;place-items:center;width:31px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.88);color:var(--accent-dark)}.a2e-power-actions button:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,white)}.a2e-power-details{display:grid;gap:7px;padding:9px 11px;border-top:1px solid var(--line)}.a2e-power-json{margin:0;padding:8px;border-radius:7px;background:rgba(34,42,48,.06);white-space:pre-wrap;overflow-wrap:anywhere;font-size:.76em}.a2e-power-meta{display:flex;flex-wrap:wrap;gap:10px;font-size:.78em;color:#756f64}
+    .a2e-charge-bar{height:11px;margin-top:8px;border:1px solid var(--line);border-radius:999px;background:rgba(85,76,61,.15);overflow:hidden}.a2e-charge-bar span{display:block;height:100%;width:calc(({{charges.value}} / {{#if charges.max}}{{charges.max}}{{else}}1{{/if}}) * 100%);max-width:100%;background:linear-gradient(90deg,var(--accent-dark),var(--accent))}.a2e-recharge{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:8px;align-items:center;margin-top:9px}.a2e-recharge-status{min-height:34px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.72);font-weight:800}
+    details.a2e-technical{margin-top:8px}details.a2e-technical summary{cursor:pointer;font-weight:800;color:#756f64}
+    @media(max-width:720px){.a2e-item-hero{grid-template-columns:76px minmax(0,1fr)}.a2e-item-hero>img{width:76px;height:76px}.a2e-grid-5,.a2e-grid-4,.a2e-grid-3{grid-template-columns:repeat(2,minmax(0,1fr))}.a2e-title-row{align-items:flex-start;flex-direction:column}.a2e-kind-pill{align-self:flex-start}.a2e-tabs{grid-auto-flow:row;grid-template-columns:repeat(2,1fr)}.a2e-tabs .item{border-bottom:1px solid var(--line)}.add2e-arcane-entry{grid-template-columns:34px minmax(0,1fr) 55px 36px}.add2e-arcane-entry>div:nth-child(4){display:none}.a2e-recharge{grid-template-columns:1fr}}
   </style>
 
   {{#if isMagicItem}}
-    <header class="a2e-object-hero">
+    <header class="a2e-item-hero">
       <img src="{{img}}" alt="Image de l'objet magique" data-edit="img">
       <div>
         <div class="a2e-title-row">
@@ -34,15 +34,15 @@
             <input type="text" value="{{#if system.nom_non_identifie}}{{system.nom_non_identifie}}{{else}}Objet magique{{/if}}" readonly>
             <input type="hidden" name="name" value="{{item.name}}">
           {{/if}}
-          <span class="a2e-kind-label"><i class="fas fa-wand-magic-sparkles"></i> Objet magique</span>
+          <span class="a2e-kind-pill"><i class="fas fa-wand-magic-sparkles"></i> Objet magique</span>
           <input type="hidden" name="system.magique" value="true">
         </div>
-        <div class="a2e-grid-3" style="margin-top:8px">
+        <div class="a2e-grid-3" style="margin-top:9px">
           <div class="a2e-field"><label>Sous-type</label><input type="text" name="system.sousType" value="{{system.sousType}}"></div>
           <div class="a2e-field"><label>Rareté</label><input type="text" name="system.rarete" value="{{system.rarete}}"></div>
           <div class="a2e-field"><label>Nom non identifié</label><input type="text" name="system.nom_non_identifie" value="{{system.nom_non_identifie}}"></div>
         </div>
-        <div class="a2e-checks" style="margin-top:8px">
+        <div class="a2e-checks">
           <label><input type="checkbox" name="system.equipee" {{checked system.equipee}}> Équipé</label>
           <label><input type="checkbox" name="system.identifie" {{checked system.identifie}}> Identifié</label>
           <label><input type="checkbox" name="system.maudit" {{checked system.maudit}}> Maudit</label>
@@ -95,7 +95,6 @@
             {{#if system.charges.rechargeable}}
               <div class="a2e-recharge" data-recharge-control data-item-uuid="{{item.uuid}}">
                 <div class="a2e-recharge-status">Vérification de la recharge…</div>
-                <div></div>
                 <button type="button" class="a2e-recharge-button" style="display:none"><i class="fas fa-battery-half"></i> Recharger</button>
                 <img src="icons/svg/clockwork.svg" alt="" style="display:none" onload="(()=>{const box=this.closest('[data-recharge-control]');if(!box||box.dataset.bound==='1')return;box.dataset.bound='1';const status=box.querySelector('.a2e-recharge-status');const button=box.querySelector('.a2e-recharge-button');const uuid=box.dataset.itemUuid;const interval=1440;const tick=()=>{const api=game.add2e?.time;const value=typeof api?.currentTick==='function'?Number(api.currentTick()):Number(game.settings?.get?.('add2e','worldTimeTick'));return Number.isFinite(value)?Math.max(0,Math.floor(value)):0};const refresh=async()=>{const item=await fromUuid(uuid).catch(()=>null);if(!item)return;const now=tick();let anchor=Number(item.getFlag?.('add2e','lastMagicItemRechargeTick'));if(!Number.isFinite(anchor)){anchor=now;await item.setFlag?.('add2e','lastMagicItemRechargeTick',anchor)}const current=Number(item.system?.charges?.value??0)||0;const max=Number(item.system?.charges?.max??0)||0;const remaining=Math.max(0,interval-(now-anchor));const ready=remaining<=0&&current<max;button.style.display=ready?'inline-flex':'none';status.textContent=current>=max?'Charges au maximum':ready?'Recharge disponible':`Disponible dans ${Math.ceil(remaining/60)} h de temps ADD2E`};button.addEventListener('click',async ev=>{ev.preventDefault();ev.stopPropagation();const item=await fromUuid(uuid).catch(()=>null);if(!item)return;const now=tick();const last=Number(item.getFlag?.('add2e','lastMagicItemRechargeTick'));if(Number.isFinite(last)&&now-last<interval){ui.notifications.warn('La recharge nécessite 24 heures de temps ADD2E.');return}const formula=String(item.system?.charges?.rechargeFormula||'1d6').trim()||'1d6';const roll=await(new Roll(formula)).evaluate();const oldValue=Math.max(0,Number(item.system?.charges?.value??0)||0);const max=Math.max(0,Number(item.system?.charges?.max??0)||0);const gain=Math.max(0,Math.trunc(Number(roll.total)||0));const next=Math.min(max,oldValue+gain);await item.update({'system.charges.value':next,'flags.add2e.lastMagicItemRechargeTick':now},{add2eInternal:true,add2eMagicRecharge:true,render:false});const create=globalThis.add2eCreateChatCard;if(typeof create==='function')await create({actor:item.parent??null,title:`Recharge de ${item.name}`,icon:'fas fa-battery-half',variant:'success',source:{name:item.name,img:item.img,type:'Objet magique'},rows:[{label:'Jet',value:`${formula} = ${gain}`},{label:'Charges',value:`${oldValue} → ${next} / ${max}`}],message:`${item.name} récupère ${next-oldValue} charge(s).`});ui.notifications.info(`${item.name} récupère ${next-oldValue} charge(s).`);await refresh();item.sheet?.render?.({force:true})});Hooks.on('updateSetting',setting=>{const key=String(setting?.key??setting?.id??'');if(key==='add2e.worldTimeTick'||key.endsWith('.worldTimeTick'))refresh()});refresh()})()">
               </div>
@@ -127,28 +126,26 @@
             {{#if powers.length}}
               <ol class="a2e-power-list">
                 {{#each powers as |p|}}
-                  <li class="a2e-power-entry">
-                    <details open>
-                      <summary>
-                        <img src="{{#if p.img}}{{p.img}}{{else}}icons/svg/aura.svg{{/if}}" alt="">
-                        <div><strong>{{p._add2eName}}</strong><div class="a2e-power-badges"><span class="a2e-power-badge">{{p._add2eKindLabel}}</span><span class="a2e-power-badge">{{p._add2eCategoryLabel}}</span><span class="a2e-power-badge">{{p._add2eAutomationLabel}}</span></div></div>
-                        <span>Coût {{p._add2eCost}}</span>
-                        {{#if @root.editable}}
-                          <div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>
-                        {{/if}}
-                      </summary>
-                      <div class="a2e-power-details">
-                        {{#if p._add2eHasCanonicalValue}}
-                          <div class="a2e-power-canonical"><b>{{p._add2eCanonicalValueLabel}}</b></div>
-                        {{else}}
+                  {{#if p._add2eHasCanonicalValue}}
+                    <li class="a2e-power-entry"><div class="a2e-power-compact"><strong>{{p._add2eCanonicalValueLabel}}</strong>{{#if @root.editable}}<div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>{{/if}}</div></li>
+                  {{else}}
+                    <li class="a2e-power-entry">
+                      <details>
+                        <summary>
+                          <img src="{{#if p.img}}{{p.img}}{{else}}icons/svg/aura.svg{{/if}}" alt="">
+                          <div><strong>{{p._add2eName}}</strong><div class="a2e-power-badges"><span class="a2e-power-badge">{{p._add2eKindLabel}}</span><span class="a2e-power-badge">{{p._add2eCategoryLabel}}</span><span class="a2e-power-badge">{{p._add2eAutomationLabel}}</span></div></div>
+                          <span>Coût {{p._add2eCost}}</span>
+                          {{#if @root.editable}}<div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>{{/if}}
+                        </summary>
+                        <div class="a2e-power-details">
                           {{#if p.description}}<div>{{{p.description}}}</div>{{/if}}
                           {{#if p._add2eHasParameters}}<pre class="a2e-power-json">{{p._add2eParametersJson}}</pre>{{/if}}
                           {{#if p._add2eHasEffects}}<pre class="a2e-power-json">{{p._add2eEffectsJson}}</pre>{{/if}}
-                        {{/if}}
-                        <div class="a2e-power-meta"><span><b>Activation :</b> {{p._add2eActivationLabel}}</span><span><b>Source :</b> {{p._add2eSourceLabel}}</span></div>
-                      </div>
-                    </details>
-                  </li>
+                          <div class="a2e-power-meta"><span><b>Activation :</b> {{p._add2eActivationLabel}}</span><span><b>Source :</b> {{p._add2eSourceLabel}}</span></div>
+                        </div>
+                      </details>
+                    </li>
+                  {{/if}}
                 {{/each}}
               </ol>
             {{else}}<p><em>Aucun pouvoir configuré.</em></p>{{/if}}
@@ -182,19 +179,16 @@
       </div>
     </section>
   {{else}}
-    <header class="a2e-object-hero">
+    <header class="a2e-item-hero">
       <img src="{{img}}" alt="Image de l'équipement" data-edit="img">
       <div>
-        <div class="a2e-title-row"><input type="text" name="name" value="{{item.name}}" placeholder="Nom de l'équipement"><span class="a2e-kind-label"><i class="fas fa-toolbox"></i> Équipement</span></div>
-        <div class="a2e-grid-3" style="margin-top:8px">
+        <div class="a2e-title-row"><input type="text" name="name" value="{{item.name}}" placeholder="Nom de l'équipement"><span class="a2e-kind-pill"><i class="fas fa-toolbox"></i> Équipement</span></div>
+        <div class="a2e-grid-3" style="margin-top:9px">
           <div class="a2e-field"><label>Catégorie</label><input type="text" name="system.categorie" value="{{system.categorie}}"></div>
           <div class="a2e-field"><label>Sous-type</label><input type="text" name="system.sousType" value="{{system.sousType}}"></div>
           <div class="a2e-field"><label>Nom système</label><input type="text" name="system.nom" value="{{system.nom}}"></div>
         </div>
-        <div class="a2e-checks" style="margin-top:8px">
-          <label><input type="checkbox" name="system.equipee" {{checked system.equipee}}> Équipé</label>
-          <label><input type="checkbox" name="system.consommable" {{checked system.consommable}}> Consommable</label>
-        </div>
+        <div class="a2e-checks"><label><input type="checkbox" name="system.equipee" {{checked system.equipee}}> Équipé</label><label><input type="checkbox" name="system.consommable" {{checked system.consommable}}> Consommable</label></div>
       </div>
     </header>
 
