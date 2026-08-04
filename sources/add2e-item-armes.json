@@ -1,6 +1,6 @@
 {
   "exporter": "ADD2E compendium export",
-  "version": "2026-07-27-add2e-export-compendiums-v1",
+  "version": "2026-08-04-canonical-source-contract-v1",
   "exportedAt": "2026-07-27T11:07:27.484Z",
   "world": "test-clerc",
   "worldTitle": "test clerc",
@@ -48,8 +48,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -165,8 +163,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -279,8 +275,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -396,8 +390,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -510,8 +502,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -628,8 +618,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -746,8 +734,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -866,8 +852,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -998,8 +982,6 @@
         "portee_courte": 80,
         "portee_moyenne": 160,
         "portee_longue": 240,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -1133,8 +1115,6 @@
         "portee_courte": 80,
         "portee_moyenne": 160,
         "portee_longue": 240,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -1278,8 +1258,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -1396,8 +1374,6 @@
         "portee_courte": 60,
         "portee_moyenne": 120,
         "portee_longue": 180,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -1531,8 +1507,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -1659,8 +1633,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -1794,8 +1766,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -1908,8 +1878,6 @@
         "portee_courte": 70,
         "portee_moyenne": 140,
         "portee_longue": 210,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -2054,8 +2022,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -2174,8 +2140,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -2302,8 +2266,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -2430,8 +2392,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -2558,8 +2518,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -2682,8 +2640,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -2796,8 +2752,6 @@
         "portee_courte": 70,
         "portee_moyenne": 140,
         "portee_longue": 210,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -2928,8 +2882,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -3056,8 +3008,6 @@
         "portee_courte": 15,
         "portee_moyenne": 30,
         "portee_longue": 45,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -3191,8 +3141,6 @@
         "portee_courte": 5,
         "portee_moyenne": 10,
         "portee_longue": 15,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -3328,8 +3276,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -3456,8 +3402,6 @@
         "portee_courte": 15,
         "portee_moyenne": 30,
         "portee_longue": 45,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -3594,8 +3538,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -3722,8 +3664,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -3843,8 +3783,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -3957,8 +3895,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -4084,8 +4020,6 @@
         "portee_courte": 50,
         "portee_moyenne": 100,
         "portee_longue": 150,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -4216,8 +4150,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -4344,8 +4276,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -4458,8 +4388,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -4586,8 +4514,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -4703,8 +4629,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -4820,8 +4744,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -4948,8 +4870,6 @@
         "portee_courte": 40,
         "portee_moyenne": 80,
         "portee_longue": 160,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -5066,8 +4986,6 @@
         "portee_courte": 50,
         "portee_moyenne": 100,
         "portee_longue": 180,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -5212,8 +5130,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -5326,8 +5242,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -5454,8 +5368,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -5589,8 +5501,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -5706,8 +5616,6 @@
         "portee_courte": 60,
         "portee_moyenne": 120,
         "portee_longue": 180,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -5852,8 +5760,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -5980,8 +5886,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -6094,8 +5998,6 @@
         "portee_courte": 20,
         "portee_moyenne": 40,
         "portee_longue": 60,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -6217,8 +6119,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -6345,8 +6245,6 @@
         "portee_courte": 60,
         "portee_moyenne": 120,
         "portee_longue": 210,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -6491,8 +6389,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -6605,8 +6501,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -6737,8 +6631,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -6851,8 +6743,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -6965,8 +6855,6 @@
         "portee_courte": 60,
         "portee_moyenne": 120,
         "portee_longue": 180,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -7113,8 +7001,6 @@
         "portee_courte": 20,
         "portee_moyenne": 40,
         "portee_longue": 60,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -7234,8 +7120,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -7362,8 +7246,6 @@
         "portee_courte": 50,
         "portee_moyenne": 100,
         "portee_longue": 150,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -7508,8 +7390,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -7622,8 +7502,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -7750,8 +7628,6 @@
         "portee_courte": 15,
         "portee_moyenne": 30,
         "portee_longue": 45,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -7870,8 +7746,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -7984,8 +7858,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -8112,8 +7984,6 @@
         "portee_courte": 5,
         "portee_moyenne": 10,
         "portee_longue": 15,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -8232,8 +8102,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -8346,8 +8214,6 @@
         "portee_courte": 20,
         "portee_moyenne": 40,
         "portee_longue": 60,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -8468,8 +8334,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -8592,8 +8456,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -8706,8 +8568,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -8834,8 +8694,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -8948,8 +8806,6 @@
         "portee_courte": 50,
         "portee_moyenne": 100,
         "portee_longue": 200,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -9071,8 +8927,6 @@
         "portee_courte": 40,
         "portee_moyenne": 80,
         "portee_longue": 160,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -9189,8 +9043,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -9303,8 +9155,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -9417,8 +9267,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -9531,8 +9379,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -9648,8 +9494,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -9779,8 +9623,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -9893,8 +9735,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -10021,8 +9861,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -10135,8 +9973,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -10263,8 +10099,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -10398,8 +10232,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -10526,8 +10358,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -10640,8 +10470,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -10775,8 +10603,6 @@
         "portee_courte": 15,
         "portee_moyenne": 30,
         "portee_longue": 45,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -10907,8 +10733,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -11024,8 +10848,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -11141,8 +10963,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -11275,8 +11095,6 @@
         "portee_courte": 50,
         "portee_moyenne": 100,
         "portee_longue": 200,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -11410,8 +11228,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -11538,8 +11354,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -11658,8 +11472,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -11786,8 +11598,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -11906,8 +11716,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -12034,8 +11842,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -12169,8 +11975,6 @@
         "portee_courte": 20,
         "portee_moyenne": 40,
         "portee_longue": 60,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -12289,8 +12093,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -12417,8 +12219,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -12531,8 +12331,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -12659,8 +12457,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -12790,8 +12586,6 @@
         "portee_courte": 80,
         "portee_moyenne": 160,
         "portee_longue": 240,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -12936,8 +12730,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -13050,8 +12842,6 @@
         "portee_courte": 10,
         "portee_moyenne": 20,
         "portee_longue": 30,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -13170,8 +12960,6 @@
         "portee_courte": 20,
         "portee_moyenne": 40,
         "portee_longue": 60,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -13290,8 +13078,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -13404,8 +13190,6 @@
         "portee_courte": "70",
         "portee_moyenne": "140",
         "portee_longue": "210",
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": "0",
         "bonus_dom": "0",
         "ajustement_ca": "-1,0,0,1,2,3,3,3,3",
@@ -13526,8 +13310,6 @@
         "portee_courte": 0,
         "portee_moyenne": 0,
         "portee_longue": 0,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -13640,8 +13422,6 @@
         "portee_courte": 70,
         "portee_moyenne": 140,
         "portee_longue": 210,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
@@ -13772,8 +13552,6 @@
         "portee_courte": 60,
         "portee_moyenne": 120,
         "portee_longue": 180,
-        "bonus_toucher": 0,
-        "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
