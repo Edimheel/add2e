@@ -1,15 +1,15 @@
 // scripts/add2e/item-sheet-registration.mjs
 // ADD2E — Enregistrement strict des fiches d'items spécialisées.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
-// Version : 2026-08-04-canonical-power-source-v3
+// Version : 2026-08-04-canonical-power-source-v4
 
 import { Add2eItemSheet } from "../add2e-item-sheet.mjs";
 globalThis.Add2eItemSheet = Add2eItemSheet;
 
 const POWER_FIELDS = ["pouvoirs", "powers", "pouvoirsMagiques", "magicalPowers"];
 const MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
-const EDITOR_VERSION = "2026-08-04-canonical-power-source-v3";
-const NORMALIZER_VERSION = "2026-08-04-canonical-power-source-v3";
+const EDITOR_VERSION = "2026-08-04-canonical-power-source-v4";
+const NORMALIZER_VERSION = "2026-08-04-canonical-power-source-v4";
 const BUILDER_MODIFIER_IDS = new Set([
   "magic-item-builder:attack:bonus",
   "magic-item-builder:damage:bonus",
@@ -30,13 +30,42 @@ const FIXED_ARMOR_TYPES = new Set([
   "classe_armure_fixe", "classe_armure_base", "ca_fixe", "ca_base", "defense_base"
 ]);
 const LEGACY_ENCHANTMENT_FIELDS = ["bonus_toucher", "bonus_degats", "bonus_ca", "ca_fixe"];
+const NORMALIZED_UPDATE_PREFIXES = [
+  "system.enchantement",
+  "system.bonus_hit",
+  "system.bonus_dom",
+  "system.bonus_toucher",
+  "system.bonus_degats",
+  "system.bonus_ac",
+  "system.bonus_ca",
+  "system.ca_fixe",
+  "system.caFixe",
+  "system.effectTags",
+  "system.charges",
+  "system.magique",
+  "system.magic",
+  ...POWER_FIELDS.map(field => `system.${field}`),
+  "flags.add2e.modifiers",
+  "flags.add2e.magicItemBuilder",
+  "flags.add2e.magicItemBuilderVersion",
+  "flags.add2e.magicPowerCatalogue"
+];
 
 function add2eItemsCollection() { return foundry?.documents?.collections?.Items ?? globalThis.Items; }
 function add2eItemDocumentClass() { return foundry?.documents?.Item ?? globalThis.Item; }
 function clone(value) { try { return foundry.utils.deepClone(value); } catch (_e) { try { return structuredClone(value); } catch (_e2) { return JSON.parse(JSON.stringify(value)); } } }
+function isPlainObject(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+function isDataFieldOperator(value) {
+  const DataFieldOperator = foundry?.data?.operators?.DataFieldOperator;
+  return typeof DataFieldOperator === "function" && value instanceof DataFieldOperator;
+}
 function stripLegacyDataOperatorKeys(value) {
   if (Array.isArray(value)) return value.map(stripLegacyDataOperatorKeys);
-  if (!value || typeof value !== "object") return clone(value);
+  if (!value || typeof value !== "object" || isDataFieldOperator(value)) return clone(value);
   const result = {};
   for (const [key, entry] of Object.entries(value)) {
     if (String(key).startsWith("-=") || String(key).startsWith("==")) continue;
@@ -44,20 +73,44 @@ function stripLegacyDataOperatorKeys(value) {
   }
   return result;
 }
+function flattenUpdateData(value, prefix = "", result = {}) {
+  if (isDataFieldOperator(value) || Array.isArray(value) || !isPlainObject(value)) {
+    if (prefix) result[prefix] = value;
+    return result;
+  }
+  const entries = Object.entries(value);
+  if (!entries.length && prefix) {
+    result[prefix] = {};
+    return result;
+  }
+  for (const [key, entry] of entries) {
+    if (String(key).startsWith("-=") || String(key).startsWith("==")) continue;
+    const path = prefix ? `${prefix}.${key}` : key;
+    flattenUpdateData(entry, path, result);
+  }
+  return result;
+}
+function forcedDeletionValue() {
+  const ForcedDeletion = foundry?.data?.operators?.ForcedDeletion;
+  if (typeof ForcedDeletion?.create === "function") return ForcedDeletion.create(null);
+  if (typeof ForcedDeletion === "function") {
+    try { return new ForcedDeletion(null); } catch (_e) { try { return new ForcedDeletion(); } catch (_e2) {} }
+  }
+  return null;
+}
 function setForcedDeletion(object, path) {
+  const operator = forcedDeletionValue();
+  if (operator) {
+    object[String(path)] = operator;
+    return true;
+  }
   const parts = String(path).split(".").filter(Boolean);
   const key = parts.pop();
   if (!key) return false;
-  let current = object;
-  for (const part of parts) {
-    current[part] ??= {};
-    current = current[part];
-  }
-  const ForcedDeletion = foundry?.data?.operators?.ForcedDeletion;
-  if (typeof ForcedDeletion === "function") current[key] = new ForcedDeletion();
-  else current[`-=${key}`] = null;
+  object[[...parts, `-=${key}`].join(".")] = null;
   return true;
 }
+function pathMatchesPrefix(path, prefix) { return path === prefix || path.startsWith(`${prefix}.`); }
 function esc(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 function norm(value) { return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9:+*_.-]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, ""); }
 function list(value) {
@@ -97,7 +150,7 @@ function expand(value) {
     return result;
   }
 }
-function flattenedPaths(value) { const result = new Set(Object.keys(value ?? {})); try { for (const path of Object.keys(foundry.utils.flattenObject(value ?? {}))) result.add(path); } catch (_e) {} return [...result]; }
+function flattenedPaths(value) { return Object.keys(flattenUpdateData(value)); }
 function mergeUnique(...values) {
   const seen = new Set();
   const result = [];
@@ -476,7 +529,7 @@ function magicItemNormalization(source) {
   setProperty(patch, "flags.add2e.magicItemBuilder", { ...currentBuilder, version: NORMALIZER_VERSION, generatedTags: [], generatedModifiers: [] });
   setProperty(patch, "flags.add2e.magicItemBuilderVersion", NORMALIZER_VERSION);
 
-  const cleanPatch = stripLegacyDataOperatorKeys(patch);
+  const cleanPatch = flattenUpdateData(stripLegacyDataOperatorKeys(patch));
   for (const key of LEGACY_ENCHANTMENT_FIELDS) {
     if (Object.hasOwn(originalEnchantment, key) || Object.hasOwn(originalEnchantment, `-=${key}`)) {
       setForcedDeletion(cleanPatch, `system.enchantement.${key}`);
@@ -485,8 +538,7 @@ function magicItemNormalization(source) {
   return cleanPatch;
 }
 function shouldNormalizeUpdate(change = {}) {
-  const prefixes = ["system.enchantement", "system.bonus_hit", "system.bonus_dom", "system.bonus_toucher", "system.bonus_degats", "system.bonus_ac", "system.bonus_ca", "system.ca_fixe", "system.caFixe", "system.charges", "system.magique", "system.magic", ...POWER_FIELDS.map(field => `system.${field}`), "flags.add2e.modifiers", "flags.add2e.magicItemBuilder", "flags.add2e.magicPowerCatalogue"];
-  return flattenedPaths(change).some(path => prefixes.some(prefix => path === prefix || path.startsWith(`${prefix}.`)));
+  return flattenedPaths(change).some(path => NORMALIZED_UPDATE_PREFIXES.some(prefix => pathMatchesPrefix(path, prefix)));
 }
 function normalizeMagicItemCreate(item) {
   const source = clone(item?.toObject?.() ?? item?._source ?? {}); if (!MAGIC_ITEM_TYPES.has(magicItemType(source))) return;
@@ -495,8 +547,13 @@ function normalizeMagicItemCreate(item) {
 function normalizeMagicItemUpdate(item, change = {}, options = {}) {
   if (options?.add2eMagicItemDataNormalizer === true || !MAGIC_ITEM_TYPES.has(String(item?.type ?? "").toLowerCase()) || !shouldNormalizeUpdate(change)) return;
   const source = clone(item?.toObject?.() ?? item?._source ?? {}), merged = merge(source, expand(change)), patch = magicItemNormalization(merged); if (!patch) return;
-  for (const key of Object.keys(change)) if (["system.enchantement.", "system.bonus_hit", "system.bonus_dom", "system.bonus_toucher", "system.bonus_degats", "system.bonus_ac", "system.bonus_ca", "system.ca_fixe", "system.caFixe", "system.effectTags", "system.charges", "system.magique", "flags.add2e.modifiers", "flags.add2e.magicItemBuilder", "flags.add2e.magicItemBuilderVersion"].some(prefix => key === prefix || key.startsWith(prefix))) delete change[key];
-  const normalized = merge(expand(change), patch); for (const key of Object.keys(change)) delete change[key]; Object.assign(change, normalized); options.add2eMagicItemDataNormalizer = true;
+  const passthrough = flattenUpdateData(change);
+  for (const path of Object.keys(passthrough)) {
+    if (NORMALIZED_UPDATE_PREFIXES.some(prefix => pathMatchesPrefix(path, prefix))) delete passthrough[path];
+  }
+  for (const key of Object.keys(change)) delete change[key];
+  Object.assign(change, passthrough, patch);
+  options.add2eMagicItemDataNormalizer = true;
 }
 async function migrateCanonicalPowerSources() {
   if (!game.user?.isGM) return;
@@ -540,7 +597,7 @@ function renderPowerBackedFields(app, html) {
 export function add2eRegisterClassItemSheet() {
   const options = { types: ["classe"], makeDefault: true, canConfigure: true, canBeDefault: true, label: "ADD2E | Fiche Classe" }, ItemsCollection = add2eItemsCollection();
   if (ItemsCollection?.registerSheet) ItemsCollection.registerSheet("add2e", Add2eItemSheet, options); else console.warn("[ADD2E][SHEETS] Collection Items introuvable : fiche classe non enregistrée.");
-  const DSC = globalThis.DocumentSheetConfig ?? foundry?.applications?.apps?.DocumentSheetConfig, ItemDocument = add2eItemDocumentClass();
+  const DSC = foundry?.applications?.apps?.DocumentSheetConfig, ItemDocument = add2eItemDocumentClass();
   if (DSC?.registerSheet && ItemDocument) { try { DSC.registerSheet(ItemDocument, "add2e", Add2eItemSheet, options); } catch (error) { console.warn("[ADD2E][SHEETS] DocumentSheetConfig classe non appliqué, fallback Items.registerSheet conservé.", error); } }
   console.log("[ADD2E][SHEETS] Fiche Item.classe enregistrée :", Add2eItemSheet?.name);
 }
