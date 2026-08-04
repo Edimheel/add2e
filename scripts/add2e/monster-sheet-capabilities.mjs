@@ -1,9 +1,9 @@
 // ADD2E — Affichage détaillé des monstres
-// Version : 2026-08-04-canonical-monster-morale-v7
+// Version : 2026-08-04-canonical-monster-morale-v8
 // But : séparer les capacités informatives MJ des effets système activables.
 // Foundry V13/V14/V15 : la feuille de monstre unique est enregistrée dans scripts/monster-sheet.mjs.
 
-const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-08-04-canonical-monster-morale-v7";
+const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-08-04-canonical-monster-morale-v8";
 globalThis.ADD2E_MONSTER_CAPABILITIES_VERSION = ADD2E_MONSTER_CAPABILITIES_VERSION;
 
 function esc(value) {
@@ -86,28 +86,17 @@ function capCard(cap, system = false) {
 }
 
 function canonicalMoraleBase(value) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (value && typeof value === "object") {
-    for (const candidate of [value.score, value.value, value.base, value.total]) {
-      const numeric = Number(candidate);
-      if (Number.isFinite(numeric)) return numeric;
-    }
-    return null;
-  }
-  const text = String(value ?? "").trim();
-  if (!/^[+-]?\d+(?:[.,]\d+)?$/.test(text)) return null;
-  const numeric = Number(text.replace(",", "."));
-  return Number.isFinite(numeric) ? numeric : null;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 function resolveMonsterMorale(actor) {
-  const raw = actor?.system?.morale;
-  const base = canonicalMoraleBase(raw);
+  const base = canonicalMoraleBase(actor?.system?.morale);
   if (!Number.isFinite(base)) {
     return {
       base: null,
       total: null,
-      display: String(raw ?? "").trim() || "—",
+      adjustment: 0,
+      display: "—",
       resolution: null
     };
   }
