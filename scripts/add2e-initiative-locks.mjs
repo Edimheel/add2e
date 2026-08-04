@@ -81,7 +81,8 @@ export function canTokenInteractNow(tokenOrDoc, { notify = false } = {}) {
 }
 
 export function installTokenMoveLock() {
-  const proto = globalThis.Token?.prototype;
+  const TokenClass = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass;
+  const proto = TokenClass?.prototype;
   if (!proto) return;
 
   for (const method of TOKEN_DRAG_METHODS) {
