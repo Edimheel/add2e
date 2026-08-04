@@ -1,5 +1,6 @@
 // ADD2E — Objets magiques : créateur unifié d'Items.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
+// Version : 2026-08-04-canonical-created-powers-v2
 
 import {
   ADD2E_MAGIC_ITEM_BUILDER_VERSION,
@@ -7,13 +8,13 @@ import {
   add2eMagicMergeUniqueValues,
   add2eMagicNumber,
   add2eMagicOptionalNumber,
-  add2eMagicSigned,
   add2eObjectMagicEscapeHtml
 } from "./core.mjs";
 import { ADD2E_MAGIC_CREATOR_PROFILES } from "./profiles.mjs";
 import {
   add2eMagicBuilderDefaultApplication,
   add2eMagicBuilderReadBaseStats,
+  add2eMagicBuilderReadBaseWeight,
   add2eMagicBuilderResolveItem,
   add2eMagicBuilderType
 } from "./enchantment-builder.mjs";
@@ -30,7 +31,92 @@ import {
   add2eMagicCreatorState
 } from "./catalogue-editor.mjs";
 
+const ADD2E_MAGIC_GENERATED_POWER_SOURCE = "Créateur canonique d’objets magiques ADD2E";
+const ADD2E_MAGIC_BONUS_POWER_DEFINITIONS = Object.freeze({
+  attack: Object.freeze({
+    name: "Bonus magique au toucher",
+    category: "combat",
+    effectType: "attack_bonus",
+    effectField: "attackBonus"
+  }),
+  damage: Object.freeze({
+    name: "Bonus magique aux dégâts",
+    category: "combat",
+    effectType: "damage_bonus",
+    effectField: "damageBonus"
+  }),
+  armor: Object.freeze({
+    name: "Bonus magique de classe d’armure",
+    category: "defense",
+    effectType: "armor_class_bonus",
+    effectField: "bonus"
+  }),
+  fixedArmor: Object.freeze({
+    name: "Classe d’armure magique fixe",
+    category: "defense",
+    effectType: "fixed_armor_class",
+    effectField: "value"
+  })
+});
+
 let hooksInstalled = false;
+
+function add2eMagicCreatorPowerEffects(power) {
+  const raw = power?.effects;
+  if (Array.isArray(raw)) return raw.filter(effect => effect && typeof effect === "object");
+  if (raw && typeof raw === "object") return Object.values(raw).filter(effect => effect && typeof effect === "object");
+  return [];
+}
+
+function add2eMagicCreatorHasEffectType(powers, effectType) {
+  return powers.some(power => add2eMagicCreatorPowerEffects(power)
+    .some(effect => String(effect?.type ?? effect?.kind ?? "").trim().toLowerCase() === effectType));
+}
+
+function add2eMagicCreatorGeneratedPower(kind, rawValue, application) {
+  const definition = ADD2E_MAGIC_BONUS_POWER_DEFINITIONS[kind];
+  if (!definition) return null;
+  const value = Number(rawValue);
+  if (!Number.isFinite(value)) return null;
+  if (kind !== "fixedArmor" && value === 0) return null;
+  const effectValue = kind === "armor" ? Math.abs(value) : value;
+  return {
+    schema: 2,
+    kind: "generated",
+    name: definition.name,
+    label: definition.name,
+    category: definition.category,
+    automation: "automatic",
+    activation: { type: "passive", trigger: "equipped" },
+    parameters: { application },
+    effects: [{
+      type: definition.effectType,
+      [definition.effectField]: effectValue,
+      application
+    }],
+    compatibility: {},
+    validation: {},
+    source: { section: ADD2E_MAGIC_GENERATED_POWER_SOURCE }
+  };
+}
+
+function add2eMagicCreatorCanonicalPowers(selectedPowers, result) {
+  const powers = add2eMagicClone(selectedPowers ?? []);
+  const application = ["source", "porteur"].includes(result.application) ? result.application : "porteur";
+  const values = {
+    attack: result.bonusToucher,
+    damage: result.bonusDegats,
+    armor: result.bonusCA,
+    fixedArmor: result.caFixe
+  };
+  for (const [kind, value] of Object.entries(values)) {
+    const definition = ADD2E_MAGIC_BONUS_POWER_DEFINITIONS[kind];
+    if (value === null || value === undefined || add2eMagicCreatorHasEffectType(powers, definition.effectType)) continue;
+    const power = add2eMagicCreatorGeneratedPower(kind, value, application);
+    if (power) powers.push(power);
+  }
+  return powers;
+}
 
 async function add2eMagicBuilderCollectCreatorBases() {
   const result = { arme: [], armure: [] };
@@ -304,9 +390,17 @@ function add2eMagicBuilderCreatorSanitizeBase(baseItem, profile, name) {
   source.type = profile.itemType;
   source.img = baseItem.img || profile.img;
   source.system = add2eMagicClone(baseItem.system ?? {});
+  for (const field of [
+    "enchantement", "pouvoirs", "powers", "pouvoirsMagiques", "magicalPowers",
+    "bonus_toucher", "bonus_degats", "bonus_ac", "bonus_ca", "ca_fixe", "caFixe"
+  ]) delete source.system[field];
   source.effects = Array.isArray(source.effects) ? source.effects : [];
   source.flags = add2eMagicClone(baseItem.flags ?? {});
   source.flags.add2e ??= {};
+  for (const field of [
+    "magicItemProfile", "magicItemBuilderVersion", "magicItemBuilder", "magicPowerCatalogue",
+    "baseItemUuid", "baseItemName", "baseItemType"
+  ]) delete source.flags.add2e[field];
   return source;
 }
 
@@ -331,33 +425,19 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
   system.equipee ??= false;
   system.tags = add2eMagicMergeUniqueValues(system.tags, profile.tags);
   system.effectTags = add2eMagicMergeUniqueValues(system.effectTags, profile.tags);
-  const enchantement = {
-    schema: 1,
+  system.enchantement = {
+    schema: 3,
     baseUuid: String(baseItem?.uuid ?? ""),
     baseName: String(baseItem?.name ?? ""),
     baseType: String(baseItem?.type ?? ""),
+    baseWeight: baseItem ? add2eMagicBuilderReadBaseWeight(baseItem) : {
+      value: null,
+      unit: "",
+      encumbranceGoldPieces: null
+    },
     application,
-    bonusToucher: result.bonusToucher,
-    bonusDegats: result.bonusDegats,
-    bonusCA: result.bonusCA,
-    caFixe: result.caFixe,
     baseStats
   };
-  system.enchantement = enchantement;
-  if (type === "arme") {
-    const sourceMode = application === "source";
-    system.bonus_hit = baseStats.bonusToucher + (sourceMode ? result.bonusToucher : 0);
-    system.bonus_dom = baseStats.bonusDegats + (sourceMode ? result.bonusDegats : 0);
-  } else {
-    system.bonus_toucher = result.bonusToucher;
-    system.bonus_degats = result.bonusDegats;
-  }
-  system.bonus_ac = baseStats.bonusCA + result.bonusCA;
-  system.ca_fixe = result.caFixe ?? baseStats.caFixe ?? null;
-  if (application === "porteur") {
-    if (result.bonusToucher) system.effectTags = add2eMagicMergeUniqueValues(system.effectTags, `bonus_attaque:${add2eMagicSigned(result.bonusToucher)}`);
-    if (result.bonusDegats) system.effectTags = add2eMagicMergeUniqueValues(system.effectTags, `bonus_degats:${add2eMagicSigned(result.bonusDegats)}`);
-  }
   const max = profile.charges ? Math.max(result.chargesMax, result.chargesValue) : 0;
   const current = profile.charges ? Math.min(result.chargesValue, max) : 0;
   if (profile.charges || max > 0) {
@@ -387,12 +467,8 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
   });
   itemData.flags.add2e.magicItemBuilder = {
     version: ADD2E_MAGIC_ITEM_BUILDER_VERSION,
-    generatedTags: application === "porteur"
-      ? [
-          result.bonusToucher ? `bonus_attaque:${add2eMagicSigned(result.bonusToucher)}` : "",
-          result.bonusDegats ? `bonus_degats:${add2eMagicSigned(result.bonusDegats)}` : ""
-        ].filter(Boolean)
-      : []
+    generatedTags: [],
+    generatedModifiers: []
   };
 }
 
@@ -524,11 +600,13 @@ export async function add2eMagicBuilderCreateMagicItem(directory = null) {
       itemData.flags.add2e.arcaneDocumentKind = "spell-scroll";
     }
   }
-  add2eMagicCatalogueAttachToItemData(itemData, catalogueSelection.powers, catalogueSelection.catalogue);
+  const powers = add2eMagicCreatorCanonicalPowers(catalogueSelection.powers, result);
+  add2eMagicCatalogueAttachToItemData(itemData, powers, catalogueSelection.catalogue);
   if (folder) itemData.folder = folder;
-  const ItemClass = CONFIG?.Item?.documentClass ?? globalThis.Item;
+  const ItemClass = CONFIG?.Item?.documentClass;
+  if (!ItemClass?.create) throw new Error("La classe Item Foundry est indisponible.");
   const created = await ItemClass.create(itemData, { renderSheet: true });
-  ui.notifications.info(`${created?.name ?? name} a été créé avec ${catalogueSelection.powers.length} pouvoir${catalogueSelection.powers.length > 1 ? "s" : ""} du catalogue.`);
+  ui.notifications.info(`${created?.name ?? name} a été créé avec ${powers.length} pouvoir${powers.length > 1 ? "s" : ""} canonique${powers.length > 1 ? "s" : ""}.`);
   return created;
 }
 
