@@ -432,6 +432,93 @@ function resolveDiagnosticActor(actorOrId = null) {
     ?? null;
 }
 
+function movementDiagnosticInventoryRows(movement) {
+  return (movement?.inventory?.entries ?? []).map(entry => ({
+    type: String(entry?.kind ?? "item"),
+    nom: String(entry?.name ?? "Objet"),
+    quantité: Number(entry?.quantity) || 0,
+    unité: String(entry?.weightUnit ?? ""),
+    poidsUnitairePo: round2(entry?.unitWeight),
+    totalPo: round2(entry?.total),
+    totalKg: round2((Number(entry?.total) || 0) / GOLD_PIECES_PER_KILOGRAM),
+    source: String(entry?.weightSource ?? "")
+  }));
+}
+
+function movementDiagnosticAdjustmentRows(movement) {
+  const resolution = movement?.encumbrance?.carriedWeight ?? null;
+  const rows = [];
+  for (const applied of resolution?.applied ?? []) {
+    const modifier = applied?.modifier ?? {};
+    const metadata = modifier?.metadata ?? {};
+    const details = Array.isArray(metadata.details) ? metadata.details : [];
+    if (details.length) {
+      for (const detail of details) {
+        const reason = detail?.armor
+          ? detail?.shield
+            ? "Bouclier magique : poids complet"
+            : "Armure magique : demi-poids"
+          : "Poids canonique de l’objet magique";
+        rows.push({
+          type: "objet",
+          nom: String(detail?.name ?? modifier?.source?.name ?? "Objet magique"),
+          politique: String(metadata.label ?? modifier?.source?.name ?? modifier?.id ?? "Ajustement"),
+          opération: String(modifier?.operation ?? "add"),
+          poidsSourcePo: round2(detail?.sourceWeight),
+          poidsInventairePo: round2(detail?.currentWeight),
+          poidsRetenuPo: round2(detail?.desiredWeight),
+          ajustementPo: round2(detail?.adjustment),
+          facteur: "",
+          raison: reason
+        });
+      }
+      continue;
+    }
+
+    const operation = String(modifier?.operation ?? "add");
+    const contribution = Number(applied?.contribution);
+    rows.push({
+      type: "politique",
+      nom: String(modifier?.source?.name ?? modifier?.id ?? "Politique"),
+      politique: String(metadata.label ?? modifier?.source?.name ?? modifier?.id ?? "Ajustement"),
+      opération: operation,
+      poidsSourcePo: "",
+      poidsInventairePo: "",
+      poidsRetenuPo: "",
+      ajustementPo: operation === "add" && Number.isFinite(contribution) ? round2(contribution) : "",
+      facteur: operation === "multiply" ? round2(modifier?.value) : "",
+      raison: String(metadata.producer ?? metadata.setting ?? "règle canonique")
+    });
+  }
+  return rows;
+}
+
+function movementDiagnosticWeightAudit(movement) {
+  const resolution = movement?.encumbrance?.carriedWeight ?? {};
+  const inventoryRows = movementDiagnosticInventoryRows(movement);
+  const adjustmentRows = movementDiagnosticAdjustmentRows(movement);
+  const rawTotalPo = Number.isFinite(Number(resolution.base))
+    ? Number(resolution.base)
+    : Number(movement?.inventory?.total) || 0;
+  const afterOverridePo = Number(resolution?.stages?.afterOverride ?? rawTotalPo) || 0;
+  const additionsPo = Number(resolution?.additionsTotal) || 0;
+  const afterAdditionsPo = Number(resolution?.stages?.afterAdditions ?? (afterOverridePo + additionsPo)) || 0;
+  const multiplier = Number(resolution?.multiplierTotal) || 1;
+  const finalPo = Number(resolution?.total ?? movement?.poidsPo ?? movement?.poids) || 0;
+  const summary = {
+    poidsBrutPo: round2(rawTotalPo),
+    poidsBrutKg: round2(rawTotalPo / GOLD_PIECES_PER_KILOGRAM),
+    aprèsRemplacementPo: round2(afterOverridePo),
+    ajustementsPo: round2(additionsPo),
+    aprèsAjustementsPo: round2(afterAdditionsPo),
+    multiplicateur: round2(multiplier),
+    poidsFinalPo: round2(finalPo),
+    poidsFinalKg: round2(finalPo / GOLD_PIECES_PER_KILOGRAM),
+    formule: `(${round2(afterOverridePo)} ${additionsPo >= 0 ? "+" : "−"} ${round2(Math.abs(additionsPo))}) × ${round2(multiplier)} = ${round2(finalPo)}`
+  };
+  return { summary, inventoryRows, adjustmentRows };
+}
+
 function diagnoseMovement(actorOrId = null, options = {}) {
   const actor = resolveDiagnosticActor(actorOrId);
   if (!actor) throw new Error("Sélectionne un token, fournis un acteur ou son identifiant.");
@@ -448,28 +535,30 @@ function diagnoseMovement(actorOrId = null, options = {}) {
   const applied = Object.entries(resolutions).flatMap(([mode, resolution]) => (
     movementAppliedRows(resolution).map(row => ({ mode, ...row }))
   ));
+  const weightAudit = movementDiagnosticWeightAudit(movement);
   const report = {
     version: ADD2E_MOVEMENT_LOT_2G_VERSION,
     actor: { id: actor.id, uuid: actor.uuid, name: actor.name },
     source: movement?.source,
     display: movement?.display,
     inventory: movement?.inventory,
+    weightAudit,
     encumbrance: movement?.encumbrance,
     movementModes: movement?.movementModes,
     appliedModifiers: applied
   };
 
   console.group(`${ADD2E_MOVE_XP_TAG}[DIAGNOSTIC] ${actor.name}`);
-  console.log("Synthèse", report.display);
+  console.log("Synthèse du mouvement", report.display);
   console.table(report.display?.capacityRows ?? []);
-  console.table((report.inventory?.entries ?? []).map(entry => ({
-    nom: entry.name,
-    quantité: entry.quantity,
-    unité: entry.weightUnit,
-    poidsUnitairePo: entry.unitWeight,
-    totalPo: entry.total,
-    source: entry.weightSource
-  })));
+  console.groupCollapsed("Poids transporté — calcul consolidé");
+  console.table([weightAudit.summary]);
+  console.log("Inventaire brut");
+  console.table(weightAudit.inventoryRows);
+  console.log("Ajustements canoniques");
+  console.table(weightAudit.adjustmentRows);
+  console.groupEnd();
+  console.log("Modificateurs de mouvement appliqués");
   console.table(applied);
   console.log("Rapport complet", report);
   console.groupEnd();
