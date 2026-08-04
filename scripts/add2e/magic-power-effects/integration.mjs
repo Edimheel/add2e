@@ -181,6 +181,10 @@ function cleanUpdate(change) {
 
 const localUser = userId => !userId || String(userId) === String(game.user?.id ?? "");
 
+function effectSyncChanged(result) {
+  return ["created", "updated", "deleted"].some(key => Number(result?.[key]) > 0);
+}
+
 function queueItemEffectOperation(item, label, operation) {
   const actor = actorForItemDocument(item);
   const key = String(actor?.uuid ?? item?.uuid ?? item?.id ?? label);
@@ -189,7 +193,7 @@ function queueItemEffectOperation(item, label, operation) {
     .catch(() => undefined)
     .then(operation)
     .then(async result => {
-      await refreshActor(actor);
+      if (effectSyncChanged(result)) await refreshActor(actor);
       return result;
     });
   itemEffectQueues.set(key, next);
@@ -221,9 +225,11 @@ async function migrate() {
   }
   for (const actor of game.actors ?? []) {
     const sync = await syncActor(actor);
-    if (sync.created || sync.updated || sync.deleted) actors += 1;
-    effects += await migrateEffects(actor);
-    await refreshActor(actor);
+    const migratedEffects = await migrateEffects(actor);
+    const actorChanged = effectSyncChanged(sync);
+    if (actorChanged) actors += 1;
+    effects += migratedEffects;
+    if (actorChanged || migratedEffects > 0) await refreshActor(actor);
   }
   return { items, actors, effects };
 }
