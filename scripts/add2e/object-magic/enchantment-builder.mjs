@@ -1,18 +1,16 @@
 // ADD2E — Objets magiques : enchantements et objets de base.
 // Compatible Foundry V13/V14/V15 — DialogV2.
-// Version : 2026-08-03-canonical-armor-enchantment-v1
+// Version : 2026-08-04-canonical-enchantment-metadata-v2
 
 import {
   ADD2E_MAGIC_ITEM_BUILDER_VERSION,
   ADD2E_MAGIC_ITEM_TYPES,
   add2eMagicClone,
   add2eMagicGetProperty,
-  add2eMagicMerge,
   add2eMagicMergeUniqueValues,
   add2eMagicNumber,
   add2eMagicOptionalNumber,
   add2eMagicSetProperty,
-  add2eMagicSigned,
   add2eObjectMagicEscapeHtml,
   add2eObjectMagicNormalizeTag,
   add2eObjectMagicToArray
@@ -51,17 +49,6 @@ const ADD2E_MAGIC_WEAPON_FAMILY_ALIASES = Object.freeze({
   epieu: ["lance"],
   fleche: ["fleche"]
 });
-const ADD2E_MAGIC_ARMOR_LEGACY_FIELDS = Object.freeze([
-  "bonus_ac",
-  "bonus_ca",
-  "ca_fixe",
-  "caFixe",
-  "bonus_toucher",
-  "bonus_degats",
-  "effectTags",
-  "properties",
-  "cost"
-]);
 
 let hooksInstalled = false;
 let baseWeightIndexPromise = null;
@@ -81,16 +68,12 @@ function add2eMagicBuilderIsArmor(itemOrType) {
   return type === "armure";
 }
 
-function add2eMagicBuilderDeleteSystemFields(update, fields) {
-  if (!update || typeof update !== "object") return;
-  const system = update.system && typeof update.system === "object" && !Array.isArray(update.system)
-    ? update.system
-    : (update.system = {});
-  for (const field of fields) {
-    delete system[field];
-    delete update[`system.${field}`];
-    system[`-=${field}`] = null;
+function add2eMagicBuilderForcedDeletion() {
+  const ForcedDeletion = foundry?.data?.operators?.ForcedDeletion;
+  if (typeof ForcedDeletion?.create !== "function") {
+    throw new Error("[ADD2E][OBJET_MAGIQUE] foundry.data.operators.ForcedDeletion est requis par Foundry V13/V14/V15.");
   }
+  return ForcedDeletion.create(null);
 }
 
 export function add2eMagicBuilderSupported(item) {
@@ -117,30 +100,17 @@ function add2eMagicBuilderBaseWeight(raw = {}) {
 
 export function add2eMagicBuilderEnchantment(item, systemOverride = null) {
   const system = systemOverride ?? item?.system ?? {};
-  const hasRawEnchantement = Boolean(
-    system.enchantement
-    && typeof system.enchantement === "object"
-    && !Array.isArray(system.enchantement)
-  );
-  const raw = hasRawEnchantement ? system.enchantement : {};
+  const raw = system.enchantement && typeof system.enchantement === "object" && !Array.isArray(system.enchantement)
+    ? system.enchantement
+    : {};
   const baseStats = raw.baseStats && typeof raw.baseStats === "object" ? raw.baseStats : {};
   const baseWeight = add2eMagicBuilderBaseWeight(raw.baseWeight ?? {
     value: raw.basePoids ?? raw.baseWeightValue,
     unit: raw.basePoidsUnite ?? raw.baseWeightUnit,
     encumbranceGoldPieces: raw.basePoidsEncombrementPo ?? raw.baseEncumbranceGoldPieces
   });
-  const type = add2eMagicBuilderType(item);
-  const isArmor = add2eMagicBuilderIsArmor(type);
-  const legacyToucher = type === "arme"
-    ? system.bonus_hit ?? system.bonus_toucher ?? system.hit_bonus ?? system.attack_bonus
-    : system.bonus_toucher ?? system.bonus_hit ?? system.attack_bonus;
-  const legacyDegats = type === "arme"
-    ? system.bonus_dom ?? system.bonus_degats ?? system.damage_bonus ?? system.degats_bonus
-    : system.bonus_degats ?? system.bonus_dom ?? system.damage_bonus;
-  const legacyBonusCA = isArmor ? undefined : system.bonus_ac ?? system.bonus_ca ?? system.ac_bonus ?? system.ca_bonus;
-  const legacyCAFixe = isArmor ? undefined : system.ca_fixe ?? system.caFixe ?? system.fixedCA ?? system.fixed_ac;
   return {
-    schema: 2,
+    schema: 3,
     baseUuid: String(raw.baseUuid ?? item?.flags?.add2e?.baseItemUuid ?? "").trim(),
     baseName: String(raw.baseName ?? item?.flags?.add2e?.baseItemName ?? "").trim(),
     baseType: String(raw.baseType ?? item?.flags?.add2e?.baseItemType ?? "").trim(),
@@ -148,21 +118,9 @@ export function add2eMagicBuilderEnchantment(item, systemOverride = null) {
     application: ["source", "porteur"].includes(String(raw.application ?? "").trim())
       ? String(raw.application).trim()
       : add2eMagicBuilderDefaultApplication(item),
-    bonusToucher: isArmor
-      ? 0
-      : add2eMagicNumber(raw.bonusToucher ?? raw.bonus_toucher ?? (hasRawEnchantement ? 0 : legacyToucher), 0),
-    bonusDegats: isArmor
-      ? 0
-      : add2eMagicNumber(raw.bonusDegats ?? raw.bonus_degats ?? (hasRawEnchantement ? 0 : legacyDegats), 0),
-    bonusCA: isArmor
-      ? add2eMagicNumber(raw.bonusCA, 0)
-      : add2eMagicNumber(raw.bonusCA ?? raw.bonus_ca ?? (hasRawEnchantement ? 0 : legacyBonusCA), 0),
-    caFixe: isArmor
-      ? add2eMagicOptionalNumber(raw.caFixe)
-      : add2eMagicOptionalNumber(raw.caFixe ?? raw.ca_fixe ?? (hasRawEnchantement ? null : legacyCAFixe)),
     baseStats: {
-      bonusToucher: isArmor ? 0 : add2eMagicNumber(baseStats.bonusToucher, 0),
-      bonusDegats: isArmor ? 0 : add2eMagicNumber(baseStats.bonusDegats, 0),
+      bonusToucher: add2eMagicNumber(baseStats.bonusToucher, 0),
+      bonusDegats: add2eMagicNumber(baseStats.bonusDegats, 0),
       bonusCA: add2eMagicNumber(baseStats.bonusCA, 0),
       caFixe: add2eMagicOptionalNumber(baseStats.caFixe)
     }
@@ -459,74 +417,6 @@ export async function add2eMagicBuilderLoadBaseWeightIndex() {
   return baseWeightIndexPromise;
 }
 
-export function add2eMagicBuilderSyncUpdate(item, change) {
-  if (!add2eMagicBuilderSupported(item) || !change || typeof change !== "object") return;
-  const type = add2eMagicBuilderType(item);
-  const isArmor = add2eMagicBuilderIsArmor(type);
-  const touchesEnchantement = add2eMagicGetProperty(change, "system.enchantement") !== undefined;
-  const legacyPaths = [
-    "system.bonus_hit", "system.bonus_dom", "system.bonus_toucher", "system.bonus_degats",
-    "system.bonus_ac", "system.bonus_ca", "system.ca_fixe", "system.caFixe"
-  ];
-  const touchesLegacyBuilder = !isArmor && legacyPaths.some(path => add2eMagicGetProperty(change, path) !== undefined);
-  const touchesArmorLegacy = isArmor && ADD2E_MAGIC_ARMOR_LEGACY_FIELDS
-    .some(field => add2eMagicGetProperty(change, `system.${field}`) !== undefined);
-  if (!touchesEnchantement && !touchesLegacyBuilder && !touchesArmorLegacy) return;
-
-  const mergedSystem = add2eMagicMerge(item.system ?? {}, change.system ?? {});
-  const enchantement = add2eMagicBuilderEnchantment(item, mergedSystem);
-  const base = enchantement.baseStats;
-  const sourceMode = enchantement.application === "source";
-  if (type === "arme") {
-    add2eMagicSetProperty(change, "system.bonus_hit", base.bonusToucher + (sourceMode ? enchantement.bonusToucher : 0));
-    add2eMagicSetProperty(change, "system.bonus_dom", base.bonusDegats + (sourceMode ? enchantement.bonusDegats : 0));
-  } else if (!isArmor) {
-    add2eMagicSetProperty(change, "system.bonus_toucher", enchantement.bonusToucher);
-    add2eMagicSetProperty(change, "system.bonus_degats", enchantement.bonusDegats);
-  }
-
-  let generatedTags = [];
-  if (isArmor) {
-    add2eMagicBuilderDeleteSystemFields(change, ADD2E_MAGIC_ARMOR_LEGACY_FIELDS);
-  } else {
-    add2eMagicSetProperty(change, "system.bonus_ac", base.bonusCA + enchantement.bonusCA);
-    add2eMagicSetProperty(change, "system.ca_fixe", enchantement.caFixe ?? base.caFixe ?? null);
-    const previousGenerated = new Set(
-      add2eObjectMagicToArray(item.flags?.add2e?.magicItemBuilder?.generatedTags)
-        .map(value => String(value ?? "").trim())
-        .filter(Boolean)
-    );
-    const existingTags = add2eObjectMagicToArray(mergedSystem.effectTags ?? mergedSystem.effets ?? mergedSystem.effects)
-      .map(value => String(value ?? "").trim())
-      .filter(Boolean)
-      .filter(tag => !previousGenerated.has(tag));
-    if (enchantement.application === "porteur") {
-      if (enchantement.bonusToucher) generatedTags.push(`bonus_attaque:${add2eMagicSigned(enchantement.bonusToucher)}`);
-      if (enchantement.bonusDegats) generatedTags.push(`bonus_degats:${add2eMagicSigned(enchantement.bonusDegats)}`);
-    }
-    add2eMagicSetProperty(change, "system.effectTags", [...new Set([...existingTags, ...generatedTags])]);
-  }
-
-  add2eMagicSetProperty(change, "system.enchantement", enchantement);
-  add2eMagicSetProperty(change, "flags.add2e.magicItemBuilder", {
-    version: ADD2E_MAGIC_ITEM_BUILDER_VERSION,
-    generatedTags
-  });
-  const powers = mergedSystem.pouvoirs ?? [];
-  const chargeMax = add2eMagicNumber(mergedSystem.charges?.max, 0);
-  const isMagic = Boolean(
-    enchantement.baseUuid
-    || enchantement.baseName
-    || enchantement.bonusToucher
-    || enchantement.bonusDegats
-    || enchantement.bonusCA
-    || enchantement.caFixe !== null
-    || add2eObjectMagicToArray(powers).length
-    || chargeMax > 0
-  );
-  if (isMagic) add2eMagicSetProperty(change, "system.magique", true);
-}
-
 function add2eMagicBuilderCopyPaths(sourceSystem, targetUpdate, paths) {
   for (const path of paths) {
     const value = add2eMagicGetProperty(sourceSystem, path);
@@ -636,21 +526,15 @@ export async function add2eMagicBuilderApplyBase(targetItem, baseItem) {
     return false;
   }
   const currentTags = add2eObjectMagicToArray(targetItem.system?.tags);
-  const currentEffectTags = targetType === "armure"
-    ? []
-    : add2eObjectMagicToArray(targetItem.system?.effectTags ?? targetItem.system?.effets ?? targetItem.system?.effects);
+  const currentEffectTags = add2eObjectMagicToArray(targetItem.system?.effectTags ?? targetItem.system?.effets ?? targetItem.system?.effects);
   const update = {};
   add2eMagicBuilderCopyPaths(baseItem.system ?? {}, update, add2eMagicBuilderBasePaths(targetType));
   add2eMagicSetProperty(update, "system.tags", add2eMagicMergeUniqueValues(add2eMagicGetProperty(update, "system.tags"), currentTags));
-  if (targetType === "armure") {
-    add2eMagicBuilderDeleteSystemFields(update, ADD2E_MAGIC_ARMOR_LEGACY_FIELDS);
-  } else {
-    add2eMagicSetProperty(update, "system.effectTags", add2eMagicMergeUniqueValues(add2eMagicGetProperty(update, "system.effectTags"), currentEffectTags));
-  }
+  add2eMagicSetProperty(update, "system.effectTags", add2eMagicMergeUniqueValues(add2eMagicGetProperty(update, "system.effectTags"), currentEffectTags));
   const currentEnchantement = add2eMagicBuilderEnchantment(targetItem);
   const nextEnchantement = {
     ...currentEnchantement,
-    schema: 2,
+    schema: 3,
     baseUuid: String(baseItem.uuid ?? ""),
     baseName: String(baseItem.name ?? "Base"),
     baseType,
@@ -781,9 +665,9 @@ export async function add2eMagicBuilderClearBase(itemUuid) {
   enchantement.baseWeight = { value: null, unit: "", encumbranceGoldPieces: null };
   await item.update({
     "system.enchantement": enchantement,
-    "flags.add2e.-=baseItemUuid": null,
-    "flags.add2e.-=baseItemName": null,
-    "flags.add2e.-=baseItemType": null
+    "flags.add2e.baseItemUuid": add2eMagicBuilderForcedDeletion(),
+    "flags.add2e.baseItemName": add2eMagicBuilderForcedDeletion(),
+    "flags.add2e.baseItemType": add2eMagicBuilderForcedDeletion()
   }, { add2eMagicItemBuilder: true, add2eInternal: true });
   item.sheet?.render?.({ force: true });
   return true;
@@ -825,7 +709,6 @@ export async function add2eMagicBuilderRemovePower(itemUuid, powerIndex) {
 export function installMagicEnchantmentBuilderHooks() {
   if (hooksInstalled) return;
   hooksInstalled = true;
-  Hooks.on("preUpdateItem", (item, change) => add2eMagicBuilderSyncUpdate(item, change));
   Hooks.once("ready", () => {
     add2eMagicBuilderLoadBaseWeightIndex().catch(error => {
       console.error("[ADD2E][OBJET_MAGIQUE][BASE_WEIGHT][ERROR]", error);
