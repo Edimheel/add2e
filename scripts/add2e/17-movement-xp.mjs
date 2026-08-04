@@ -35,6 +35,8 @@ const recalculationTimers = new Map();
 const MOVEMENT_DOMAINS = new Set(["movement", "encumbrance"]);
 const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-08-02-world-encumbrance-settings-v4";
 const ADD2E_MOVEMENT_EFFECT_CONTEXT_VERSION = "2026-08-02-size-transformation-effect-context-v1";
+const ADD2E_MOVEMENT_LOT_2G_VERSION = "2026-08-04-lot-2g-closure-v1";
+const GOLD_PIECES_PER_KILOGRAM = 20;
 
 const ITEM_MOVEMENT_FIELDS = Object.freeze([
   "system.mouvement", "system.movement", "system.vitesse",
@@ -43,16 +45,19 @@ const ITEM_MOVEMENT_FIELDS = Object.freeze([
   "system.poids_unite", "system.weightUnit", "system.poids_encombrement_po", "system.encumbrance_gp",
   "system.quantite", "system.quantity", "system.carried", "system.transporte", "system.transporté",
   "system.inInventory", "system.ignoreEncumbrance", "system.encumbranceExempt",
+  "system.facteur_taille", "system.taille_facteur", "system.sizeFactor", "system.encumbranceFactor",
   "system.categorie", "system.category", "system.sousType", "system.subType", "system.subtype",
   "system.tags", "system.effectTags", "system.equipe", "system.equipee", "system.equipped",
   "system.porte", "system.portee", "system.porté", "system.worn", "flags.add2e.modifiers",
-  "flags.add2e.tags", "flags.add2e.effectTags", "flags.add2e.carried", "flags.add2e.ignoreEncumbrance"
+  "flags.add2e.tags", "flags.add2e.effectTags", "flags.add2e.carried", "flags.add2e.ignoreEncumbrance",
+  "flags.add2e.size", "flags.add2e.transformation"
 ]);
 
 const ACTOR_MOVEMENT_FIELDS = Object.freeze([
   "system.force", "system.force_base", "system.force_ex",
   "system.bonus_caracteristiques.force", "system.bonus_divers_caracteristiques.force",
   "system.taille", "system.size", "system.gabarit", "system.transformation", "system.forme", "system.form",
+  "system.facteur_taille", "system.taille_facteur", "system.sizeFactor", "system.encumbranceFactor",
   "system.mouvement", "system.movement",
   "flags.add2e.modifiers", "flags.add2e.size", "flags.add2e.transformation",
   "flags.add2e.environment", "flags.add2e.milieu", "flags.add2e.monnaie"
@@ -67,6 +72,412 @@ globalThis.ADD2E_MOVEMENT_REFERENCE_POLICY_VERSION = "2026-08-02-canonical-sourc
 globalThis.ADD2E_ENCUMBRANCE_SETTINGS_VERSION = ADD2E_ENCUMBRANCE_SETTINGS_VERSION;
 globalThis.ADD2E_MOVEMENT_TERRAIN_POLICY_VERSION = "2026-08-02-terrain-out-of-scope-v1";
 globalThis.ADD2E_MOVEMENT_EFFECT_CONTEXT_VERSION = ADD2E_MOVEMENT_EFFECT_CONTEXT_VERSION;
+globalThis.ADD2E_MOVEMENT_LOT_2G_VERSION = ADD2E_MOVEMENT_LOT_2G_VERSION;
+
+function movementEngine() {
+  return globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+}
+
+function canonicalMovementKey(value) {
+  const engine = movementEngine();
+  const normalized = typeof engine?.normalizeKey === "function"
+    ? engine.normalizeKey(value)
+    : norm(value).replace(/_/g, "-");
+  return String(normalized ?? "").replace(/_/g, "-");
+}
+
+function finitePositiveFactor(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value === "object") {
+    for (const key of [
+      "factor", "sizeFactor", "encumbranceFactor", "weightFactor", "scale",
+      "facteur", "facteurTaille", "facteur_taille", "facteurEncombrement"
+    ]) {
+      const nested = finitePositiveFactor(value?.[key]);
+      if (nested !== null) return nested;
+    }
+    return null;
+  }
+  const parsed = Number(String(value).trim().replace(",", "."));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function rawValues(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(rawValues);
+  if (value instanceof Set) return [...value].flatMap(rawValues);
+  if (typeof value === "object") return Object.values(value).flatMap(rawValues);
+  return [value];
+}
+
+function factorFromTags(...values) {
+  for (const raw of values.flatMap(rawValues)) {
+    const text = String(raw ?? "");
+    for (const part of text.split(/[,;|\n]+/g)) {
+      const match = part.match(/(?:facteur[\s_-]*taille|size[\s_-]*factor|encumbrance[\s_-]*factor|weight[\s_-]*factor)\s*[:=]\s*([0-9]+(?:[.,][0-9]+)?)/i);
+      if (!match) continue;
+      const factor = finitePositiveFactor(match[1]);
+      if (factor !== null) return factor;
+    }
+  }
+  return null;
+}
+
+function activeActorEffects(actor) {
+  const seen = new Set();
+  const result = [];
+  for (const effect of [...(actor?.effects?.contents ?? actor?.effects ?? []), ...(actor?.appliedEffects ?? [])]) {
+    const key = String(effect?.uuid ?? effect?.id ?? "");
+    if (!effect || !key || seen.has(key) || effect.disabled === true || effect.isSuppressed === true || effect.active === false) continue;
+    seen.add(key);
+    result.push(effect);
+  }
+  return result;
+}
+
+function actorRaceItem(actor) {
+  return Array.from(actor?.items ?? []).find(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+}
+
+function movementSizeFactorProfile(actor, context = {}) {
+  const candidates = [];
+  const add = (factor, source, priority, detail = null) => {
+    const value = finitePositiveFactor(factor);
+    if (value === null) return;
+    candidates.push({ factor: value, source, priority, detail });
+  };
+
+  add(context.transformationFactor, "contexte de transformation", 120, context.transformationContext?.factorSource ?? null);
+  add(context.sizeFactor, "contexte de taille", 115, context.size ?? context.taille ?? null);
+
+  for (const effect of activeActorEffects(actor)) {
+    const flags = effect?.flags?.add2e ?? {};
+    add(flags.capabilityTransformation, `effet : ${effect.name}`, 110, effect.uuid ?? effect.id);
+    add(flags.movement, `effet : ${effect.name}`, 105, effect.uuid ?? effect.id);
+    const tagged = factorFromTags(flags.tags, flags.effectTags);
+    add(tagged, `tag d’effet : ${effect.name}`, 100, effect.uuid ?? effect.id);
+  }
+
+  const actorFlags = actor?.flags?.add2e ?? {};
+  const actorSystem = actor?.system ?? {};
+  add(actorFlags.transformation, "transformation de l’acteur", 90, actor.uuid ?? actor.id);
+  add(actorFlags.size, "profil de taille de l’acteur", 85, actor.uuid ?? actor.id);
+  add(
+    actorSystem.facteur_taille
+      ?? actorSystem.taille_facteur
+      ?? actorSystem.sizeFactor
+      ?? actorSystem.encumbranceFactor,
+    "données de taille de l’acteur",
+    80,
+    actor.uuid ?? actor.id
+  );
+  add(factorFromTags(actorFlags.tags, actorFlags.effectTags, actorSystem.tags, actorSystem.effectTags), "tag de l’acteur", 75, actor.uuid ?? actor.id);
+
+  const race = actorRaceItem(actor);
+  const raceSystem = race?.system ?? {};
+  const raceFlags = race?.flags?.add2e ?? {};
+  add(raceFlags.size, `profil racial : ${race?.name ?? "race"}`, 65, race?.uuid ?? race?.id ?? null);
+  add(
+    raceSystem.facteur_taille
+      ?? raceSystem.taille_facteur
+      ?? raceSystem.sizeFactor
+      ?? raceSystem.encumbranceFactor,
+    `données raciales : ${race?.name ?? "race"}`,
+    60,
+    race?.uuid ?? race?.id ?? null
+  );
+  add(factorFromTags(raceFlags.tags, raceFlags.effectTags, raceSystem.tags, raceSystem.effectTags), `tag racial : ${race?.name ?? "race"}`, 55, race?.uuid ?? race?.id ?? null);
+
+  const selected = candidates.sort((left, right) => right.priority - left.priority)[0] ?? null;
+  return {
+    factor: selected?.factor ?? 1,
+    source: selected?.source ?? "aucun facteur explicite",
+    detail: selected?.detail ?? null,
+    explicit: Boolean(selected),
+    candidates
+  };
+}
+
+function movementIgnoreSources(engine, actor, query, context) {
+  if (!engine || !actor) return [];
+  const requestedTarget = canonicalMovementKey(query?.target);
+  const source = Array.isArray(query?.modifiers)
+    ? query.modifiers
+    : typeof engine.collect === "function"
+      ? engine.collect(actor, context)
+      : [];
+  const result = [];
+  const seen = new Set();
+
+  for (const raw of source) {
+    const metadata = raw?.metadata ?? {};
+    if (metadata.ignoresEncumbrance !== true) continue;
+    const normalized = typeof engine.normalizeModifier === "function"
+      ? engine.normalizeModifier(raw, { source: raw?.source })
+      : raw;
+    if (!normalized || canonicalMovementKey(normalized.domain) !== "movement") continue;
+    const modifierTarget = canonicalMovementKey(normalized.target);
+    if (![requestedTarget, "all"].includes(modifierTarget)) continue;
+    normalized._context = raw?._context ?? {};
+    const condition = typeof engine.evaluateModifierConditions === "function"
+      ? engine.evaluateModifierConditions(normalized, { ...context, actor })
+      : { applicable: true };
+    if (!condition?.applicable) continue;
+    const id = String(normalized.id ?? raw?.id ?? normalized.source?.id ?? "");
+    const key = `${id}|${normalized.source?.uuid ?? normalized.source?.name ?? ""}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push({
+      id,
+      name: String(normalized.metadata?.label ?? normalized.source?.name ?? "Effet de mouvement"),
+      sourceKind: String(normalized.source?.kind ?? ""),
+      sourceId: String(normalized.source?.id ?? ""),
+      sourceUuid: String(normalized.source?.uuid ?? "")
+    });
+  }
+  return result;
+}
+
+function installMovementLot2GEngineExtensions() {
+  const engine = movementEngine();
+  if (!engine || typeof engine.resolve !== "function") return false;
+  if (engine.__add2eMovementLot2GVersion === ADD2E_MOVEMENT_LOT_2G_VERSION) return true;
+
+  const baseResolve = engine.resolve.bind(engine);
+  Object.defineProperty(engine, "resolve", {
+    configurable: true,
+    writable: true,
+    value(actor, query = {}) {
+      const domain = canonicalMovementKey(query.domain);
+      const target = canonicalMovementKey(query.target);
+      const context = {
+        ...(query.context ?? {}),
+        actor,
+        item: query.item ?? query.context?.item,
+        targetActor: query.targetActor ?? query.context?.targetActor
+      };
+
+      let base = query.base;
+      let ignoredBy = [];
+      let sizeProfile = null;
+
+      if (domain === "encumbrance" && target === "carried-weight") {
+        const existingFactor = finitePositiveFactor(context.transformationFactor ?? context.sizeFactor);
+        sizeProfile = movementSizeFactorProfile(actor, context);
+        if (existingFactor === null && sizeProfile.explicit && Math.abs(sizeProfile.factor - 1) > 0.0001) {
+          context.sizeFactor = sizeProfile.factor;
+          context.sizeFactorSource = {
+            source: sizeProfile.source,
+            detail: sizeProfile.detail
+          };
+        }
+      }
+
+      if (domain === "movement") {
+        ignoredBy = movementIgnoreSources(engine, actor, query, context);
+        if (ignoredBy.length) {
+          context.encumbranceIgnored = true;
+          context.encumbranceIgnoreSources = ignoredBy;
+          context.encumbranceMultiplier = 1;
+          if (["ground", "sol", "terrestre"].includes(target)) {
+            const naturalBase = Number(context.naturalBase ?? context.movementSource?.value);
+            if (Number.isFinite(naturalBase) && naturalBase >= 0) base = naturalBase;
+          }
+        }
+      }
+
+      const resolution = baseResolve(actor, { ...query, base, context });
+      if (ignoredBy.length) {
+        resolution.encumbranceIgnored = true;
+        resolution.encumbranceIgnoreSources = ignoredBy;
+      }
+      if (sizeProfile?.explicit) {
+        resolution.sizeFactor = sizeProfile.factor;
+        resolution.sizeFactorSource = sizeProfile.source;
+      }
+      return resolution;
+    }
+  });
+
+  Object.defineProperty(engine, "__add2eMovementLot2GVersion", {
+    configurable: true,
+    writable: true,
+    value: ADD2E_MOVEMENT_LOT_2G_VERSION
+  });
+  return true;
+}
+
+function round2(value) {
+  return Math.round((Number(value) || 0) * 100) / 100;
+}
+
+function signed(value) {
+  const number = Number(value) || 0;
+  return `${number >= 0 ? "+" : ""}${number}`;
+}
+
+function movementCapacityRows(movement) {
+  const activeKey = {
+    sans_encombrement: "unencumbered",
+    leger: "light",
+    modere: "moderate",
+    lourd: "heavy",
+    severe: "severe",
+    surcharge: "overload"
+  }[String(movement?.categorie ?? "")] ?? "unencumbered";
+  const rows = [
+    ["unencumbered", "Sans encombrement", movement?.limiteSansEncombrement],
+    ["light", "Léger", movement?.limiteLegere],
+    ["moderate", "Modéré", movement?.limiteModeree],
+    ["heavy", "Lourd", movement?.limiteLourde],
+    ["severe", "Sévère", movement?.limiteSevere]
+  ].map(([key, label, limit]) => ({
+    key,
+    label,
+    limitPo: round2(limit),
+    limitKg: round2((Number(limit) || 0) / GOLD_PIECES_PER_KILOGRAM),
+    active: activeKey === key
+  }));
+  if (activeKey === "overload") {
+    rows.push({ key: "overload", label: "Surcharge", limitPo: null, limitKg: null, active: true });
+  }
+  return rows;
+}
+
+function movementAppliedRows(resolution) {
+  return Array.isArray(resolution?.applied)
+    ? resolution.applied.map(entry => {
+      const modifier = entry?.modifier ?? {};
+      return {
+        id: String(modifier.id ?? ""),
+        label: String(modifier.metadata?.label ?? modifier.source?.name ?? modifier.id ?? "Modificateur"),
+        source: String(modifier.source?.name ?? ""),
+        domain: String(modifier.domain ?? ""),
+        target: String(modifier.target ?? ""),
+        operation: String(modifier.operation ?? ""),
+        value: modifier.value
+      };
+    })
+    : [];
+}
+
+function movementDisplayData(actor, movement) {
+  const groundResolution = movement?.movementResolutions?.ground ?? movement?.movementResolution ?? null;
+  const carriedWeightResolution = movement?.encumbrance?.carriedWeight ?? null;
+  const ignoredBy = Array.isArray(groundResolution?.encumbranceIgnoreSources)
+    ? groundResolution.encumbranceIgnoreSources
+    : [];
+  const armorModifier = movementAppliedRows(groundResolution)
+    .find(row => String(row.id).includes(":movement:armor-cap")) ?? null;
+  const sizeProfile = movementSizeFactorProfile(actor, {
+    size: movement?.contextScope?.size,
+    transformation: movement?.contextScope?.transformation,
+    transformationFactor: movement?.contextScope?.factor
+  });
+  const selectedSource = movement?.source?.selected ?? null;
+  const forceProfile = movement?.forceProfilEncombrement ?? {};
+
+  return {
+    naturalMovement: round2(movement?.naturalBase),
+    finalMovement: round2(movement?.actuel),
+    sourceLabel: String(selectedSource?.name ?? "Aucune source"),
+    sourceKind: String(selectedSource?.kind ?? ""),
+    weightPo: round2(movement?.poidsPo ?? movement?.poids),
+    weightKg: round2(movement?.poidsKg),
+    weightLabel: `${round2(movement?.poidsKg)} kg`,
+    category: String(movement?.categorie ?? "sans_encombrement"),
+    categoryLabel: String(movement?.label ?? "Sans encombrement"),
+    multiplier: round2(movement?.multiplier ?? 1),
+    attackPenalty: Number(movement?.attaquePenalite) || 0,
+    attackPenaltyDisplay: signed(movement?.attaquePenalite),
+    armorClassPenalty: Number(movement?.classeArmurePenalite) || 0,
+    armorClassPenaltyDisplay: signed(movement?.classeArmurePenalite),
+    strengthTableKey: String(forceProfile?.tableKey ?? forceProfile?.score ?? "—"),
+    strengthSource: String(forceProfile?.source ?? ""),
+    capacityRows: movementCapacityRows(movement),
+    encumbranceIgnored: groundResolution?.encumbranceIgnored === true,
+    ignoredBy,
+    ignoredByLabel: ignoredBy.map(entry => entry.name).join(" · "),
+    size: movement?.contextScope?.size ?? null,
+    transformation: movement?.contextScope?.transformation ?? null,
+    sizeFactor: Number(carriedWeightResolution?.sizeFactor ?? movement?.contextScope?.factor ?? sizeProfile.factor) || 1,
+    sizeFactorSource: String(carriedWeightResolution?.sizeFactorSource ?? sizeProfile.source ?? ""),
+    hasSizeFactor: Math.abs((Number(carriedWeightResolution?.sizeFactor ?? movement?.contextScope?.factor ?? sizeProfile.factor) || 1) - 1) > 0.0001,
+    armorLabel: armorModifier?.source ?? "",
+    hasArmorLimit: Boolean(armorModifier),
+    inventoryCount: Array.isArray(movement?.inventory?.entries) ? movement.inventory.entries.length : 0
+  };
+}
+
+function computeMovementForConsumers(actor, options = {}) {
+  const movement = computeMovement(actor, options);
+  if (!movement || typeof movement !== "object") return movement;
+  return {
+    ...movement,
+    display: movementDisplayData(actor, movement)
+  };
+}
+
+function resolveDiagnosticActor(actorOrId = null) {
+  if (actorOrId?.documentName === "Actor") return actorOrId;
+  if (actorOrId?.actor?.documentName === "Actor") return actorOrId.actor;
+  if (typeof actorOrId === "string" && actorOrId.trim()) {
+    const id = actorOrId.trim();
+    return game.actors?.get?.(id)
+      ?? Array.from(game.actors ?? []).find(actor => actor?.name === id)
+      ?? null;
+  }
+  return canvas?.tokens?.controlled?.[0]?.actor
+    ?? game.user?.character
+    ?? null;
+}
+
+function diagnoseMovement(actorOrId = null, options = {}) {
+  const actor = resolveDiagnosticActor(actorOrId);
+  if (!actor) throw new Error("Sélectionne un token, fournis un acteur ou son identifiant.");
+  const movement = computeMovementForConsumers(actor, {
+    consumer: "movement-diagnostic",
+    movementMode: options.movementMode ?? options.mode ?? "ground",
+    token: options.token,
+    scene: options.scene,
+    environment: options.environment,
+    transformation: options.transformation,
+    size: options.size
+  });
+  const resolutions = movement?.movementResolutions ?? {};
+  const applied = Object.entries(resolutions).flatMap(([mode, resolution]) => (
+    movementAppliedRows(resolution).map(row => ({ mode, ...row }))
+  ));
+  const report = {
+    version: ADD2E_MOVEMENT_LOT_2G_VERSION,
+    actor: { id: actor.id, uuid: actor.uuid, name: actor.name },
+    source: movement?.source,
+    display: movement?.display,
+    inventory: movement?.inventory,
+    encumbrance: movement?.encumbrance,
+    movementModes: movement?.movementModes,
+    appliedModifiers: applied
+  };
+
+  console.group(`${ADD2E_MOVE_XP_TAG}[DIAGNOSTIC] ${actor.name}`);
+  console.log("Synthèse", report.display);
+  console.table(report.display?.capacityRows ?? []);
+  console.table((report.inventory?.entries ?? []).map(entry => ({
+    nom: entry.name,
+    quantité: entry.quantity,
+    unité: entry.weightUnit,
+    poidsUnitairePo: entry.unitWeight,
+    totalPo: entry.total,
+    source: entry.weightSource
+  })));
+  console.table(applied);
+  console.log("Rapport complet", report);
+  console.groupEnd();
+  return report;
+}
+
+installMovementLot2GEngineExtensions();
+Hooks.once("init", installMovementLot2GEngineExtensions);
 
 function actorTimerKey(actor) {
   return String(actor?.uuid ?? actor?.id ?? "");
@@ -438,7 +849,7 @@ Hooks.on("deleteItem", (item, options = {}) => queueItemMovementRecalc(item, "de
 installMovementTokenControl();
 
 globalThis.add2eComputeXp = computeXp;
-globalThis.add2eComputeMovement = computeMovement;
+globalThis.add2eComputeMovement = computeMovementForConsumers;
 globalThis.add2eGetMagicMovementRules = magicMovementRules;
 globalThis.add2eRecalcMoveXp = recalc;
 globalThis.add2eAwardXp = awardXp;
@@ -447,3 +858,5 @@ globalThis.add2eMinXpForLevel = minXpForLevel;
 globalThis.add2eValidateTokenMovement = validateTokenMovement;
 globalThis.add2eComputeTokenMovementScale = computeTokenMovementScale;
 globalThis.add2eGetEncumbranceSettings = readEncumbranceSettings;
+globalThis.add2eResolveMovementSizeFactor = movementSizeFactorProfile;
+globalThis.add2eDiagnoseMovement = diagnoseMovement;
