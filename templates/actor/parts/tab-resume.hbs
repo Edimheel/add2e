@@ -25,7 +25,68 @@
                 <div>
                   <label>Mouvement</label>
                   <strong>{{movement.actuel}} m</strong>
-                  <small>déplacement résolu</small>
+                  <small>{{movement.display.categoryLabel}}</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="a2e-panel a2e-movement-summary">
+              <h2><i class="fas fa-person-walking-luggage"></i> Mouvement et encombrement</h2>
+              <div class="a2e-panel-body">
+                <div class="a2e-summary-pills" style="margin-bottom:8px;">
+                  <span class="a2e-summary-pill" title="Source du mouvement naturel">
+                    <b>Source</b>&nbsp;{{movement.display.sourceLabel}}
+                  </span>
+                  <span class="a2e-summary-pill" title="Mouvement naturel avant armure, charge et effets">
+                    <b>Base</b>&nbsp;{{movement.display.naturalMovement}} m
+                  </span>
+                  <span class="a2e-summary-pill" title="Mouvement final résolu">
+                    <b>Final</b>&nbsp;{{movement.display.finalMovement}} m
+                  </span>
+                  <span class="a2e-summary-pill" title="Poids canonique : {{movement.display.weightPo}} unités d’encombrement">
+                    <b>Charge</b>&nbsp;{{movement.display.weightLabel}}
+                  </span>
+                  <span class="a2e-summary-pill">
+                    <b>Force</b>&nbsp;{{movement.display.strengthTableKey}}
+                  </span>
+                  <span class="a2e-summary-pill">
+                    <b>État</b>&nbsp;{{movement.display.categoryLabel}}
+                  </span>
+                  <span class="a2e-summary-pill" title="Multiplicateur appliqué au mouvement naturel">
+                    <b>Multiplicateur</b>&nbsp;×{{movement.display.multiplier}}
+                  </span>
+                  <span class="a2e-summary-pill" title="Pénalité appliquée aux jets d’attaque">
+                    <b>Attaque</b>&nbsp;{{movement.display.attackPenaltyDisplay}}
+                  </span>
+                  <span class="a2e-summary-pill" title="Ajustement appliqué à la classe d’armure">
+                    <b>CA</b>&nbsp;{{movement.display.armorClassPenaltyDisplay}}
+                  </span>
+                  {{#if movement.display.hasArmorLimit}}
+                    <span class="a2e-summary-pill" title="Plafond de mouvement imposé par l’armure équipée">
+                      <b>Armure</b>&nbsp;{{movement.display.armorLabel}}
+                    </span>
+                  {{/if}}
+                  {{#if movement.display.hasSizeFactor}}
+                    <span class="a2e-summary-pill" title="{{movement.display.sizeFactorSource}}">
+                      <b>Facteur de taille</b>&nbsp;×{{movement.display.sizeFactor}}
+                    </span>
+                  {{/if}}
+                  {{#if movement.display.encumbranceIgnored}}
+                    <span class="a2e-summary-pill" title="{{movement.display.ignoredByLabel}}">
+                      <i class="fas fa-feather"></i>&nbsp;<b>Déplacement sans pénalité de charge</b>
+                    </span>
+                  {{/if}}
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:6px;">
+                  {{#each movement.display.capacityRows as |row|}}
+                    <div style="padding:7px 8px;border:1px solid {{#if row.active}}#2f6f55{{else}}rgba(90,72,35,.25){{/if}};border-radius:7px;background:{{#if row.active}}rgba(47,111,85,.12){{else}}rgba(255,255,255,.35){{/if}};">
+                      <div style="font-size:.76rem;font-weight:900;text-transform:uppercase;letter-spacing:.03em;">{{row.label}}</div>
+                      <div style="margin-top:2px;font-weight:800;">
+                        {{#if row.limitKg}}jusqu’à {{row.limitKg}} kg{{else}}au-delà de la limite{{/if}}
+                      </div>
+                    </div>
+                  {{/each}}
                 </div>
               </div>
             </div>
