@@ -1,9 +1,9 @@
 // ADD2E — Affichage détaillé des monstres
-// Version : 2026-08-05-manual-monster-spell-selection-v9
+// Version : 2026-08-05-monster-tab-hook-fix-v10
 // But : séparer les capacités informatives MJ des effets système activables et permettre au MJ de composer manuellement les sorts préparés.
 // Foundry V13/V14/V15 : ApplicationV2 / DialogV2 uniquement.
 
-const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-08-05-manual-monster-spell-selection-v9";
+const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-08-05-monster-tab-hook-fix-v10";
 const ADD2E_MONSTER_SPELL_PACK = "add2e.sorts";
 globalThis.ADD2E_MONSTER_CAPABILITIES_VERSION = ADD2E_MONSTER_CAPABILITIES_VERSION;
 
@@ -714,6 +714,24 @@ function installMonsterRangedProjectileBridge() {
   return true;
 }
 
+function refreshCapabilitiesPanel(body, actor) {
+  let panel = body.children('[data-tab="capacites"]').first();
+  const replacement = $(buildCapTab(actor));
+
+  if (!panel.length) {
+    const magicPanel = body.children('[data-tab="magie"]').first();
+    if (magicPanel.length) magicPanel.before(replacement);
+    else body.append(replacement);
+    panel = body.children('[data-tab="capacites"]').first();
+    return panel;
+  }
+
+  const wasActive = panel.hasClass("active");
+  panel.empty().append(replacement.contents());
+  panel.toggleClass("active", wasActive);
+  return panel;
+}
+
 Hooks.on("renderAdd2eMonsterSheet", (app, html, data) => {
   try {
     installStyles();
@@ -721,37 +739,34 @@ Hooks.on("renderAdd2eMonsterSheet", (app, html, data) => {
     if (!actor || actor.type !== "monster") return;
 
     const $html = html instanceof jQuery ? html : $(html);
-    const tabs = $html.find(".sheet-tabs");
-    const body = $html.find(".sheet-body");
+    const tabs = $html.find(".sheet-tabs").first();
+    const body = $html.find(".sheet-body").first();
     if (!tabs.length || !body.length) return;
 
-    if (!tabs.find('[data-tab="capacites"]').length) {
-      tabs.find('[data-tab="magie"], [data-tab="description"]').first().before(`<a class="item" data-tab="capacites"><i class="fas fa-list-check"></i> Capacités</a>`);
+    if (!tabs.children('[data-tab="capacites"]').length) {
+      tabs.children('[data-tab="magie"], [data-tab="description"]').first().before(`<a class="item" data-tab="capacites"><i class="fas fa-list-check"></i> Capacités</a>`);
     }
 
-    body.find('[data-tab="capacites"]').remove();
-    const magieTab = body.find('[data-tab="magie"]');
-    if (magieTab.length) magieTab.before(buildCapTab(actor));
-    else body.append(buildCapTab(actor));
-
+    refreshCapabilitiesPanel(body, actor);
     bindMonsterSpellLibrary(app, $html, actor);
 
-    const descTab = body.find('[data-tab="description"]');
+    const descTab = body.children('[data-tab="description"]').first();
     if (descTab.length && !descTab.find(".add2e-monster-details-readonly").length) descTab.prepend(buildDetails(actor));
 
-    const effectsTab = body.find('[data-tab="effets"]');
+    const effectsTab = body.children('[data-tab="effets"]').first();
     if (effectsTab.length && !effectsTab.find(".add2e-monster-effect-explain").length) {
       effectsTab.prepend(`<div class="add2e-monster-panel add2e-monster-effect-explain"><h2>Règle d’usage</h2><div class="add2e-monster-panel-body add2e-monster-note">Cet onglet doit contenir uniquement les effets qui modifient réellement la résolution de jeu ou qui doivent être activés/désactivés. Embuscade, attaque en groupe, discipline, écholocation narrative ou tactiques non chiffrées restent dans Capacités / notes MJ.</div></div>`);
     }
 
-    $html.off("click.add2e-monster-cap-tabs").on("click.add2e-monster-cap-tabs", ".sheet-tabs .item", ev => {
-      ev.preventDefault();
-      const tab = ev.currentTarget.dataset.tab;
-      $html.find(".sheet-tabs .item").removeClass("active");
-      $(ev.currentTarget).addClass("active");
-      $html.find(".sheet-body .tab").removeClass("active");
-      $html.find(`.sheet-body .tab[data-tab="${tab}"]`).addClass("active");
-    });
+    const remembered = app?._add2eActiveTab ?? app?._add2eReadStoredTab?.() ?? null;
+    if (remembered && tabs.children(`[data-tab="${remembered}"]`).length && body.children(`[data-tab="${remembered}"]`).length) {
+      tabs.children(".item[data-tab]").each((_index, element) => {
+        element.classList.toggle("active", element.dataset.tab === remembered);
+      });
+      body.children(".tab[data-tab]").each((_index, element) => {
+        element.classList.toggle("active", element.dataset.tab === remembered);
+      });
+    }
   } catch (err) {
     console.error("[ADD2E][MONSTER_SHEET][CAPABILITIES] Erreur d'affichage", err);
   }
