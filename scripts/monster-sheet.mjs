@@ -6,7 +6,7 @@
  * - Défense et sauvegardes exclusivement canoniques
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-07-25-monster-canonical-defense-save-v10";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-08-05-monster-tab-state-v11";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const ADD2E_MONSTER_ACTOR_SHEET_V2 = foundry?.applications?.sheets?.ActorSheetV2;
@@ -505,6 +505,14 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
   }
 
   render(options = {}, legacyOptions = {}) {
+    const root = this.element instanceof HTMLElement
+      ? this.element
+      : this.element?.[0] instanceof HTMLElement
+        ? this.element[0]
+        : null;
+    if (root && !this._add2ePendingView) {
+      this._add2ePendingView = this._captureViewBeforeRender(root);
+    }
     if (typeof options === "boolean") return super.render({ force: options }, legacyOptions);
     return super.render(options, legacyOptions);
   }
