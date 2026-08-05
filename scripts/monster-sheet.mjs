@@ -6,7 +6,7 @@
  * - Défense et sauvegardes exclusivement canoniques
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-08-05-monster-tab-logs-v13";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-08-05-monster-tab-render-race-fix-v14";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const ADD2E_MONSTER_ACTOR_SHEET_V2 = foundry?.applications?.sheets?.ActorSheetV2;
@@ -52,92 +52,6 @@ const ADD2E_MONSTER_SAVE_TYPES = Object.freeze([
   "souffle",
   "sorts"
 ]);
-
-const ADD2E_MONSTER_TAB_LOG_PREFIX = "[ADD2E][MONSTER_TABS]";
-
-function add2eMonsterTabRoot(source) {
-  if (!source) return null;
-  const root = source.jquery ? source[0] : source;
-  if (!(root instanceof HTMLElement)) return null;
-  if (root.matches?.(".add2e-monster-readable-sheet")) return root;
-  return root.querySelector?.(".add2e-monster-readable-sheet") ?? null;
-}
-
-function add2eMonsterTabSnapshot(sheet, source = null) {
-  const root = add2eMonsterTabRoot(source)
-    ?? add2eMonsterTabRoot(sheet?.element)
-    ?? null;
-  const nav = root?.querySelector?.(":scope > .sheet-tabs") ?? null;
-  const body = root?.querySelector?.(":scope > .sheet-body") ?? null;
-  const navItems = Array.from(nav?.querySelectorAll?.(":scope > .item[data-tab]") ?? []);
-  const panels = Array.from(body?.querySelectorAll?.(":scope > .tab[data-tab]") ?? []);
-  let storedTab = null;
-  try { storedTab = sessionStorage.getItem(`add2e.monster.${sheet?.actor?.id || "unknown"}.activeTab`); }
-  catch (_error) {}
-
-  return {
-    actor: sheet?.actor?.name ?? null,
-    actorId: sheet?.actor?.id ?? null,
-    sheetVersion: ADD2E_MONSTER_SHEET_VERSION,
-    renderSequence: sheet?._add2eRenderSequence ?? 0,
-    rootConnected: root?.isConnected === true,
-    memoryTab: sheet?._add2eActiveTab ?? null,
-    pendingTab: sheet?._add2ePendingView?.activeTab ?? null,
-    storedTab,
-    tabGroups: sheet?.tabGroups && typeof sheet.tabGroups === "object" ? { ...sheet.tabGroups } : null,
-    activeNavigation: navItems.filter(item => item.classList.contains("active")).map(item => item.dataset.tab),
-    activePanels: panels.filter(panel => panel.classList.contains("active")).map(panel => panel.dataset.tab),
-    navigation: navItems.map(item => ({ tab: item.dataset.tab, active: item.classList.contains("active") })),
-    panels: panels.map(panel => ({ tab: panel.dataset.tab, active: panel.classList.contains("active") })),
-    scrollTop: body?.scrollTop ?? null,
-    timestamp: Math.round(performance.now() * 100) / 100
-  };
-}
-
-function add2eMonsterTabLog(sheet, stage, extra = {}, source = null) {
-  console.log(ADD2E_MONSTER_TAB_LOG_PREFIX, stage, {
-    ...add2eMonsterTabSnapshot(sheet, source),
-    stage,
-    ...extra
-  });
-}
-
-function add2eInstallMonsterTabObserver(sheet, source) {
-  const root = add2eMonsterTabRoot(source);
-  if (!root || typeof MutationObserver !== "function") return;
-
-  sheet._add2eTabObserver?.disconnect?.();
-  const sequence = sheet._add2eRenderSequence ?? 0;
-  const observer = new MutationObserver(records => {
-    for (const record of records) {
-      const target = record.target;
-      if (!(target instanceof HTMLElement)) continue;
-      if (!target.matches?.(".sheet-tabs .item[data-tab], .sheet-body .tab[data-tab]")) continue;
-      add2eMonsterTabLog(sheet, "CLASS_MUTATION", {
-        sequence,
-        targetTab: target.dataset.tab ?? null,
-        targetKind: target.matches(".sheet-tabs .item[data-tab]") ? "navigation" : "panel",
-        oldClass: record.oldValue ?? "",
-        newClass: target.className
-      }, root);
-    }
-  });
-
-  observer.observe(root, {
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["class"],
-    attributeOldValue: true
-  });
-  sheet._add2eTabObserver = observer;
-
-  setTimeout(() => {
-    if (sheet._add2eTabObserver !== observer) return;
-    observer.disconnect();
-    sheet._add2eTabObserver = null;
-    add2eMonsterTabLog(sheet, "OBSERVER_STOP", { sequence }, root);
-  }, 1500);
-}
 
 function __add2eNormalize(str) {
   return (str ?? "")
@@ -568,9 +482,8 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
   };
 
   _add2eActiveTab = null;
-  _add2ePendingView = null;
   _add2eRenderSequence = 0;
-  _add2eTabObserver = null;
+  _add2ePendingViews = new Map();
 
   get title() {
     return this.actor?.name ?? super.title;
@@ -594,28 +507,25 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
   }
 
   render(options = {}, legacyOptions = {}) {
-    this._add2eRenderSequence += 1;
-    const sequence = this._add2eRenderSequence;
+    const sequence = ++this._add2eRenderSequence;
     const root = this.element instanceof HTMLElement
       ? this.element
       : this.element?.[0] instanceof HTMLElement
         ? this.element[0]
         : null;
 
-    add2eMonsterTabLog(this, "RENDER_ENTER", {
-      sequence,
-      options: typeof options === "object" ? { ...options } : options,
-      hasRoot: Boolean(root)
-    }, root);
+    const view = root
+      ? this._captureViewBeforeRender(root)
+      : {
+          activeTab: this._add2eActiveTab ?? this._add2eReadStoredTab() ?? "combat",
+          scrollTop: 0,
+          scrollLeft: 0
+        };
 
-    if (root && !this._add2ePendingView) {
-      this._add2ePendingView = this._captureViewBeforeRender(root);
+    this._add2ePendingViews.set(sequence, view);
+    for (const pendingSequence of this._add2ePendingViews.keys()) {
+      if (pendingSequence < sequence - 4) this._add2ePendingViews.delete(pendingSequence);
     }
-
-    add2eMonsterTabLog(this, "RENDER_DISPATCH", {
-      sequence,
-      pendingView: this._add2ePendingView ? { ...this._add2ePendingView } : null
-    }, root);
 
     if (typeof options === "boolean") return super.render({ force: options }, legacyOptions);
     return super.render(options, legacyOptions);
@@ -700,44 +610,33 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
   }
 
   async _renderHTML(_context, _options) {
+    const sequence = this._add2eRenderSequence;
     const data = await this.getData();
     const html = await foundry.applications.handlebars.renderTemplate("systems/add2e/templates/actor/monster-sheet.hbs", data);
     const wrapper = document.createElement("div");
+    wrapper.dataset.add2eRenderSequence = String(sequence);
     wrapper.innerHTML = html;
     return wrapper;
   }
 
-  _replaceHTML(result, content, options) {
-    const sequence = this._add2eRenderSequence;
-    add2eMonsterTabLog(this, "REPLACE_BEFORE", { sequence, options }, content);
-    content.replaceChildren(...result.childNodes);
-    add2eMonsterTabLog(this, "REPLACE_AFTER_DOM", { sequence }, content);
-    this.activateListeners(content);
-    add2eInstallMonsterTabObserver(this, content);
-    add2eMonsterTabLog(this, "REPLACE_AFTER_LISTENERS", { sequence }, content);
-    this._restoreViewAfterRender(content);
-    add2eMonsterTabLog(this, "REPLACE_AFTER_RESTORE_CALL", { sequence }, content);
+  _replaceHTML(result, content, _options) {
+    const sequence = Number(result?.dataset?.add2eRenderSequence) || this._add2eRenderSequence;
+    const view = this._add2ePendingViews.get(sequence) ?? {
+      activeTab: this._add2eActiveTab ?? this._add2eReadStoredTab() ?? "combat",
+      scrollTop: 0,
+      scrollLeft: 0
+    };
 
-    queueMicrotask(() => add2eMonsterTabLog(this, "POST_RENDER_MICROTASK", { sequence }, content));
-    for (const delay of [0, 50, 250, 750]) {
-      setTimeout(() => add2eMonsterTabLog(this, `POST_RENDER_${delay}MS`, { sequence }, content), delay);
-    }
+    content.replaceChildren(...result.childNodes);
+    this.activateListeners(content);
+    this._restoreViewAfterRender(content, view, sequence);
+    this._add2ePendingViews.delete(sequence);
   }
 
-  async _updateObject(event, formData) {
+  async _updateObject(_event, formData) {
     const updateData = foundry.utils.flattenObject(formData ?? {});
     if (!updateData.name || String(updateData.name).trim() === "") updateData.name = this.actor.name;
-    add2eMonsterTabLog(this, "UPDATE_OBJECT_BEGIN", {
-      eventType: event?.type ?? null,
-      fieldName: event?.target?.name ?? null,
-      updateKeys: Object.keys(updateData)
-    });
     await this.actor.update(updateData);
-    add2eMonsterTabLog(this, "UPDATE_OBJECT_END", {
-      eventType: event?.type ?? null,
-      fieldName: event?.target?.name ?? null,
-      updateKeys: Object.keys(updateData)
-    });
   }
 
   _add2eTabStorageKey() {
@@ -751,89 +650,71 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
 
   _add2eRememberActiveTab(tabName) {
     const tab = String(tabName || "combat").trim() || "combat";
-    add2eMonsterTabLog(this, "REMEMBER_BEFORE", { requestedTab: tab });
     this._add2eActiveTab = tab;
     if (this.tabGroups && typeof this.tabGroups === "object") this.tabGroups.primary = tab;
     try { sessionStorage.setItem(this._add2eTabStorageKey(), tab); } catch (_error) {}
-    add2eMonsterTabLog(this, "REMEMBER_AFTER", { requestedTab: tab });
     return tab;
   }
 
   _captureViewBeforeRender(root) {
-    add2eMonsterTabLog(this, "CAPTURE_BEFORE", {}, root);
     const sheetRoot = root?.matches?.(".add2e-monster-readable-sheet")
       ? root
       : root?.querySelector?.(".add2e-monster-readable-sheet")
         ?? null;
     const body = sheetRoot?.querySelector?.(":scope > .sheet-body") ?? null;
-    const activeTab = sheetRoot?.querySelector?.(":scope > .sheet-tabs .item.active[data-tab]")?.dataset?.tab
-      ?? this._add2eActiveTab
-      ?? this._add2eReadStoredTab()
-      ?? "combat";
+    const rememberedTab = this._add2eActiveTab ?? this._add2eReadStoredTab();
+    const domTab = sheetRoot?.querySelector?.(":scope > .sheet-tabs .item.active[data-tab]")?.dataset?.tab ?? null;
+    const activeTab = rememberedTab ?? domTab ?? "combat";
     this._add2eRememberActiveTab(activeTab);
-    const view = {
+    return {
       activeTab,
       scrollTop: body?.scrollTop ?? 0,
       scrollLeft: body?.scrollLeft ?? 0
     };
-    add2eMonsterTabLog(this, "CAPTURE_AFTER", { capturedView: { ...view } }, root);
-    return view;
   }
 
   _renderPreservingView(root) {
-    this._add2ePendingView = this._captureViewBeforeRender(root);
+    this._captureViewBeforeRender(root);
     this.render(false);
   }
 
-  _restoreViewAfterRender(content) {
-    const sequence = this._add2eRenderSequence;
-    const view = this._add2ePendingView ?? {
-      activeTab: this._add2eActiveTab ?? this._add2eReadStoredTab() ?? "combat",
-      scrollTop: 0,
-      scrollLeft: 0
-    };
-    add2eMonsterTabLog(this, "RESTORE_SCHEDULE", {
-      sequence,
-      view: { ...view }
-    }, content);
-    this._add2ePendingView = null;
+  _restoreViewAfterRender(content, view = {}, sequence = this._add2eRenderSequence) {
+    const sheetRoot = content?.matches?.(".add2e-monster-readable-sheet")
+      ? content
+      : content?.querySelector?.(".add2e-monster-readable-sheet")
+        ?? null;
+    if (!sheetRoot) return;
 
+    const nav = sheetRoot.querySelector(":scope > .sheet-tabs");
+    const body = sheetRoot.querySelector(":scope > .sheet-body");
+    if (!nav || !body) return;
+
+    const links = Array.from(nav.querySelectorAll(":scope > .item[data-tab]"));
+    const panels = Array.from(body.querySelectorAll(":scope > .tab[data-tab]"));
+    const requested = String(
+      this._add2eActiveTab
+      ?? this._add2eReadStoredTab()
+      ?? view.activeTab
+      ?? "combat"
+    );
+    const available = new Set(links.map(link => String(link.dataset.tab || "")));
+    const activeTab = available.has(requested)
+      ? requested
+      : available.has("combat")
+        ? "combat"
+        : String(links[0]?.dataset?.tab || "combat");
+
+    this._add2eRememberActiveTab(activeTab);
+    for (const link of links) link.classList.toggle("active", link.dataset.tab === activeTab);
+    for (const panel of panels) panel.classList.toggle("active", panel.dataset.tab === activeTab);
+
+    const scrollTop = view.scrollTop ?? 0;
+    const scrollLeft = view.scrollLeft ?? 0;
     requestAnimationFrame(() => {
-      add2eMonsterTabLog(this, "RESTORE_RAF_BEFORE", {
-        sequence,
-        view: { ...view }
-      }, content);
-      const sheetRoot = content?.matches?.(".add2e-monster-readable-sheet")
-        ? content
-        : content?.querySelector?.(".add2e-monster-readable-sheet")
-          ?? null;
-      if (!sheetRoot) return;
-
-      const nav = sheetRoot.querySelector(":scope > .sheet-tabs");
-      const body = sheetRoot.querySelector(":scope > .sheet-body");
-      if (!nav || !body) return;
-
-      const links = Array.from(nav.querySelectorAll(":scope > .item[data-tab]"));
-      const panels = Array.from(body.querySelectorAll(":scope > .tab[data-tab]"));
-      const requested = String(view.activeTab || this._add2eReadStoredTab() || "combat");
-      const available = new Set(links.map(link => String(link.dataset.tab || "")));
-      const activeTab = available.has(requested)
-        ? requested
-        : available.has("combat")
-          ? "combat"
-          : String(links[0]?.dataset?.tab || "combat");
-
-      this._add2eRememberActiveTab(activeTab);
-      for (const link of links) link.classList.toggle("active", link.dataset.tab === activeTab);
-      for (const panel of panels) panel.classList.toggle("active", panel.dataset.tab === activeTab);
-
-      body.scrollTop = view.scrollTop ?? 0;
-      body.scrollLeft = view.scrollLeft ?? 0;
-      add2eMonsterTabLog(this, "RESTORE_RAF_AFTER", {
-        sequence,
-        requested,
-        restoredTab: activeTab
-      }, content);
+      if (sequence !== this._add2eRenderSequence) return;
+      if (!body.isConnected) return;
+      body.scrollTop = scrollTop;
+      body.scrollLeft = scrollLeft;
     });
   }
 
@@ -843,16 +724,8 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
 
     const submit = async event => {
       event?.preventDefault?.();
-      add2eMonsterTabLog(this, "AUTO_SUBMIT_BEGIN", {
-        eventType: event?.type ?? null,
-        fieldName: event?.target?.name ?? null
-      }, root);
-      this._add2ePendingView = this._captureViewBeforeRender(root);
+      this._captureViewBeforeRender(root);
       await this._updateObject(event, add2eCollectMonsterFormData(form));
-      add2eMonsterTabLog(this, "AUTO_SUBMIT_END", {
-        eventType: event?.type ?? null,
-        fieldName: event?.target?.name ?? null
-      }, root);
     };
 
     form.addEventListener("submit", submit);
@@ -874,7 +747,6 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
         const sheetRoot = event.currentTarget?.closest?.(".add2e-monster-readable-sheet");
         const nav = sheetRoot?.querySelector?.(":scope > .sheet-tabs");
         const body = sheetRoot?.querySelector?.(":scope > .sheet-body");
-        add2eMonsterTabLog(this, "TAB_CLICK_BEFORE", { clickedTab: tabName }, sheetRoot);
         this._add2eRememberActiveTab(tabName);
         nav?.querySelectorAll?.(":scope > .item[data-tab]")?.forEach(link => {
           link.classList.toggle("active", link.dataset.tab === tabName);
@@ -882,7 +754,6 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
         body?.querySelectorAll?.(":scope > .tab[data-tab]")?.forEach(panel => {
           panel.classList.toggle("active", panel.dataset.tab === tabName);
         });
-        add2eMonsterTabLog(this, "TAB_CLICK_AFTER", { clickedTab: tabName }, sheetRoot);
       });
 
     html.find(".roll-save").off("click.add2e-monster-save").on("click.add2e-monster-save", async event => {
@@ -1110,16 +981,6 @@ Hooks.on("deleteItem", item => {
   if (actor?.type === "monster") add2eSyncMonsterCanonicalArmorClass(actor, "monster-item-delete-hook").catch(console.error);
 });
 
-Hooks.on("updateActor", (actor, changes, options) => {
-  if (actor?.type !== "monster") return;
-  const sheet = actor.sheet;
-  if (!(sheet instanceof Add2eMonsterSheet)) return;
-  add2eMonsterTabLog(sheet, "HOOK_UPDATE_ACTOR", {
-    updateKeys: Object.keys(foundry.utils.flattenObject(changes ?? {})),
-    optionKeys: Object.keys(options ?? {})
-  });
-});
-
 Hooks.on("createToken", async tokenDoc => {
   const actor = tokenDoc?.actor;
   if (!actor || actor.type !== "monster") return;
@@ -1127,4 +988,3 @@ Hooks.on("createToken", async tokenDoc => {
 });
 
 try { globalThis.Add2eMonsterSheet = Add2eMonsterSheet; } catch (_e) {}
-console.log(ADD2E_MONSTER_TAB_LOG_PREFIX, "LOGS_READY", { version: ADD2E_MONSTER_SHEET_VERSION });
