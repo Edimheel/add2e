@@ -31,6 +31,7 @@
     "scripts/08-character-sheet-ui.mjs",
     "scripts/resolveActiveEffectsOnTarget.mjs",
     "scripts/monster-sheet.mjs",
+    "scripts/add2e/monster-sheet-tabs-diagnostics.mjs",
     "scripts/pnj-sheet.mjs",
     "scripts/dummy-sheet.mjs",
     "scripts/add2e-action-hud-pnj.mjs"
