@@ -1,57 +1,4 @@
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-04-canonical-thief-skill-aliases-v20";
-
-const THIEF_ORDER = [
-  "pickpocket",
-  "crochetage_serrures",
-  "detection_pieges",
-  "deplacement_silencieux",
-  "dissimulation",
-  "ecoute",
-  "escalade",
-  "frappe_dans_le_dos"
-];
-
-const THIEF_LABELS = {
-  pickpocket: "Pickpocket",
-  crochetage_serrures: "Crochetage de serrures",
-  detection_pieges: "Détection/désamorçage des pièges",
-  deplacement_silencieux: "Déplacement silencieux",
-  dissimulation: "Dissimulation dans l’ombre",
-  ecoute: "Acuité auditive",
-  escalade: "Escalade",
-  frappe_dans_le_dos: "Attaque dans le dos",
-  lecture_langues: "Lecture des langues"
-};
-
-const THIEF_ALIASES = {
-  pick_pockets: "pickpocket",
-  pick_pocket: "pickpocket",
-  pickpockets: "pickpocket",
-  open_locks: "crochetage_serrures",
-  open_lock: "crochetage_serrures",
-  crochetage: "crochetage_serrures",
-  find_remove_traps: "detection_pieges",
-  find_traps: "detection_pieges",
-  remove_traps: "detection_pieges",
-  detect_traps: "detection_pieges",
-  detection_de_pieges: "detection_pieges",
-  desamorcage_pieges: "detection_pieges",
-  move_silently: "deplacement_silencieux",
-  hide_in_shadows: "dissimulation",
-  dissimulation_dans_l_ombre: "dissimulation",
-  hear_noise: "ecoute",
-  hear_noises: "ecoute",
-  detect_noise: "ecoute",
-  listen: "ecoute",
-  acuite_auditive: "ecoute",
-  climb_walls: "escalade",
-  climb_wall: "escalade",
-  backstab: "frappe_dans_le_dos",
-  attaque_dans_le_dos: "frappe_dans_le_dos",
-  read_languages: "lecture_langues",
-  read_language: "lecture_langues",
-  lecture_des_langues: "lecture_langues"
-};
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-05-canonical-thief-skill-consumer-v21";
 
 const GENERIC_ACTIONS = new Map([
   ["monk-surprise-reduite", "probability_check"],
@@ -150,7 +97,14 @@ function keyOf(value) {
     .replace(/^_+|_+$/g, "");
 }
 
-const thiefKey = value => THIEF_ALIASES[keyOf(value)] ?? keyOf(value);
+function canonicalThiefKey(value) {
+  const resolver = globalThis.add2eNormalizeThiefSkillKey;
+  if (typeof resolver !== "function") {
+    throw new Error("Le normalisateur canonique ADD2E des compétences de voleur est indisponible.");
+  }
+  return String(resolver(value) ?? "").trim();
+}
+
 const classSlug = (system, name = "") => keyOf(system?.slug ?? system?.label ?? system?.nom ?? system?.name ?? name);
 const classLevel = item => {
   const value = Number(item?.system?.niveau ?? item?.system?.level);
@@ -164,35 +118,13 @@ const isMonkClass = (system, name = "") => classSlug(system, name).includes("moi
 
 let THIEF_REFERENCE_SYSTEM = null;
 
-function normalizeThiefSystem(system, name = "") {
-  const copy = clone(system ?? {});
-  if (!isThiefClass(copy, name)) return copy;
-  copy.thiefSkillLabels = { ...THIEF_LABELS, ...(copy.thiefSkillLabels ?? {}) };
-  copy.thiefSkillOrder = Array.isArray(copy.thiefSkillOrder) && copy.thiefSkillOrder.length
-    ? copy.thiefSkillOrder.map(thiefKey)
-    : [...THIEF_ORDER];
-  if (Array.isArray(copy.progression)) {
-    copy.progression = copy.progression.map(entry => {
-      const row = { ...(entry ?? {}) };
-      const skills = { ...(row.thiefSkills ?? {}) };
-      const backstab = Number(row.backstabMultiplier);
-      const readLanguages = Number(row.readLanguages);
-      if (Number.isFinite(backstab) && backstab > 0) skills.frappe_dans_le_dos = backstab;
-      if (Number.isFinite(readLanguages) && readLanguages > 0) skills.lecture_langues = readLanguages;
-      row.thiefSkills = skills;
-      return row;
-    });
-  }
-  return copy;
-}
-
 async function loadThiefReferenceSystem() {
   const world = Array.from(game.items ?? []).find(item =>
     String(item?.type ?? "").toLowerCase() === "classe"
     && classSlug(item.system ?? {}, item.name) === "voleur"
   );
   if (world) {
-    THIEF_REFERENCE_SYSTEM = normalizeThiefSystem(world.system ?? {}, world.name);
+    THIEF_REFERENCE_SYSTEM = clone(world.system ?? {});
     return THIEF_REFERENCE_SYSTEM;
   }
 
@@ -206,7 +138,7 @@ async function loadThiefReferenceSystem() {
       && classSlug(document.system ?? {}, document.name) === "voleur"
     );
     if (!item) continue;
-    THIEF_REFERENCE_SYSTEM = normalizeThiefSystem(item.system ?? {}, item.name);
+    THIEF_REFERENCE_SYSTEM = clone(item.system ?? {});
     return THIEF_REFERENCE_SYSTEM;
   }
   return null;
@@ -218,7 +150,7 @@ function classSystems(actor) {
     .map(item => {
       const level = classLevel(item);
       if (level === null) return null;
-      const system = normalizeThiefSystem(item.system ?? {}, item.name);
+      const system = clone(item.system ?? {});
       return {
         ...system,
         _add2eClassSlug: classSlug(system, item.name),
@@ -312,16 +244,6 @@ function isThiefFeature(feature) {
   ].map(keyOf).some(value => value.includes("voleur") || value.includes("assassin"));
 }
 
-function isThiefSkill(feature) {
-  const joined = `${keyOf(feature?.name ?? feature?.label ?? feature?.title ?? "")} ${thiefKey(feature?.skillKey ?? feature?.key ?? feature?.slug ?? "")}`;
-  return [
-    "pickpocket", "faire_les_poches", "crochetage", "serrure", "piege", "desamorc",
-    "deplacement_silencieux", "dissimulation", "ecoute", "auditiv", "hear_noise",
-    "escalade", "climb", "lecture_langues", "read_languages", "frappe_dans_le_dos",
-    "backstab", "assassinat", "assassination"
-  ].some(value => joined.includes(value));
-}
-
 function progression(actor, slug = null) {
   const wanted = keyOf(slug ?? "");
   const systems = classSystems(actor);
@@ -348,7 +270,7 @@ function thiefSource(actor) {
   const monk = systems.find(system => isMonkClass(system, system._add2eClassName));
   if (!monk || !THIEF_REFERENCE_SYSTEM) return null;
   return {
-    ...THIEF_REFERENCE_SYSTEM,
+    ...clone(THIEF_REFERENCE_SYSTEM),
     _add2eClassSlug: "voleur",
     _add2eClassName: "Voleur",
     _add2eClassLevel: monk._add2eClassLevel,
@@ -377,6 +299,29 @@ function thiefTable(actor) {
   return rows;
 }
 
+function thiefSkillForFeature(actor, feature) {
+  if (!isThiefFeature(feature)) return null;
+  const candidates = [
+    feature?.skillKey,
+    feature?.key,
+    feature?.slug,
+    feature?.id,
+    feature?._id,
+    feature?.name,
+    feature?.label,
+    feature?.title,
+    feature?.nom
+  ].map(value => canonicalThiefKey(value)).filter(Boolean);
+  if (!candidates.length) return null;
+
+  return thiefTable(actor).find(entry => {
+    const keys = [entry?.key, entry?.label, entry?.shortLabel]
+      .map(value => canonicalThiefKey(value))
+      .filter(Boolean);
+    return keys.some(key => candidates.includes(key));
+  }) ?? null;
+}
+
 function activableFeatures(actor, { includeLocked = true } = {}) {
   const status = thiefStatus(actor);
   return classFeatures(actor)
@@ -388,19 +333,14 @@ function activableFeatures(actor, { includeLocked = true } = {}) {
       return level !== null && level >= minLevel(feature) && level <= maxLevel(feature);
     })
     .map(feature => {
-      if (!isThiefSkill(feature)) return feature;
-      const skill = thiefTable(actor).find(entry =>
-        thiefKey(entry.key) === thiefKey(feature?.skillKey ?? feature?.key ?? feature?.slug ?? feature?.name)
-      );
-      return skill
-        ? {
-          ...feature,
-          _add2eThiefSkill: skill,
-          _add2eHudLabel: `${feature.name ?? feature.label ?? "Capacité"} — ${skill.display}`
-        }
-        : null;
-    })
-    .filter(Boolean);
+      const skill = thiefSkillForFeature(actor, feature);
+      if (!skill) return feature;
+      return {
+        ...feature,
+        _add2eThiefSkill: skill,
+        _add2eHudLabel: `${feature.name ?? feature.label ?? "Capacité"} — ${skill.display}`
+      };
+    });
 }
 
 function passiveFeatures(actor, { includeLocked = true } = {}) {
@@ -704,7 +644,9 @@ async function execute(actor, feature, sheet = null) {
       return false;
     }
   }
-  if (isThiefSkill(feature)) {
+
+  const thiefSkill = thiefSkillForFeature(actor, feature);
+  if (thiefSkill) {
     const status = thiefStatus(actor);
     if (status.applies && !status.ok) {
       ui.notifications.warn(status.message);
@@ -715,7 +657,7 @@ async function execute(actor, feature, sheet = null) {
       ui.notifications.error("Moteur canonique des compétences de voleur absent.");
       return false;
     }
-    return (await roll(actor, thiefKey(feature?.skillKey ?? feature?.key ?? feature?.slug ?? feature?.name))) !== false;
+    return (await roll(actor, thiefSkill.key)) !== false;
   }
 
   const genericResult = await genericAction(actor, feature);
@@ -813,15 +755,6 @@ function restoreHud() {
   document.head.appendChild(style);
 }
 
-Hooks.once("init", () => {
-  const previous = globalThis.add2eNormalizeThiefSkillKey;
-  if (globalThis.__ADD2E_THIEF_SKILL_ALIAS_NORMALIZER_V2) return;
-  globalThis.__ADD2E_THIEF_SKILL_ALIAS_NORMALIZER_V2 = true;
-  globalThis.add2eNormalizeThiefSkillKey = value =>
-    THIEF_ALIASES[thiefKey(value)]
-    ?? (typeof previous === "function" ? previous(value) : thiefKey(value));
-});
-
 Hooks.once("ready", async () => {
   await loadThiefReferenceSystem();
   restoreHud();
@@ -842,6 +775,5 @@ globalThis.add2eExecuteClassFeatureOnUse = execute;
 globalThis.add2eUseClassFeatureFromElement = useFromElement;
 globalThis.add2eGetActorClassProgression = progression;
 globalThis.add2eGetActorThiefProgression = thiefProgression;
-globalThis.add2eNormalizeThiefSkillKeyLocal = thiefKey;
 globalThis.add2eResolveSlowFallProtection = slowFall;
 globalThis.add2eIsActionBlocked = actionBlocked;
