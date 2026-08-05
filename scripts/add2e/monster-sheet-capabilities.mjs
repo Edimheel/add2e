@@ -1,9 +1,10 @@
 // ADD2E — Affichage détaillé des monstres
-// Version : 2026-08-04-canonical-monster-morale-v8
-// But : séparer les capacités informatives MJ des effets système activables.
-// Foundry V13/V14/V15 : la feuille de monstre unique est enregistrée dans scripts/monster-sheet.mjs.
+// Version : 2026-08-05-manual-monster-spell-selection-v9
+// But : séparer les capacités informatives MJ des effets système activables et permettre au MJ de composer manuellement les sorts préparés.
+// Foundry V13/V14/V15 : ApplicationV2 / DialogV2 uniquement.
 
-const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-08-04-canonical-monster-morale-v8";
+const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-08-05-manual-monster-spell-selection-v9";
+const ADD2E_MONSTER_SPELL_PACK = "add2e.sorts";
 globalThis.ADD2E_MONSTER_CAPABILITIES_VERSION = ADD2E_MONSTER_CAPABILITIES_VERSION;
 
 function esc(value) {
@@ -130,6 +131,452 @@ function resolveMonsterMorale(actor) {
 
 globalThis.add2eResolveMonsterMorale = resolveMonsterMorale;
 
+function monsterSpellProfile(actor) {
+  const profile = actor?.system?.spellcasting;
+  return profile && typeof profile === "object" && !Array.isArray(profile) ? profile : {};
+}
+
+function monsterSpellEntries(profile) {
+  const explicitEntries = Array.isArray(profile?.entries)
+    ? profile.entries.filter(entry => entry && typeof entry === "object")
+    : [];
+  if (explicitEntries.length) {
+    return explicitEntries.map(entry => ({
+      lists: toArray(entry.lists ?? entry.list).map(norm).filter(Boolean),
+      maxSpellLevel: Number.isFinite(Number(entry.maxSpellLevel)) && Number(entry.maxSpellLevel) > 0
+        ? Number(entry.maxSpellLevel)
+        : null
+    }));
+  }
+  return [{
+    lists: toArray(profile?.lists).map(norm).filter(Boolean),
+    maxSpellLevel: Number.isFinite(Number(profile?.maxSpellLevel)) && Number(profile.maxSpellLevel) > 0
+      ? Number(profile.maxSpellLevel)
+      : null
+  }];
+}
+
+function monsterSpellLevel(spell) {
+  const level = Number(spell?.system?.niveau);
+  return Number.isFinite(level) && level > 0 ? level : 0;
+}
+
+function monsterSpellLists(spell) {
+  return toArray(spell?.system?.spellLists).map(norm).filter(Boolean);
+}
+
+function monsterSpellSelectionState(actor) {
+  const profile = monsterSpellProfile(actor);
+  if (profile.enabled !== true) {
+    return { ok: false, profile, message: "Aucun profil de lanceur de sorts n’est activé dans le JSON de ce monstre." };
+  }
+  if (profile.usesPreparation !== true) {
+    return { ok: false, profile, message: "Ce profil n’utilise pas la préparation. Ses pouvoirs doivent rester déclarés dans le JSON." };
+  }
+  return { ok: true, profile, message: "" };
+}
+
+function monsterSpellAllowed(actor, spell) {
+  const state = monsterSpellSelectionState(actor);
+  if (!state.ok) return state;
+  if (String(spell?.type ?? "").toLowerCase() !== "sort") {
+    return { ok: false, profile: state.profile, message: "Seuls les objets de type sort peuvent être ajoutés." };
+  }
+
+  const level = monsterSpellLevel(spell);
+  if (level <= 0) {
+    return { ok: false, profile: state.profile, message: `Le niveau canonique du sort « ${spell?.name ?? "inconnu"} » est absent.` };
+  }
+
+  const lists = monsterSpellLists(spell);
+  const allowed = monsterSpellEntries(state.profile).some(entry => {
+    if (entry.maxSpellLevel && level > entry.maxSpellLevel) return false;
+    if (!entry.lists.length) return true;
+    return lists.some(list => entry.lists.includes(list));
+  });
+
+  if (!allowed) {
+    const profileLists = monsterSpellEntries(state.profile).flatMap(entry => entry.lists);
+    const maxLevels = monsterSpellEntries(state.profile).map(entry => entry.maxSpellLevel).filter(Boolean);
+    const details = [
+      profileLists.length ? `listes autorisées : ${[...new Set(profileLists)].join(", ")}` : "",
+      maxLevels.length ? `niveau maximal : ${Math.max(...maxLevels)}` : ""
+    ].filter(Boolean).join(" ; ");
+    return {
+      ok: false,
+      profile: state.profile,
+      message: `Le sort « ${spell.name} » ne respecte pas le profil déclaré${details ? ` (${details})` : ""}.`
+    };
+  }
+
+  return { ok: true, profile: state.profile, message: "", level, lists };
+}
+
+function monsterAlreadyHasSpell(actor, spell) {
+  const name = norm(spell?.name);
+  const level = monsterSpellLevel(spell);
+  const sourceUuid = String(spell?.uuid ?? "").trim();
+  return actor?.items?.some?.(item => {
+    if (String(item?.type ?? "").toLowerCase() !== "sort") return false;
+    const itemSource = String(item?.flags?.core?.sourceId ?? item?.flags?.add2e?.monsterSpellSelection?.sourceUuid ?? "").trim();
+    if (sourceUuid && itemSource && itemSource === sourceUuid) return true;
+    return norm(item?.name) === name && monsterSpellLevel(item) === level;
+  }) ?? false;
+}
+
+function monsterSpellLevelLimit(profile, level) {
+  const sources = [profile?.spellsPerLevel, profile?.slotsByLevel];
+  for (const source of sources) {
+    if (!source || typeof source !== "object") continue;
+    const raw = source[level] ?? source[String(level)];
+    const value = Number(raw);
+    if (Number.isFinite(value) && value >= 0) return value;
+  }
+  return null;
+}
+
+function monsterPreparedTotal(actor, level) {
+  return actor?.items?.filter?.(item => String(item?.type ?? "").toLowerCase() === "sort" && monsterSpellLevel(item) === level)
+    .reduce((sum, item) => sum + Math.max(0, Number(item?.flags?.add2e?.memorizedCount) || 0), 0) ?? 0;
+}
+
+async function importMonsterSpell(actor, spell, { memorized = 1, method = "manual" } = {}) {
+  if (!game.user?.isGM) {
+    ui.notifications.warn("Seul le MJ peut modifier le répertoire de sorts d’un monstre.");
+    return false;
+  }
+
+  const check = monsterSpellAllowed(actor, spell);
+  if (!check.ok) {
+    ui.notifications.warn(check.message);
+    return false;
+  }
+  if (monsterAlreadyHasSpell(actor, spell)) {
+    ui.notifications.warn(`« ${spell.name} » est déjà présent sur ${actor.name}.`);
+    return false;
+  }
+
+  const level = check.level;
+  const count = Math.max(0, Math.floor(Number(memorized) || 0));
+  const limit = monsterSpellLevelLimit(check.profile, level);
+  const currentTotal = monsterPreparedTotal(actor, level);
+  if (limit !== null && currentTotal + count > limit) {
+    ui.notifications.warn(`Limite dépassée au niveau ${level} : ${currentTotal + count}/${limit}.`);
+    return false;
+  }
+
+  const data = spell.toObject();
+  delete data._id;
+  delete data.folder;
+  data.flags = data.flags ?? {};
+  data.flags.core = data.flags.core ?? {};
+  data.flags.add2e = data.flags.add2e ?? {};
+  data.flags.core.sourceId = spell.uuid;
+  data.flags.add2e.memorizedCount = count;
+  data.flags.add2e.monsterSpellSelection = {
+    method,
+    sourceUuid: spell.uuid,
+    selectedAt: new Date().toISOString(),
+    selectedBy: game.user.id,
+    version: ADD2E_MONSTER_CAPABILITIES_VERSION
+  };
+
+  await actor.createEmbeddedDocuments("Item", [data], {
+    add2eMonsterSpellSelection: true,
+    render: false
+  });
+  ui.notifications.info(`${spell.name} ajouté à ${actor.name}.`);
+  return true;
+}
+
+async function monsterSpellPackCandidates(actor) {
+  const pack = game.packs.get(ADD2E_MONSTER_SPELL_PACK);
+  if (!pack) throw new Error(`Compendium introuvable : ${ADD2E_MONSTER_SPELL_PACK}`);
+
+  const index = Array.from(await pack.getIndex({
+    fields: ["name", "type", "img", "system.niveau", "system.spellLists"]
+  }) ?? []);
+
+  return index
+    .filter(entry => String(entry?.type ?? "").toLowerCase() === "sort")
+    .filter(entry => monsterSpellAllowed(actor, entry).ok)
+    .filter(entry => !monsterAlreadyHasSpell(actor, entry))
+    .sort((a, b) => monsterSpellLevel(a) - monsterSpellLevel(b) || String(a.name).localeCompare(String(b.name), "fr"));
+}
+
+function monsterSpellOptions(candidates) {
+  const groups = new Map();
+  for (const candidate of candidates) {
+    const level = monsterSpellLevel(candidate);
+    if (!groups.has(level)) groups.set(level, []);
+    groups.get(level).push(candidate);
+  }
+
+  return [...groups.entries()].map(([level, entries]) => {
+    const options = entries.map(entry => {
+      const lists = monsterSpellLists(entry);
+      const suffix = lists.length ? ` — ${lists.join(", ")}` : "";
+      return `<option value="${esc(entry._id)}">${esc(entry.name)}${esc(suffix)}</option>`;
+    }).join("");
+    return `<optgroup label="Niveau ${level}">${options}</optgroup>`;
+  }).join("");
+}
+
+async function openMonsterSpellPicker(app, actor) {
+  const state = monsterSpellSelectionState(actor);
+  if (!state.ok) {
+    ui.notifications.warn(state.message);
+    return false;
+  }
+
+  const DialogV2 = foundry.applications?.api?.DialogV2;
+  if (!DialogV2 || typeof DialogV2.wait !== "function") {
+    throw new Error("DialogV2 est indisponible.");
+  }
+
+  const candidates = await monsterSpellPackCandidates(actor);
+  if (!candidates.length) {
+    ui.notifications.warn("Aucun sort compatible restant dans le compendium add2e.sorts.");
+    return false;
+  }
+
+  const result = await DialogV2.wait({
+    window: {
+      title: `Ajouter un sort — ${actor.name}`,
+      classes: ["add2e-monster-spell-picker-window"]
+    },
+    content: `
+      <form class="add2e-monster-spell-picker-form">
+        <div class="form-group">
+          <label for="add2e-monster-spell-choice"><b>Sort du compendium</b></label>
+          <select id="add2e-monster-spell-choice" name="spellId" required style="width:100%">${monsterSpellOptions(candidates)}</select>
+        </div>
+        <div class="form-group" style="margin-top:10px">
+          <label for="add2e-monster-spell-count"><b>Exemplaires mémorisés</b></label>
+          <input id="add2e-monster-spell-count" type="number" name="memorized" min="0" step="1" value="1" style="width:100%"/>
+        </div>
+        <p class="hint" style="margin-top:10px">La sélection respecte uniquement les listes et niveaux explicitement déclarés dans system.spellcasting.</p>
+      </form>`,
+    buttons: [
+      {
+        action: "add",
+        label: "Ajouter",
+        icon: "<i class='fas fa-plus'></i>",
+        default: true,
+        callback: (_event, button) => ({
+          spellId: String(button?.form?.elements?.spellId?.value ?? ""),
+          memorized: Math.max(0, Math.floor(Number(button?.form?.elements?.memorized?.value) || 0))
+        })
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
+      }
+    ],
+    close: () => null
+  });
+
+  if (!result?.spellId) return false;
+  const pack = game.packs.get(ADD2E_MONSTER_SPELL_PACK);
+  const spell = await pack?.getDocument(result.spellId);
+  if (!spell) {
+    ui.notifications.error("Le sort sélectionné est introuvable dans le compendium.");
+    return false;
+  }
+
+  const imported = await importMonsterSpell(actor, spell, {
+    memorized: result.memorized,
+    method: "compendium-picker"
+  });
+  if (imported) app?.render?.(false);
+  return imported;
+}
+
+function readMonsterDropData(event) {
+  const original = event?.originalEvent ?? event;
+  const TextEditorImpl = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor ?? null;
+  if (typeof TextEditorImpl?.getDragEventData === "function") {
+    return TextEditorImpl.getDragEventData(original);
+  }
+  const raw = original?.dataTransfer?.getData?.("text/plain");
+  if (!raw) return {};
+  try { return JSON.parse(raw); } catch (_error) { return {}; }
+}
+
+async function resolveMonsterDroppedItem(data) {
+  const uuid = String(data?.uuid ?? "").trim();
+  if (uuid) {
+    const resolver = foundry.utils?.fromUuid ?? globalThis.fromUuid;
+    if (typeof resolver === "function") return resolver(uuid);
+  }
+
+  const id = String(data?._id ?? data?.id ?? "").trim();
+  const packId = String(data?.pack ?? "").trim();
+  if (packId && id) return game.packs.get(packId)?.getDocument(id) ?? null;
+  if (id) return game.items?.get(id) ?? null;
+  return null;
+}
+
+function monsterSpellProfileLabel(profile) {
+  const entries = monsterSpellEntries(profile);
+  const lists = [...new Set(entries.flatMap(entry => entry.lists))];
+  const levels = entries.map(entry => entry.maxSpellLevel).filter(Boolean);
+  const values = [
+    lists.length ? `Listes : ${lists.join(", ")}` : "Listes : choix MJ",
+    levels.length ? `Niveau maximal : ${Math.max(...levels)}` : "Niveau maximal : non précisé",
+    profile?.casterLevel ? `Niveau de lanceur : ${profile.casterLevel}` : ""
+  ].filter(Boolean);
+  return values.join(" · ");
+}
+
+function buildMonsterSpellLibrary(actor) {
+  if (!game.user?.isGM) return "";
+  const state = monsterSpellSelectionState(actor);
+  const profileLabel = state.profile?.enabled === true
+    ? monsterSpellProfileLabel(state.profile)
+    : "Aucun profil de lanceur actif";
+  const disabled = state.ok ? "" : "disabled";
+  const disabledClass = state.ok ? "" : "is-disabled";
+
+  return `
+    <section class="add2e-monster-panel add2e-monster-spell-library ${disabledClass}">
+      <h2><i class="fas fa-book-sparkles"></i> Répertoire de sorts du monstre</h2>
+      <div class="add2e-monster-panel-body">
+        <div class="add2e-monster-spell-profile">${esc(profileLabel)}</div>
+        <div class="add2e-monster-spell-actions">
+          <button type="button" class="add2e-monster-spell-picker" ${disabled}><i class="fas fa-list"></i> Choisir dans add2e.sorts</button>
+          <div class="add2e-monster-spell-dropzone" data-disabled="${state.ok ? "0" : "1"}" tabindex="0">
+            <i class="fas fa-cloud-arrow-down"></i>
+            <span>Déposer ici un sort du monde ou d’un compendium</span>
+          </div>
+        </div>
+        ${state.ok ? "" : `<p class="add2e-monster-note">${esc(state.message)}</p>`}
+      </div>
+    </section>`;
+}
+
+function bindMonsterMemorizationControls(app, $html, actor) {
+  const profile = monsterSpellProfile(actor);
+  const magicTab = $html.find('.sheet-body .tab[data-tab="magie"]');
+  if (!magicTab.length) return;
+
+  magicTab.find(".sort-memorize-plus, .sort-memorize-minus").each((_index, element) => {
+    const $element = $(element);
+    const sortId = String($element.data("sortId") ?? "");
+    const sort = actor.items.get(sortId);
+    const cell = $element.closest("td");
+
+    if (!sort) {
+      cell.html('<span class="add2e-monster-power-label">Pouvoir</span>');
+      return;
+    }
+
+    const plus = $element.hasClass("sort-memorize-plus");
+    const clone = element.cloneNode(true);
+    clone.classList.remove("sort-memorize-plus", "sort-memorize-minus");
+    clone.classList.add(plus ? "add2e-monster-spell-plus" : "add2e-monster-spell-minus");
+    clone.removeAttribute("data-add2e-prep-bound");
+    element.replaceWith(clone);
+  });
+
+  $html.off("click.add2e-monster-spell-count").on("click.add2e-monster-spell-count", ".add2e-monster-spell-plus, .add2e-monster-spell-minus", async event => {
+    event.preventDefault();
+    event.stopPropagation();
+    const button = event.currentTarget;
+    const sort = actor.items.get(String(button.dataset.sortId ?? ""));
+    if (!sort) return;
+
+    const current = Math.max(0, Number(sort.flags?.add2e?.memorizedCount) || 0);
+    const level = monsterSpellLevel(sort);
+    const isPlus = button.classList.contains("add2e-monster-spell-plus");
+    const next = isPlus ? current + 1 : Math.max(0, current - 1);
+    const limit = monsterSpellLevelLimit(profile, level);
+    const total = monsterPreparedTotal(actor, level);
+
+    if (isPlus && limit !== null && total >= limit) {
+      ui.notifications.warn(`Limite atteinte au niveau ${level} : ${total}/${limit}.`);
+      return;
+    }
+
+    await sort.setFlag("add2e", "memorizedCount", next);
+    app?.render?.(false);
+  });
+
+  magicTab.find(".spell-level-header").each((_index, header) => {
+    const match = String(header.textContent ?? "").match(/Niveau\s+(\d+)/i);
+    const level = Number(match?.[1] ?? 0);
+    if (!level) return;
+    const total = monsterPreparedTotal(actor, level);
+    const limit = monsterSpellLevelLimit(profile, level);
+    const counter = header.querySelector("span:last-child");
+    if (counter) counter.textContent = limit === null ? `Mémorisé : ${total}` : `Mémorisé : ${total}/${limit}`;
+  });
+}
+
+function bindMonsterSpellLibrary(app, $html, actor) {
+  const magicTab = $html.find('.sheet-body .tab[data-tab="magie"]');
+  if (!magicTab.length) return;
+
+  magicTab.find(".add2e-monster-spell-library").remove();
+  const panel = buildMonsterSpellLibrary(actor);
+  if (panel) magicTab.prepend(panel);
+
+  bindMonsterMemorizationControls(app, $html, actor);
+
+  $html.off("click.add2e-monster-spell-picker").on("click.add2e-monster-spell-picker", ".add2e-monster-spell-picker", async event => {
+    event.preventDefault();
+    try {
+      await openMonsterSpellPicker(app, actor);
+    } catch (error) {
+      console.error("[ADD2E][MONSTER_SPELLS][PICKER]", error);
+      ui.notifications.error("Impossible d’ouvrir la sélection de sorts du monstre.");
+    }
+  });
+
+  $html.off("dragover.add2e-monster-spell-drop").on("dragover.add2e-monster-spell-drop", ".add2e-monster-spell-dropzone", event => {
+    event.preventDefault();
+    const zone = event.currentTarget;
+    if (zone.dataset.disabled === "1") return;
+    zone.classList.add("is-dragover");
+    const original = event.originalEvent ?? event;
+    if (original.dataTransfer) original.dataTransfer.dropEffect = "copy";
+  });
+
+  $html.off("dragleave.add2e-monster-spell-drop").on("dragleave.add2e-monster-spell-drop", ".add2e-monster-spell-dropzone", event => {
+    event.currentTarget.classList.remove("is-dragover");
+  });
+
+  $html.off("drop.add2e-monster-spell-drop").on("drop.add2e-monster-spell-drop", ".add2e-monster-spell-dropzone", async event => {
+    event.preventDefault();
+    event.stopPropagation();
+    const zone = event.currentTarget;
+    zone.classList.remove("is-dragover");
+    if (zone.dataset.disabled === "1") {
+      ui.notifications.warn(monsterSpellSelectionState(actor).message);
+      return;
+    }
+
+    try {
+      const data = readMonsterDropData(event);
+      const item = await resolveMonsterDroppedItem(data);
+      if (!item) {
+        ui.notifications.warn("Objet déposé introuvable.");
+        return;
+      }
+      const imported = await importMonsterSpell(actor, item, {
+        memorized: 1,
+        method: "drag-drop"
+      });
+      if (imported) app?.render?.(false);
+    } catch (error) {
+      console.error("[ADD2E][MONSTER_SPELLS][DROP]", error);
+      ui.notifications.error("Impossible d’ajouter le sort déposé.");
+    }
+  });
+}
+
 function installStyles() {
   const id = "add2e-monster-capabilities-style";
   if (document.getElementById(id)) return;
@@ -154,6 +601,18 @@ function installStyles() {
     .add2e.sheet.monster .add2e-monster-badge { display:inline-flex; align-items:center; padding:3px 6px; border-radius:999px; border:1px solid #d6bd70; background:#fff8df; color:#55390d; font-weight:700; font-size:.78rem; }
     .add2e.sheet.monster .add2e-monster-badge.bad { border-color:#ca8a8a; background:#fff0ec; color:#8a1f18; }
     .add2e.sheet.monster .add2e-monster-note { color:#7f704d; font-style:italic; }
+    .add2e.sheet.monster .add2e-monster-spell-profile { margin-bottom:8px; color:#55390d; font-weight:800; }
+    .add2e.sheet.monster .add2e-monster-spell-actions { display:grid; grid-template-columns:minmax(190px,auto) 1fr; gap:10px; align-items:stretch; }
+    .add2e.sheet.monster .add2e-monster-spell-picker { border:1px solid #6f4b12; border-radius:7px; background:linear-gradient(180deg,#fff8df,#ead99d); color:#3d2b0a; font-weight:900; padding:8px 10px; cursor:pointer; }
+    .add2e.sheet.monster .add2e-monster-spell-picker:disabled { opacity:.5; cursor:not-allowed; }
+    .add2e.sheet.monster .add2e-monster-spell-dropzone { display:flex; align-items:center; justify-content:center; gap:8px; min-height:42px; padding:8px 12px; border:2px dashed #9a7431; border-radius:8px; background:#fffdf4; color:#6f4b12; font-weight:850; }
+    .add2e.sheet.monster .add2e-monster-spell-dropzone.is-dragover { border-style:solid; background:#e8f5df; box-shadow:inset 0 0 0 2px #719c4a; }
+    .add2e.sheet.monster .add2e-monster-spell-library.is-disabled .add2e-monster-spell-dropzone { opacity:.5; }
+    .add2e.sheet.monster .add2e-monster-power-label { color:#6f4b12; font-weight:900; }
+    .application.add2e-monster-spell-picker-window .window-content { background:#f7eed3; color:#2f210d; }
+    .application.add2e-monster-spell-picker-window select,
+    .application.add2e-monster-spell-picker-window input { background:#fffaf0; border:1px solid #b9a15d; border-radius:5px; padding:6px; color:#1d1606; }
+    @media(max-width:800px){.add2e.sheet.monster .add2e-monster-spell-actions{grid-template-columns:1fr;}}
   `;
   document.head.appendChild(style);
 }
@@ -274,6 +733,8 @@ Hooks.on("renderAdd2eMonsterSheet", (app, html, data) => {
     const magieTab = body.find('[data-tab="magie"]');
     if (magieTab.length) magieTab.before(buildCapTab(actor));
     else body.append(buildCapTab(actor));
+
+    bindMonsterSpellLibrary(app, $html, actor);
 
     const descTab = body.find('[data-tab="description"]');
     if (descTab.length && !descTab.find(".add2e-monster-details-readonly").length) descTab.prepend(buildDetails(actor));
