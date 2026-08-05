@@ -1,118 +1,103 @@
 // scripts/add2e-new-day.mjs
-// ADD2E — Bouton MJ "Nouvelle journée"
-// Version : 2026-05-15-v1
+// ADD2E — Nouvelle journée : effets temporaires et ressources quotidiennes.
+// Compatible Foundry V13/V14/V15, DialogV2.
+// Version : 2026-08-05-monster-daily-powers-v2
 
-const ADD2E_NEW_DAY_VERSION = "2026-05-15-v1";
+const ADD2E_NEW_DAY_VERSION = "2026-08-05-monster-daily-powers-v2";
 const TAG = "[ADD2E][NEW_DAY]";
 
-function add2eClone(value) {
+const clone = value => {
   if (value === undefined || value === null) return value;
   if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
   if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
   return JSON.parse(JSON.stringify(value));
-}
+};
 
-function add2eArray(value) {
+const arrayify = value => {
   if (value === undefined || value === null || value === "") return [];
-  if (Array.isArray(value)) return value.flatMap(add2eArray);
-  if (typeof value === "string") return value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
-  if (typeof value === "object") return Object.values(value).flatMap(add2eArray);
+  if (Array.isArray(value)) return value.flatMap(arrayify);
+  if (typeof value === "string") return value.split(/[,;|\n]+/).map(entry => entry.trim()).filter(Boolean);
+  if (typeof value === "object") return Object.values(value).flatMap(arrayify);
   return [value];
-}
+};
 
-function add2eNormalize(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[\s\-]+/g, "_")
-    .replace(/_+/g, "_");
-}
+const normalize = value => String(value ?? "")
+  .trim()
+  .toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .replace(/[’']/g, "")
+  .replace(/[^a-z0-9]+/g, "_")
+  .replace(/^_+|_+$/g, "");
 
-function add2eEffectFlag(effect, key, fallback = undefined) {
+function effectFlag(effect, key, fallback = undefined) {
   try {
     const flags = effect?.flags?.add2e ?? {};
-    if (flags && typeof flags === "object" && key in flags) return flags[key];
-    const direct = effect?.getFlag?.("add2e", key);
-    return direct ?? fallback;
-  } catch (_e) {
+    if (key in flags) return flags[key];
+    return effect?.getFlag?.("add2e", key) ?? fallback;
+  } catch (_error) {
     return fallback;
   }
 }
 
-function add2eEffectTags(effect) {
+function effectTags(effect) {
   const flags = effect?.flags?.add2e ?? {};
-  const tags = [
-    ...add2eArray(flags.tags),
-    ...add2eArray(flags.effectTags),
-    ...add2eArray(effect?.statuses),
-    ...add2eArray(effect?.system?.tags),
-    ...add2eArray(effect?.system?.effectTags)
-  ];
-  return tags.map(add2eNormalize).filter(Boolean);
+  return [
+    ...arrayify(flags.tags),
+    ...arrayify(flags.effectTags),
+    ...arrayify(effect?.statuses),
+    ...arrayify(effect?.system?.tags),
+    ...arrayify(effect?.system?.effectTags)
+  ].map(normalize).filter(Boolean);
 }
 
-function add2eIsRacialOrPermanentEffect(effect) {
-  const resetPolicy = add2eNormalize(add2eEffectFlag(effect, "resetPolicy", ""));
-  const sourceType = add2eNormalize(add2eEffectFlag(effect, "sourceType", ""));
-  const tags = add2eEffectTags(effect);
+function isRacialOrPermanentEffect(effect) {
+  const resetPolicy = normalize(effectFlag(effect, "resetPolicy", ""));
+  const sourceType = normalize(effectFlag(effect, "sourceType", ""));
+  const tags = effectTags(effect);
 
   if (["never", "manual", "whileequipped", "while_equipped"].includes(resetPolicy)) return true;
   if (["race", "racial"].includes(sourceType)) return true;
-  if (tags.includes("racial") || tags.includes("race")) return true;
-  if (tags.some(t => t.startsWith("race:"))) return true;
-
-  return false;
+  return tags.includes("racial") || tags.includes("race") || tags.some(tag => tag.startsWith("race:"));
 }
 
-function add2eHasFiniteDuration(effect) {
-  const d = effect?.duration ?? {};
-  const rounds = Number(d.rounds ?? 0) || 0;
-  const turns = Number(d.turns ?? 0) || 0;
-  const seconds = Number(d.seconds ?? 0) || 0;
-  return rounds > 0 || turns > 0 || seconds > 0;
+function hasFiniteDuration(effect) {
+  const duration = effect?.duration ?? {};
+  return [duration.rounds, duration.turns, duration.seconds].some(value => (Number(value) || 0) > 0);
 }
 
-function add2eShouldDeleteEffectOnNewDay(effect) {
-  if (!effect || add2eIsRacialOrPermanentEffect(effect)) return false;
+function shouldDeleteEffectOnNewDay(effect) {
+  if (!effect || isRacialOrPermanentEffect(effect)) return false;
 
-  const resetPolicy = add2eNormalize(add2eEffectFlag(effect, "resetPolicy", ""));
-  const sourceType = add2eNormalize(add2eEffectFlag(effect, "sourceType", ""));
-  const tags = add2eEffectTags(effect);
+  const resetPolicy = normalize(effectFlag(effect, "resetPolicy", ""));
+  const sourceType = normalize(effectFlag(effect, "sourceType", ""));
+  const tags = effectTags(effect);
 
   if (["newday", "new_day", "daily", "jour", "nouvelle_journee"].includes(resetPolicy)) return true;
-
   if (["spell", "sort", "classfeature", "class_feature", "capacite", "capacity"].includes(sourceType)) {
-    if (add2eHasFiniteDuration(effect)) return true;
+    if (hasFiniteDuration(effect)) return true;
     if (tags.includes("temporaire") || tags.includes("temporary")) return true;
     if (tags.includes("reset:new_day") || tags.includes("reset:newday")) return true;
   }
-
-  if (add2eHasFiniteDuration(effect)) return true;
-
-  return false;
+  return hasFiniteDuration(effect);
 }
 
-function add2eResetObjectResources(container, path = "") {
+function resetObjectResources(container, path = "") {
   const updates = [];
 
-  const walk = (obj, currentPath) => {
-    if (!obj || typeof obj !== "object" || Array.isArray(obj)) return;
+  const walk = (object, currentPath) => {
+    if (!object || typeof object !== "object" || Array.isArray(object)) return;
 
-    const reset = add2eNormalize(obj.reset ?? obj.resetPolicy ?? obj.recharge ?? "");
-    const hasDailyReset = ["newday", "new_day", "daily", "jour", "nouvelle_journee"].includes(reset);
-
-    if (hasDailyReset) {
-      const max = Number(obj.max ?? obj.maximum ?? obj.total ?? 0);
-      if (Number.isFinite(max) && max > 0 && "value" in obj) updates.push({ path: `${currentPath}.value`, value: max });
-      if ("used" in obj) updates.push({ path: `${currentPath}.used`, value: false });
-      if ("spent" in obj) updates.push({ path: `${currentPath}.spent`, value: 0 });
-      if ("targets" in obj) updates.push({ path: `${currentPath}.targets`, value: [] });
-      if ("targetIds" in obj) updates.push({ path: `${currentPath}.targetIds`, value: [] });
+    const reset = normalize(object.reset ?? object.resetPolicy ?? object.recharge ?? "");
+    if (["newday", "new_day", "daily", "jour", "nouvelle_journee"].includes(reset)) {
+      const max = Number(object.max ?? object.maximum ?? object.total ?? 0);
+      if (Number.isFinite(max) && max > 0 && "value" in object) updates.push({ path: `${currentPath}.value`, value: max });
+      if ("used" in object) updates.push({ path: `${currentPath}.used`, value: false });
+      if ("spent" in object) updates.push({ path: `${currentPath}.spent`, value: 0 });
+      if ("targets" in object) updates.push({ path: `${currentPath}.targets`, value: [] });
+      if ("targetIds" in object) updates.push({ path: `${currentPath}.targetIds`, value: [] });
     }
 
-    for (const [key, value] of Object.entries(obj)) {
+    for (const [key, value] of Object.entries(object)) {
       if (!value || typeof value !== "object" || Array.isArray(value)) continue;
       walk(value, currentPath ? `${currentPath}.${key}` : key);
     }
@@ -122,15 +107,15 @@ function add2eResetObjectResources(container, path = "") {
   return updates;
 }
 
-function add2eBuildFlagUpdate(actor) {
+function buildActorFlagUpdate(actor) {
   const flags = actor?.flags?.add2e ?? {};
   const updates = {};
 
-  for (const item of add2eResetObjectResources(flags.resources ?? {}, "flags.add2e.resources")) {
-    updates[item.path] = item.value;
+  for (const resource of resetObjectResources(flags.resources ?? {}, "flags.add2e.resources")) {
+    updates[resource.path] = resource.value;
   }
 
-  const dailyUses = add2eClone(flags.dailyUses ?? {});
+  const dailyUses = clone(flags.dailyUses ?? {});
   if (dailyUses && typeof dailyUses === "object" && !Array.isArray(dailyUses)) {
     let changed = false;
     for (const value of Object.values(dailyUses)) {
@@ -152,181 +137,204 @@ function add2eBuildFlagUpdate(actor) {
   return updates;
 }
 
-async function add2eResetActorForNewDay(actor, { dryRun = false } = {}) {
-  const effects = Array.from(actor?.effects ?? []);
-  const effectIdsToDelete = effects
-    .filter(add2eShouldDeleteEffectOnNewDay)
-    .map(e => e.id)
-    .filter(Boolean);
+function buildDailyItemUpdates(actor) {
+  const updates = [];
 
-  const updateData = add2eBuildFlagUpdate(actor);
-  const updateKeys = Object.keys(updateData).filter(k => k !== "flags.add2e.lastNewDay");
+  for (const item of actor?.items ?? []) {
+    const charges = item?.system?.charges;
+    if (!charges || typeof charges !== "object") continue;
+
+    const recharge = normalize(charges.recharge ?? charges.reset ?? item.flags?.add2e?.resetPolicy ?? "");
+    if (!["newday", "new_day", "daily", "jour", "nouvelle_journee"].includes(recharge)) continue;
+
+    const max = Number(charges.max ?? charges.maximum ?? item.system?.max_charges ?? 0);
+    if (!Number.isFinite(max) || max <= 0) continue;
+
+    const current = Number(charges.value ?? charges.current ?? 0);
+    if (current === max) continue;
+
+    updates.push({
+      _id: item.id,
+      "system.charges.value": max,
+      "flags.add2e.global_charges": max
+    });
+  }
+
+  return updates;
+}
+
+async function resetActorForNewDay(actor, { dryRun = false } = {}) {
+  const effects = Array.from(actor?.effects ?? []);
+  const effectIdsToDelete = effects.filter(shouldDeleteEffectOnNewDay).map(effect => effect.id).filter(Boolean);
+  const actorUpdate = buildActorFlagUpdate(actor);
+  const itemUpdates = buildDailyItemUpdates(actor);
+  const actorResourceKeys = Object.keys(actorUpdate).filter(key => key !== "flags.add2e.lastNewDay");
 
   if (!dryRun) {
-    if (effectIdsToDelete.length) await actor.deleteEmbeddedDocuments("ActiveEffect", effectIdsToDelete, { add2eNewDay: true });
-    await actor.update(updateData, { add2eNewDay: true });
+    if (effectIdsToDelete.length) {
+      await actor.deleteEmbeddedDocuments("ActiveEffect", effectIdsToDelete, { add2eNewDay: true });
+    }
+    if (itemUpdates.length) {
+      await actor.updateEmbeddedDocuments("Item", itemUpdates, { add2eNewDay: true, add2eReason: "daily-recharge" });
+    }
+    await actor.update(actorUpdate, { add2eNewDay: true });
   }
 
   return {
     actorId: actor.id,
     actorName: actor.name,
+    actorType: actor.type,
     effectsDeleted: effectIdsToDelete.length,
-    resourcesReset: updateKeys.length,
-    deletedEffectNames: effects.filter(e => effectIdsToDelete.includes(e.id)).map(e => e.name)
+    actorResourcesReset: actorResourceKeys.length,
+    itemResourcesReset: itemUpdates.length,
+    deletedEffectNames: effects.filter(effect => effectIdsToDelete.includes(effect.id)).map(effect => effect.name),
+    resetItemNames: itemUpdates.map(update => actor.items.get(update._id)?.name).filter(Boolean)
   };
 }
 
-function add2eGetPlayerActors() {
-  return game.actors.filter(actor => actor?.type === "personnage" && !actor.compendium);
+function getWorldActors() {
+  return game.actors.filter(actor => !actor.compendium && ["personnage", "monster"].includes(String(actor.type)));
 }
 
-async function add2ePreviewNewDay() {
+async function previewNewDay() {
   const results = [];
-  for (const actor of add2eGetPlayerActors()) results.push(await add2eResetActorForNewDay(actor, { dryRun: true }));
+  for (const actor of getWorldActors()) results.push(await resetActorForNewDay(actor, { dryRun: true }));
   return results;
 }
 
-function add2eNewDaySummaryHtml(results, preview = true) {
-  const totalActors = results.length;
-  const totalEffects = results.reduce((sum, r) => sum + Number(r.effectsDeleted ?? 0), 0);
-  const totalResources = results.reduce((sum, r) => sum + Number(r.resourcesReset ?? 0), 0);
-
+function summaryHtml(results, preview = true) {
+  const totalEffects = results.reduce((sum, result) => sum + result.effectsDeleted, 0);
+  const totalActorResources = results.reduce((sum, result) => sum + result.actorResourcesReset, 0);
+  const totalItemResources = results.reduce((sum, result) => sum + result.itemResourcesReset, 0);
   const rows = results
-    .filter(r => r.effectsDeleted || r.resourcesReset)
-    .map(r => `
+    .filter(result => result.effectsDeleted || result.actorResourcesReset || result.itemResourcesReset)
+    .map(result => `
       <tr>
-        <td>${foundry.utils.escapeHTML(r.actorName)}</td>
-        <td style="text-align:center;">${r.effectsDeleted}</td>
-        <td style="text-align:center;">${r.resourcesReset}</td>
+        <td>${foundry.utils.escapeHTML(result.actorName)}</td>
+        <td>${foundry.utils.escapeHTML(result.actorType)}</td>
+        <td style="text-align:center">${result.effectsDeleted}</td>
+        <td style="text-align:center">${result.actorResourcesReset}</td>
+        <td style="text-align:center">${result.itemResourcesReset}</td>
       </tr>
-    `)
-    .join("");
+    `).join("");
 
   return `
-    <div class="add2e-new-day-dialog" style="line-height:1.45;">
-      <p><b>${preview ? "Prévisualisation" : "Résultat"} — Nouvelle journée ADD2E</b></p>
+    <div class="add2e-new-day-dialog" style="line-height:1.45">
+      <p><strong>${preview ? "Prévisualisation" : "Résultat"} — Nouvelle journée ADD2E</strong></p>
       <ul>
-        <li>Acteurs personnage trouvés : <b>${totalActors}</b></li>
-        <li>Effets temporaires à supprimer : <b>${totalEffects}</b></li>
-        <li>Ressources journalières à réinitialiser : <b>${totalResources}</b></li>
+        <li>Acteurs du monde contrôlés : <strong>${results.length}</strong></li>
+        <li>Effets temporaires : <strong>${totalEffects}</strong></li>
+        <li>Ressources d’acteur : <strong>${totalActorResources}</strong></li>
+        <li>Charges quotidiennes d’objets ou pouvoirs : <strong>${totalItemResources}</strong></li>
       </ul>
-      <p style="margin-top:0.6em;">Les effets raciaux/permanents sont conservés. Les effets sans durée et sans flag de réinitialisation ne sont pas supprimés.</p>
       ${rows ? `
-        <table style="width:100%;margin-top:0.7em;">
-          <thead><tr><th style="text-align:left;">Acteur</th><th>Effets</th><th>Ressources</th></tr></thead>
+        <table style="width:100%">
+          <thead><tr><th>Acteur</th><th>Type</th><th>Effets</th><th>Acteur</th><th>Objets</th></tr></thead>
           <tbody>${rows}</tbody>
-        </table>` : `<p><i>Aucune modification détectée.</i></p>`}
+        </table>` : "<p><em>Aucune modification détectée.</em></p>"}
     </div>
   `;
 }
 
-async function add2ePostNewDayChat(results) {
-  const totalActors = results.length;
-  const totalEffects = results.reduce((sum, r) => sum + Number(r.effectsDeleted ?? 0), 0);
-  const totalResources = results.reduce((sum, r) => sum + Number(r.resourcesReset ?? 0), 0);
-
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ alias: "ADD2E" }),
-    content: `
-      <div class="add2e-chat add2e-new-day-chat">
-        <h2 style="margin:0 0 0.35em 0;">☀️ Nouvelle journée</h2>
-        <p>Le Maître de Jeu déclare le début d'une nouvelle journée.</p>
-        <ul>
-          <li>Acteurs traités : <b>${totalActors}</b></li>
-          <li>Effets temporaires supprimés : <b>${totalEffects}</b></li>
-          <li>Ressources journalières réinitialisées : <b>${totalResources}</b></li>
-        </ul>
-      </div>
-    `
-  });
-}
-
-async function add2eStartNewDay() {
-  if (!game.user.isGM) {
-    ui.notifications.warn("Seul le MJ peut lancer une nouvelle journée.");
-    return;
+async function postNewDayChat(results) {
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
   }
 
-  const preview = await add2ePreviewNewDay();
+  const totals = {
+    actors: results.length,
+    effects: results.reduce((sum, result) => sum + result.effectsDeleted, 0),
+    actorResources: results.reduce((sum, result) => sum + result.actorResourcesReset, 0),
+    itemResources: results.reduce((sum, result) => sum + result.itemResourcesReset, 0)
+  };
 
-  new Dialog({
-    title: "ADD2E — Nouvelle journée",
-    content: add2eNewDaySummaryHtml(preview, true),
-    buttons: {
-      validate: {
-        icon: '<i class="fas fa-sun"></i>',
-        label: "Lancer la nouvelle journée",
-        callback: async () => {
-          const results = [];
-          for (const actor of add2eGetPlayerActors()) results.push(await add2eResetActorForNewDay(actor, { dryRun: false }));
-          console.log(`${TAG}[DONE]`, results);
-          ui.notifications.info("ADD2E | Nouvelle journée appliquée.");
-          await add2ePostNewDayChat(results);
-        }
-      },
-      cancel: { icon: '<i class="fas fa-times"></i>', label: "Annuler" }
-    },
-    default: "validate"
-  }, { width: 520 }).render(true);
+  const card = {
+    title: "Nouvelle journée",
+    icon: "fas fa-sun",
+    variant: "utility",
+    source: { name: game.user.name, type: "Maître de jeu" },
+    rows: [
+      { label: "Acteurs traités", value: String(totals.actors) },
+      { label: "Effets supprimés", value: String(totals.effects) },
+      { label: "Ressources d’acteur", value: String(totals.actorResources) },
+      { label: "Pouvoirs rechargés", value: String(totals.itemResources) }
+    ],
+    chatData: { speaker: ChatMessage.getSpeaker({ alias: "ADD2E" }) }
+  };
+
+  globalThis.add2eBuildChatCard(card);
+  return globalThis.add2eCreateChatCard(card);
 }
 
-function add2eBuildNewDayTool() {
+async function startNewDay() {
+  if (!game.user.isGM) {
+    ui.notifications.warn("Seul le MJ peut lancer une nouvelle journée.");
+    return false;
+  }
+
+  const DialogV2 = foundry.applications.api.DialogV2;
+  const preview = await previewNewDay();
+  const confirmed = await DialogV2.confirm({
+    window: { title: "ADD2E — Nouvelle journée" },
+    content: summaryHtml(preview, true),
+    yes: { label: "Lancer la nouvelle journée", icon: "fas fa-sun" },
+    no: { label: "Annuler", icon: "fas fa-times" },
+    modal: true,
+    rejectClose: false
+  });
+  if (!confirmed) return false;
+
+  const results = [];
+  for (const actor of getWorldActors()) results.push(await resetActorForNewDay(actor));
+
+  console.log(`${TAG}[DONE]`, results);
+  ui.notifications.info("ADD2E | Nouvelle journée appliquée.");
+  await postNewDayChat(results);
+  return true;
+}
+
+function buildNewDayTool() {
   return {
     name: "add2e-new-day",
     title: "ADD2E | Nouvelle journée",
     icon: "fas fa-sun",
     button: true,
     visible: game.user.isGM,
-    onClick: () => add2eStartNewDay()
+    onClick: () => startNewDay()
   };
 }
 
-function add2eRegisterNewDaySceneControl(controls) {
+function registerNewDaySceneControl(controls) {
   if (!game.user.isGM) return;
-
-  const tool = add2eBuildNewDayTool();
+  const tool = buildNewDayTool();
 
   if (Array.isArray(controls)) {
-    const tokenControls = controls.find(c => c.name === "token") ?? controls[0];
-    if (tokenControls?.tools && Array.isArray(tokenControls.tools)) {
-      if (!tokenControls.tools.some(t => t.name === tool.name)) tokenControls.tools.push(tool);
+    const tokenControls = controls.find(control => control.name === "token") ?? controls[0];
+    if (Array.isArray(tokenControls?.tools)) {
+      if (!tokenControls.tools.some(existing => existing.name === tool.name)) tokenControls.tools.push(tool);
       return;
     }
-
-    controls.push({
-      name: "add2e",
-      title: "ADD2E",
-      icon: "fas fa-dragon",
-      layer: "TokenLayer",
-      tools: [tool],
-      activeTool: tool.name
-    });
+    controls.push({ name: "add2e", title: "ADD2E", icon: "fas fa-dragon", layer: "TokenLayer", tools: [tool], activeTool: tool.name });
     return;
   }
 
   const tokenControls = controls?.token ?? controls?.tokens ?? null;
-  if (tokenControls?.tools) {
-    if (Array.isArray(tokenControls.tools)) {
-      if (!tokenControls.tools.some(t => t.name === tool.name)) tokenControls.tools.push(tool);
-    } else if (typeof tokenControls.tools === "object") {
-      tokenControls.tools[tool.name] = tool;
-    }
+  if (Array.isArray(tokenControls?.tools)) {
+    if (!tokenControls.tools.some(existing => existing.name === tool.name)) tokenControls.tools.push(tool);
+  } else if (tokenControls?.tools && typeof tokenControls.tools === "object") {
+    tokenControls.tools[tool.name] = tool;
   }
 }
 
 Hooks.once("init", () => {
   game.add2e = game.add2e ?? {};
   game.add2e.newDayVersion = ADD2E_NEW_DAY_VERSION;
-  game.add2e.startNewDay = add2eStartNewDay;
-  game.add2e.resetActorForNewDay = add2eResetActorForNewDay;
-  game.add2e.shouldDeleteEffectOnNewDay = add2eShouldDeleteEffectOnNewDay;
+  game.add2e.startNewDay = startNewDay;
+  game.add2e.resetActorForNewDay = resetActorForNewDay;
+  game.add2e.shouldDeleteEffectOnNewDay = shouldDeleteEffectOnNewDay;
   console.log(`${TAG}[INIT]`, ADD2E_NEW_DAY_VERSION);
 });
 
-Hooks.on("getSceneControlButtons", add2eRegisterNewDaySceneControl);
+Hooks.on("getSceneControlButtons", registerNewDaySceneControl);
 
-export {
-  add2eStartNewDay,
-  add2eResetActorForNewDay,
-  add2eShouldDeleteEffectOnNewDay
-};
+export { startNewDay as add2eStartNewDay, resetActorForNewDay as add2eResetActorForNewDay, shouldDeleteEffectOnNewDay as add2eShouldDeleteEffectOnNewDay };
