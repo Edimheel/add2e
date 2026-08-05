@@ -1,6 +1,6 @@
 // scripts/add2e-attack/03-attack-rules.mjs
 // ADD2E — Règles et helpers de résolution d’attaque.
-// Version : 2026-08-03-canonical-position-shield-v1
+// Version : 2026-08-05-canonical-thief-combat-skills-v2
 
 import {
   add2eAttackComputeCharacterDisplayedCA
@@ -36,7 +36,6 @@ export function add2eNormalizeAttackTag(value) {
     }
   }
 
-  // Normalisation des aliases les plus fréquents.
   tag = tag
     .replace(/:melee$/g, ":corps_a_corps")
     .replace(/:melee:/g, ":corps_a_corps:")
@@ -75,7 +74,7 @@ export function add2eCollectAttackTags(arme) {
   const sys = arme?.system ?? {};
   const tags = new Set();
 
-  const push = (raw) => {
+  const push = raw => {
     for (const value of add2eToAttackArray(raw)) {
       const tag = add2eNormalizeAttackTag(value);
       if (tag) tags.add(tag);
@@ -89,7 +88,6 @@ export function add2eCollectAttackTags(arme) {
   push(sys.effects);
   push(arme?.flags?.add2e?.tags);
 
-  // Compatibilité anciens champs structurants.
   const categorie = add2eNormalizeAttackTag(sys.categorie ?? sys.category ?? "");
   const type = add2eNormalizeAttackTag(sys.type ?? sys.type_arme ?? "");
   const famille = add2eNormalizeAttackTag(sys.famille ?? sys.famille_arme ?? "");
@@ -121,9 +119,6 @@ export function add2eTagSetMatches(tags, matcher) {
   for (const raw of set) {
     const tag = add2eNormalizeAttackTag(raw);
     if (!tag) continue;
-
-    // bonus_touche:epee:1 doit pouvoir matcher famille_arme:epee,
-    // type_arme:epee ou arme:epee sans coder tous les cas.
     if (tag.endsWith(`:${wanted}`)) return true;
     if (tag.split(":").includes(wanted)) return true;
   }
@@ -161,7 +156,6 @@ export function add2eMeasureTokenGridDistance(tokenA, tokenB, { gridSpaces = tru
   const grid = canvas?.grid;
   const gridSize = Number(grid?.size || 100) || 100;
 
-  // Foundry V13+ : measurePath remplace measureDistances.
   if (grid && typeof grid.measurePath === "function") {
     try {
       const result = grid.measurePath([a, b], { gridSpaces });
@@ -178,7 +172,6 @@ export function add2eMeasureTokenGridDistance(tokenA, tokenB, { gridSpaces = tru
     }
   }
 
-  // Fallback non déprécié : distance de grille carrée par diagonale ADD2E simple.
   const dx = Math.abs(Number(b.x) - Number(a.x));
   const dy = Math.abs(Number(b.y) - Number(a.y));
 
@@ -227,23 +220,13 @@ export function add2eGetBackArcInfo(attackerToken, targetToken) {
     };
   }
 
-  // Repère écran : 0° = Est, 90° = Sud, 180° = Ouest, 270° = Nord.
   const angleTargetToAttacker = add2eNormalizeAngleDeg(Math.atan2(dy, dx) * 180 / Math.PI);
-
-  // Convention ADD2E pour la position : rotation 0° du token = face vers le bas de la scène.
-  // Repère écran : 0° = Est, 90° = Sud, 180° = Ouest, 270° = Nord.
-  // Donc une rotation Foundry 0° correspond à 90° dans ce repère.
   const targetRotation = add2eNormalizeAngleDeg(targetToken?.document?.rotation ?? targetToken?.rotation ?? 0);
   const targetFrontAngle = add2eNormalizeAngleDeg(90 + targetRotation);
   const targetBackAngle = add2eNormalizeAngleDeg(targetFrontAngle + 180);
   const diffBack = add2eAngleDiffDeg(angleTargetToAttacker, targetBackAngle);
   const diffFront = add2eAngleDiffDeg(angleTargetToAttacker, targetFrontAngle);
 
-  // Découpage volontairement simple pour Foundry :
-  // - Face : arc frontal large.
-  // - Dos : arc arrière strict, utilisé pour attaque sournoise/assassinat.
-  // - Flanc arrière : annule aussi la DEX défensive.
-  // - Flanc : annule seulement le bouclier.
   const isBehind = diffBack <= 75;
   const isFront = !isBehind && diffFront <= 75;
   const isRearFlank = !isBehind && !isFront && diffBack <= 120;
@@ -400,10 +383,6 @@ export function add2eGetDexIgnoredCAAdjustment(actor) {
   });
   const dexDef = Number(derived?.profile?.def);
   if (!Number.isFinite(dexDef) || dexDef === 0) return { value: 0, raw: 0 };
-
-  // Dans la fiche, la DEX défensive est ajoutée à la CA.
-  // Bonne DEX = valeur négative ; mauvaise DEX = valeur positive.
-  // L'ignorer revient à soustraire cette valeur de la CA finale.
   return { value: -dexDef, raw: dexDef };
 }
 
@@ -506,7 +485,6 @@ export function add2eGetCombatStatProfile(arme) {
     if (!toucherCaracs.length) {
       if (isProjectilePropulse) add2ePushUniqueAbility(toucherCaracs, "dexterite");
       else if (isLancer) {
-        // Manuel des joueurs : une arme lancée à la main cumule Force et Dextérité au toucher.
         add2ePushUniqueAbility(toucherCaracs, "force");
         add2ePushUniqueAbility(toucherCaracs, "dexterite");
       } else if (isCorpsACorps || defaultContact) add2ePushUniqueAbility(toucherCaracs, "force");
@@ -577,7 +555,6 @@ export function add2eGetAttackAbilityModifier(actor, key, usage) {
       : Number(profile.att ?? 0) || 0;
   }
 
-  // Les armes spéciales doivent fournir leurs ajustements dérivés dans le profil canonique.
   const candidates = usage === "degats"
     ? ["bonus_degats", "degats", "dom"]
     : ["bonus_toucher", "att", "attaque"];
@@ -637,235 +614,73 @@ export async function add2eConsumeOneUseWeaponAfterAttack(actor, arme) {
   }
 }
 
-export function add2eNormalizeAttackSkillKey(value) {
-  return add2eNormalizeAttackTag(value)
-    .replace(/^competence_voleur:/, "")
-    .replace(/^competences_voleur:/, "")
-    .replace(/^thief_skill:/, "")
-    .replace(/^voleur:/, "");
-}
-
-export function add2eIsBackstabSkillKey(value) {
-  const key = add2eNormalizeAttackSkillKey(value);
-  return key === "frappe_dans_le_dos" ||
-    key === "attaque_dans_le_dos" ||
-    key === "attaque_sournoise" ||
-    key === "backstab" ||
-    key === "sneak_attack" ||
-    (key.includes("dos") && (key.includes("frappe") || key.includes("attaque"))) ||
-    (key.includes("sournoise") && key.includes("attaque"));
-}
-
-export function add2eAttackClone(value) {
-  if (value === undefined || value === null) return value;
-  try {
-    if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
-    if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
-    return JSON.parse(JSON.stringify(value));
-  } catch {
-    return value;
+function add2eCanonicalThiefSkillKey(value) {
+  const resolver = globalThis.add2eNormalizeThiefSkillKey;
+  if (typeof resolver !== "function") {
+    throw new Error("Le normalisateur canonique ADD2E des compétences de voleur est indisponible.");
   }
+  return String(resolver(value) ?? "").trim();
 }
 
-export function add2eAttackClassNames(actor) {
-  const details = actor?.system?.details_classe ?? {};
-  return [
-    actor?.system?.classe,
-    details?.label,
-    details?.name,
-    details?.nom,
-    details?.classe,
-    details?.slug
-  ].map(v => add2eNormalizeAttackTag(v)).filter(Boolean);
-}
-
-export function add2eAttackFindClassItem(actor) {
-  const items = actor?.items?.filter?.(i => String(i?.type ?? "").toLowerCase() === "classe") ?? [];
-  if (!items.length) return null;
-  const wanted = add2eAttackClassNames(actor);
-  if (wanted.length) {
-    const found = items.find(i => {
-      const sys = i.system ?? {};
-      const names = [i.name, sys.label, sys.name, sys.nom, sys.classe, sys.slug]
-        .map(v => add2eNormalizeAttackTag(v))
-        .filter(Boolean);
-      return names.some(n => wanted.includes(n));
-    });
-    if (found) return found;
+function add2eCanonicalThiefProgression(actor) {
+  const resolver = globalThis.add2eGetActorThiefProgression;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E de progression des compétences de voleur est indisponible.");
   }
-  return items[0] ?? null;
+  const row = resolver(actor);
+  return row && typeof row === "object" ? row : null;
 }
 
-export function add2eAttackFindWorldClassSystem(actor) {
-  const wanted = add2eAttackClassNames(actor);
-  const names = [
-    actor?.system?.classe,
-    actor?.system?.details_classe?.label,
-    actor?.system?.details_classe?.name,
-    actor?.system?.details_classe?.nom
-  ].filter(Boolean);
-
-  for (const name of names) {
-    const item = game?.items?.getName?.(name);
-    if (item?.type === "classe") return add2eAttackClone(item.system ?? {}) || {};
+function add2eCanonicalThiefSkill(actor, key, progressionRow = null) {
+  const resolver = globalThis.add2eGetActorThiefSkills;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des compétences de voleur est indisponible.");
   }
-
-  if (wanted.length) {
-    const item = game?.items?.find?.(i => {
-      if (i?.type !== "classe") return false;
-      const sys = i.system ?? {};
-      const names = [i.name, sys.label, sys.name, sys.nom, sys.classe, sys.slug]
-        .map(v => add2eNormalizeAttackTag(v))
-        .filter(Boolean);
-      return names.some(n => wanted.includes(n));
-    });
-    if (item) return add2eAttackClone(item.system ?? {}) || {};
+  const wanted = add2eCanonicalThiefSkillKey(key);
+  const rows = resolver(actor, progressionRow);
+  if (!Array.isArray(rows)) {
+    throw new Error("Le résolveur canonique ADD2E des compétences de voleur a renvoyé une valeur invalide.");
   }
-
-  return {};
+  return rows.find(row => add2eCanonicalThiefSkillKey(row?.key) === wanted) ?? null;
 }
 
-export function add2eGetActorClassSystemForAttack(actor) {
-  const details = add2eAttackClone(actor?.system?.details_classe ?? {}) || {};
-  const item = add2eAttackFindClassItem(actor);
-  const itemSystem = add2eAttackClone(item?.system ?? {}) || {};
-  const worldSystem = add2eAttackFindWorldClassSystem(actor);
-
-  let merged = {};
-  for (const part of [details, itemSystem, worldSystem]) {
-    if (foundry?.utils?.mergeObject) {
-      merged = foundry.utils.mergeObject(merged, part || {}, { inplace: false, recursive: true });
-    } else {
-      merged = { ...merged, ...(part || {}) };
-    }
-  }
-
-  merged.__classItemId = item?.id ?? null;
-  merged.__classItemName = item?.name ?? merged.label ?? merged.name ?? actor?.system?.classe ?? null;
-  return merged;
-}
-
-export function add2eAttackIsAssassinClass(cls, actor) {
-  const names = [
-    cls?.label,
-    cls?.name,
-    cls?.nom,
-    cls?.classe,
-    cls?.slug,
-    cls?.__classItemName,
-    actor?.system?.classe
-  ].map(v => add2eNormalizeAttackTag(v)).filter(Boolean);
-  return names.some(n => n.includes("assassin"));
-}
-
-export function add2eAttackIsThiefLikeClass(cls, actor) {
-  const names = [
-    cls?.label,
-    cls?.name,
-    cls?.nom,
-    cls?.classe,
-    cls?.slug,
-    cls?.__classItemName,
-    actor?.system?.classe
-  ].map(v => add2eNormalizeAttackTag(v)).filter(Boolean);
-  return names.some(n => n.includes("voleur") || n.includes("assassin"));
-}
-
-export function add2eGetAttackProgressionRow(actor) {
-  const level = Math.max(1, Number(actor?.system?.niveau ?? actor?.system?.level ?? 1) || 1);
-
-  // Les monstres n'ont pas d'item classe ni de progression de classe.
-  // On ne doit donc pas journaliser PROGRESSION MANQUANTE pour eux.
-  if (actor?.type !== "personnage") {
-    return { cls: {}, level, row: null, rowLevel: null, isMonster: true };
-  }
-
-  const cls = add2eGetActorClassSystemForAttack(actor);
-  const progression = Array.isArray(cls.progression) ? cls.progression : [];
-
-  const rows = progression
-    .map((r, idx) => ({ row: r, level: Number(r?.niveau ?? r?.level ?? idx + 1) || (idx + 1), idx }))
-    .filter(x => x.row && Number.isFinite(x.level))
-    .sort((a, b) => a.level - b.level);
-
-  const exact = rows.find(x => x.level === level) || null;
-
-  if (!exact) {
-    console.warn("[ADD2E][ATTAQUE][PROGRESSION MANQUANTE]", {
-      actor: actor?.name,
-      classe: cls.__classItemName || cls.label || cls.name,
-      niveauActeur: level,
-      niveauxDisponibles: rows.map(x => x.level)
-    });
-  }
-
-  return { cls, level, row: exact?.row ?? null, rowLevel: exact?.level ?? null };
+function add2eThiefRowLevel(row) {
+  const value = Number(row?.niveau ?? row?.level);
+  return Number.isFinite(value) && value >= 1 ? Math.floor(value) : null;
 }
 
 export function add2eGetBackstabInfo(actor) {
-  const { cls, level, row } = add2eGetAttackProgressionRow(actor);
-
-  try {
-    if (typeof globalThis.add2eGetActorThiefSkills === "function") {
-      const skills = globalThis.add2eGetActorThiefSkills(actor, row) ?? [];
-      const skill = skills.find(s => add2eIsBackstabSkillKey(s?.key ?? s?.label));
-      const value = Number(skill?.finalValue ?? skill?.value ?? skill?.base ?? 0) || 0;
-      if (value > 1) {
-        return {
-          available: true,
-          multiplier: value,
-          label: skill?.label || "Frappe dans le dos",
-          source: "add2eGetActorThiefSkills",
-          level
-        };
-      }
-    }
-  } catch (err) {
-    console.warn("[ADD2E][ATTAQUE SOURNOISE] Lecture via add2eGetActorThiefSkills impossible.", err);
+  const row = add2eCanonicalThiefProgression(actor);
+  const level = add2eThiefRowLevel(row);
+  if (!row) {
+    return {
+      available: false,
+      multiplier: 1,
+      label: "Frappe dans le dos",
+      source: "missing-canonical-progression",
+      level
+    };
   }
 
-  const structured = row?.thiefSkills && typeof row.thiefSkills === "object" ? row.thiefSkills : {};
-  const candidates = [
-    row?.backstabMultiplier,
-    row?.backstab_multiplier,
-    row?.frappeDansLeDos,
-    row?.frappe_dans_le_dos,
-    row?.attaqueDansLeDos,
-    row?.attaque_dans_le_dos,
-    row?.attaqueSournoise,
-    row?.attaque_sournoise,
-    structured.frappe_dans_le_dos,
-    structured.attaque_dans_le_dos,
-    structured.attaque_sournoise,
-    structured.backstab,
-    structured.sneak_attack,
-    cls.backstabMultiplier,
-    cls.backstab_multiplier,
-    cls.frappeDansLeDos,
-    cls.frappe_dans_le_dos,
-    cls.attaqueDansLeDos,
-    cls.attaque_dans_le_dos
-  ];
-
-  for (const raw of candidates) {
-    const value = Number(raw) || 0;
-    if (value > 1) {
-      return { available: true, multiplier: value, label: "Frappe dans le dos", source: "progression", level };
-    }
+  const skill = add2eCanonicalThiefSkill(actor, "frappe_dans_le_dos", row);
+  const multiplier = Number(skill?.finalValue ?? skill?.value ?? skill?.base);
+  if (!Number.isFinite(multiplier) || multiplier <= 1) {
+    return {
+      available: false,
+      multiplier: 1,
+      label: skill?.label || "Frappe dans le dos",
+      source: "missing-canonical-skill",
+      level
+    };
   }
 
-  const labels = Array.isArray(cls.skillLabels) ? cls.skillLabels : [];
-  const values = Array.isArray(row?.skills) ? row.skills : [];
-  const idx = labels.findIndex(label => add2eIsBackstabSkillKey(label));
-  if (idx >= 0) {
-    const value = Number(values[idx]) || 0;
-    // Ancien format : si la valeur legacy est déjà un multiplicateur exploitable, on l’utilise.
-    if (value > 1 && value <= 10) {
-      return { available: true, multiplier: value, label: labels[idx] || "Frappe dans le dos", source: "legacy-skills", level };
-    }
-  }
-
-  return { available: false, multiplier: 1, label: "Frappe dans le dos", source: "none", level };
+  return {
+    available: true,
+    multiplier,
+    label: skill?.label || "Frappe dans le dos",
+    source: "add2eGetActorThiefSkills",
+    level
+  };
 }
 
 export function add2eGetAssassinationTargetLevel(cible) {
@@ -894,117 +709,83 @@ export function add2eGetAssassinationBracketKey(level) {
   return "18+";
 }
 
-export function add2eReadAssassinationChanceFromClass(cls, assassinLevel, targetLevel) {
-  const table = cls?.assassinationTable ?? cls?.assassinatTable ?? cls?.tableAssassinat;
-  if (!table || typeof table !== "object") return null;
-
-  const levelKey = String(Math.max(1, Number(assassinLevel) || 1));
-  const row = table[levelKey] ?? table[Number(levelKey)];
-  if (!row || typeof row !== "object") return null;
-
+function add2eReadCanonicalAssassinationBase(row, targetLevel) {
+  const table = row?.assassinationTableRow;
+  if (!table || typeof table !== "object" || Array.isArray(table)) return null;
   const bracket = add2eGetAssassinationBracketKey(targetLevel);
-  const raw = row[bracket];
+  const raw = table[bracket];
   if (raw === undefined || raw === null || raw === "" || raw === "—" || raw === "-") return null;
-
-  const match = String(raw).match(/-?\d+/);
-  const value = match ? Number(match[0]) : Number(raw);
+  const value = Number(raw);
   if (!Number.isFinite(value) || value <= 0) return null;
-
   return {
     score: Math.max(0, Math.min(100, value)),
-    bracket,
-    source: "assassinationTable"
+    bracket
   };
 }
 
 export function add2eGetAssassinationInfo(actor, cible = null) {
-  const { cls, level, row, rowLevel } = add2eGetAttackProgressionRow(actor);
+  const row = add2eCanonicalThiefProgression(actor);
+  const level = add2eThiefRowLevel(row);
+  const targetLevel = add2eGetAssassinationTargetLevel(cible);
+  const targetBracket = add2eGetAssassinationBracketKey(targetLevel);
 
   if (!row) {
     return {
       available: false,
       score: 0,
+      baseScore: 0,
       label: "Assassinat",
-      breakdownTitle: `Aucune progression exacte pour le niveau ${level}`,
-      source: "missing-progression",
+      breakdownTitle: "Aucune progression canonique d’assassin pour cet acteur",
+      source: "missing-canonical-progression",
       level,
-      rowLevel,
-      targetLevel: null,
-      targetBracket: null
-    };
-  }
-
-  const targetLevel = add2eGetAssassinationTargetLevel(cible);
-  const tableResult = add2eReadAssassinationChanceFromClass(cls, rowLevel ?? level, targetLevel);
-  if (tableResult) {
-    return {
-      available: true,
-      score: tableResult.score,
-      label: "Assassinat",
-      breakdownTitle: `Table d’assassinat : assassin niveau ${rowLevel ?? level}, cible niveau ${targetLevel} (${tableResult.bracket})`,
-      source: tableResult.source,
-      level,
-      rowLevel,
+      rowLevel: level,
       targetLevel,
-      targetBracket: tableResult.bracket
+      targetBracket
     };
   }
 
-  try {
-    if (typeof globalThis.add2eGetActorThiefSkills === "function") {
-      const skills = globalThis.add2eGetActorThiefSkills(actor, row) ?? [];
-      const skill = skills.find(s => add2eNormalizeAttackSkillKey(s?.key ?? s?.label) === "assassinat");
-      const value = Number(skill?.finalValue ?? skill?.value ?? skill?.base ?? 0) || 0;
-      if (value > 0) {
-        return {
-          available: true,
-          score: value,
-          label: skill?.label || "Assassinat",
-          breakdownTitle: skill?.breakdownTitle || `Base ${value}%`,
-          source: "add2eGetActorThiefSkills",
-          level,
-          rowLevel,
-          targetLevel,
-          targetBracket: add2eGetAssassinationBracketKey(targetLevel)
-        };
-      }
-    }
-  } catch (err) {
-    console.warn("[ADD2E][ASSASSINAT] Lecture via add2eGetActorThiefSkills impossible.", err);
+  const tableResult = add2eReadCanonicalAssassinationBase(row, targetLevel);
+  if (!tableResult) {
+    return {
+      available: false,
+      score: 0,
+      baseScore: 0,
+      label: "Assassinat",
+      breakdownTitle: `Aucune valeur dans progression.assassinationTableRow pour la cible ${targetBracket}`,
+      source: "missing-assassinationTableRow-value",
+      level,
+      rowLevel: level,
+      targetLevel,
+      targetBracket
+    };
   }
 
-  const structured = row?.thiefSkills && typeof row.thiefSkills === "object" ? row.thiefSkills : {};
-  const candidates = [structured.assassinat, row?.assassinat, row?.assassination, row?.compAssassin, cls.assassinat];
-
-  for (const raw of candidates) {
-    if (raw === undefined || raw === null || raw === "") continue;
-    const match = String(raw).match(/(-?\d+)/);
-    const value = match ? Number(match[1]) : Number(raw);
-    if (Number.isFinite(value) && value > 0) {
-      return {
-        available: true,
-        score: value,
-        label: "Assassinat",
-        breakdownTitle: `Base ${value}%`,
-        source: "progression",
-        level,
-        rowLevel,
-        targetLevel,
-        targetBracket: add2eGetAssassinationBracketKey(targetLevel)
-      };
-    }
+  const resolver = globalThis.add2eBuildThiefSkillRow;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E d’une compétence de voleur est indisponible.");
+  }
+  const resolved = resolver({
+    keyRaw: "assassinat",
+    valueRaw: tableResult.score,
+    actor
+  });
+  if (!resolved) {
+    throw new Error("La résolution canonique ADD2E de l’assassinat a échoué.");
   }
 
   return {
-    available: false,
-    score: 0,
-    label: "Assassinat",
-    breakdownTitle: "Aucune valeur d’assassinat dans la progression de ce niveau",
-    source: "none",
+    available: true,
+    score: Number(resolved.finalValue) || 0,
+    baseScore: tableResult.score,
+    label: resolved.label || "Assassinat",
+    breakdownTitle: `${resolved.breakdownTitle} | Table d’assassinat : assassin niveau ${level ?? "?"}, cible niveau ${targetLevel} (${tableResult.bracket})`,
+    source: "progression.assassinationTableRow+add2eBuildThiefSkillRow",
+    resolution: resolved.resolution ?? null,
+    bonuses: resolved.bonuses ?? [],
     level,
-    rowLevel,
+    rowLevel: level,
     targetLevel,
-    targetBracket: add2eGetAssassinationBracketKey(targetLevel)
+    targetBracket: tableResult.bracket
   };
 }
 
@@ -1028,4 +809,3 @@ globalThis.add2eGetBackArcInfo = add2eGetBackArcInfo;
 globalThis.add2eBuildPositionAttackAdjustment = add2eBuildPositionAttackAdjustment;
 globalThis.add2eGetBackstabInfo = add2eGetBackstabInfo;
 globalThis.add2eGetAssassinationInfo = add2eGetAssassinationInfo;
-globalThis.add2eGetActorClassSystemForAttack = add2eGetActorClassSystemForAttack;
