@@ -6,7 +6,7 @@
  */
 
 const __add2eOnUseResult = await (async () => {
-  const VERSION = "2026-07-23-canonical-save-executor-v6";
+  const VERSION = "2026-08-05-chat-card-layout-v7";
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2?.wait) {
     ui.notifications.error("Injonction : DialogV2 indisponible.");
@@ -388,24 +388,23 @@ const __add2eOnUseResult = await (async () => {
       variant: "neutral"
     },
     resisted: {
-      message: "La cible résiste au jet de protection contre les sortilèges.",
+      message: "La cible résiste au sort.",
       variant: "failure"
     }
   }[outcome];
 
   const rows = [
-    { label: "Cible", value: targetToken.name ?? target.name },
     { label: "Ordre", value: commandWord },
     {
-      label: "Condition de sauvegarde",
-      value: requiresSave ? "INT 13+ ou 6 DV/niveaux" : "Non requise"
+      label: "Sauvegarde",
+      value: requiresSave ? "INT ≥ 13 ou DV/niveau ≥ 6" : "Non requise"
     }
   ];
   if (save.required) {
     rows.push(
       { label: "D20", value: save.d20 },
-      { label: "Bonus de sauvegarde", value: `${save.bonus >= 0 ? "+" : ""}${save.bonus}` },
-      { label: "Total", value: save.total },
+      { label: "Bonus", value: `${save.bonus >= 0 ? "+" : ""}${save.bonus}` },
+      { label: "Résultat", value: save.total },
       { label: "Seuil", value: save.target }
     );
   }
@@ -441,7 +440,7 @@ const __add2eOnUseResult = await (async () => {
     variant: outcomeData.variant,
     source: {
       name: caster.name,
-      img: caster.img,
+      img: sourceItem.img || caster.img,
       type: "Sort divin",
       meta: "Clerc niveau 1"
     },
@@ -449,7 +448,7 @@ const __add2eOnUseResult = await (async () => {
       name: target.name,
       img: target.img,
       type: isUndead ? "Mort-vivant" : "Créature",
-      meta: save.resolution?.targetResolution?.selected?.className ?? ""
+      meta: ""
     },
     rows,
     message: outcomeData.message,
