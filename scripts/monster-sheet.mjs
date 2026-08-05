@@ -6,7 +6,7 @@
  * - Défense et sauvegardes exclusivement canoniques
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-08-05-monster-tab-state-v11";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-08-05-monster-tab-session-v12";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const ADD2E_MONSTER_ACTOR_SHEET_V2 = foundry?.applications?.sheets?.ActorSheetV2;
@@ -481,6 +481,7 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
     }
   };
 
+  _add2eActiveTab = null;
   _add2ePendingView = null;
 
   get title() {
@@ -605,8 +606,8 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
 
   _replaceHTML(result, content, _options) {
     content.replaceChildren(...result.childNodes);
-    this._restoreViewAfterRender(content);
     this.activateListeners(content);
+    this._restoreViewAfterRender(content);
   }
 
   async _updateObject(_event, formData) {
@@ -615,13 +616,34 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
     await this.actor.update(updateData);
   }
 
+  _add2eTabStorageKey() {
+    return `add2e.monster.${this.actor?.id || "unknown"}.activeTab`;
+  }
+
+  _add2eReadStoredTab() {
+    try { return sessionStorage.getItem(this._add2eTabStorageKey()) || null; }
+    catch (_error) { return null; }
+  }
+
+  _add2eRememberActiveTab(tabName) {
+    const tab = String(tabName || "combat").trim() || "combat";
+    this._add2eActiveTab = tab;
+    if (this.tabGroups && typeof this.tabGroups === "object") this.tabGroups.primary = tab;
+    try { sessionStorage.setItem(this._add2eTabStorageKey(), tab); } catch (_error) {}
+    return tab;
+  }
+
   _captureViewBeforeRender(root) {
     const sheetRoot = root?.matches?.(".add2e-monster-readable-sheet")
       ? root
       : root?.querySelector?.(".add2e-monster-readable-sheet")
         ?? null;
-    const body = sheetRoot?.querySelector?.(".sheet-body") ?? null;
-    const activeTab = sheetRoot?.querySelector?.(".sheet-tabs .item.active")?.dataset?.tab ?? "combat";
+    const body = sheetRoot?.querySelector?.(":scope > .sheet-body") ?? null;
+    const activeTab = sheetRoot?.querySelector?.(":scope > .sheet-tabs .item.active[data-tab]")?.dataset?.tab
+      ?? this._add2eActiveTab
+      ?? this._add2eReadStoredTab()
+      ?? "combat";
+    this._add2eRememberActiveTab(activeTab);
     return {
       activeTab,
       scrollTop: body?.scrollTop ?? 0,
@@ -635,27 +657,40 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
   }
 
   _restoreViewAfterRender(content) {
-    const view = this._add2ePendingView;
+    const view = this._add2ePendingView ?? {
+      activeTab: this._add2eActiveTab ?? this._add2eReadStoredTab() ?? "combat",
+      scrollTop: 0,
+      scrollLeft: 0
+    };
     this._add2ePendingView = null;
-    if (!view) return;
 
     requestAnimationFrame(() => {
-      const sheetRoot = content?.querySelector?.(".add2e-monster-readable-sheet") ?? null;
+      const sheetRoot = content?.matches?.(".add2e-monster-readable-sheet")
+        ? content
+        : content?.querySelector?.(".add2e-monster-readable-sheet")
+          ?? null;
       if (!sheetRoot) return;
 
-      const activeTab = view.activeTab || "combat";
-      for (const link of sheetRoot.querySelectorAll(".sheet-tabs .item")) {
-        link.classList.toggle("active", link.dataset.tab === activeTab);
-      }
-      for (const panel of sheetRoot.querySelectorAll(".tab")) {
-        panel.classList.toggle("active", panel.dataset.tab === activeTab);
-      }
+      const nav = sheetRoot.querySelector(":scope > .sheet-tabs");
+      const body = sheetRoot.querySelector(":scope > .sheet-body");
+      if (!nav || !body) return;
 
-      const body = sheetRoot.querySelector(".sheet-body");
-      if (body) {
-        body.scrollTop = view.scrollTop;
-        body.scrollLeft = view.scrollLeft;
-      }
+      const links = Array.from(nav.querySelectorAll(":scope > .item[data-tab]"));
+      const panels = Array.from(body.querySelectorAll(":scope > .tab[data-tab]"));
+      const requested = String(view.activeTab || this._add2eReadStoredTab() || "combat");
+      const available = new Set(links.map(link => String(link.dataset.tab || "")));
+      const activeTab = available.has(requested)
+        ? requested
+        : available.has("combat")
+          ? "combat"
+          : String(links[0]?.dataset?.tab || "combat");
+
+      this._add2eRememberActiveTab(activeTab);
+      for (const link of links) link.classList.toggle("active", link.dataset.tab === activeTab);
+      for (const panel of panels) panel.classList.toggle("active", panel.dataset.tab === activeTab);
+
+      body.scrollTop = view.scrollTop ?? 0;
+      body.scrollLeft = view.scrollLeft ?? 0;
     });
   }
 
@@ -665,6 +700,7 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
 
     const submit = async event => {
       event?.preventDefault?.();
+      this._add2ePendingView = this._captureViewBeforeRender(root);
       await this._updateObject(event, add2eCollectMonsterFormData(form));
     };
 
@@ -680,14 +716,21 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
     this._injectLayoutFix();
     this._activateAutoSubmit(root);
 
-    html.find(".sheet-tabs .item").off("click.add2e-monster-tabs").on("click.add2e-monster-tabs", event => {
-      event.preventDefault();
-      const tabName = $(event.currentTarget).data("tab");
-      html.find(".sheet-tabs .item").removeClass("active");
-      html.find(".tab").removeClass("active");
-      $(event.currentTarget).addClass("active");
-      html.find(`.tab[data-tab="${tabName}"]`).addClass("active");
-    });
+    html.off("click.add2e-monster-tabs", ".sheet-tabs .item[data-tab]")
+      .on("click.add2e-monster-tabs", ".sheet-tabs .item[data-tab]", event => {
+        event.preventDefault();
+        const tabName = String(event.currentTarget?.dataset?.tab ?? "combat");
+        const sheetRoot = event.currentTarget?.closest?.(".add2e-monster-readable-sheet");
+        const nav = sheetRoot?.querySelector?.(":scope > .sheet-tabs");
+        const body = sheetRoot?.querySelector?.(":scope > .sheet-body");
+        this._add2eRememberActiveTab(tabName);
+        nav?.querySelectorAll?.(":scope > .item[data-tab]")?.forEach(link => {
+          link.classList.toggle("active", link.dataset.tab === tabName);
+        });
+        body?.querySelectorAll?.(":scope > .tab[data-tab]")?.forEach(panel => {
+          panel.classList.toggle("active", panel.dataset.tab === tabName);
+        });
+      });
 
     html.find(".roll-save").off("click.add2e-monster-save").on("click.add2e-monster-save", async event => {
       event.preventDefault();
