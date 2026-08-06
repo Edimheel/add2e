@@ -1,12 +1,12 @@
 // ============================================================
 // ADD2E — Spellcasting par Items classe
-// Version : 2026-08-06-canonical-resource-memorization-v2
+// Version : 2026-08-06-canonical-resource-memorization-v3
 // Les Items classe sont l’unique source de niveau et de listes de sorts.
 // Les profils dérivés canoniques sont l’unique source Intelligence/Sagesse.
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-06-canonical-resource-memorization-v2";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-06-canonical-resource-memorization-v3";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -609,6 +609,17 @@ function add2eGetMemorizedByList(sort) {
   return raw && typeof raw === "object" && !Array.isArray(raw) ? foundry.utils.deepClone(raw) : {};
 }
 
+function add2eSpellStoredMemorization(sort, key) {
+  const byList = add2eGetMemorizedByList(sort);
+  if (Object.prototype.hasOwnProperty.call(byList, key)) return Math.max(0, Number(byList[key]) || 0);
+  const lists = add2eGetSpellListsFromItem(sort).map(add2eNormalizeSpellKey).filter(Boolean);
+  const legacyRaw = sort?.getFlag?.("add2e", "memorizedCount") ?? sort?.flags?.add2e?.memorizedCount;
+  const legacyPresent = legacyRaw !== undefined && legacyRaw !== null && legacyRaw !== "";
+  return lists.length <= 1 && lists.includes(key) && legacyPresent
+    ? Math.max(0, Number(legacyRaw) || 0)
+    : 0;
+}
+
 function add2eSpellMemorizationResource(sort, entry, options = {}) {
   const key = add2eNormalizeSpellKey(entry?.key);
   if (!sort || !key || !add2eIsRegularPreparableSpell(sort)) {
@@ -616,16 +627,6 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
   }
   const actor = sort.actor ?? sort.parent ?? null;
   const level = Math.max(1, Number(sort.system?.niveau ?? sort.system?.level ?? 1) || 1);
-  const byList = add2eGetMemorizedByList(sort);
-  const lists = add2eGetSpellListsFromItem(sort).map(add2eNormalizeSpellKey).filter(Boolean);
-  const hasCanonicalValue = Object.prototype.hasOwnProperty.call(byList, key);
-  const legacyRaw = sort?.getFlag?.("add2e", "memorizedCount") ?? sort?.flags?.add2e?.memorizedCount;
-  const legacyPresent = legacyRaw !== undefined && legacyRaw !== null && legacyRaw !== "";
-  const current = hasCanonicalValue
-    ? Math.max(0, Number(byList[key]) || 0)
-    : lists.length <= 1 && lists.includes(key) && legacyPresent
-      ? Math.max(0, Number(legacyRaw) || 0)
-      : 0;
   const maximum = actor ? add2eGetSlotsForEntryLevel(actor, entry, level) : null;
 
   return {
@@ -636,7 +637,9 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
     actor,
     item: sort,
     target: `${key}:${level}`,
-    current,
+    get current() {
+      return add2eSpellStoredMemorization(sort, key);
+    },
     maximum,
     cost: Math.max(0, Number(options.cost ?? 1) || 0),
     recovery: Math.max(0, Number(options.recovery ?? 0) || 0),
@@ -655,9 +658,10 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
     },
     write: async nextValue => {
       const next = Math.max(0, Math.floor(Number(nextValue) || 0));
+      const liveCurrent = add2eSpellStoredMemorization(sort, key);
       if (actor && Number.isFinite(maximum)) {
         const currentTotal = add2eCountPreparedForEntryLevel(actor, entry, level);
-        const projected = Math.max(0, currentTotal - current + next);
+        const projected = Math.max(0, currentTotal - liveCurrent + next);
         if (projected > maximum) {
           throw new Error(`Limite atteinte : ${entry?.label ?? add2eSpellLabel(key)} niveau ${level} (${projected}/${maximum}).`);
         }
@@ -734,8 +738,9 @@ async function add2eConsumeMemorizedSpell(sort, entry, cost = 1, options = {}) {
 
 function add2eGetTotalMemorizedCount(sort) {
   if (!sort || !add2eIsRegularPreparableSpell(sort)) return 0;
+  const spellLists = add2eGetSpellListsFromItem(sort).map(add2eNormalizeSpellKey);
   const entries = add2eGetSpellcastingEntries(sort.actor ?? sort.parent ?? null)
-    .filter(entry => add2eGetSpellListsFromItem(sort).map(add2eNormalizeSpellKey).includes(add2eNormalizeSpellKey(entry.key)));
+    .filter(entry => spellLists.includes(add2eNormalizeSpellKey(entry.key)));
   return entries.reduce((sum, entry) => sum + add2eGetMemorizedCountForEntry(sort, entry), 0);
 }
 
