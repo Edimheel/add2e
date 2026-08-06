@@ -37,6 +37,7 @@
   ],
   "styles": [
     "styles/add2e.css",
+    "styles/monster-morale.css",
     "styles/character-sheet.css",
     "styles/application-v2-character-sheet.css",
     "styles/magic-recharge.css"
