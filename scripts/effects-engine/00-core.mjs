@@ -1005,3 +1005,304 @@ export function installEffectsEngineCore(Engine) {
   globalThis.ADD2E_EFFECTS = Engine;
   globalThis.ADD2E_MODIFIER_RESOLVER_VERSION = ADD2E_MODIFIER_RESOLVER_VERSION;
 }
+
+// ============================================================================
+// Domaine canonique resource
+// ============================================================================
+const ADD2E_RESOURCE_DOMAIN_VERSION = "2026-08-06-canonical-resource-domain-v1";
+const ADD2E_RESOURCE_OPERATION_QUEUE = { tail: Promise.resolve() };
+
+function add2eResourceNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function add2eResourceDocument(resource = {}) {
+  return resource.document ?? resource.item ?? resource.actor ?? resource.targetDocument ?? null;
+}
+
+function add2eResourceActor(resource = {}, document = add2eResourceDocument(resource)) {
+  return resource.actor
+    ?? document?.actor
+    ?? (document?.documentName === "Actor" ? document : null)
+    ?? document?.parent
+    ?? null;
+}
+
+function add2eResourceReadPath(document, path) {
+  if (!document || !path) return undefined;
+  try { return foundry.utils.getProperty(document, path); }
+  catch (_error) { return undefined; }
+}
+
+function add2eResourceSource(resource = {}, document = add2eResourceDocument(resource)) {
+  const source = resource.source;
+  if (source && typeof source === "object") return { ...source };
+  return {
+    kind: canonicalKey(resource.sourceKind ?? document?.documentName ?? "resource") || "resource",
+    id: String(resource.sourceId ?? document?.id ?? document?._id ?? ""),
+    uuid: String(resource.sourceUuid ?? document?.uuid ?? ""),
+    name: String(resource.sourceName ?? document?.name ?? resource.label ?? "Ressource")
+  };
+}
+
+function add2eResourceResolveNumeric(Engine, actor, target, base, context, enabled = true) {
+  if (!enabled || !Number.isFinite(base)) return { total: base, applied: [], rejected: [] };
+  if (!actor || typeof Engine.resolve !== "function") return { total: base, applied: [], rejected: [] };
+  return Engine.resolve(actor, {
+    domain: "resource",
+    target,
+    base,
+    context
+  });
+}
+
+function add2eResourceState(Engine, resource = {}, options = {}) {
+  if (!resource || typeof resource !== "object") throw new TypeError("Une description de ressource ADD2E est requise.");
+  const document = add2eResourceDocument(resource);
+  const actor = add2eResourceActor(resource, document);
+  const type = canonicalKey(resource.type ?? resource.resourceType ?? "generic") || "generic";
+  const id = String(resource.id ?? resource.resourceId ?? `${document?.uuid ?? document?.id ?? "resource"}:${resource.currentPath ?? type}`);
+  const currentPath = String(resource.currentPath ?? resource.path ?? "").trim();
+  const maximumPath = String(resource.maximumPath ?? resource.maxPath ?? "").trim();
+  const rawCurrent = resource.current ?? resource.value ?? add2eResourceReadPath(document, currentPath);
+  const rawMaximum = resource.maximum ?? resource.max ?? add2eResourceReadPath(document, maximumPath);
+  const rawCost = options.cost ?? resource.cost ?? 1;
+  const rawRecovery = options.recovery ?? options.amount ?? resource.recovery ?? resource.recoveryAmount ?? 0;
+  const baseCurrent = Math.max(0, add2eResourceNumber(rawCurrent, 0));
+  const maximumFinite = rawMaximum !== undefined && rawMaximum !== null && rawMaximum !== "" && Number.isFinite(Number(rawMaximum));
+  const baseMaximum = maximumFinite ? Math.max(0, Number(rawMaximum)) : null;
+  const context = {
+    ...(resource.context ?? {}),
+    ...(options.context ?? {}),
+    actor,
+    item: resource.item ?? (document?.documentName === "Item" ? document : null),
+    resourceId: id,
+    resourceType: type,
+    resourceTarget: resource.target ?? null,
+    source: add2eResourceSource(resource, document),
+    consumer: options.consumer ?? resource.consumer ?? "resource-domain"
+  };
+  const maximumResolution = add2eResourceResolveNumeric(Engine, actor, "maximum", baseMaximum, context, maximumFinite);
+  const costResolution = add2eResourceResolveNumeric(Engine, actor, "cost", Math.max(0, add2eResourceNumber(rawCost, 0)), context);
+  const recoveryResolution = add2eResourceResolveNumeric(Engine, actor, "recovery", Math.max(0, add2eResourceNumber(rawRecovery, 0)), context);
+  const maximum = maximumFinite ? Math.max(0, add2eResourceNumber(maximumResolution?.total, baseMaximum)) : null;
+  const current = maximum === null ? baseCurrent : Math.min(baseCurrent, maximum);
+  const cost = Math.max(0, add2eResourceNumber(costResolution?.total, 0));
+  const recovery = Math.max(0, add2eResourceNumber(recoveryResolution?.total, 0));
+  return {
+    domain: "resource",
+    method: "ADD2E_EFFECTS.resolveResource",
+    id,
+    type,
+    label: String(resource.label ?? document?.name ?? type),
+    document,
+    actor,
+    item: resource.item ?? (document?.documentName === "Item" ? document : null),
+    target: resource.target ?? null,
+    source: add2eResourceSource(resource, document),
+    currentPath,
+    maximumPath,
+    current,
+    maximum,
+    cost,
+    recovery,
+    recoveryPeriod: canonicalKey(resource.recoveryPeriod ?? resource.period ?? "") || null,
+    available: cost <= current,
+    missing: Math.max(0, cost - current),
+    context,
+    resolutions: {
+      maximum: maximumResolution,
+      cost: costResolution,
+      recovery: recoveryResolution
+    },
+    write: typeof resource.write === "function" ? resource.write : null,
+    updateOptions: resource.updateOptions && typeof resource.updateOptions === "object" ? { ...resource.updateOptions } : {}
+  };
+}
+
+function add2eResourceEnqueue(operation) {
+  const run = ADD2E_RESOURCE_OPERATION_QUEUE.tail.then(operation, operation);
+  ADD2E_RESOURCE_OPERATION_QUEUE.tail = run.catch(() => undefined);
+  return run;
+}
+
+async function add2eResourceWrite(state, value, reason, extraOptions = {}) {
+  const next = state.maximum === null
+    ? Math.max(0, add2eResourceNumber(value, 0))
+    : Math.max(0, Math.min(state.maximum, add2eResourceNumber(value, 0)));
+  if (typeof state.write === "function") {
+    await state.write(next, state, { reason, ...extraOptions });
+    return next;
+  }
+  if (!state.document || !state.currentPath) {
+    throw new Error(`La ressource « ${state.label} » ne définit pas de chemin d’écriture canonique.`);
+  }
+  if (typeof state.document.update !== "function") {
+    throw new Error(`Le document de la ressource « ${state.label} » ne peut pas être mis à jour.`);
+  }
+  await state.document.update({ [state.currentPath]: next }, {
+    ...state.updateOptions,
+    ...extraOptions,
+    add2eReason: reason
+  });
+  return next;
+}
+
+async function add2eResourceRollback(applied, reason, options = {}) {
+  const errors = [];
+  for (const entry of [...applied].reverse()) {
+    try {
+      await add2eResourceWrite(entry.state, entry.before, `${reason}:rollback`, options.updateOptions ?? {});
+    } catch (error) {
+      errors.push({ id: entry.state.id, label: entry.state.label, error });
+    }
+  }
+  if (errors.length) {
+    const labels = errors.map(entry => entry.label).join(", ");
+    throw new AggregateError(errors.map(entry => entry.error), `Échec du retour arrière des ressources : ${labels}.`);
+  }
+}
+
+function add2eResourceOperationValue(state, operation, options = {}) {
+  if (operation === "consume") return state.current - state.cost;
+  if (operation === "recover") {
+    const amount = options.amount !== undefined ? Math.max(0, add2eResourceNumber(options.amount, 0)) : state.recovery;
+    return state.current + amount;
+  }
+  if (operation === "set") return add2eResourceNumber(options.value, state.current);
+  throw new Error(`Opération de ressource inconnue : ${operation}.`);
+}
+
+async function add2eResourceMutate(Engine, resources, operation, options = {}, execute = null) {
+  const list = Array.isArray(resources) ? resources : [resources];
+  if (!list.length || list.some(resource => !resource || typeof resource !== "object")) {
+    throw new TypeError("Une ou plusieurs descriptions de ressources ADD2E sont requises.");
+  }
+  return add2eResourceEnqueue(async () => {
+    const states = list.map(resource => add2eResourceState(Engine, resource, options));
+    if (operation === "consume") {
+      const unavailable = states.filter(state => !state.available);
+      if (unavailable.length) {
+        return {
+          ok: false,
+          committed: false,
+          reason: "resource-unavailable",
+          domain: "resource",
+          operation,
+          resources: unavailable
+        };
+      }
+    }
+    const planned = states.map(state => {
+      const rawAfter = add2eResourceOperationValue(state, operation, options);
+      const after = state.maximum === null
+        ? Math.max(0, rawAfter)
+        : Math.max(0, Math.min(state.maximum, rawAfter));
+      return { state, before: state.current, after };
+    });
+    const applied = [];
+    try {
+      for (const entry of planned) {
+        if (entry.after !== entry.before) {
+          await add2eResourceWrite(entry.state, entry.after, options.reason ?? `resource-${operation}`, options.updateOptions ?? {});
+        }
+        applied.push(entry);
+      }
+      const result = typeof execute === "function"
+        ? await execute(planned.map(entry => ({ ...entry.state, before: entry.before, after: entry.after })))
+        : undefined;
+      return {
+        ok: true,
+        committed: true,
+        domain: "resource",
+        operation,
+        result,
+        resources: planned.map(entry => ({
+          ...entry.state,
+          before: entry.before,
+          after: entry.after,
+          delta: entry.after - entry.before,
+          available: operation === "consume" ? entry.after >= 0 : true
+        }))
+      };
+    } catch (error) {
+      try {
+        await add2eResourceRollback(applied, options.reason ?? `resource-${operation}`, options);
+      } catch (rollbackError) {
+        throw new AggregateError([error, rollbackError], `La transaction de ressources a échoué et son retour arrière est incomplet.`);
+      }
+      throw error;
+    }
+  });
+}
+
+function installCanonicalResourceDomain(Engine) {
+  Object.defineProperties(Engine, {
+    resolveResource: {
+      configurable: true,
+      writable: true,
+      value(resource, options = {}) {
+        return add2eResourceState(this, resource, options);
+      }
+    },
+    checkResourceAvailability: {
+      configurable: true,
+      writable: true,
+      value(resource, options = {}) {
+        const state = add2eResourceState(this, resource, options);
+        return { ...state, ok: state.available, reason: state.available ? "available" : "resource-unavailable" };
+      }
+    },
+    consumeResource: {
+      configurable: true,
+      writable: true,
+      async value(resource, options = {}) {
+        return add2eResourceMutate(this, resource, "consume", options);
+      }
+    },
+    consumeResources: {
+      configurable: true,
+      writable: true,
+      async value(resources, options = {}) {
+        return add2eResourceMutate(this, resources, "consume", options);
+      }
+    },
+    recoverResource: {
+      configurable: true,
+      writable: true,
+      async value(resource, options = {}) {
+        return add2eResourceMutate(this, resource, "recover", options);
+      }
+    },
+    recoverResources: {
+      configurable: true,
+      writable: true,
+      async value(resources, options = {}) {
+        return add2eResourceMutate(this, resources, "recover", options);
+      }
+    },
+    setResource: {
+      configurable: true,
+      writable: true,
+      async value(resource, value, options = {}) {
+        return add2eResourceMutate(this, resource, "set", { ...options, value });
+      }
+    },
+    transactResources: {
+      configurable: true,
+      writable: true,
+      async value(resources, execute, options = {}) {
+        if (typeof execute !== "function") throw new TypeError("La transaction resource requiert une fonction d’exécution.");
+        return add2eResourceMutate(this, resources, "consume", options, execute);
+      }
+    }
+  });
+  globalThis.ADD2E_RESOURCE_DOMAIN_VERSION = ADD2E_RESOURCE_DOMAIN_VERSION;
+}
+
+const add2eInstallEffectsEngineCoreBase = installEffectsEngineCore;
+installEffectsEngineCore = function installEffectsEngineCoreWithResources(Engine) {
+  add2eInstallEffectsEngineCoreBase(Engine);
+  installCanonicalResourceDomain(Engine);
+};
