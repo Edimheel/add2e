@@ -1,9 +1,9 @@
 // ADD2E — Affichage détaillé des monstres
-// Version : 2026-08-05-monster-tab-hook-fix-v10
-// But : séparer les capacités informatives MJ des effets système activables et permettre au MJ de composer manuellement les sorts préparés.
+// Version : 2026-08-06-adnd2e-monster-morale-v11
+// But : séparer les capacités informatives MJ des effets système activables, gérer le moral AD&D 2e et permettre au MJ de composer manuellement les sorts préparés.
 // Foundry V13/V14/V15 : ApplicationV2 / DialogV2 uniquement.
 
-const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-08-05-monster-tab-hook-fix-v10";
+const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-08-06-adnd2e-monster-morale-v11";
 const ADD2E_MONSTER_SPELL_PACK = "add2e.sorts";
 globalThis.ADD2E_MONSTER_CAPABILITIES_VERSION = ADD2E_MONSTER_CAPABILITIES_VERSION;
 
@@ -87,49 +87,315 @@ function capCard(cap, system = false) {
 }
 
 function canonicalMoraleBase(value) {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
+  const score = Number(value);
+  return Number.isInteger(score) && score >= 2 && score <= 20 ? score : null;
 }
 
-function resolveMonsterMorale(actor) {
+function moraleRatingLabel(score) {
+  if (!Number.isFinite(score)) return "—";
+  if (score <= 4) return "Instable";
+  if (score <= 7) return "Agité";
+  if (score <= 10) return "Moyen";
+  if (score <= 12) return "Stable";
+  if (score <= 14) return "Élite";
+  if (score <= 16) return "Champion";
+  if (score <= 18) return "Fanatique";
+  return "Sans peur";
+}
+
+function monsterMoraleEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (typeof engine?.resolve !== "function" || typeof engine?.collect !== "function" || typeof engine?.createModifier !== "function") {
+    throw new Error("Le résolveur canonique ADD2E du moral n’est pas disponible.");
+  }
+  return engine;
+}
+
+function moraleSituationModifier(engine, actor, id, label, value) {
+  return engine.createModifier({
+    id: `${actor.id}:monster-morale:${id}`,
+    domain: "morale",
+    target: "score",
+    operation: "add",
+    value,
+    priority: 1000,
+    stacking: { mode: "stack", group: null },
+    conditions: {},
+    source: {
+      kind: "context",
+      id: `monster-morale:${id}`,
+      uuid: actor.uuid ?? "",
+      name: label
+    },
+    metadata: { transient: true, moraleSituation: true }
+  });
+}
+
+function monsterMoraleSituationModifiers(engine, actor, context = {}) {
+  const conditions = context?.conditions ?? context ?? {};
+  const modifiers = [];
+  const add = (id, label, value) => modifiers.push(moraleSituationModifier(engine, actor, id, label, value));
+
+  const losses = Math.max(0, Number(conditions.losses) || 0);
+  if (losses >= 50) add("losses-50", "Pertes de 50 %", -4);
+  else if (losses >= 25) add("losses-25", "Pertes de 25 %", -2);
+
+  if (conditions.abandoned === true) add("abandoned", "Abandonné par ses alliés", -6);
+  if (conditions.hatedEnemy === true) add("hated-enemy", "Ennemi haï", 4);
+  if (conditions.surprised === true) add("surprised", "Surpris", -2);
+  if (conditions.fightingMagicUsers === true) add("enemy-magic", "Magie ennemie", -2);
+  if (conditions.defendingHome === true) add("defending-home", "Défend son foyer", 3);
+  if (conditions.defensiveTerrain === true) add("defensive-terrain", "Terrain favorable", 1);
+  if (conditions.leaderDifferentAlignment === true) add("leader-alignment", "Chef d’un autre alignement", -1);
+  if (conditions.mostPowerfulAllyKilled === true) add("powerful-ally-killed", "Allié principal tué", -4);
+  if (conditions.favored === true) add("favored", "Bien traité", 2);
+  if (conditions.poorlyTreated === true) add("poorly-treated", "Mal traité", -4);
+  if (conditions.noEnemySlain === true) add("no-enemy-slain", "Aucun ennemi vaincu", -2);
+  if (conditions.outnumberedThreeToOne === true) add("outnumbered", "Infériorité de trois contre un", -4);
+  if (conditions.outnumbersThreeToOne === true) add("outnumbers", "Supériorité de trois contre un", 2);
+  if (conditions.unableToAffectOpponent === true) add("unable-to-affect", "Adversaire impossible à blesser", -8);
+  if (conditions.alliedMagicUser === true) add("allied-magic", "Magie alliée", 2);
+
+  const additionalChecks = Math.max(0, Math.floor(Number(conditions.additionalChecks) || 0));
+  if (additionalChecks > 0) add("additional-checks", "Tests supplémentaires ce round", -additionalChecks);
+  return modifiers;
+}
+
+function resolveMonsterMorale(actor, context = {}) {
   const base = canonicalMoraleBase(actor?.system?.morale);
   if (!Number.isFinite(base)) {
     return {
+      ok: false,
+      reason: "invalid-base",
       base: null,
       total: null,
       adjustment: 0,
+      label: "—",
       display: "—",
       resolution: null
     };
   }
 
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
-  if (typeof engine?.resolve !== "function") {
-    throw new Error("Le résolveur canonique ADD2E du moral n’est pas disponible.");
-  }
-
+  const engine = monsterMoraleEngine();
+  const resolutionContext = {
+    ...context,
+    actor,
+    type: "monster-morale",
+    actionType: "morale",
+    moraleTarget: "score",
+    scope: context.scope === "individual" ? "individual" : "group",
+    source: context.source ?? "monster-sheet-capabilities",
+    consumer: context.consumer ?? "application-v2"
+  };
+  const modifiers = [
+    ...engine.collect(actor, resolutionContext),
+    ...monsterMoraleSituationModifiers(engine, actor, context)
+  ];
   const resolution = engine.resolve(actor, {
     domain: "morale",
     target: "score",
     base,
-    context: {
-      type: "monster-morale",
-      source: "monster-sheet-capabilities",
-      consumer: "application-v2"
-    }
+    rounding: "round",
+    modifiers,
+    context: resolutionContext
   });
   const total = Number(resolution?.total);
   if (!Number.isFinite(total)) throw new Error("La résolution canonique du moral a renvoyé une valeur invalide.");
   const adjustment = total - base;
   return {
+    ok: true,
+    reason: "resolved",
     base,
     total,
     adjustment,
-    display: adjustment === 0 ? String(total) : `${total} (base ${base}, ${adjustment >= 0 ? "+" : ""}${adjustment})`,
-    resolution
+    label: moraleRatingLabel(base),
+    display: adjustment === 0 ? `${base} — ${moraleRatingLabel(base)}` : `${total} (base ${base})`,
+    resolution,
+    context: resolutionContext
   };
 }
 
+function monsterMoraleResult(success, margin, context = {}) {
+  if (success) return "Tient bon.";
+  if (context?.conditions?.noEscape === true) return "Se rend.";
+  if (margin <= 2) return "Se replie.";
+  return "Prend la fuite.";
+}
+
+async function rollMonsterMorale(actor, context = {}) {
+  if (!actor) return { ok: false, reason: "missing-actor" };
+  if (!game.user?.isGM && !actor.isOwner && !actor.testUserPermission?.(game.user, "OWNER")) {
+    ui.notifications?.warn?.("Vous ne pouvez pas tester le moral de cet acteur.");
+    return { ok: false, reason: "permission-denied" };
+  }
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    ui.notifications?.error?.("Les cartes ADD2E sont indisponibles.");
+    return { ok: false, reason: "chat-card-unavailable" };
+  }
+
+  const morale = resolveMonsterMorale(actor, context);
+  if (!morale.ok) {
+    ui.notifications?.warn?.("Le score de moral doit être compris entre 2 et 20.");
+    return morale;
+  }
+
+  const roll = await new Roll("2d10").evaluate();
+  const total = Number(roll.total);
+  if (!Number.isFinite(total)) return { ok: false, reason: "invalid-roll", morale, roll };
+  const success = total <= morale.total;
+  const margin = Math.max(0, total - morale.total);
+  const result = monsterMoraleResult(success, margin, context);
+  const applied = (morale.resolution?.applied ?? []).map(modifier => ({
+    id: modifier.id,
+    value: Number(modifier.value),
+    source: String(modifier.source?.name ?? "")
+  }));
+
+  const card = {
+    actor,
+    title: `Test de moral — ${success ? "Réussite" : "Échec"}`,
+    icon: `fas ${success ? "fa-shield" : "fa-person-running"}`,
+    variant: success ? "success" : "failure",
+    source: {
+      name: actor.name,
+      img: actor.img,
+      type: context.scope === "individual" ? "Moral individuel" : "Moral du groupe"
+    },
+    rows: [
+      { label: "Jet", value: `${total} / ${morale.total}` },
+      { label: "Résultat", value: result }
+    ],
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      rolls: [roll],
+      flags: {
+        add2e: {
+          monsterMorale: {
+            actorId: actor.id,
+            scope: context.scope === "individual" ? "individual" : "group",
+            base: morale.base,
+            score: morale.total,
+            adjustment: morale.adjustment,
+            roll: total,
+            success,
+            margin,
+            result,
+            conditions: foundry.utils.deepClone(context.conditions ?? {}),
+            applied
+          }
+        }
+      }
+    }
+  };
+  globalThis.add2eBuildChatCard(card);
+  const message = await globalThis.add2eCreateChatCard(card);
+  return { ok: true, morale, roll, total, success, margin, result, message };
+}
+
+function moraleCheckbox(name, label, modifier) {
+  const sign = modifier > 0 ? `+${modifier}` : String(modifier);
+  return `<label class="add2e-monster-morale-option"><input type="checkbox" name="${name}"><span>${label}</span><b>${sign}</b></label>`;
+}
+
+async function promptMonsterMorale(actor) {
+  const base = canonicalMoraleBase(actor?.system?.morale);
+  if (!Number.isFinite(base)) {
+    ui.notifications?.warn?.("Le score de moral doit être compris entre 2 et 20.");
+    return false;
+  }
+  const DialogV2 = foundry.applications?.api?.DialogV2;
+  if (typeof DialogV2?.wait !== "function") throw new Error("DialogV2 est indisponible.");
+
+  const result = await DialogV2.wait({
+    window: {
+      title: `Moral — ${actor.name}`,
+      classes: ["add2e-monster-morale-window"]
+    },
+    content: `
+      <form class="add2e-monster-morale-form">
+        <div class="add2e-monster-morale-summary"><b>${esc(actor.name)}</b><span>Moral ${base} — ${moraleRatingLabel(base)}</span></div>
+        <div class="add2e-monster-morale-grid">
+          <label><span>Test</span><select name="scope"><option value="group">Groupe</option><option value="individual">Individu</option></select></label>
+          <label><span>Pertes</span><select name="losses"><option value="0">Aucune</option><option value="25">25 % (-2)</option><option value="50">50 % (-4)</option></select></label>
+          <label><span>Autres tests ce round</span><input type="number" name="additionalChecks" min="0" step="1" value="0"></label>
+        </div>
+        <div class="add2e-monster-morale-columns">
+          <fieldset><legend>Défavorables</legend>
+            ${moraleCheckbox("abandoned", "Abandonné", -6)}
+            ${moraleCheckbox("surprised", "Surpris", -2)}
+            ${moraleCheckbox("fightingMagicUsers", "Magie ennemie", -2)}
+            ${moraleCheckbox("leaderDifferentAlignment", "Chef d’un autre alignement", -1)}
+            ${moraleCheckbox("mostPowerfulAllyKilled", "Allié principal tué", -4)}
+            ${moraleCheckbox("poorlyTreated", "Mal traité", -4)}
+            ${moraleCheckbox("noEnemySlain", "Aucun ennemi vaincu", -2)}
+            ${moraleCheckbox("outnumberedThreeToOne", "Infériorité de 3 contre 1", -4)}
+            ${moraleCheckbox("unableToAffectOpponent", "Adversaire invulnérable", -8)}
+          </fieldset>
+          <fieldset><legend>Favorables</legend>
+            ${moraleCheckbox("hatedEnemy", "Ennemi haï", 4)}
+            ${moraleCheckbox("defendingHome", "Défend son foyer", 3)}
+            ${moraleCheckbox("defensiveTerrain", "Terrain favorable", 1)}
+            ${moraleCheckbox("favored", "Bien traité", 2)}
+            ${moraleCheckbox("outnumbersThreeToOne", "Supériorité de 3 contre 1", 2)}
+            ${moraleCheckbox("alliedMagicUser", "Magie alliée", 2)}
+            <label class="add2e-monster-morale-option"><input type="checkbox" name="noEscape"><span>Aucune fuite possible</span><b>Issue</b></label>
+          </fieldset>
+        </div>
+      </form>`,
+    buttons: [
+      {
+        action: "roll",
+        label: "Lancer",
+        icon: "<i class='fas fa-dice'></i>",
+        default: true,
+        callback: (_event, button) => {
+          const form = button?.form;
+          const checked = name => form?.elements?.[name]?.checked === true;
+          return {
+            scope: String(form?.elements?.scope?.value ?? "group"),
+            conditions: {
+              losses: Number(form?.elements?.losses?.value ?? 0),
+              additionalChecks: Math.max(0, Math.floor(Number(form?.elements?.additionalChecks?.value) || 0)),
+              abandoned: checked("abandoned"),
+              hatedEnemy: checked("hatedEnemy"),
+              surprised: checked("surprised"),
+              fightingMagicUsers: checked("fightingMagicUsers"),
+              defendingHome: checked("defendingHome"),
+              defensiveTerrain: checked("defensiveTerrain"),
+              leaderDifferentAlignment: checked("leaderDifferentAlignment"),
+              mostPowerfulAllyKilled: checked("mostPowerfulAllyKilled"),
+              favored: checked("favored"),
+              poorlyTreated: checked("poorlyTreated"),
+              noEnemySlain: checked("noEnemySlain"),
+              outnumberedThreeToOne: checked("outnumberedThreeToOne"),
+              outnumbersThreeToOne: checked("outnumbersThreeToOne"),
+              unableToAffectOpponent: checked("unableToAffectOpponent"),
+              alliedMagicUser: checked("alliedMagicUser"),
+              noEscape: checked("noEscape")
+            }
+          };
+        }
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
+      }
+    ],
+    close: () => null
+  });
+  if (!result) return false;
+  return rollMonsterMorale(actor, {
+    ...result,
+    source: "monster-sheet-morale-roll",
+    consumer: "application-v2"
+  });
+}
+
 globalThis.add2eResolveMonsterMorale = resolveMonsterMorale;
+globalThis.add2eRollMonsterMorale = rollMonsterMorale;
+globalThis.add2ePromptMonsterMorale = promptMonsterMorale;
 
 function monsterSpellProfile(actor) {
   const profile = actor?.system?.spellcasting;
@@ -577,6 +843,27 @@ function bindMonsterSpellLibrary(app, $html, actor) {
   });
 }
 
+function bindMonsterMoraleControl(app, $html, actor) {
+  const input = $html.find('input[name="system.morale"]').first();
+  if (!input.length) return;
+  const group = input.closest(".form-group");
+  if (group.length && !group.find(".add2e-monster-morale-control").length) {
+    input.wrap('<div class="add2e-monster-morale-control"></div>');
+    input.after('<button type="button" class="add2e-monster-morale-roll" title="Tester le moral"><i class="fas fa-flag"></i> Tester</button>');
+  }
+
+  $html.off("click.add2e-monster-morale").on("click.add2e-monster-morale", ".add2e-monster-morale-roll", async event => {
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      await promptMonsterMorale(actor);
+    } catch (error) {
+      console.error("[ADD2E][MONSTER_MORALE][ROLL]", error);
+      ui.notifications?.error?.("Le test de moral n’a pas pu être lancé.");
+    }
+  });
+}
+
 function installStyles() {
   const id = "add2e-monster-capabilities-style";
   if (document.getElementById(id)) return;
@@ -609,10 +896,26 @@ function installStyles() {
     .add2e.sheet.monster .add2e-monster-spell-dropzone.is-dragover { border-style:solid; background:#e8f5df; box-shadow:inset 0 0 0 2px #719c4a; }
     .add2e.sheet.monster .add2e-monster-spell-library.is-disabled .add2e-monster-spell-dropzone { opacity:.5; }
     .add2e.sheet.monster .add2e-monster-power-label { color:#6f4b12; font-weight:900; }
-    .application.add2e-monster-spell-picker-window .window-content { background:#f7eed3; color:#2f210d; }
+    .add2e.sheet.monster .add2e-monster-morale-control { display:flex; align-items:center; gap:6px; }
+    .add2e.sheet.monster .add2e-monster-morale-control input { min-width:0; }
+    .add2e.sheet.monster .add2e-monster-morale-roll { flex:0 0 auto; border:1px solid #6f4b12; border-radius:5px; background:#ead99d; color:#3d2b0a; padding:4px 7px; font-weight:900; cursor:pointer; }
+    .application.add2e-monster-spell-picker-window .window-content,
+    .application.add2e-monster-morale-window .window-content { background:#f7eed3; color:#2f210d; }
     .application.add2e-monster-spell-picker-window select,
-    .application.add2e-monster-spell-picker-window input { background:#fffaf0; border:1px solid #b9a15d; border-radius:5px; padding:6px; color:#1d1606; }
-    @media(max-width:800px){.add2e.sheet.monster .add2e-monster-spell-actions{grid-template-columns:1fr;}}
+    .application.add2e-monster-spell-picker-window input,
+    .application.add2e-monster-morale-window select,
+    .application.add2e-monster-morale-window input { background:#fffaf0; border:1px solid #b9a15d; border-radius:5px; padding:6px; color:#1d1606; }
+    .application.add2e-monster-morale-window .add2e-monster-morale-summary { display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; padding:8px; border:1px solid #d9bf73; border-radius:7px; background:#fffdf4; }
+    .application.add2e-monster-morale-window .add2e-monster-morale-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:10px; }
+    .application.add2e-monster-morale-window .add2e-monster-morale-grid label > span { display:block; margin-bottom:3px; font-weight:900; }
+    .application.add2e-monster-morale-window .add2e-monster-morale-grid select,
+    .application.add2e-monster-morale-window .add2e-monster-morale-grid input { width:100%; }
+    .application.add2e-monster-morale-window .add2e-monster-morale-columns { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .application.add2e-monster-morale-window fieldset { min-width:0; border:1px solid #d9bf73; border-radius:7px; padding:8px; }
+    .application.add2e-monster-morale-window legend { padding:0 5px; color:#6f4b12; font-weight:900; }
+    .application.add2e-monster-morale-window .add2e-monster-morale-option { display:grid; grid-template-columns:auto 1fr auto; gap:6px; align-items:center; padding:3px 0; }
+    .application.add2e-monster-morale-window .add2e-monster-morale-option input { margin:0; }
+    @media(max-width:800px){.add2e.sheet.monster .add2e-monster-spell-actions{grid-template-columns:1fr;}.application.add2e-monster-morale-window .add2e-monster-morale-grid,.application.add2e-monster-morale-window .add2e-monster-morale-columns{grid-template-columns:1fr;}}
   `;
   document.head.appendChild(style);
 }
@@ -749,6 +1052,7 @@ Hooks.on("renderAdd2eMonsterSheet", (app, html, data) => {
 
     refreshCapabilitiesPanel(body, actor);
     bindMonsterSpellLibrary(app, $html, actor);
+    bindMonsterMoraleControl(app, $html, actor);
 
     const descTab = body.children('[data-tab="description"]').first();
     if (descTab.length && !descTab.find(".add2e-monster-details-readonly").length) descTab.prepend(buildDetails(actor));
