@@ -1,8 +1,7 @@
-// ADD2E — Service commun des fenêtres DialogV2.
+// ADD2E — API commune des fenêtres DialogV2.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 uniquement.
 
-const ADD2E_DIALOG_UI_VERSION = "2026-08-06-dialog-ui-v1";
-
+const ADD2E_DIALOG_UI_VERSION = "2026-08-06-dialog-ui-v2";
 globalThis.ADD2E_DIALOG_UI_VERSION = ADD2E_DIALOG_UI_VERSION;
 
 const ADD2E_DIALOG_THEMES = Object.freeze({
@@ -78,16 +77,7 @@ const ADD2E_DIALOG_THEMES = Object.freeze({
   }
 });
 
-const ADD2E_DIALOG_ADAPTERS = [
-  {
-    selector: ".add2e-monster-morale-form",
-    theme: "monster",
-    windowClass: "add2e-monster-morale-window",
-    primaryAction: "roll"
-  }
-];
-
-function add2eDialogEsc(value) {
+function esc(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -96,25 +86,26 @@ function add2eDialogEsc(value) {
     .replaceAll("'", "&#039;");
 }
 
-function add2eDialogTheme(name) {
+function theme(name) {
   return ADD2E_DIALOG_THEMES[String(name ?? "parchment").trim()] ?? ADD2E_DIALOG_THEMES.parchment;
 }
 
-function add2eDialogElement(value) {
+function htmlElement(value) {
   if (value instanceof HTMLElement) return value;
   if (value?.[0] instanceof HTMLElement) return value[0];
   return null;
 }
 
-function add2eDialogRoot(app, html) {
-  const appElement = add2eDialogElement(app?.element);
+function applicationRoot(app, html) {
+  const appElement = htmlElement(app?.element);
   if (appElement) return appElement.closest?.(".application, .window-app") ?? appElement;
-  const htmlElement = add2eDialogElement(html);
-  if (!htmlElement) return null;
-  return htmlElement.closest?.(".application, .window-app") ?? htmlElement;
+
+  const rendered = htmlElement(html);
+  if (!rendered) return null;
+  return rendered.closest?.(".application, .window-app") ?? rendered;
 }
 
-function add2eDialogEnsureStyles() {
+function ensureStyles() {
   const id = "add2e-dialog-ui-style";
   const current = document.getElementById(id);
   if (current?.dataset?.version === ADD2E_DIALOG_UI_VERSION) return;
@@ -136,9 +127,8 @@ function add2eDialogEnsureStyles() {
   color: var(--a2e-dialog-text) !important;
   box-shadow: 0 10px 30px rgba(0,0,0,.42), inset 0 0 0 1px rgba(255,255,255,.45) !important;
 }
-.application.add2e-dialog-window > .window-header,
+
 .application.add2e-dialog-window .window-header,
-.window-app.add2e-dialog-window > .window-header,
 .window-app.add2e-dialog-window .window-header {
   min-height: 46px !important;
   padding: 8px 12px !important;
@@ -148,6 +138,7 @@ function add2eDialogEnsureStyles() {
   color: #fff !important;
   text-shadow: 0 1px 2px rgba(0,0,0,.75) !important;
 }
+
 .application.add2e-dialog-window .window-title,
 .window-app.add2e-dialog-window .window-title {
   color: #fff !important;
@@ -156,6 +147,7 @@ function add2eDialogEnsureStyles() {
   font-weight: 900 !important;
   letter-spacing: .02em !important;
 }
+
 .application.add2e-dialog-window .window-header button,
 .application.add2e-dialog-window .window-header .header-control,
 .application.add2e-dialog-window .window-header i,
@@ -166,9 +158,8 @@ function add2eDialogEnsureStyles() {
   background: transparent !important;
   color: #fff !important;
 }
-.application.add2e-dialog-window > .window-content,
+
 .application.add2e-dialog-window .window-content,
-.window-app.add2e-dialog-window > .window-content,
 .window-app.add2e-dialog-window .window-content {
   min-height: 0 !important;
   max-height: calc(100vh - 72px) !important;
@@ -181,6 +172,7 @@ function add2eDialogEnsureStyles() {
   background-size: 42px 42px, 57px 57px, 100% 100% !important;
   color: var(--a2e-dialog-text) !important;
 }
+
 .application.add2e-dialog-window .dialog-content,
 .window-app.add2e-dialog-window .dialog-content,
 .add2e-dialog-shell {
@@ -188,10 +180,12 @@ function add2eDialogEnsureStyles() {
   background: transparent !important;
   color: var(--a2e-dialog-text) !important;
 }
+
 .add2e-dialog-shell {
   display: block !important;
   min-width: 0 !important;
 }
+
 .application.add2e-dialog-window footer,
 .application.add2e-dialog-window .form-footer,
 .application.add2e-dialog-window .window-footer,
@@ -210,6 +204,7 @@ function add2eDialogEnsureStyles() {
   border-top: 1px solid var(--a2e-dialog-border) !important;
   background: linear-gradient(180deg, var(--a2e-dialog-paper-dark), var(--a2e-dialog-border)) !important;
 }
+
 .application.add2e-dialog-window footer button,
 .application.add2e-dialog-window .form-footer button,
 .application.add2e-dialog-window .window-footer button,
@@ -229,6 +224,7 @@ function add2eDialogEnsureStyles() {
   font-weight: 950 !important;
   box-shadow: 0 2px 4px rgba(0,0,0,.18) !important;
 }
+
 .application.add2e-dialog-window button.add2e-dialog-primary,
 .window-app.add2e-dialog-window button.add2e-dialog-primary {
   border-color: var(--a2e-dialog-dark) !important;
@@ -236,6 +232,7 @@ function add2eDialogEnsureStyles() {
   color: #fff !important;
   text-shadow: 0 1px 2px rgba(0,0,0,.65) !important;
 }
+
 .application.add2e-dialog-window footer button:hover,
 .application.add2e-dialog-window .form-footer button:hover,
 .application.add2e-dialog-window .dialog-buttons button:hover,
@@ -245,10 +242,11 @@ function add2eDialogEnsureStyles() {
   filter: brightness(1.08) !important;
   transform: translateY(-1px) !important;
 }
-.application.add2e-dialog-window input,
+
+.application.add2e-dialog-window input:not([type="checkbox"]):not([type="radio"]),
 .application.add2e-dialog-window select,
 .application.add2e-dialog-window textarea,
-.window-app.add2e-dialog-window input,
+.window-app.add2e-dialog-window input:not([type="checkbox"]):not([type="radio"]),
 .window-app.add2e-dialog-window select,
 .window-app.add2e-dialog-window textarea {
   border: 1px solid var(--a2e-dialog-border) !important;
@@ -256,24 +254,77 @@ function add2eDialogEnsureStyles() {
   background: var(--a2e-dialog-paper-light) !important;
   color: var(--a2e-dialog-text) !important;
 }
+
 .application.add2e-dialog-window input[type="checkbox"],
 .window-app.add2e-dialog-window input[type="checkbox"] {
-  width: 17px !important;
-  height: 17px !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  display: inline-grid !important;
+  place-content: center !important;
+  box-sizing: border-box !important;
+  flex: 0 0 18px !important;
+  width: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  max-height: 18px !important;
   margin: 0 !important;
-  accent-color: var(--a2e-dialog-main) !important;
+  padding: 0 !important;
+  border: 2px solid var(--a2e-dialog-border) !important;
+  border-radius: 4px !important;
+  background: var(--a2e-dialog-paper-light) !important;
+  color: #fff !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.65) !important;
+  cursor: pointer !important;
 }
 
-/* Fenêtre de moral : contenu compact et lisible. */
+.application.add2e-dialog-window input[type="checkbox"]::before,
+.window-app.add2e-dialog-window input[type="checkbox"]::before {
+  content: none !important;
+  display: none !important;
+}
+
+.application.add2e-dialog-window input[type="checkbox"]::after,
+.window-app.add2e-dialog-window input[type="checkbox"]::after {
+  content: "" !important;
+  display: block !important;
+  width: 8px !important;
+  height: 4px !important;
+  border: 0 solid transparent !important;
+  transform: rotate(-45deg) !important;
+}
+
+.application.add2e-dialog-window input[type="checkbox"]:checked,
+.window-app.add2e-dialog-window input[type="checkbox"]:checked {
+  border-color: var(--a2e-dialog-dark) !important;
+  background: var(--a2e-dialog-main) !important;
+}
+
+.application.add2e-dialog-window input[type="checkbox"]:checked::after,
+.window-app.add2e-dialog-window input[type="checkbox"]:checked::after {
+  border-left: 2px solid #fff !important;
+  border-bottom: 2px solid #fff !important;
+}
+
+.application.add2e-dialog-window input[type="checkbox"]:focus-visible,
+.window-app.add2e-dialog-window input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--a2e-dialog-light) !important;
+  outline-offset: 2px !important;
+}
+
+/* Fenêtre de moral : contenu métier commun. */
 .application.add2e-dialog-window.add2e-monster-morale-window,
 .window-app.add2e-dialog-window.add2e-monster-morale-window {
   width: min(760px, calc(100vw - 24px)) !important;
 }
+
 .add2e-monster-morale-form {
   display: grid !important;
   gap: 10px !important;
   color: var(--a2e-dialog-text) !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-summary {
   display: flex !important;
   align-items: center !important;
@@ -285,22 +336,26 @@ function add2eDialogEnsureStyles() {
   border-radius: 9px !important;
   background: linear-gradient(180deg, var(--a2e-dialog-paper-light), var(--a2e-dialog-paper-dark)) !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-summary b {
   color: var(--a2e-dialog-dark) !important;
   font-family: Georgia, "Times New Roman", serif !important;
   font-size: 1.12rem !important;
   font-weight: 900 !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-summary span {
   color: #5d3d0d !important;
   font-weight: 900 !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-grid {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   gap: 8px !important;
   margin: 0 !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-grid > label {
   min-width: 0 !important;
   padding: 8px !important;
@@ -308,6 +363,7 @@ function add2eDialogEnsureStyles() {
   border-radius: 8px !important;
   background: var(--a2e-dialog-paper-light) !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-grid label > span {
   display: block !important;
   margin-bottom: 4px !important;
@@ -316,6 +372,7 @@ function add2eDialogEnsureStyles() {
   font-weight: 950 !important;
   text-transform: uppercase !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-grid select,
 .add2e-monster-morale-form .add2e-monster-morale-grid input {
   width: 100% !important;
@@ -323,11 +380,13 @@ function add2eDialogEnsureStyles() {
   padding: 5px 7px !important;
   font-weight: 800 !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-columns {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
   gap: 10px !important;
 }
+
 .add2e-monster-morale-form fieldset {
   min-width: 0 !important;
   margin: 0 !important;
@@ -336,15 +395,17 @@ function add2eDialogEnsureStyles() {
   border-radius: 9px !important;
   background: linear-gradient(180deg, var(--a2e-dialog-paper-light), var(--a2e-dialog-paper)) !important;
 }
+
 .add2e-monster-morale-form legend {
   padding: 0 7px !important;
   color: var(--a2e-dialog-dark) !important;
   font-family: Georgia, "Times New Roman", serif !important;
   font-weight: 900 !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-option {
   display: grid !important;
-  grid-template-columns: 20px minmax(0,1fr) auto !important;
+  grid-template-columns: 18px minmax(0,1fr) auto !important;
   gap: 8px !important;
   align-items: center !important;
   min-height: 29px !important;
@@ -352,13 +413,16 @@ function add2eDialogEnsureStyles() {
   padding: 3px 5px !important;
   border-radius: 5px !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-option:nth-of-type(odd) {
   background: rgba(217,191,115,.15) !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-option span {
   min-width: 0 !important;
   font-weight: 750 !important;
 }
+
 .add2e-monster-morale-form .add2e-monster-morale-option b {
   display: inline-flex !important;
   align-items: center !important;
@@ -372,12 +436,14 @@ function add2eDialogEnsureStyles() {
   font-weight: 950 !important;
   line-height: 1.3 !important;
 }
+
 @media (max-width: 800px) {
   .application.add2e-dialog-window,
   .window-app.add2e-dialog-window {
     width: calc(100vw - 16px) !important;
     min-width: calc(100vw - 16px) !important;
   }
+
   .add2e-monster-morale-form .add2e-monster-morale-grid,
   .add2e-monster-morale-form .add2e-monster-morale-columns {
     grid-template-columns: 1fr !important;
@@ -387,152 +453,137 @@ function add2eDialogEnsureStyles() {
   document.head.appendChild(style);
 }
 
-function add2eDialogDescriptor(root) {
-  const shell = root.querySelector?.(".add2e-dialog-shell[data-add2e-dialog-ui]") ?? null;
-  if (shell) {
-    return {
-      shell,
-      theme: shell.dataset.add2eDialogTheme || "parchment",
-      windowClass: shell.dataset.add2eWindowClass || "",
-      primaryAction: shell.dataset.add2ePrimaryAction || ""
-    };
-  }
+function shellDescriptor(root) {
+  const shell = root?.querySelector?.(".add2e-dialog-shell[data-add2e-dialog-ui]") ?? null;
+  if (!shell) return null;
 
-  for (const adapter of ADD2E_DIALOG_ADAPTERS) {
-    const marker = root.matches?.(adapter.selector) ? root : root.querySelector?.(adapter.selector);
-    if (!marker) continue;
-    return {
-      shell: marker,
-      theme: adapter.theme,
-      windowClass: adapter.windowClass,
-      primaryAction: adapter.primaryAction
-    };
-  }
-  return null;
+  return {
+    shell,
+    theme: shell.dataset.add2eDialogTheme || "parchment",
+    windowClass: shell.dataset.add2eWindowClass || "",
+    primaryAction: shell.dataset.add2ePrimaryAction || ""
+  };
 }
 
-function add2eDialogApplyTheme(root, descriptor) {
+function applyTheme(root, descriptor) {
   if (!root || !descriptor) return false;
-  const theme = add2eDialogTheme(descriptor.theme);
+  const palette = theme(descriptor.theme);
+
   root.classList.add("add2e-dialog-window");
-  if (descriptor.windowClass) {
-    for (const className of descriptor.windowClass.split(/\s+/).filter(Boolean)) root.classList.add(className);
+  for (const className of String(descriptor.windowClass).split(/\s+/).filter(Boolean)) {
+    root.classList.add(className);
   }
+
   root.dataset.add2eDialogUi = ADD2E_DIALOG_UI_VERSION;
-  root.style.setProperty("--a2e-dialog-dark", theme.dark);
-  root.style.setProperty("--a2e-dialog-main", theme.main);
-  root.style.setProperty("--a2e-dialog-light", theme.light);
-  root.style.setProperty("--a2e-dialog-border", theme.border);
-  root.style.setProperty("--a2e-dialog-paper", theme.paper);
-  root.style.setProperty("--a2e-dialog-paper-light", theme.paperLight);
-  root.style.setProperty("--a2e-dialog-paper-dark", theme.paperDark);
-  root.style.setProperty("--a2e-dialog-text", theme.text);
+  root.style.setProperty("--a2e-dialog-dark", palette.dark);
+  root.style.setProperty("--a2e-dialog-main", palette.main);
+  root.style.setProperty("--a2e-dialog-light", palette.light);
+  root.style.setProperty("--a2e-dialog-border", palette.border);
+  root.style.setProperty("--a2e-dialog-paper", palette.paper);
+  root.style.setProperty("--a2e-dialog-paper-light", palette.paperLight);
+  root.style.setProperty("--a2e-dialog-paper-dark", palette.paperDark);
+  root.style.setProperty("--a2e-dialog-text", palette.text);
 
   const buttons = root.querySelectorAll?.("footer button, .form-footer button, .window-footer button, .dialog-buttons button") ?? [];
   for (const button of buttons) {
     const action = String(button.dataset?.action ?? button.value ?? "");
-    const primary = action === descriptor.primaryAction || button.classList.contains("default") || button.dataset?.default === "true";
+    const primary = action === descriptor.primaryAction
+      || button.classList.contains("default")
+      || button.dataset?.default === "true";
     button.classList.toggle("add2e-dialog-primary", primary);
   }
   return true;
 }
 
-function add2eDialogDecorate(app, html) {
-  add2eDialogEnsureStyles();
-  const root = add2eDialogRoot(app, html);
+function decorate(app, html) {
+  ensureStyles();
+  const root = applicationRoot(app, html);
   if (!root) return false;
+
   const apply = () => {
-    const descriptor = add2eDialogDescriptor(root);
-    if (descriptor) add2eDialogApplyTheme(root, descriptor);
+    const descriptor = shellDescriptor(root);
+    if (descriptor) applyTheme(root, descriptor);
   };
+
   apply();
   requestAnimationFrame(apply);
   setTimeout(apply, 50);
   return true;
 }
 
-function add2eDialogShell({ content = "", theme = "parchment", windowClass = "", primaryAction = "" } = {}) {
-  return `<div class="add2e-dialog-shell" data-add2e-dialog-ui="${add2eDialogEsc(ADD2E_DIALOG_UI_VERSION)}" data-add2e-dialog-theme="${add2eDialogEsc(theme)}" data-add2e-window-class="${add2eDialogEsc(windowClass)}" data-add2e-primary-action="${add2eDialogEsc(primaryAction)}">${content}</div>`;
+function buildShell({ content = "", selectedTheme = "parchment", windowClass = "", primaryAction = "" } = {}) {
+  return `<div class="add2e-dialog-shell" data-add2e-dialog-ui="${esc(ADD2E_DIALOG_UI_VERSION)}" data-add2e-dialog-theme="${esc(selectedTheme)}" data-add2e-window-class="${esc(windowClass)}" data-add2e-primary-action="${esc(primaryAction)}">${content}</div>`;
 }
 
-function add2eDialogPrepareOptions(options = {}) {
-  const theme = String(options.add2eTheme ?? options.theme ?? "parchment");
+function prepareOptions(options = {}) {
+  const selectedTheme = String(options.add2eTheme ?? "parchment");
   const primaryAction = String(
     options.add2ePrimaryAction
-    ?? options.primaryAction
     ?? options.buttons?.find?.(button => button?.default === true)?.action
     ?? ""
   );
-  const extraClasses = [
+  const classes = [
     ...(Array.isArray(options?.window?.classes) ? options.window.classes : []),
     ...(Array.isArray(options.add2eClasses) ? options.add2eClasses : []),
     "add2e-dialog-window"
   ].filter(Boolean);
-  const windowClass = [...new Set(extraClasses)].join(" ");
+  const uniqueClasses = [...new Set(classes)];
+  const windowClass = uniqueClasses.join(" ");
   const content = String(options.content ?? "");
+
   const prepared = {
     ...options,
     window: {
       ...(options.window ?? {}),
-      classes: [...new Set(extraClasses)]
+      classes: uniqueClasses
     },
     content: content.includes("data-add2e-dialog-ui=")
       ? content
-      : add2eDialogShell({ content, theme, windowClass, primaryAction })
+      : buildShell({ content, selectedTheme, windowClass, primaryAction })
   };
+
   delete prepared.add2eTheme;
-  delete prepared.theme;
   delete prepared.add2ePrimaryAction;
-  delete prepared.primaryAction;
   delete prepared.add2eClasses;
   return prepared;
 }
 
-function add2eDialogClass() {
+function dialogClass() {
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2) throw new Error("DialogV2 est indisponible.");
   return DialogV2;
 }
 
-async function add2eDialogCall(method, options = {}, ...rest) {
-  add2eDialogEnsureStyles();
-  const DialogV2 = add2eDialogClass();
-  if (typeof DialogV2[method] !== "function") throw new Error(`DialogV2.${method} est indisponible.`);
-  return DialogV2[method](add2eDialogPrepareOptions(options), ...rest);
+async function callDialog(method, options = {}, ...rest) {
+  ensureStyles();
+  const DialogV2 = dialogClass();
+  if (typeof DialogV2[method] !== "function") {
+    throw new Error(`DialogV2.${method} est indisponible.`);
+  }
+  return DialogV2[method].call(DialogV2, prepareOptions(options), ...rest);
 }
 
-function add2eRegisterDialogAdapter(adapter = {}) {
-  const selector = String(adapter.selector ?? "").trim();
-  if (!selector) throw new Error("Le sélecteur de fenêtre ADD2E est requis.");
-  ADD2E_DIALOG_ADAPTERS.push({
-    selector,
-    theme: String(adapter.theme ?? "parchment"),
-    windowClass: String(adapter.windowClass ?? ""),
-    primaryAction: String(adapter.primaryAction ?? "")
-  });
-}
-
-globalThis.ADD2E_DIALOG_UI = Object.freeze({
+const ADD2E_DIALOG_UI = Object.freeze({
   version: ADD2E_DIALOG_UI_VERSION,
   themes: ADD2E_DIALOG_THEMES,
-  wait: (options, ...rest) => add2eDialogCall("wait", options, ...rest),
-  confirm: (options, ...rest) => add2eDialogCall("confirm", options, ...rest),
-  prompt: (options, ...rest) => add2eDialogCall("prompt", options, ...rest),
-  alert: (options, ...rest) => add2eDialogCall("alert", options, ...rest),
-  prepareOptions: add2eDialogPrepareOptions,
-  registerAdapter: add2eRegisterDialogAdapter,
-  decorate: add2eDialogDecorate,
-  ensureStyles: add2eDialogEnsureStyles
+  wait: (options, ...rest) => callDialog("wait", options, ...rest),
+  confirm: (options, ...rest) => callDialog("confirm", options, ...rest),
+  prompt: (options, ...rest) => callDialog("prompt", options, ...rest),
+  alert: (options, ...rest) => callDialog("alert", options, ...rest),
+  prepareOptions,
+  decorate,
+  ensureStyles
 });
 
-globalThis.add2eDialogWait = globalThis.ADD2E_DIALOG_UI.wait;
-globalThis.add2eDialogConfirm = globalThis.ADD2E_DIALOG_UI.confirm;
-globalThis.add2eDialogPrompt = globalThis.ADD2E_DIALOG_UI.prompt;
-globalThis.add2eDialogAlert = globalThis.ADD2E_DIALOG_UI.alert;
+globalThis.ADD2E_DIALOG_UI = ADD2E_DIALOG_UI;
+globalThis.add2eDialogWait = ADD2E_DIALOG_UI.wait;
+globalThis.add2eDialogConfirm = ADD2E_DIALOG_UI.confirm;
+globalThis.add2eDialogPrompt = ADD2E_DIALOG_UI.prompt;
+globalThis.add2eDialogAlert = ADD2E_DIALOG_UI.alert;
 
-Hooks.on("renderDialogV2", add2eDialogDecorate);
-Hooks.on("renderApplicationV2", add2eDialogDecorate);
-Hooks.once("ready", add2eDialogEnsureStyles);
+Hooks.on("renderDialogV2", decorate);
+Hooks.on("renderApplicationV2", decorate);
+Hooks.once("ready", ensureStyles);
 
-add2eDialogEnsureStyles();
+ensureStyles();
 console.log("[ADD2E][DIALOG_UI][VERSION]", ADD2E_DIALOG_UI_VERSION);
