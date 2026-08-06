@@ -1,9 +1,9 @@
 // ADD2E — Affichage détaillé des monstres
-// Version : 2026-08-06-adnd2e-monster-morale-v11
+// Version : 2026-08-06-adnd2e-monster-morale-v12-dialog-api
 // But : séparer les capacités informatives MJ des effets système activables, gérer le moral AD&D 2e et permettre au MJ de composer manuellement les sorts préparés.
 // Foundry V13/V14/V15 : ApplicationV2 / DialogV2 uniquement.
 
-const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-08-06-adnd2e-monster-morale-v11";
+const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-08-06-adnd2e-monster-morale-v12-dialog-api";
 const ADD2E_MONSTER_SPELL_PACK = "add2e.sorts";
 globalThis.ADD2E_MONSTER_CAPABILITIES_VERSION = ADD2E_MONSTER_CAPABILITIES_VERSION;
 
@@ -598,9 +598,8 @@ async function openMonsterSpellPicker(app, actor) {
     return false;
   }
 
-  const DialogV2 = foundry.applications?.api?.DialogV2;
-  if (!DialogV2 || typeof DialogV2.wait !== "function") {
-    throw new Error("DialogV2 est indisponible.");
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
 
   const candidates = await monsterSpellPackCandidates(actor);
@@ -609,10 +608,12 @@ async function openMonsterSpellPicker(app, actor) {
     return false;
   }
 
-  const result = await DialogV2.wait({
+  const result = await globalThis.add2eDialogWait({
+    add2eTheme: "monster",
+    add2ePrimaryAction: "add",
+    add2eClasses: ["add2e-monster-spell-picker-window"],
     window: {
-      title: `Ajouter un sort — ${actor.name}`,
-      classes: ["add2e-monster-spell-picker-window"]
+      title: `Ajouter un sort — ${actor.name}`
     },
     content: `
       <form class="add2e-monster-spell-picker-form">
@@ -930,7 +931,7 @@ function buildCapTab(actor) {
   const sysCaps = caps.filter(c => c.affichage === "systeme");
 
   const mjHtml = mjCaps.length ? mjCaps.map(c => capCard(c, false)).join("") : `<p class="add2e-monster-note">Aucune capacité informative renseignée.</p>`;
-  const sysHtml = sysCaps.length ? sysCaps.map(c => capCard(c, true)).join("") : `<p class="add2e-monster-note">Aucun effet système propre au monstre. Les tactiques sans valeur chiffrée restent des notes MJ.</p>`;
+  const sysHtml = sysCaps.length ? sysCaps.map(c => capCard(c, true)).join("") : `<p class="add2e-monster-note">Aucun effet système propre au monstre. Les tactiques sans valeur chiffrée restent dans Capacités / notes MJ.</p>`;
 
   return `
     <div class="tab" data-group="primary" data-tab="capacites">
