@@ -13,6 +13,7 @@
     }
   ],
   "esmodules": [
+    "scripts/add2e/dialog-ui.mjs",
     "scripts/add2e-active-effects-expire.js",
     "scripts/effects-engine.mjs",
     "scripts/add2e-attack.mjs",
@@ -37,7 +38,6 @@
   ],
   "styles": [
     "styles/add2e.css",
-    "styles/monster-morale.css",
     "styles/character-sheet.css",
     "styles/application-v2-character-sheet.css",
     "styles/magic-recharge.css"
