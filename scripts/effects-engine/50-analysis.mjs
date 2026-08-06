@@ -19,15 +19,6 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function htmlEscape(value) {
-  try { return foundry.utils.escapeHTML(String(value ?? "")); } catch {}
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
 function records(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
   if (value && typeof value === "object") return Object.values(value).filter(Boolean);
@@ -214,8 +205,8 @@ function directRacialCapabilities(engine, actor) {
       index,
       sourceId: context.source.id,
       sourceName: context.source.name,
-      actionType: "roll",
-      activable: raw.activable !== false,
+      actionType: canRoll ? "roll" : "narrative",
+      activable: canRoll && raw.activable !== false,
       canRoll
     }];
   });
@@ -350,7 +341,7 @@ async function enableRacialVision(engine, actor, vision, state, { reason = "raci
 }
 
 async function add2eRollRacialCapability(actor, capabilityId, context = {}) {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
   if (!actor || typeof engine?.rollRacialCapability !== "function") {
     ui.notifications?.warn?.("Capacité raciale indisponible.");
     return null;
@@ -359,28 +350,59 @@ async function add2eRollRacialCapability(actor, capabilityId, context = {}) {
     ui.notifications?.warn?.("Vous ne pouvez pas utiliser les capacités de cet acteur.");
     return null;
   }
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    ui.notifications?.error?.("Les cartes ADD2E sont indisponibles.");
+    return null;
+  }
+
   const result = await engine.rollRacialCapability(actor, capabilityId, context);
   if (!result?.ok) {
-    ui.notifications?.warn?.("Cette capacité raciale n’a pas pu être résolue.");
+    const message = result?.reason === "requirements-missing"
+      ? `Conditions manquantes : ${(result.missing ?? []).join(", ")}.`
+      : "Cette capacité raciale n’a pas pu être résolue.";
+    ui.notifications?.warn?.(message);
     return result;
   }
+
   const capability = result.capability;
   const success = result.success === true;
-  const border = success ? "#197d5a" : "#9d352c";
-  const background = success ? "#eefaf4" : "#fff0ee";
-  const title = success ? "Réussite" : "Échec";
-  const content = `<div class="add2e-card-racial" style="border:2px solid ${border};border-radius:12px;padding:10px;background:${background};color:#24180f;font-family:var(--font-primary);">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="fas ${htmlEscape(capability.iconClass || "fa-dice-d20")}" style="font-size:1.55em;color:${border};"></i><strong style="font-size:1.08em;color:${border};">${htmlEscape(capability.label)}</strong><span style="margin-left:auto;font-weight:900;">Capacité raciale</span></div>
-    <div>Jet : <strong>${htmlEscape(result.formula)}</strong> = <strong>${htmlEscape(result.total)}</strong> / réussite sur <strong>${htmlEscape(result.successAt)}</strong> ou moins.</div>
-    <div style="margin-top:5px;font-weight:900;color:${border};">${title}</div>
-    <div style="margin-top:6px;font-size:.9em;line-height:1.35;">${htmlEscape(capability.description)}</div>
-  </div>`;
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content,
-    flags: { add2e: { racialCapability: { actorId: actor.id, raceSourceId: capability.sourceId, capabilityId: capability.id, success } } }
-  });
-  return result;
+  const card = {
+    actor,
+    title: `${capability.label} — ${success ? "Réussite" : "Échec"}`,
+    icon: `fas ${capability.iconClass || "fa-dice-d20"}`,
+    variant: success ? "success" : "failure",
+    source: {
+      name: actor.name,
+      img: actor.img,
+      type: "Capacité raciale"
+    },
+    rows: [
+      { label: "Jet", value: `${result.total} / ${result.successAt}` },
+      { label: "Résultat", value: success ? "Réussite." : "Échec." }
+    ],
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      rolls: result.roll ? [result.roll] : [],
+      flags: {
+        add2e: {
+          racialCapability: {
+            actorId: actor.id,
+            raceSourceId: capability.sourceId,
+            capabilityId: capability.id,
+            skillTarget: result.skillTarget,
+            success,
+            total: result.total,
+            baseSuccessAt: result.baseSuccessAt,
+            successAt: result.successAt,
+            adjustment: result.adjustment
+          }
+        }
+      }
+    }
+  };
+  globalThis.add2eBuildChatCard(card);
+  const message = await globalThis.add2eCreateChatCard(card);
+  return { ...result, message };
 }
 
 function installStrictRacialProfileAuthority(Engine) {
@@ -546,8 +568,59 @@ function installStrictRacialProfileAuthority(Engine) {
           const missing = actionRequirements(capability).filter(key => context?.[key] !== true);
           if (missing.length) return { ok: false, success: false, reason: "requirements-missing", capability, missing };
           const formula = String(capability.formula ?? capability.die ?? "").trim();
-          const successAt = this.readNumber(capability.successAt, capability.maxSuccess, capability.threshold, capability.pct);
-          if (!formula || !Number.isFinite(successAt) || successAt <= 0) return { ok: false, success: false, reason: "invalid-capability", capability };
+          const baseSuccessAt = this.readNumber(capability.successAt, capability.maxSuccess, capability.threshold, capability.pct);
+          if (!formula || !Number.isFinite(baseSuccessAt) || baseSuccessAt <= 0) {
+            return { ok: false, success: false, reason: "invalid-capability", capability };
+          }
+
+          const skillTarget = this.normalizeTag(capability.key ?? capability.id);
+          if (!skillTarget) return { ok: false, success: false, reason: "invalid-skill-target", capability };
+          const sourceItem = directRaceItem(actor);
+          const resolutionContext = {
+            ...context,
+            actor,
+            sourceItem,
+            raceItem: sourceItem,
+            actionType: "skill",
+            skillKey: skillTarget,
+            skillTarget,
+            racialCapabilityId: capability.id,
+            source: context.source ?? "racial-capability"
+          };
+          const modifiers = [
+            ...this.collect(actor, resolutionContext),
+            ...records(context.modifiers ?? context.extraModifiers)
+          ];
+          const circumstance = context.circumstance;
+          const circumstanceValue = Number(circumstance?.value ?? circumstance?.amount ?? circumstance?.bonus ?? 0);
+          if (Number.isFinite(circumstanceValue) && circumstanceValue !== 0) {
+            modifiers.push(this.createModifier({
+              id: `${actor.id}:racial-skill:${skillTarget}:circumstance`,
+              domain: "skill",
+              target: skillTarget,
+              operation: "add",
+              value: circumstanceValue,
+              priority: 1000,
+              stacking: { mode: "stack", group: null },
+              conditions: {},
+              source: {
+                kind: "context",
+                id: `racial-skill:${skillTarget}:circumstance`,
+                uuid: actor.uuid ?? "",
+                name: String(circumstance?.label ?? circumstance?.name ?? "Circonstance").trim() || "Circonstance"
+              },
+              metadata: { transient: true, circumstance: true }
+            }));
+          }
+          const resolution = this.resolve(actor, {
+            domain: "skill",
+            target: skillTarget,
+            base: baseSuccessAt,
+            rounding: "floor",
+            modifiers,
+            context: resolutionContext
+          });
+          const successAt = Math.max(0, Math.trunc(Number(resolution?.total) || 0));
           const roll = await new Roll(formula).evaluate();
           if (game?.dice3d?.showForRoll) await game.dice3d.showForRoll(roll);
           const total = Number(roll.total);
@@ -558,8 +631,12 @@ function installStrictRacialProfileAuthority(Engine) {
             capability,
             roll,
             total,
+            baseSuccessAt,
             successAt,
-            formula
+            adjustment: successAt - baseSuccessAt,
+            formula,
+            skillTarget,
+            resolution
           };
         }
       }
