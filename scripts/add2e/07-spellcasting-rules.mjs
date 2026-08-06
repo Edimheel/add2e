@@ -1,12 +1,12 @@
 // ============================================================
 // ADD2E — Spellcasting par Items classe
-// Version : 2026-07-26-int-wis-magic-canonical-v1
+// Version : 2026-08-06-canonical-resource-memorization-v2
 // Les Items classe sont l’unique source de niveau et de listes de sorts.
 // Les profils dérivés canoniques sont l’unique source Intelligence/Sagesse.
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-07-26-int-wis-magic-canonical-v1";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-06-canonical-resource-memorization-v2";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -90,6 +90,18 @@ function add2eSpellDerived(actor, ability, consumer = "spellcasting-rules") {
     source: "spellcasting-rules",
     consumer
   });
+}
+
+function add2eSpellResourceEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!engine
+    || typeof engine.resolveResource !== "function"
+    || typeof engine.checkResourceAvailability !== "function"
+    || typeof engine.setResource !== "function"
+    || typeof engine.consumeResource !== "function") {
+    throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour la mémorisation.");
+  }
+  return engine;
 }
 
 function add2eSpellClassItems(actor) {
@@ -597,42 +609,134 @@ function add2eGetMemorizedByList(sort) {
   return raw && typeof raw === "object" && !Array.isArray(raw) ? foundry.utils.deepClone(raw) : {};
 }
 
-function add2eGetMemorizedCountForEntry(sort, entry) {
+function add2eSpellMemorizationResource(sort, entry, options = {}) {
   const key = add2eNormalizeSpellKey(entry?.key);
-  if (!sort || !key || !add2eIsRegularPreparableSpell(sort)) return 0;
+  if (!sort || !key || !add2eIsRegularPreparableSpell(sort)) {
+    throw new Error("La ressource de mémorisation demandée est invalide.");
+  }
+  const actor = sort.actor ?? sort.parent ?? null;
+  const level = Math.max(1, Number(sort.system?.niveau ?? sort.system?.level ?? 1) || 1);
+  const byList = add2eGetMemorizedByList(sort);
   const lists = add2eGetSpellListsFromItem(sort).map(add2eNormalizeSpellKey).filter(Boolean);
+  const hasCanonicalValue = Object.prototype.hasOwnProperty.call(byList, key);
   const legacyRaw = sort?.getFlag?.("add2e", "memorizedCount") ?? sort?.flags?.add2e?.memorizedCount;
   const legacyPresent = legacyRaw !== undefined && legacyRaw !== null && legacyRaw !== "";
-  const legacyCount = Math.max(0, Number(legacyRaw) || 0);
-  if (lists.length <= 1 && lists.includes(key) && legacyPresent) return legacyCount;
-  const byList = add2eGetMemorizedByList(sort);
-  if (Object.prototype.hasOwnProperty.call(byList, key)) return Math.max(0, Number(byList[key] ?? 0) || 0);
-  return lists.length <= 1 && lists.includes(key) ? legacyCount : 0;
+  const current = hasCanonicalValue
+    ? Math.max(0, Number(byList[key]) || 0)
+    : lists.length <= 1 && lists.includes(key) && legacyPresent
+      ? Math.max(0, Number(legacyRaw) || 0)
+      : 0;
+  const maximum = actor ? add2eGetSlotsForEntryLevel(actor, entry, level) : null;
+
+  return {
+    id: `${sort.uuid ?? sort.id}:memorization:${key}`,
+    type: "spell-memorization",
+    label: `${sort.name} — ${entry?.label ?? add2eSpellLabel(key)}`,
+    document: sort,
+    actor,
+    item: sort,
+    target: `${key}:${level}`,
+    current,
+    maximum,
+    cost: Math.max(0, Number(options.cost ?? 1) || 0),
+    recovery: Math.max(0, Number(options.recovery ?? 0) || 0),
+    recoveryPeriod: "preparation",
+    source: {
+      kind: "spell",
+      id: String(sort.id ?? ""),
+      uuid: String(sort.uuid ?? ""),
+      name: String(sort.name ?? "Sort")
+    },
+    context: {
+      spellList: key,
+      spellLevel: level,
+      entry,
+      consumer: options.consumer ?? "spellcasting-rules"
+    },
+    write: async nextValue => {
+      const next = Math.max(0, Math.floor(Number(nextValue) || 0));
+      if (actor && Number.isFinite(maximum)) {
+        const currentTotal = add2eCountPreparedForEntryLevel(actor, entry, level);
+        const projected = Math.max(0, currentTotal - current + next);
+        if (projected > maximum) {
+          throw new Error(`Limite atteinte : ${entry?.label ?? add2eSpellLabel(key)} niveau ${level} (${projected}/${maximum}).`);
+        }
+      }
+      const nextByList = add2eGetMemorizedByList(sort);
+      if (next > 0) nextByList[key] = next;
+      else delete nextByList[key];
+      for (const listKey of Object.keys(nextByList)) {
+        if ((Number(nextByList[listKey]) || 0) <= 0) delete nextByList[listKey];
+      }
+      const total = Object.values(nextByList).reduce((sum, amount) => sum + (Number(amount) || 0), 0);
+      await sort.update({
+        "flags.add2e.memorizedByList": nextByList,
+        "flags.add2e.memorizedCount": total
+      }, {
+        render: false,
+        diff: false,
+        add2eSpellPreparation: true,
+        add2eReason: options.reason ?? "spell-memorization-resource"
+      });
+    }
+  };
+}
+
+function add2eGetMemorizedCountForEntry(sort, entry) {
+  if (!sort || !add2eIsRegularPreparableSpell(sort)) return 0;
+  const engine = add2eSpellResourceEngine();
+  return Math.max(0, Number(engine.resolveResource(add2eSpellMemorizationResource(sort, entry, {
+    cost: 0,
+    consumer: "spell-memorization-read"
+  }), {
+    cost: 0,
+    consumer: "spell-memorization-read"
+  })?.current) || 0);
 }
 
 async function add2eSetMemorizedCountForEntry(sort, entry, value) {
-  const key = add2eNormalizeSpellKey(entry?.key);
-  if (!sort || !key || !add2eIsRegularPreparableSpell(sort)) return;
+  if (!sort || !add2eIsRegularPreparableSpell(sort)) return null;
+  const engine = add2eSpellResourceEngine();
   const next = Math.max(0, Number(value) || 0);
-  const byList = add2eGetMemorizedByList(sort);
-  if (next > 0) byList[key] = next;
-  else delete byList[key];
-  for (const listKey of Object.keys(byList)) if ((Number(byList[listKey]) || 0) <= 0) delete byList[listKey];
-  const total = Object.values(byList).reduce((sum, amount) => sum + (Number(amount) || 0), 0);
-  await sort.update({
-    "flags.add2e.memorizedByList": byList,
-    "flags.add2e.memorizedCount": total
-  }, { render: false, diff: false, add2eSpellPreparation: true });
+  return engine.setResource(add2eSpellMemorizationResource(sort, entry, {
+    cost: 0,
+    consumer: "spell-memorization-set",
+    reason: "spell-memorization-set"
+  }), next, {
+    reason: "spell-memorization-set",
+    consumer: "spell-memorization-set"
+  });
+}
+
+function add2eCheckMemorizedSpell(sort, entry, cost = 1) {
+  const engine = add2eSpellResourceEngine();
+  return engine.checkResourceAvailability(add2eSpellMemorizationResource(sort, entry, {
+    cost,
+    consumer: "spell-memorization-check"
+  }), {
+    cost,
+    consumer: "spell-memorization-check"
+  });
+}
+
+async function add2eConsumeMemorizedSpell(sort, entry, cost = 1, options = {}) {
+  const engine = add2eSpellResourceEngine();
+  return engine.consumeResource(add2eSpellMemorizationResource(sort, entry, {
+    cost,
+    consumer: options.consumer ?? "spell-cast",
+    reason: options.reason ?? "spell-cast-memorization"
+  }), {
+    cost,
+    reason: options.reason ?? "spell-cast-memorization",
+    consumer: options.consumer ?? "spell-cast"
+  });
 }
 
 function add2eGetTotalMemorizedCount(sort) {
   if (!sort || !add2eIsRegularPreparableSpell(sort)) return 0;
-  const lists = add2eGetSpellListsFromItem(sort).map(add2eNormalizeSpellKey).filter(Boolean);
-  const legacyRaw = sort?.getFlag?.("add2e", "memorizedCount") ?? sort?.flags?.add2e?.memorizedCount;
-  const legacyPresent = legacyRaw !== undefined && legacyRaw !== null && legacyRaw !== "";
-  if (lists.length <= 1 && legacyPresent) return Math.max(0, Number(legacyRaw) || 0);
-  const byList = add2eGetMemorizedByList(sort);
-  return Object.values(byList).reduce((sum, value) => sum + (Number(value) || 0), 0);
+  const entries = add2eGetSpellcastingEntries(sort.actor ?? sort.parent ?? null)
+    .filter(entry => add2eGetSpellListsFromItem(sort).map(add2eNormalizeSpellKey).includes(add2eNormalizeSpellKey(entry.key)));
+  return entries.reduce((sum, entry) => sum + add2eGetMemorizedCountForEntry(sort, entry), 0);
 }
 
 function add2eCountPreparedForEntryLevel(actor, entry, spellLevel) {
@@ -676,8 +780,11 @@ globalThis.add2eCanActorUseSpell = add2eCanActorUseSpell;
 globalThis.add2eIsObjectMagicSpellForPreparation = add2eIsObjectMagicSpellForPreparation;
 globalThis.add2eIsCapacitySpellForPreparation = add2eIsCapacitySpellForPreparation;
 globalThis.add2eIsRegularPreparableSpell = add2eIsRegularPreparableSpell;
+globalThis.add2eGetSpellMemorizationResource = add2eSpellMemorizationResource;
 globalThis.add2eGetMemorizedCountForEntry = add2eGetMemorizedCountForEntry;
 globalThis.add2eSetMemorizedCountForEntry = add2eSetMemorizedCountForEntry;
+globalThis.add2eCheckMemorizedSpell = add2eCheckMemorizedSpell;
+globalThis.add2eConsumeMemorizedSpell = add2eConsumeMemorizedSpell;
 globalThis.add2eGetTotalMemorizedCount = add2eGetTotalMemorizedCount;
 globalThis.add2eCountPreparedForEntryLevel = add2eCountPreparedForEntryLevel;
 globalThis.add2eGetWisdomBonusSpellSlots = actor => {
