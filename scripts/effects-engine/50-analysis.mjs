@@ -622,7 +622,6 @@ function installStrictRacialProfileAuthority(Engine) {
           });
           const successAt = Math.max(0, Math.trunc(Number(resolution?.total) || 0));
           const roll = await new Roll(formula).evaluate();
-          if (game?.dice3d?.showForRoll) await game.dice3d.showForRoll(roll);
           const total = Number(roll.total);
           return {
             ok: Number.isFinite(total),
