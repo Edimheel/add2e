@@ -3,7 +3,7 @@
 
 import { add2eEvaluateRollSafe } from "./13d-actor-sheet-listeners-rolls.mjs";
 
-const ADD2E_SOCIAL_RESOLUTION_VERSION = "2026-08-06-player-friendly-loyalty-card-v3";
+const ADD2E_SOCIAL_RESOLUTION_VERSION = "2026-08-06-add2e-dialogs-player-social-cards-v4";
 const ADD2E_AMITIE_REACTION_VERSION = ADD2E_SOCIAL_RESOLUTION_VERSION;
 
 const ADD2E_LOYALTY_SITUATIONS = Object.freeze({
@@ -433,6 +433,9 @@ async function add2eRollCharismaReactionCard(actor, context = {}) {
   const total = rawRoll + reaction.adjustment;
   const outcome = add2eCharismaReactionOutcome(total);
   const targetLabel = add2eSocialTargetLabel(context);
+  const adjustedRollLabel = reaction.adjustment
+    ? `${rawRoll} ${add2eSocialSigned(reaction.adjustment)} = ${total}`
+    : String(total);
   const card = {
     actor,
     title: String(context.title ?? "Réaction initiale"),
@@ -441,15 +444,12 @@ async function add2eRollCharismaReactionCard(actor, context = {}) {
     source: {
       name: actor.name,
       img: actor.img,
-      type: `Charisme ${reaction.charisma?.total ?? "—"}`
+      type: "Réaction"
     },
     rows: [
       { label: "Cible", value: targetLabel },
       reaction.initialAttitude ? { label: "Attitude initiale", value: reaction.initialAttitude } : null,
-      { label: "Jet brut", value: rawRoll },
-      { label: "Ajustement de Charisme", value: add2eSocialSigned(reaction.charismaAdjustment) },
-      { label: "Autres ajustements", value: add2eSocialAppliedLabels(reaction.resolution) },
-      { label: "Résultat ajusté", value: total },
+      { label: "Jet", value: adjustedRollLabel },
       { label: "Réaction", value: outcome.label }
     ].filter(Boolean),
     chatData: {
@@ -463,6 +463,8 @@ async function add2eRollCharismaReactionCard(actor, context = {}) {
           total,
           adjustment: reaction.adjustment,
           charismaAdjustment: reaction.charismaAdjustment,
+          permanentAdjustment: reaction.permanentAdjustment,
+          appliedModifiers: add2eSocialAppliedLabels(reaction.resolution),
           circumstance: reaction.circumstance,
           initialAttitude: reaction.initialAttitude || null,
           outcome: outcome.key,
@@ -672,18 +674,22 @@ async function add2eRollContextualReactionCard(sourceActor, targetActor = null, 
 }
 
 async function add2ePromptContextualReaction(sourceActor, targetActor = null, context = {}) {
-  const DialogV2 = foundry.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) throw new Error("DialogV2 est indisponible.");
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
   const targetLabel = add2eSocialTargetLabel({
     ...context,
     targetActor,
     targetActors: context.targetActors
   });
 
-  return DialogV2.wait({
+  return globalThis.add2eDialogWait({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "roll",
+    add2eClasses: ["add2e-social-reaction-window"],
     window: { title: "Réaction initiale" },
     position: { width: 430 },
-    content: `<form style="display:flex;flex-direction:column;gap:8px;">
+    content: `<form class="add2e-social-reaction-form" style="display:flex;flex-direction:column;gap:8px;">
       <p style="margin:0;font-size:.85em;"><b>Interlocuteur :</b> ${add2eSocialEscape(sourceActor?.name ?? "Personnage")}</p>
       <p style="margin:0;font-size:.85em;"><b>Cible :</b> ${add2eSocialEscape(targetLabel)}</p>
       <div class="form-group"><label>Attitude initiale ou contexte</label><input type="text" name="initialAttitude" placeholder="Ex. prudente, méfiante, négociation"></div>
@@ -716,7 +722,7 @@ async function add2ePromptContextualReaction(sourceActor, targetActor = null, co
         callback: () => null
       }
     ],
-    rejectClose: false
+    close: () => null
   });
 }
 
@@ -727,8 +733,9 @@ function add2eLoyaltySituationOptions() {
 }
 
 async function add2ePromptCharismaLoyalty(actor, subjectActor = null, context = {}) {
-  const DialogV2 = foundry.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) throw new Error("DialogV2 est indisponible.");
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
   const subjectLabel = String(
     context.subjectLabel
     ?? subjectActor?.name
@@ -737,10 +744,13 @@ async function add2ePromptCharismaLoyalty(actor, subjectActor = null, context = 
       : "Compagnon, suivant ou groupe")
   ).trim();
 
-  return DialogV2.wait({
+  return globalThis.add2eDialogWait({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "roll",
+    add2eClasses: ["add2e-social-loyalty-window"],
     window: { title: "Loyauté, obédience ou moral" },
     position: { width: 500 },
-    content: `<form style="display:flex;flex-direction:column;gap:8px;">
+    content: `<form class="add2e-social-loyalty-form" style="display:flex;flex-direction:column;gap:8px;">
       <p style="margin:0;font-size:.85em;"><b>Seigneur ou commandant :</b> ${add2eSocialEscape(actor?.name ?? "Personnage")}</p>
       <p style="margin:0;font-size:.85em;"><b>Sujet :</b> ${add2eSocialEscape(subjectLabel)}</p>
       <div class="form-group"><label>Situation</label><select name="situation" style="width:100%;">${add2eLoyaltySituationOptions()}</select></div>
@@ -773,7 +783,7 @@ async function add2ePromptCharismaLoyalty(actor, subjectActor = null, context = 
         callback: () => null
       }
     ],
-    rejectClose: false
+    close: () => null
   });
 }
 
