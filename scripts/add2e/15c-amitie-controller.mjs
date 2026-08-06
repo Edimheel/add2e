@@ -3,7 +3,7 @@
 
 import { add2eEvaluateRollSafe } from "./13d-actor-sheet-listeners-rolls.mjs";
 
-const ADD2E_SOCIAL_RESOLUTION_VERSION = "2026-08-05-canonical-reaction-loyalty-v2";
+const ADD2E_SOCIAL_RESOLUTION_VERSION = "2026-08-06-player-friendly-loyalty-card-v3";
 const ADD2E_AMITIE_REACTION_VERSION = ADD2E_SOCIAL_RESOLUTION_VERSION;
 
 const ADD2E_LOYALTY_SITUATIONS = Object.freeze({
@@ -535,6 +535,19 @@ function add2eLoyaltyBand(score) {
   };
 }
 
+function add2eLoyaltyPlayerResult(success, consequence) {
+  if (success) return "Loyal et obéissant.";
+  const key = add2eSocialNormalize(consequence);
+  if (key === "refus") return "Refuse l’ordre.";
+  if (key === "fuite") return "Prend la fuite.";
+  if (key === "desertion") return "Déserte.";
+  if (key === "reddition") return "Se rend.";
+  if (key === "vol") return "Vole dès que possible.";
+  if (key === "cooperation") return "Coopère avec l’autre camp.";
+  if (key === "temoigne") return "Témoigne contre son seigneur.";
+  return "N’obéit pas.";
+}
+
 function add2eResolveCharismaLoyalty(actor, context = {}) {
   const engine = add2eSocialEngine();
   const subjectActor = context.subjectActor ?? context.targetActor ?? null;
@@ -595,6 +608,7 @@ async function add2eRollCharismaLoyaltyCard(actor, context = {}) {
   const consequence = success
     ? "Loyauté, obédience ou moral maintenu."
     : loyalty.situation.consequence;
+  const playerResult = add2eLoyaltyPlayerResult(success, consequence);
   const subjectLabel = String(
     context.subjectLabel
     ?? loyalty.subjectActor?.name
@@ -603,25 +617,18 @@ async function add2eRollCharismaLoyaltyCard(actor, context = {}) {
   ).trim();
   const card = {
     actor,
-    title: String(context.title ?? "Test de loyauté, d’obédience ou de moral"),
+    title: String(context.title ?? `Test de loyauté — ${success ? "Réussite" : "Échec"}`),
     icon: "fas fa-people-group",
     variant: success ? "success" : "failure",
     source: {
       name: actor.name,
       img: actor.img,
-      type: `Charisme ${loyalty.charisma?.total ?? "—"}`
+      type: "Loyauté"
     },
     rows: [
       { label: "Sujet", value: subjectLabel },
-      { label: "Base", value: "50 %" },
-      { label: "Ajustement de Charisme", value: add2eSocialSigned(loyalty.charismaAdjustment, " %") },
-      { label: "Autres ajustements", value: add2eSocialAppliedLabels(loyalty.resolution) },
-      { label: "Loyauté ajustée", value: `${loyalty.rawThreshold} %` },
-      { label: "Niveau de loyauté", value: `${loyalty.band.label} — ${loyalty.band.description}` },
-      { label: "Situation", value: loyalty.situation.label },
-      { label: "Jet", value: `${total} ${success ? "≤" : ">"} ${loyalty.threshold}` },
-      { label: "Résultat", value: success ? "Réussite" : "Échec" },
-      { label: "Conséquence", value: consequence }
+      { label: "Jet", value: `${total} / ${loyalty.threshold}` },
+      { label: "Résultat", value: playerResult }
     ],
     chatData: {
       speaker: ChatMessage.getSpeaker({ actor }),
@@ -639,6 +646,7 @@ async function add2eRollCharismaLoyaltyCard(actor, context = {}) {
           loyaltyBand: loyalty.band.key,
           loyaltySituation: loyalty.situation.key,
           consequence,
+          playerResult,
           actorUuid: actor.uuid,
           subjectActorUuid: loyalty.subjectActor?.uuid ?? null,
           subjectLabel
@@ -648,7 +656,7 @@ async function add2eRollCharismaLoyaltyCard(actor, context = {}) {
   };
   globalThis.add2eBuildChatCard(card);
   const message = await globalThis.add2eCreateChatCard(card);
-  return { ...loyalty, roll, total, success, consequence, subjectLabel, message };
+  return { ...loyalty, roll, total, success, consequence, playerResult, subjectLabel, message };
 }
 
 async function add2eRollContextualReactionCard(sourceActor, targetActor = null, context = {}) {
