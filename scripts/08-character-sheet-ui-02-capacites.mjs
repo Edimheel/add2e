@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
-const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-05-racial-capability-artwork-v2";
+const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-08-06-canonical-racial-skill-cards-v3";
 const ADD2E_CAPABILITY_ICON_ROOT = "systems/add2e/assets/icones/capacites";
 const ADD2E_RACIAL_ARTWORK_FLAG = "__ADD2E_RACIAL_CAPABILITY_ARTWORK_V1";
 
@@ -307,7 +307,7 @@ function buildClassCard(feature, index, active) {
 }
 
 function racialEngine() {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
   return typeof engine?.getRacialActions === "function" ? engine : null;
 }
 
@@ -321,21 +321,30 @@ function racialVisionStateHtml(enabled) {
   return `<span class="a2e-racial-vision-state ${active ? "is-active" : "is-inactive"}" style="display:inline-flex;align-items:center;gap:4px;margin-left:7px;padding:2px 6px;border:1px solid ${border};border-radius:999px;background:${background};color:${color};font-size:.72em;font-weight:900;white-space:nowrap;"><i class="fas ${icon}" aria-hidden="true"></i>${label}</span>`;
 }
 
-function buildRacialCard(entry) {
+function buildRacialCard(entry, active = true) {
   const vision = entry?.actionType === "vision-toggle";
+  const actionable = vision || entry?.canRoll === true;
   const enabled = entry?.enabled === true;
   const name = String(entry?.label ?? "Capacité raciale").trim() || "Capacité raciale";
-  const title = vision ? `${enabled ? "Désactiver" : "Activer"} ${name}` : `Utiliser ${name}`;
+  const title = vision
+    ? `${enabled ? "Désactiver" : "Activer"} ${name}`
+    : actionable
+      ? `Utiliser ${name}`
+      : name;
   const image = racialCapabilityImage(entry?.id ?? entry?.key, name);
   const data = `data-racial-capability-id="${escapeHtml(entry?.id ?? "")}"`;
   const visionClass = vision ? (enabled ? "is-enabled is-vision-active" : "is-disabled is-vision-inactive") : "is-roll";
   const visualStyle = vision ? (enabled ? "border-color:#48b5e4!important;background:#07364e!important;box-shadow:0 0 0 2px rgba(72,181,228,.25),0 0 12px rgba(72,181,228,.42)!important;" : "border-color:#a66a47!important;background:#35261f!important;box-shadow:none!important;filter:grayscale(.82) brightness(.78);") : "";
   const imageStyle = vision && !enabled ? " style=\"filter:grayscale(1) brightness(.7);\"" : "";
   const visual = image
-    ? `<button type="button" class="add2e-racial-capability-use a2e-feature-image-button ${visionClass}" ${data} title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}"${visualStyle ? ` style="${visualStyle}"` : ""}><img class="a2e-feature-card-img" src="${escapeHtml(image)}" alt=""${imageStyle}></button>`
-    : iconControl({ className: `add2e-racial-capability-use add2e-feature-icon-only ${visionClass}`, icon: vision ? (enabled ? "fa-eye" : "fa-eye-slash") : (entry?.iconClass || "fa-dice-d20"), title, data });
+    ? actionable
+      ? `<button type="button" class="add2e-racial-capability-use a2e-feature-image-button ${visionClass}" ${data} title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}"${visualStyle ? ` style="${visualStyle}"` : ""}><img class="a2e-feature-card-img" src="${escapeHtml(image)}" alt=""${imageStyle}></button>`
+      : `<span class="a2e-feature-image-static"><img class="a2e-feature-card-img" src="${escapeHtml(image)}" alt=""></span>`
+    : actionable
+      ? iconControl({ className: `add2e-racial-capability-use add2e-feature-icon-only ${visionClass}`, icon: vision ? (enabled ? "fa-eye" : "fa-eye-slash") : (entry?.iconClass || "fa-dice-d20"), title, data })
+      : "";
   const state = vision ? racialVisionStateHtml(enabled) : "";
-  return `<div class="a2e-feature-card add2e-racial-feature-card is-activable ${vision ? (enabled ? "a2e-racial-vision-active" : "a2e-racial-vision-inactive") : ""}">${visual ? `<div class="a2e-feature-card-visual">${visual}</div>` : ""}<div class="a2e-feature-card-content"><div class="a2e-feature-card-title"><strong>${escapeHtml(name)}</strong>${state}</div>${entry?.description ? `<div class="a2e-feature-card-desc">${escapeHtml(entry.description)}</div>` : ""}</div></div>`;
+  return `<div class="a2e-feature-card add2e-racial-feature-card ${active && actionable ? "is-activable" : "is-passive"} ${vision ? (enabled ? "a2e-racial-vision-active" : "a2e-racial-vision-inactive") : ""}">${visual ? `<div class="a2e-feature-card-visual">${visual}</div>` : ""}<div class="a2e-feature-card-content"><div class="a2e-feature-card-title"><strong>${escapeHtml(name)}</strong>${state}</div>${entry?.description ? `<div class="a2e-feature-card-desc">${escapeHtml(entry.description)}</div>` : ""}</div></div>`;
 }
 
 function buildCapabilities(actor) {
@@ -346,10 +355,12 @@ function buildCapabilities(actor) {
   const classPassive = nonThief.filter(({ feature }) => !featureIsActive(feature) || isBackstabFeature(feature));
   const engine = racialEngine();
   const racialActions = engine?.getRacialActions?.(actor)?.filter(entry => entry?.activable !== false) ?? [];
+  const racialNarratives = engine?.getRacialCapabilities?.(actor)?.filter(entry => entry?.canRoll !== true) ?? [];
   const racialPassives = engine?.getRacialPassiveEffects?.(actor) ?? [];
-  const active = [...classActive.map(({ feature, index }) => buildClassCard(feature, index, true)), ...racialActions.map(buildRacialCard)];
+  const active = [...classActive.map(({ feature, index }) => buildClassCard(feature, index, true)), ...racialActions.map(entry => buildRacialCard(entry, true))];
   const passive = [
     ...classPassive.map(({ feature, index }) => buildClassCard(feature, index, false)),
+    ...racialNarratives.map(entry => buildRacialCard(entry, false)),
     ...racialPassives.filter(effect => !slug(`${effect?.id ?? ""} ${effect?.name ?? ""}`).includes("infravision")).map(effect => `<div class="a2e-feature-card is-passive"><div class="a2e-feature-card-content"><div class="a2e-feature-card-title"><strong>${escapeHtml(effect?.name ?? "Avantage racial")}</strong></div>${effect?.description ? `<div class="a2e-feature-card-desc">${escapeHtml(effect.description)}</div>` : ""}</div></div>`)
   ];
   return `<div class="a2e-grid-2 add2e-capacites-grid-modern"><div class="a2e-panel"><h2>Capacités activables</h2><div class="a2e-panel-body a2e-feature-card-list">${active.length ? active.join("") : `<p class="a2e-muted">Aucune capacité activable disponible à ce niveau.</p>`}</div></div><div class="a2e-panel"><h2>Capacités passives</h2><div class="a2e-panel-body a2e-feature-card-list">${passive.length ? passive.join("") : `<p class="a2e-muted">Aucune capacité passive disponible à ce niveau.</p>`}</div></div></div>`;
@@ -369,24 +380,46 @@ async function useRacialCapabilityFromElement(actor, element, sheet = null) {
     const enabled = capability.enabled !== true;
     const result = await engine.setRacialVision?.(actor, enabled, { reason: "racial-capability-sheet" });
     if (!result || result.reason === "missing-actor") return ui.notifications?.error?.("Impossible de modifier l’infravision raciale."), false;
-    const color = enabled ? "#116b9d" : "#8f451f";
-    const background = enabled ? "#e6f7ff" : "#fff0e6";
-    const border = enabled ? "#48b5e4" : "#d69061";
+    if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+      return ui.notifications?.error?.("Les cartes ADD2E sont indisponibles."), false;
+    }
     const state = enabled ? "Activée" : "Désactivée";
-    const icon = enabled ? "fa-eye" : "fa-eye-slash";
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor }),
-      content: `<div class="add2e-card-racial" style="border:2px solid ${border};border-radius:12px;padding:10px;background:${background};color:#24180f;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="fas ${icon}" style="font-size:1.55em;color:${color};"></i><strong style="font-size:1.08em;color:${color};">${escapeHtml(capability.label)}</strong><span style="margin-left:auto;font-weight:900;color:${color};">Capacité raciale</span></div><div>État : <strong style="color:${color};">${state}</strong></div>${capability.description ? `<div style="margin-top:6px;font-size:.9em;line-height:1.35;">${escapeHtml(capability.description)}</div>` : ""}</div>`,
-      flags: { add2e: { racialCapability: { actorId: actor.id, raceSourceId: capability.sourceId ?? "", capabilityId: capability.id, action: "vision-toggle", enabled } } }
-    });
+    const card = {
+      actor,
+      title: `${capability.label} — ${state}`,
+      icon: `fas ${enabled ? "fa-eye" : "fa-eye-slash"}`,
+      variant: enabled ? "success" : "neutral",
+      source: {
+        name: actor.name,
+        img: actor.img,
+        type: "Capacité raciale"
+      },
+      rows: [{ label: "État", value: state }],
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor }),
+        flags: {
+          add2e: {
+            racialCapability: {
+              actorId: actor.id,
+              raceSourceId: capability.sourceId ?? "",
+              capabilityId: capability.id,
+              action: "vision-toggle",
+              enabled
+            }
+          }
+        }
+      }
+    };
+    globalThis.add2eBuildChatCard(card);
+    await globalThis.add2eCreateChatCard(card);
     sheet?.render?.(false);
     await globalThis.add2eRefreshActionHud?.();
     return true;
   }
   const roll = globalThis.add2eRollRacialCapability;
   if (typeof roll !== "function") return ui.notifications?.error?.("Le moteur des capacités raciales n’est pas chargé."), false;
-  const result = await roll(actor, capability.id);
-  if (!result?.ok) return ui.notifications?.error?.("Le jet de capacité raciale n’a pas pu être résolu."), false;
+  const result = await roll(actor, capability.id, { source: "actor-sheet-racial-capability" });
+  if (!result?.ok) return false;
   return true;
 }
 
