@@ -931,7 +931,7 @@ function buildCapTab(actor) {
   const sysCaps = caps.filter(c => c.affichage === "systeme");
 
   const mjHtml = mjCaps.length ? mjCaps.map(c => capCard(c, false)).join("") : `<p class="add2e-monster-note">Aucune capacité informative renseignée.</p>`;
-  const sysHtml = sysCaps.length ? sysCaps.map(c => capCard(c, true)).join("") : `<p class="add2e-monster-note">Aucun effet système propre au monstre. Les tactiques sans valeur chiffrée restent dans Capacités / notes MJ.</p>`;
+  const sysHtml = sysCaps.length ? sysCaps.map(c => capCard(c, true)).join("") : `<p class="add2e-monster-note">Aucun effet système propre au monstre. Les tactiques sans valeur chiffrée restent des notes MJ.</p>`;
 
   return `
     <div class="tab" data-group="primary" data-tab="capacites">
