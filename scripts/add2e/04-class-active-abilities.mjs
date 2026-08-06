@@ -1,4 +1,4 @@
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-05-canonical-thief-skill-consumer-v21";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-06-shared-dialog-api-v22";
 
 const GENERIC_ACTIONS = new Map([
   ["monk-surprise-reduite", "probability_check"],
@@ -382,15 +382,14 @@ function findFromElement(actor, element) {
   return active.length === 1 ? active[0] : null;
 }
 
-const DialogV2Class = () => foundry?.applications?.api?.DialogV2 ?? globalThis.DialogV2 ?? null;
-
 async function dialog(title, content, label = "Valider") {
-  const DialogV2 = DialogV2Class();
-  if (!DialogV2?.wait) {
-    ui.notifications.error("DialogV2 n’est pas disponible.");
-    return null;
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
-  return DialogV2.wait({
+  return globalThis.add2eDialogWait({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "ok",
+    add2eClasses: ["add2e-class-feature-window"],
     window: { title },
     content,
     buttons: [
