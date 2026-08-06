@@ -303,13 +303,16 @@ async function promptMonsterMorale(actor) {
     ui.notifications?.warn?.("Le score de moral doit être compris entre 2 et 20.");
     return false;
   }
-  const DialogV2 = foundry.applications?.api?.DialogV2;
-  if (typeof DialogV2?.wait !== "function") throw new Error("DialogV2 est indisponible.");
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
 
-  const result = await DialogV2.wait({
+  const result = await globalThis.add2eDialogWait({
+    add2eTheme: "monster",
+    add2ePrimaryAction: "roll",
+    add2eClasses: ["add2e-monster-morale-window"],
     window: {
-      title: `Moral — ${actor.name}`,
-      classes: ["add2e-monster-morale-window"]
+      title: `Moral — ${actor.name}`
     },
     content: `
       <form class="add2e-monster-morale-form">
