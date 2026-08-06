@@ -2,7 +2,7 @@
 // Compatible Foundry V13/V14/V15.
 
 import "./15a-validation-hooks.mjs";
-import "./15c-amitie-controller.mjs";
+import "./15c-social-resolution-controller.mjs";
 
 const ADD2E_SOCKET = "system.add2e";
 const ADD2E_GM_OPERATION = "ADD2E_GM_OPERATION";
