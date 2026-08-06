@@ -284,6 +284,11 @@ export function spellRows(actor, selectedGroup = null) {
   }).join("");
   return { html: `<div class="spell-layout"><div class="spell-levels">${buttons}</div><div class="spell-list"><div class="spell-list-title">${esc(active.label)} niveau ${esc(active.level || "—")}</div>${rowsHtml}</div></div>`, selectedGroup: active.key };
 }
+function thiefSkillArtwork(skill) {
+  const key = String(skill?.key ?? "").trim();
+  if (!key) throw new Error("La clé canonique de la compétence de voleur est absente.");
+  return `systems/add2e/assets/icones/capacites/${key.replaceAll("_", "-")}.webp`;
+}
 export function featureRows(actor) {
   const rows = features(actor);
   if (!rows.length) return `<div class="empty">Aucune capacité utilisable.</div>`;
@@ -292,7 +297,8 @@ export function featureRows(actor) {
     const thiefSkill = feature?._add2eThiefSkill ?? null;
     if (thiefSkill) {
       const title = `Tester ${thiefSkill.label ?? label}`;
-      return `<div class="row capability-row"><button type="button" class="img-act capability-icon" data-action="use-feature" data-feature-index="${index}" title="${esc(title)}" aria-label="${esc(title)}"><i class="fas fa-dice-d100"></i></button><div><div class="title">${esc(label)}</div><div class="meta"><span>Compétence de voleur</span></div></div></div>`;
+      const image = thiefSkillArtwork(thiefSkill);
+      return `<div class="row capability-row"><button type="button" class="img-act capability-icon" data-action="use-feature" data-feature-index="${index}" data-skill-key="${esc(thiefSkill.key)}" title="${esc(title)}" aria-label="${esc(title)}"><img src="${esc(image)}" alt="" aria-hidden="true"></button><div><div class="title">${esc(label)}</div><div class="meta"><span>Compétence de voleur</span></div></div></div>`;
     }
     return `<div class="row compact"><div><div class="title">${esc(label)}</div><div class="meta"><span>Capacité de classe</span></div></div><button type="button" class="act" data-action="use-feature" data-feature-index="${index}">Utiliser</button></div>`;
   }).join("");
