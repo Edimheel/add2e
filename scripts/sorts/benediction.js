@@ -1,7 +1,7 @@
 /**
  * ADD2E — Sort BÉNÉDICTION / MALÉDICTION
  * Clerc niveau 1 — Conjuration/Appel
- * Version : 2026-08-04-canonical-morale-modifiers-v3
+ * Version : 2026-08-07-canonical-component-resource-v4
  *
  * Contrat onUse : true = sort consommé, false = sort non consommé.
  * Chaque item lance exclusivement son propre effet : aucun choix de variante.
@@ -9,7 +9,7 @@
  */
 
 const __add2eOnUseResult = await (async () => {
-  const VERSION = "2026-08-04-canonical-morale-modifiers-v3";
+  const VERSION = "2026-08-07-canonical-component-resource-v4";
   console.log(`%c[ADD2E][BENEDICTION] ${VERSION}`, "color:#b88924;font-weight:bold;");
 
   function add2eNormalize(value) {
@@ -49,6 +49,55 @@ const __add2eOnUseResult = await (async () => {
 
   function add2eQuantity(item) {
     return Math.max(0, Math.floor(Number(item?.system?.quantite ?? item?.system?.quantity ?? 0) || 0));
+  }
+
+  function add2eResourceEngine() {
+    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+    if (!engine
+      || typeof engine.consumeResource !== "function"
+      || typeof engine.recoverResource !== "function") {
+      throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour les composants de Bénédiction / Malédiction.");
+    }
+    return engine;
+  }
+
+  function add2eComponentResource(caster, component, componentName) {
+    return {
+      id: `${component.uuid ?? component.id}:spell-component:${add2eNormalize(componentName)}`,
+      type: "spell-component",
+      label: component.name,
+      document: component,
+      actor: caster,
+      item: component,
+      target: add2eNormalize(componentName),
+      get current() {
+        return add2eQuantity(component);
+      },
+      maximum: null,
+      cost: 1,
+      recovery: 1,
+      source: {
+        kind: "spell-component",
+        id: String(component.id ?? ""),
+        uuid: String(component.uuid ?? ""),
+        name: String(component.name ?? componentName)
+      },
+      context: {
+        componentName,
+        consumer: "benediction"
+      },
+      write: next => {
+        const update = {};
+        if (component.system?.quantite !== undefined) update["system.quantite"] = next;
+        if (component.system?.quantity !== undefined) update["system.quantity"] = next;
+        if (!Object.keys(update).length) update["system.quantite"] = next;
+        return component.update(update, {
+          add2eInternal: true,
+          add2eReason: "benediction-selected-component-resource",
+          render: false
+        });
+      }
+    };
   }
 
   function add2eEmitGmOperation(operation, payload) {
@@ -207,14 +256,27 @@ const __add2eOnUseResult = await (async () => {
       return { ok: false, blocked: true, consumed: [], message };
     }
 
-    const after = Math.max(0, before - 1);
-    await component.update({ "system.quantite": after }, { add2eReason: "benediction-selected-component-exact" });
+    const resource = add2eComponentResource(caster, component, componentName);
+    const consumed = await add2eResourceEngine().consumeResource(resource, {
+      cost: 1,
+      reason: "benediction-selected-component-exact",
+      consumer: "benediction"
+    });
+    if (!consumed.ok) {
+      const message = `${caster?.name ?? "Le lanceur"} n'a plus le composant requis : ${componentName} (1).`;
+      ui.notifications.warn(message);
+      return { ok: false, blocked: true, consumed: [], message };
+    }
+
+    const state = consumed.resources?.[0] ?? null;
+    const after = Math.max(0, Number(state?.after ?? add2eQuantity(component)) || 0);
     console.log("[ADD2E][BENEDICTION][COMPONENT_EXACT_CONSUMED]", { componentName, item: component.name, before, after });
     return {
       ok: true,
       blocked: false,
       actorId: caster?.id,
       sortName: componentName,
+      resource,
       consumed: [{
         itemId: component.id,
         itemName: component.name,
@@ -285,18 +347,21 @@ const __add2eOnUseResult = await (async () => {
   if (componentReservation?.blocked) return false;
 
   async function refundSelectedComponent(reason = "") {
-    if (!componentReservation?.consumed?.length) return false;
-    const actorDocument = game.actors?.get(componentReservation.actorId) ?? caster;
+    if (!componentReservation?.resource || !componentReservation?.consumed?.length) return false;
+    const refunded = await add2eResourceEngine().recoverResource(componentReservation.resource, {
+      amount: 1,
+      reason: `benediction-selected-component-refund:${reason}`,
+      consumer: "benediction"
+    });
+    if (!refunded.ok) return false;
     const entry = componentReservation.consumed[0];
-    const component = actorDocument?.items?.get(entry.itemId);
-    if (!component) return false;
-    await component.update({ "system.quantite": entry.before }, { add2eReason: `benediction-selected-component-refund:${reason}` });
+    const state = refunded.resources?.[0] ?? null;
     console.log("[ADD2E][BENEDICTION][COMPONENT_REFUND]", {
       reason,
       componentName,
-      item: component.name,
+      item: entry.itemName,
       before: entry.after,
-      after: entry.before
+      after: state?.after ?? entry.before
     });
     return true;
   }
