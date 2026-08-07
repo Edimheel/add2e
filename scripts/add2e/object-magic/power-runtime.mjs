@@ -3,7 +3,6 @@
 
 import {
   add2eMagicClone,
-  add2eMagicReadNumber,
   add2eObjectMagicNormalizeTag,
   add2eObjectMagicToArray
 } from "./core.mjs";
