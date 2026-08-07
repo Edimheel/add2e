@@ -249,7 +249,32 @@
       {{#if niveauxSorts.length}}
         {{#each niveauxSorts as |niv|}}
           <div class="spell-level-header"><span>Niveau {{niv}}</span>{{#with (lookup ../sortsMemorizedByLevel niv) as |memo|}}<span style="font-size:.82rem;opacity:.9">Mémorisé : {{memo.count}}</span>{{/with}}</div>
-          <table class="add2e-table"><thead><tr><th>Sort / pouvoir</th><th>Portée</th><th>Durée</th><th>Incant.</th><th>Slots</th><th></th></tr></thead><tbody>{{#each (lookup ../sortsParNiveau niv) as |sort|}}<tr><td><div class="item-name-img"><img src="{{sort.img}}" class="sort-cast-img" data-sort-id="{{sort._id}}" width="24" height="24" style="cursor:pointer"/><span class="toggle-sort-desc-chat" data-sort-id="{{sort._id}}" style="cursor:pointer;color:#4a2372">{{sort.name}}</span></div></td><td>{{formatSortChamp sort.system.portee}}</td><td>{{formatSortChamp sort.system.duree}}</td><td>{{formatSortChamp sort.system.temps_incantation}}</td><td style="text-align:center;font-weight:900;color:purple"><a class="sort-memorize-minus" data-sort-id="{{sort._id}}"><i class="fas fa-minus-circle" style="color:#c0392b"></i></a> {{getFlag sort 'add2e.memorizedCount'}} <a class="sort-memorize-plus" data-sort-id="{{sort._id}}"><i class="fas fa-plus-circle" style="color:#27ae60"></i></a></td><td class="action-icons" style="text-align:right"><a class="sort-edit" data-item-id="{{sort._id}}"><i class="fas fa-edit"></i></a><a class="sort-delete" data-item-id="{{sort._id}}"><i class="fas fa-trash"></i></a></td></tr><tr id="desc-chat-{{sort._id}}" style="display:none"><td colspan="6" style="padding:10px;font-style:italic;color:#555">{{{sort.system.description}}}</td></tr>{{/each}}</tbody></table>
+          <table class="add2e-table">
+            <thead><tr><th>Sort / pouvoir</th><th>Portée</th><th>Durée</th><th>Incant.</th><th>Ressource</th><th></th></tr></thead>
+            <tbody>
+              {{#each (lookup ../sortsParNiveau niv) as |sort|}}
+                <tr>
+                  <td><div class="item-name-img"><img src="{{sort.img}}" class="sort-cast-img" data-sort-id="{{sort._id}}" width="24" height="24" style="cursor:pointer"/><span class="toggle-sort-desc-chat" data-sort-id="{{sort._id}}" style="cursor:pointer;color:#4a2372">{{sort.name}}</span></div></td>
+                  <td>{{formatSortChamp sort.system.portee}}</td>
+                  <td>{{formatSortChamp sort.system.duree}}</td>
+                  <td>{{formatSortChamp sort.system.temps_incantation}}</td>
+                  <td style="text-align:center;font-weight:900;color:purple">
+                    {{#if sort.add2eIsPower}}
+                      <span title="Charges canoniques de l’objet">Charges {{sort.add2eResourceLabel}}</span>
+                    {{else}}
+                      <a class="sort-memorize-minus" data-sort-id="{{sort._id}}"><i class="fas fa-minus-circle" style="color:#c0392b"></i></a>
+                      {{sort.add2eResourceLabel}}
+                      <a class="sort-memorize-plus" data-sort-id="{{sort._id}}"><i class="fas fa-plus-circle" style="color:#27ae60"></i></a>
+                    {{/if}}
+                  </td>
+                  <td class="action-icons" style="text-align:right">
+                    {{#unless sort.add2eIsPower}}<a class="sort-edit" data-item-id="{{sort._id}}"><i class="fas fa-edit"></i></a><a class="sort-delete" data-item-id="{{sort._id}}"><i class="fas fa-trash"></i></a>{{/unless}}
+                  </td>
+                </tr>
+                <tr id="desc-chat-{{sort._id}}" style="display:none"><td colspan="6" style="padding:10px;font-style:italic;color:#555">{{{sort.system.description}}}</td></tr>
+              {{/each}}
+            </tbody>
+          </table>
         {{/each}}
       {{else}}<section class="panel"><h2>Magie</h2><div class="panel-body"><p class="muted">Ce monstre ne connaît aucun sort ou pouvoir magique activable.</p></div></section>{{/if}}
     </div>
