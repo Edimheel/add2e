@@ -1,8 +1,8 @@
 // ADD2E — Consommation Baie Délicieuse / Baie Empoisonnée
 // Compatible Foundry V13/V14/V15.
-// Version : 2026-08-07-canonical-resource-v3
+// Version : 2026-08-07-canonical-resource-v4
 
-const ADD2E_BAIE_TAG = "[ADD2E][OBJET_ONUSE][BAIE_CONSOMMATION_V3]";
+const ADD2E_BAIE_TAG = "[ADD2E][OBJET_ONUSE][BAIE_CONSOMMATION_V4]";
 
 function add2eHtmlEscape(value) {
   const div = document.createElement("div");
@@ -74,11 +74,16 @@ function add2eBerryResource(owner, sourceItem) {
   };
 }
 
-async function add2eChat(title, bodyHtml, speakerToken = null, options = {}) {
+function add2eCasterToken() {
+  const candidate = token ?? (typeof add2eGetCasterToken === "function" ? add2eGetCasterToken() : null);
+  return candidate?.actor ? candidate : null;
+}
+
+async function add2eChat(title, bodyHtml, options = {}) {
   if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
     throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
   }
-  const casterToken = speakerToken ?? (typeof add2eGetCasterToken === "function" ? add2eGetCasterToken() : null);
+  const casterToken = add2eCasterToken();
   const casterActor = actor ?? casterToken?.actor ?? item?.parent ?? null;
   const casterName = casterActor?.name ?? casterToken?.name ?? "Clerc";
   const targetLabel = options.targetLabel ?? casterName;
@@ -139,26 +144,10 @@ let hpAfter = current;
 const transaction = await add2eBerryResourceEngine().transactResources(
   add2eBerryResource(targetActor, item),
   async () => {
-    const label = item.name;
-    if (mode === "poison") {
-      hpAfter = Math.max(0, current - damageAmount);
-      await targetActor.update({ "system.pdv": hpAfter });
-      await add2eChat(
-        label,
-        `<p><b>${add2eHtmlEscape(targetActor.name)}</b> consomme une baie empoisonnée et subit <b>${damageAmount}</b> dégât.</p>`,
-        targetActor,
-        { targetLabel: targetActor.name, outcome: `${damageAmount} dégât`, variant: "failure" }
-      );
-    } else {
-      hpAfter = max > 0 ? Math.min(max, current + healAmount) : current + healAmount;
-      await targetActor.update({ "system.pdv": hpAfter });
-      await add2eChat(
-        label,
-        `<p><b>${add2eHtmlEscape(targetActor.name)}</b> consomme une baie délicieuse et récupère <b>${healAmount}</b> PV.</p>`,
-        targetActor,
-        { targetLabel: targetActor.name, outcome: `+${healAmount} PV`, variant: "success" }
-      );
-    }
+    hpAfter = mode === "poison"
+      ? Math.max(0, current - damageAmount)
+      : max > 0 ? Math.min(max, current + healAmount) : current + healAmount;
+    await targetActor.update({ "system.pdv": hpAfter });
     return true;
   },
   {
@@ -174,13 +163,30 @@ if (!transaction.ok) {
 
 const resourceState = transaction.resources?.[0] ?? null;
 const quantityAfter = Math.max(0, Number(resourceState?.after ?? add2eReadQty(item)) || 0);
+const label = item.name;
+const itemName = item.name;
+
+if (mode === "poison") {
+  await add2eChat(
+    label,
+    `<p><b>${add2eHtmlEscape(targetActor.name)}</b> consomme une baie empoisonnée et subit <b>${damageAmount}</b> dégât.</p>`,
+    { targetLabel: targetActor.name, outcome: `${damageAmount} dégât`, variant: "failure" }
+  );
+} else {
+  await add2eChat(
+    label,
+    `<p><b>${add2eHtmlEscape(targetActor.name)}</b> consomme une baie délicieuse et récupère <b>${healAmount}</b> PV.</p>`,
+    { targetLabel: targetActor.name, outcome: `+${healAmount} PV`, variant: "success" }
+  );
+}
+
 if (quantityAfter <= 0) {
   await item.delete({ add2eInternal: true, add2eReason: "berry-consumed-empty" });
 }
 
 console.log(`${ADD2E_BAIE_TAG}[DONE]`, {
   actor: targetActor.name,
-  item: item.name,
+  item: itemName,
   mode,
   hpBefore: current,
   hpAfter,
