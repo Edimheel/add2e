@@ -1,11 +1,6 @@
 /* ADD2E — Paladin : Guérison des maladies */
-const ADD2E_PALADIN_GUERISON_MALADIE_VERSION = "2026-07-07-class-level";
+const ADD2E_PALADIN_GUERISON_MALADIE_VERSION = "2026-08-07-canonical-resource-v2";
 globalThis.ADD2E_PALADIN_GUERISON_MALADIE_VERSION = ADD2E_PALADIN_GUERISON_MALADIE_VERSION;
-
-function a2ePalNum(v, fallback = 0) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
-}
 
 function a2ePalFeatureLevel(currentActor, currentFeature) {
   const level = Number(
@@ -13,15 +8,6 @@ function a2ePalFeatureLevel(currentActor, currentFeature) {
     ?? currentFeature?._add2eClassLevel
   );
   return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
-}
-
-function a2ePalWeekKey() {
-  const wt = Number(game.time?.worldTime);
-  if (Number.isFinite(wt) && wt > 0) return `worldweek-${Math.floor(wt / (86400 * 7))}`;
-  const d = new Date();
-  const onejan = new Date(d.getFullYear(), 0, 1);
-  const week = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
-  return `${d.getFullYear()}-week-${week}`;
 }
 
 if (!actor) {
@@ -35,49 +21,57 @@ if (level === null) {
   return false;
 }
 
-const maxUses = Math.floor((level - 1) / 5) + 1;
-const weekKey = a2ePalWeekKey();
-const flagKey = `paladin.guerisonMaladie.${weekKey}`;
-const data = actor.getFlag("add2e", flagKey) ?? { used: 0 };
-const used = a2ePalNum(data.used, 0);
-
-if (used >= maxUses) {
-  ui.notifications.warn(`Guérison des maladies déjà utilisée ${used}/${maxUses} fois cette semaine.`);
-  return false;
-}
-
 const targetToken = Array.from(game.user.targets ?? [])[0];
 const target = targetToken?.actor ?? actor;
 
 const diseaseEffects = target.effects
-  .filter(e => {
-    const name = String(e.name ?? "").toLowerCase();
-    const tags = e.flags?.add2e?.tags ?? [];
-    return name.includes("maladie") || tags.some(t => String(t).toLowerCase().includes("maladie"));
+  .filter(effect => {
+    const name = String(effect.name ?? "").toLowerCase();
+    const tags = effect.flags?.add2e?.tags ?? [];
+    return name.includes("maladie") || tags.some(tag => String(tag).toLowerCase().includes("maladie"));
   })
-  .map(e => e.id);
+  .map(effect => effect.id);
 
 if (diseaseEffects.length) {
-  await target.deleteEmbeddedDocuments("ActiveEffect", diseaseEffects);
+  await target.deleteEmbeddedDocuments("ActiveEffect", diseaseEffects, {
+    add2eInternal: true,
+    add2eReason: "paladin-cure-disease"
+  });
 }
 
-await actor.setFlag("add2e", flagKey, {
-  used: used + 1,
-  max: maxUses,
-  lastTarget: target.uuid,
-  at: Date.now()
-});
+const buildChatCard = globalThis.add2eBuildChatCard;
+const createChatCard = globalThis.add2eCreateChatCard;
+if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
+  throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
+}
 
-await ChatMessage.create({
-  speaker: ChatMessage.getSpeaker({ actor }),
-  content: `
-    <div class="add2e-chat-card">
-      <h3>Guérison des maladies</h3>
-      <p><b>${actor.name}</b> appelle son pouvoir sacré sur <b>${target.name}</b>.</p>
-      <p>Utilisations cette semaine : <b>${used + 1}/${maxUses}</b>.</p>
-      <p>${diseaseEffects.length ? `${diseaseEffects.length} effet(s) de maladie supprimé(s).` : "Aucun effet de maladie marqué n’a été trouvé ; applique le résultat selon la scène."}</p>
-    </div>
-  `
-});
-
+const cardOptions = {
+  actor,
+  title: "Guérison des maladies",
+  icon: "fas fa-hand-sparkles",
+  variant: "success",
+  source: {
+    name: actor.name,
+    img: actor.img,
+    type: "Capacité de paladin"
+  },
+  rows: [
+    { label: "Cible", value: target.name },
+    { label: "Effets supprimés", value: String(diseaseEffects.length) },
+    { label: "Utilisation", value: feature?.uses?.label ?? "Selon niveau / semaine" }
+  ],
+  trustedBodyHtml: diseaseEffects.length
+    ? "<p>Les effets de maladie marqués sur la cible ont été supprimés.</p>"
+    : "<p>Aucun effet de maladie marqué n’a été trouvé ; le MJ applique le résultat selon la situation.</p>",
+  chatData: {
+    flags: {
+      add2e: {
+        sourceCapacite: "paladin-guerison-maladie",
+        version: ADD2E_PALADIN_GUERISON_MALADIE_VERSION
+      }
+    }
+  }
+};
+buildChatCard(cardOptions);
+await createChatCard(cardOptions);
 return true;
