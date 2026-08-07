@@ -1,12 +1,12 @@
 // ============================================================
 // ADD2E — Spellcasting par Items classe
-// Version : 2026-08-06-canonical-resource-memorization-v3
+// Version : 2026-08-07-canonical-resource-memorization-v4
 // Les Items classe sont l’unique source de niveau et de listes de sorts.
 // Les profils dérivés canoniques sont l’unique source Intelligence/Sagesse.
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-06-canonical-resource-memorization-v3";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-07-canonical-resource-memorization-v4";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -609,14 +609,88 @@ function add2eGetMemorizedByList(sort) {
   return raw && typeof raw === "object" && !Array.isArray(raw) ? foundry.utils.deepClone(raw) : {};
 }
 
+function add2eLegacyMemorizationTarget(sort) {
+  const actor = sort?.actor ?? sort?.parent ?? null;
+  const lists = [...new Set(add2eGetSpellListsFromItem(sort).map(add2eNormalizeSpellKey).filter(Boolean))];
+  if (!actor) return lists.length === 1 ? lists[0] : null;
+  const available = new Set(add2eGetSpellcastingEntries(actor).map(entry => add2eNormalizeSpellKey(entry?.key)).filter(Boolean));
+  const matching = lists.filter(key => available.has(key));
+  if (matching.length === 1) return matching[0];
+  if (!matching.length && lists.length === 1) return lists[0];
+  return null;
+}
+
+async function add2eMigrateLegacySpellMemorization(actor) {
+  if (!actor?.items || actor.type !== "personnage") return { migrated: 0, ambiguous: [] };
+  const updates = [];
+  const ambiguous = [];
+
+  for (const sort of Array.from(actor.items).filter(item => String(item?.type ?? "").toLowerCase() === "sort")) {
+    if (!add2eIsRegularPreparableSpell(sort)) continue;
+    const legacyRaw = sort?.flags?.add2e?.memorizedCount;
+    if (legacyRaw === undefined || legacyRaw === null || legacyRaw === "") continue;
+
+    const byList = add2eGetMemorizedByList(sort);
+    const legacyCount = Math.max(0, Math.floor(Number(legacyRaw) || 0));
+    if (Object.keys(byList).length || legacyCount <= 0) {
+      updates.push({ _id: sort.id, "flags.add2e.-=memorizedCount": null });
+      continue;
+    }
+
+    const target = add2eLegacyMemorizationTarget(sort);
+    if (!target) {
+      ambiguous.push({
+        id: sort.id,
+        name: sort.name,
+        count: legacyCount,
+        lists: add2eGetSpellListsFromItem(sort)
+      });
+      continue;
+    }
+
+    byList[target] = legacyCount;
+    updates.push({
+      _id: sort.id,
+      "flags.add2e.memorizedByList": byList,
+      "flags.add2e.-=memorizedCount": null
+    });
+  }
+
+  if (updates.length) {
+    await actor.updateEmbeddedDocuments("Item", updates, {
+      render: false,
+      diff: false,
+      add2eSpellPreparation: true,
+      add2eReason: "migrate-legacy-memorized-count"
+    });
+  }
+  if (ambiguous.length) {
+    console.warn("[ADD2E][SPELL_PREPARATION][LEGACY_MEMORIZATION_AMBIGUOUS]", {
+      actor: actor.name,
+      actorId: actor.id,
+      spells: ambiguous
+    });
+  }
+  return { migrated: updates.length, ambiguous };
+}
+
+async function add2eMigrateLegacySpellMemorizationWorld() {
+  if (!game.user?.isGM) return { migrated: 0, ambiguous: [] };
+  let migrated = 0;
+  const ambiguous = [];
+  for (const actor of game.actors ?? []) {
+    if (actor?.type !== "personnage") continue;
+    const result = await add2eMigrateLegacySpellMemorization(actor);
+    migrated += Number(result?.migrated) || 0;
+    if (result?.ambiguous?.length) ambiguous.push({ actorId: actor.id, actorName: actor.name, spells: result.ambiguous });
+  }
+  return { migrated, ambiguous };
+}
+
 function add2eSpellStoredMemorization(sort, key) {
   const byList = add2eGetMemorizedByList(sort);
-  if (Object.prototype.hasOwnProperty.call(byList, key)) return Math.max(0, Number(byList[key]) || 0);
-  const lists = add2eGetSpellListsFromItem(sort).map(add2eNormalizeSpellKey).filter(Boolean);
-  const legacyRaw = sort?.getFlag?.("add2e", "memorizedCount") ?? sort?.flags?.add2e?.memorizedCount;
-  const legacyPresent = legacyRaw !== undefined && legacyRaw !== null && legacyRaw !== "";
-  return lists.length <= 1 && lists.includes(key) && legacyPresent
-    ? Math.max(0, Number(legacyRaw) || 0)
+  return Object.prototype.hasOwnProperty.call(byList, key)
+    ? Math.max(0, Number(byList[key]) || 0)
     : 0;
 }
 
@@ -667,14 +741,14 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
         }
       }
       const nextByList = add2eGetMemorizedByList(sort);
-      nextByList[key] = next;
+      if (next > 0) nextByList[key] = next;
+      else delete nextByList[key];
       for (const listKey of Object.keys(nextByList)) {
-        if (listKey !== key && (Number(nextByList[listKey]) || 0) <= 0) delete nextByList[listKey];
+        if ((Number(nextByList[listKey]) || 0) <= 0) delete nextByList[listKey];
       }
-      const total = Object.values(nextByList).reduce((sum, amount) => sum + (Number(amount) || 0), 0);
       await sort.update({
         "flags.add2e.memorizedByList": nextByList,
-        "flags.add2e.memorizedCount": total
+        "flags.add2e.-=memorizedCount": null
       }, {
         render: false,
         diff: false,
@@ -772,6 +846,12 @@ Hooks.on("updateActor", (actor, changed) => {
   window.setTimeout(() => add2eRerenderActorSheet(actor, true), 30);
 });
 
+Hooks.once("ready", () => {
+  add2eMigrateLegacySpellMemorizationWorld().catch(error => {
+    console.error("[ADD2E][SPELL_PREPARATION][LEGACY_MEMORIZATION_MIGRATION_ERROR]", error);
+  });
+});
+
 globalThis.add2eNormalizeSpellKey = add2eNormalizeSpellKey;
 globalThis.add2eSpellLabel = add2eSpellLabel;
 globalThis.add2eSpellClassLevel = add2eSpellClassLevel;
@@ -791,6 +871,7 @@ globalThis.add2eCheckMemorizedSpell = add2eCheckMemorizedSpell;
 globalThis.add2eConsumeMemorizedSpell = add2eConsumeMemorizedSpell;
 globalThis.add2eGetTotalMemorizedCount = add2eGetTotalMemorizedCount;
 globalThis.add2eCountPreparedForEntryLevel = add2eCountPreparedForEntryLevel;
+globalThis.add2eMigrateLegacySpellMemorization = add2eMigrateLegacySpellMemorization;
 globalThis.add2eGetWisdomBonusSpellSlots = actor => {
   const result = {};
   for (let level = 1; level <= 7; level += 1) result[level] = add2eWisdomBonusSpellSlots(actor, level);
