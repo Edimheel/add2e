@@ -348,6 +348,13 @@ async function add2eWriteScrollEntry(actor, scroll, spellKey) {
     ui.notifications.error("Le moteur des documents arcaniques est introuvable.");
     return false;
   }
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible pour la copie de parchemin.");
+  }
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles pour la copie de parchemin.");
+  }
+
   const entry = add2eFindScrollEntry(scroll, spellKey);
   if (!entry) return false;
   const actorLists = add2eScrollActorLists(actor);
@@ -367,12 +374,10 @@ async function add2eWriteScrollEntry(actor, scroll, spellKey) {
     return false;
   }
   const chance = add2eScrollLearningChance(actor);
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications.error("DialogV2 est introuvable.");
-    return false;
-  }
-  const confirmed = await DialogV2.wait({
+  const confirmed = await globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "copy",
+    add2eClasses: ["add2e-scroll-copy-dialog"],
     window: { title: `Écrire ${entry.name}` },
     modal: true,
     rejectClose: false,
@@ -407,21 +412,6 @@ async function add2eWriteScrollEntry(actor, scroll, spellKey) {
   let resolutionError = null;
 
   try {
-    try {
-      await roll.toMessage({
-        speaker: ChatMessage.getSpeaker({ actor }),
-        flavor: `Compréhension de ${add2eScrollEsc(entry.name)} — chance ${chance}% — ${success ? "réussite" : "échec"}`
-      });
-    } catch (error) {
-      console.warn("[ADD2E][ARCANE_DOCUMENTS][SCROLL_COPY_ROLL_MESSAGE_FAILED]", {
-        actor: actor.name,
-        spell: entry.name,
-        total,
-        chance,
-        error
-      });
-    }
-
     if (success) {
       learned = await add2eLearnSpellFromScroll(actor, scroll, entry, sourceDocument, unknown, total, chance);
       if (!learned) throw new Error("La création du sort appris a échoué.");
@@ -460,12 +450,52 @@ async function add2eWriteScrollEntry(actor, scroll, spellKey) {
     ui.notifications.error(`${resolutionError.message} L'inscription du parchemin a tout de même été effacée après la tentative.`);
   }
 
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<div class="add2e-chat-card" style="border:1px solid #75552b;border-radius:8px;background:#fff8e7;padding:8px;"><h3 style="margin:0 0 6px;">Copie depuis un parchemin</h3><p><b>${add2eScrollEsc(entry.name)}</b> — jet ${total}/${chance}</p><p>${success && learned ? "Le sort est copié dans le livre personnel." : "Le sort n'est pas compris ou n'a pas pu être copié, et l'inscription disparaît du parchemin."}</p></div>`
-  });
+  const copied = success && !!learned && !resolutionError;
+  const card = {
+    actor,
+    title: "Copie depuis un parchemin",
+    icon: "fas fa-pen-nib",
+    variant: copied ? "success" : "failure",
+    source: {
+      name: entry.name,
+      img: entry.img || scroll.img,
+      type: scroll.name
+    },
+    rows: [
+      { label: "Intelligence", value: String(add2eScrollIntelligence(actor)) },
+      { label: "Chance de compréhension", value: `${chance} %` },
+      { label: "Jet", value: `${total} / ${chance}` },
+      { label: "Compréhension", value: success ? "Réussite" : "Échec" },
+      { label: "Copie", value: copied ? "Sort ajouté au livre personnel" : "Sort non copié" },
+      { label: "Parchemin", value: consumed ? "Inscription consommée" : "Consommation échouée" }
+    ],
+    message: copied
+      ? `${entry.name} a été copié dans le livre personnel de ${actor.name}.`
+      : resolutionError
+        ? `${entry.name} n’a pas pu être copié : ${resolutionError.message}`
+        : `${entry.name} n’a pas été compris et l’inscription disparaît du parchemin.`,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      rolls: [roll],
+      flags: {
+        add2e: {
+          chatCardType: "scroll-copy",
+          spellKey: entry.key,
+          scrollId: scroll.id,
+          success,
+          copied,
+          consumed,
+          total,
+          chance
+        }
+      }
+    }
+  };
+  globalThis.add2eBuildChatCard(card);
+  await globalThis.add2eCreateChatCard(card);
+
   globalThis.add2eRerenderActorSheet?.(actor, true);
-  return success && !!learned && !resolutionError;
+  return copied;
 }
 
 function add2eBindArcaneScrollControls(sheet, html) {
