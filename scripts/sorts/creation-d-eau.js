@@ -1,28 +1,31 @@
 /**
  * ADD2E — Création d’eau / Destruction d’eau
- * Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
+ * Compatible Foundry V13/V14/V15.
+ * Version : 2026-08-07-canonical-resource-v2
  */
 
 const __add2eOnUseResult = await (async () => {
-  const DialogV2 = foundry.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications?.error?.("Création d’eau : DialogV2 introuvable.");
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    ui.notifications?.error?.("Création d’eau : l’API de fenêtre ADD2E est indisponible.");
+    return false;
+  }
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    ui.notifications?.error?.("Création d’eau : les constructeurs de cartes ADD2E sont indisponibles.");
     return false;
   }
 
-  const esc = value => String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
-    .replace(/'/g, "&#039;");
   const norm = value => String(value ?? "")
     .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, "_").replace(/[^a-z0-9]+/g, "_")
     .replace(/_+/g, "_").replace(/^_+|_+$/g, "");
-  const chatStyle = () => CONST.CHAT_MESSAGE_STYLES
-    ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
-    : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+
+  function resourceEngine() {
+    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+    if (!engine || typeof engine.recoverResource !== "function") {
+      throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour Création d’eau.");
+    }
+    return engine;
+  }
 
   const sourceItem = (typeof sort !== "undefined" && sort)
     ?? (typeof item !== "undefined" && item)
@@ -46,19 +49,31 @@ const __add2eOnUseResult = await (async () => {
   const level = Math.max(1, Number(caster.system?.niveau) || 1);
   const maxLitres = level * 15;
   const maxOutres = Math.max(1, Math.floor(maxLitres / 5));
-  const dialogResult = await DialogV2.wait({
+  const dialogResult = await globalThis.add2eDialogWait({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "cast",
+    add2eClasses: ["add2e-creation-eau-dialog"],
     window: { title: `Lancement : ${modeLabel}` },
-    add2eTheme: "cleric",
-    add2eImg: sourceItem.img || "icons/magic/water/orb-water-blue.webp",
-    content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">
-      <div class="form-group"><label style="font-weight:bold;">Effet :</label><div style="padding:6px 0;">${esc(modeLabel)}</div></div>
+    content: `<form class="add2e-creation-eau-form" style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">
+      <div class="form-group"><label style="font-weight:bold;">Effet :</label><div style="padding:6px 0;">${modeLabel}</div></div>
       <div class="form-group"><label style="font-weight:bold;">Nombre d’outres de 5 L :</label><input type="number" name="nbOutres" value="${maxOutres}" min="1" max="${maxOutres}" step="1" style="width:100%;"><p style="margin:3px 0 0;color:#666;font-size:.85em;">Maximum : ${maxOutres} outre(s), soit ${maxLitres} L au niveau ${level}.</p></div>
     </form>`,
     buttons: [
-      { action: "cast", label: "Lancer", icon: "fa-solid fa-droplet", default: true, callback: (_event, button) => ({ nbOutres: Number(button.form.elements.nbOutres?.value || 0) }) },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
+      {
+        action: "cast",
+        label: "Lancer",
+        icon: "<i class='fas fa-droplet'></i>",
+        default: true,
+        callback: (_event, button) => ({ nbOutres: Number(button.form.elements.nbOutres?.value || 0) })
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
+      }
     ],
-    rejectClose: false
+    close: () => null
   });
   if (!dialogResult) return false;
 
@@ -76,12 +91,46 @@ const __add2eOnUseResult = await (async () => {
     const existing = caster.items?.find(entry => entry.type === "objet" && norm(entry.name) === norm(itemName)) ?? null;
     try {
       if (existing) {
-        const next = Math.max(0, Number(existing.system?.quantite) || 0) + nbOutres;
-        await existing.update({
-          "system.quantite": next,
-          "system.volume_litres": next * 5,
-          "system.description": `Outres contenant de l’eau claire et potable créée par Création d’eau. Quantité : ${next} outre(s) de 5 L, soit ${next * 5} L.`
+        const resource = {
+          id: `${existing.uuid ?? existing.id}:water-skin-stack`,
+          type: "generated-consumable",
+          label: existing.name,
+          document: existing,
+          actor: caster,
+          item: existing,
+          target: "quantity",
+          get current() {
+            return Math.max(0, Number(existing.system?.quantite ?? existing.system?.quantity ?? 0) || 0);
+          },
+          maximum: null,
+          recovery: nbOutres,
+          source: {
+            kind: "spell",
+            id: String(sourceItem.id ?? ""),
+            uuid: String(sourceItem.uuid ?? ""),
+            name: String(sourceItem.name ?? "Création d’eau")
+          },
+          context: {
+            consumer: "creation-d-eau",
+            casterId: String(caster.id ?? ""),
+            volumeUnitLitres: 5
+          },
+          write: next => existing.update({
+            "system.quantite": next,
+            "system.volume_litres": next * 5,
+            "system.description": `Outres contenant de l’eau claire et potable créée par Création d’eau. Quantité : ${next} outre(s) de 5 L, soit ${next * 5} L.`
+          }, {
+            add2eInternal: true,
+            add2eReason: "create-water-resource-recovery",
+            render: false
+          })
+        };
+        const recovered = await resourceEngine().recoverResource(resource, {
+          amount: nbOutres,
+          reason: "create-water",
+          consumer: "creation-d-eau"
         });
+        if (!recovered.ok) throw new Error("La pile d’outres n’a pas pu être augmentée.");
         itemUpdated = existing;
       } else {
         const created = await caster.createEmbeddedDocuments("Item", [{
@@ -122,15 +171,31 @@ const __add2eOnUseResult = await (async () => {
   }
 
   const itemLine = itemCreated
-    ? `Équipement créé : <b>${esc(itemCreated.name)}</b> × ${nbOutres}.`
+    ? `Équipement créé : ${itemCreated.name} × ${nbOutres}.`
     : itemUpdated
-      ? `Équipement mis à jour : <b>${esc(itemUpdated.name)}</b> +${nbOutres}.`
+      ? `Équipement mis à jour : ${itemUpdated.name} +${nbOutres}.`
       : "Aucun équipement créé.";
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: caster }),
-    content: `<div class="add2e-spell-card add2e-spell-card-clerc" style="border:1px solid #e2bc63;border-radius:8px;overflow:hidden;background:#fffaf0;"><div style="padding:8px 10px;background:#6f4b12;color:#fff;font-weight:bold;display:flex;gap:8px;align-items:center;"><img src="${esc(sourceItem.img || "icons/magic/water/orb-water-blue.webp")}" style="width:28px;height:28px;border-radius:4px;"><span>${esc(caster.name)} — ${esc(modeLabel)}</span></div><div style="padding:9px;color:#6f4b12;"><div><b>Quantité :</b> ${litres} L (${nbOutres} outre(s)).</div><div><b>Maximum :</b> ${maxLitres} L.</div><div style="margin-top:5px;">${itemLine}</div></div></div>`,
-    ...chatStyle()
-  });
+  const card = {
+    actor: caster,
+    title: modeLabel,
+    icon: "fas fa-droplet",
+    variant: "spell",
+    source: {
+      name: caster.name,
+      img: caster.img ?? sourceItem.img ?? "icons/svg/mystery-man.svg",
+      type: "Sort divin"
+    },
+    rows: [
+      { label: "Quantité", value: `${litres} L (${nbOutres} outre(s))` },
+      { label: "Maximum", value: `${maxLitres} L` },
+      { label: "Inventaire", value: itemLine }
+    ],
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster })
+    }
+  };
+  globalThis.add2eBuildChatCard(card);
+  await globalThis.add2eCreateChatCard(card);
 
   console.log("[ADD2E][creation-d-eau.js][ONUSE_RESULT]", { mode, nbOutres, litres });
   return true;
