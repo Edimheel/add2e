@@ -652,7 +652,6 @@ async function applyHitPointState(actor, options = {}) {
     finalCurrent: n(actor.system?.pdv, state.current)
   };
   lastHitPointResolutions.set(hitPointActorKey(actor), clone(finalState));
-  console.log("[ADD2E][HP_CANONICAL][RESOLUTION]", finalState);
   return true;
 }
 
