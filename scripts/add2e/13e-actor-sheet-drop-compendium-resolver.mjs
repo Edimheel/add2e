@@ -1,10 +1,13 @@
 // ADD2E — Résolution compendium-first des drops personnage
-// Version : 2026-06-15-drop-compendium-first-split-v2
+// Version : 2026-08-07-thrown-weapon-stack-drop-v3
 //
 // Module court chargé après le drop historique. Il force la résolution depuis
 // le compendium avant que les validateurs race/classe ne lisent raw.data.
+// Les armes de jet strictement identiques sont fusionnées en une pile d'inventaire.
 
-const ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = "2026-06-15-drop-compendium-first-split-v2";
+import { add2eGetWeaponUsageProfile } from "./03b-equipment-actions.mjs";
+
+const ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = "2026-08-07-thrown-weapon-stack-drop-v3";
 globalThis.ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION;
 
 function add2eDropResolverNormalize(value) {
@@ -29,6 +32,84 @@ function add2eDropResolverToItemData(doc) {
     data.uuid = doc.uuid;
   }
   return data;
+}
+
+function add2eDropResolverIsThrownWeapon(item) {
+  if (!item || !["arme", "weapon"].includes(String(item.type ?? "").toLowerCase())) return false;
+  return add2eGetWeaponUsageProfile(item)?.isThrown === true;
+}
+
+function add2eDropResolverWeaponQuantity(item) {
+  const raw = item?.system?.quantite ?? item?.system?.quantity;
+  if (raw === undefined || raw === null || raw === "") return 1;
+  const value = Number(raw);
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 1;
+}
+
+function add2eDropResolverComparableSystem(item) {
+  const source = item?.system ?? {};
+  const system = foundry?.utils?.deepClone
+    ? foundry.utils.deepClone(source)
+    : JSON.parse(JSON.stringify(source));
+  delete system.quantite;
+  delete system.quantity;
+  delete system.equipee;
+  delete system.equipped;
+  delete system.equiped;
+  return system;
+}
+
+function add2eDropResolverThrownWeaponSignature(item) {
+  return JSON.stringify({
+    type: String(item?.type ?? "").toLowerCase(),
+    name: add2eDropResolverNormalize(item?.name ?? item?.system?.nom ?? ""),
+    system: add2eDropResolverComparableSystem(item)
+  });
+}
+
+function add2eDropResolverSameThrownWeapon(a, b) {
+  return add2eDropResolverIsThrownWeapon(a)
+    && add2eDropResolverIsThrownWeapon(b)
+    && add2eDropResolverThrownWeaponSignature(a) === add2eDropResolverThrownWeaponSignature(b);
+}
+
+async function add2eDropResolverMergeThrownWeapon(actor, itemData, raw = {}) {
+  if (!actor || actor.type !== "personnage" || !add2eDropResolverIsThrownWeapon(itemData)) return false;
+
+  const actorUuid = String(actor.uuid ?? `Actor.${actor.id ?? ""}`);
+  const sourceUuid = String(raw?.uuid ?? itemData?.uuid ?? "");
+  if (sourceUuid.startsWith(`${actorUuid}.Item.`)) return false;
+
+  const matches = Array.from(actor.items ?? []).filter(item => add2eDropResolverSameThrownWeapon(item, itemData));
+  if (!matches.length) return false;
+
+  const target = matches[0];
+  const extras = matches.slice(1);
+  const added = Math.max(1, add2eDropResolverWeaponQuantity(itemData));
+  const current = matches.reduce((total, item) => total + add2eDropResolverWeaponQuantity(item), 0);
+  const total = current + added;
+  const equipped = matches.some(item => item.system?.equipee === true || item.system?.equipped === true)
+    || itemData?.system?.equipee === true
+    || itemData?.system?.equipped === true;
+
+  await target.update({
+    "system.quantite": total,
+    "system.equipee": equipped
+  }, {
+    add2eReason: "merge-thrown-weapon-drop",
+    add2eInternal: true
+  });
+
+  const extraIds = extras.map(item => item.id).filter(Boolean);
+  if (extraIds.length) {
+    await actor.deleteEmbeddedDocuments("Item", extraIds, {
+      add2eReason: "merge-thrown-weapon-drop-duplicates",
+      add2eInternal: true
+    });
+  }
+
+  ui.notifications?.info?.(`${target.name} : ${total} exemplaire(s) dans la pile.`);
+  return true;
 }
 
 async function add2eResolveDropItemDataCompendiumFirst(raw) {
@@ -107,6 +188,7 @@ function add2eInstallDropCompendiumFirstWrapper() {
       if (raw?.type === "Item") {
         const itemData = await add2eResolveDropItemDataCompendiumFirst(raw);
         if (itemData) {
+          if (await add2eDropResolverMergeThrownWeapon(this.actor, itemData, raw)) return false;
           const syntheticEvent = add2eDropResolverBuildSyntheticEvent(event, raw, itemData);
           return original.call(this, syntheticEvent);
         }
