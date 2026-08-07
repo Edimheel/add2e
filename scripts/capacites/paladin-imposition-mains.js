@@ -1,5 +1,5 @@
 /* ADD2E — Paladin : Imposition des mains */
-const ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = "2026-07-07-class-level";
+const ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = "2026-08-07-canonical-resource-v2";
 globalThis.ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = ADD2E_PALADIN_IMPOSITION_MAINS_VERSION;
 
 function a2ePalNum(v, fallback = 0) {
@@ -15,12 +15,6 @@ function a2ePalFeatureLevel(currentActor, currentFeature) {
   return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
 }
 
-function a2ePalDayKey() {
-  const wt = Number(game.time?.worldTime);
-  if (Number.isFinite(wt) && wt > 0) return `worldday-${Math.floor(wt / 86400)}`;
-  return new Date().toISOString().slice(0, 10);
-}
-
 if (!actor) {
   ui.notifications.error("Imposition des mains : acteur introuvable.");
   return false;
@@ -29,13 +23,6 @@ if (!actor) {
 const level = a2ePalFeatureLevel(actor, feature);
 if (level === null) {
   ui.notifications.error("Imposition des mains : niveau de Paladin introuvable.");
-  return false;
-}
-
-const dayKey = a2ePalDayKey();
-const flagKey = `paladin.impositionMains.${dayKey}`;
-if (actor.getFlag("add2e", flagKey)?.used) {
-  ui.notifications.warn("Imposition des mains déjà utilisée aujourd’hui.");
   return false;
 }
 
@@ -52,19 +39,42 @@ if (gained <= 0) {
   return false;
 }
 
-await target.update({ "system.pdv": healed });
-await actor.setFlag("add2e", flagKey, { used: true, target: target.uuid, amount: gained, at: Date.now() });
+await target.update(
+  { "system.pdv": healed },
+  { add2eInternal: true, add2eReason: "paladin-lay-on-hands", render: false }
+);
 
-await ChatMessage.create({
-  speaker: ChatMessage.getSpeaker({ actor }),
-  content: `
-    <div class="add2e-chat-card">
-      <h3>Imposition des mains</h3>
-      <p><b>${actor.name}</b> impose les mains sur <b>${target.name}</b>.</p>
-      <p>Soin : <b>${gained} PV</b> (${level} × 2 PV).</p>
-      <p>PV : ${current} → ${healed} / ${max}</p>
-    </div>
-  `
-});
+const buildChatCard = globalThis.add2eBuildChatCard;
+const createChatCard = globalThis.add2eCreateChatCard;
+if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
+  throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
+}
 
+const cardOptions = {
+  actor,
+  title: "Imposition des mains",
+  icon: "fas fa-hand-holding-medical",
+  variant: "success",
+  source: {
+    name: actor.name,
+    img: actor.img,
+    type: "Capacité de paladin"
+  },
+  rows: [
+    { label: "Cible", value: target.name },
+    { label: "Soin", value: `${gained} PV (${level} × 2)` },
+    { label: "PV", value: `${current} → ${healed} / ${max}` },
+    { label: "Utilisation", value: feature?.uses?.label ?? "1 / jour" }
+  ],
+  chatData: {
+    flags: {
+      add2e: {
+        sourceCapacite: "paladin-imposition-mains",
+        version: ADD2E_PALADIN_IMPOSITION_MAINS_VERSION
+      }
+    }
+  }
+};
+buildChatCard(cardOptions);
+await createChatCard(cardOptions);
 return true;
