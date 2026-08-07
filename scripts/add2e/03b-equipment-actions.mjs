@@ -1,13 +1,10 @@
 // ============================================================
-// ADD2E — Actions d'équipement et profils d'armes
+// ADD2E — Actions d'équipement et profils d'armes virtuelles Foundry
 // Compatible Foundry V13/V14/V15.
 // Les restrictions de classe restent dans 03-equipment-rules.mjs.
 // ============================================================
 
-import { add2eMeasureTokenGridDistance } from "../add2e-attack/03-attack-rules.mjs";
-import { add2eAttackMeasureContactAndDistance } from "../add2e-attack/04g-attack-roll-range.mjs";
-
-const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-08-07-automatic-hybrid-weapon-mode-v10";
+const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-08-07-equipment-profile-owner-v11";
 const ADD2E_WEAPON_TYPES = new Set(["arme", "weapon"]);
 const ADD2E_ARMOR_TYPES = new Set(["armure", "armor"]);
 
@@ -52,7 +49,7 @@ function add2eEquipmentHasRange(weapon) {
   ].some(value => Number(value) > 0);
 }
 
-/** Source unique de classification métier des armes. */
+/** Source unique de classification métier des armes virtuelles. */
 export function add2eGetWeaponUsageProfile(weapon) {
   const system = weapon?.system ?? {};
   const tags = add2eEquipmentTags(weapon);
@@ -377,50 +374,6 @@ export async function handleItemAction({ actor, action, itemId, itemType, sheet 
   return false;
 }
 
-function add2eStripThrownTags(value) {
-  const removed = new Set([
-    "projectile_lance",
-    "usage:lancer",
-    "usage:jet",
-    "usage:arme_de_jet",
-    "categorie:projectile_lance",
-    "trait:arme_de_jet",
-    "type:arme_de_jet"
-  ]);
-  return add2eEquipmentArray(value).filter(tag => !removed.has(add2eEquipmentNormalize(tag)));
-}
-
-function add2eModeAwareWeapon(weapon, mode) {
-  if (mode !== "contact") return weapon;
-
-  const sourceSystem = weapon?.system ?? {};
-  const canonicalTags = add2eCanonicalWeaponUsageTags(weapon) ?? sourceSystem.tags;
-  const contactSystem = {
-    ...sourceSystem,
-    categorie: "melee",
-    category: "melee",
-    arme_de_jet: false,
-    armeDeJet: false,
-    isThrown: false,
-    portee_courte: 0,
-    portee_moyenne: 0,
-    portee_longue: 0,
-    porteeCourte: 0,
-    porteeMoyenne: 0,
-    porteeLongue: 0,
-    tags: add2eStripThrownTags(canonicalTags),
-    effectTags: add2eStripThrownTags(sourceSystem.effectTags),
-    effecttags: add2eStripThrownTags(sourceSystem.effecttags)
-  };
-
-  return new Proxy(weapon, {
-    get(target, property, receiver) {
-      if (property !== "system") return Reflect.get(target, property, receiver);
-      return contactSystem;
-    }
-  });
-}
-
 function add2eStackQuantity(item) {
   const value = item?.system?.quantite ?? item?.system?.quantity;
   if (value === undefined || value === null || value === "") return 1;
@@ -442,7 +395,7 @@ async function add2eShowThrownWeaponUnavailable(weapon) {
   return true;
 }
 
-async function add2eValidateWeaponAttackAvailability({ actor, weapon, actorId, weaponId, mode = "auto", notify = true } = {}) {
+export async function add2eValidateWeaponAttackAvailability({ actor, weapon, actorId, weaponId, mode = "auto", notify = true } = {}) {
   actor ??= actorId ? game.actors?.get?.(actorId) ?? null : null;
   weapon ??= actor && weaponId ? actor.items?.get?.(weaponId) ?? null : null;
   if (!actor || !weapon) return false;
@@ -464,236 +417,6 @@ async function add2eValidateWeaponAttackAvailability({ actor, weapon, actorId, w
   return false;
 }
 
-async function add2eConsumeThrownWeaponAfterAttack(actor, weapon) {
-  const api = globalThis.ADD2E_CONSUMABLES ?? game?.add2e?.consumables;
-  if (typeof api?.add2eConsumeThrownWeapon !== "function") return { ok: false, reason: "consumable-api-unavailable" };
-  return api.add2eConsumeThrownWeapon(actor, weapon, 1);
-}
-
-function add2eActionGateTargetToken(args = {}) {
-  return args.targetToken ?? args.cibleToken ?? Array.from(game.user?.targets ?? [])[0] ?? null;
-}
-
-function add2eActionGateTargetActor(token) {
-  return token?.actor
-    ?? token?.document?.actor
-    ?? (token?.document?.actorId ? game.actors?.get?.(token.document.actorId) : null)
-    ?? null;
-}
-
-function add2eActionGateSourceToken(actor, args = {}) {
-  return args.token
-    ?? args.sourceToken
-    ?? (canvas?.tokens?.controlled ?? []).find(token => token?.actor?.id === actor?.id || token?.document?.actorId === actor?.id)
-    ?? actor?.getActiveTokens?.()[0]
-    ?? actor?.token?.object
-    ?? actor?.token
-    ?? null;
-}
-
-function add2eResolveAutomaticWeaponUsage({ actor, weapon, args = {} } = {}) {
-  const profile = add2eGetWeaponUsageProfile(weapon);
-  const sourceToken = add2eActionGateSourceToken(actor, args);
-  const targetToken = add2eActionGateTargetToken(args);
-
-  let distanceCible = 0;
-  let auContact = false;
-  if (sourceToken && targetToken) {
-    ({ distanceCible, auContact } = add2eAttackMeasureContactAndDistance({
-      srcToken: sourceToken,
-      cibleToken: targetToken,
-      measureDistance: add2eMeasureTokenGridDistance
-    }));
-  }
-
-  if (profile.isHybrid && (!sourceToken || !targetToken)) {
-    ui.notifications?.warn?.("Impossible de déterminer automatiquement si l’arme doit être utilisée au contact ou lancée : token source ou cible manquant.");
-    return { ok: false, profile, sourceToken, targetToken, distanceCible, auContact, mode: null };
-  }
-
-  const mode = profile.isThrown
-    ? (profile.isHybrid && auContact ? "contact" : "throw")
-    : "other";
-
-  return { ok: true, profile, sourceToken, targetToken, distanceCible, auContact, mode };
-}
-
-async function add2eRunActionGateOnUse({ gateResults = [], actor, cible, sourceToken, targetToken, weapon, contact = false, actionTags = [] } = {}) {
-  for (const result of gateResults) {
-    if (result?.kind !== "save_gate") continue;
-    const rule = result?.rule ?? {};
-    const scriptPath = String(rule.onUse ?? rule.handler?.onUse ?? "").trim();
-    if (!scriptPath) continue;
-
-    try {
-      const response = await fetch(scriptPath, { cache: "no-store" });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const code = await response.text();
-      const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
-      const effect = result?.source?.effect ?? null;
-      const effectActor = result?.source?.actor ?? cible ?? null;
-      const event = {
-        add2eMode: String(rule.onUseMode ?? rule.handler?.mode ?? "actionGateResolved"),
-        actionGate: {
-          kind: result.kind,
-          allowed: result.allowed !== false,
-          label: result.label ?? "",
-          save: result.save ?? null,
-          rule
-        },
-        effect,
-        effectId: effect?.id ?? null,
-        effectFlags: effect?.flags?.add2e ?? {},
-        action: {
-          type: "attaque",
-          actor,
-          sourceActor: actor,
-          sourceToken,
-          targetActor: cible,
-          targetToken,
-          weapon,
-          contact,
-          actionTags
-        }
-      };
-      const handler = new AsyncFunction("actor", "item", "sort", "token", "args", "sourceItem", code);
-      await handler.call(effect, effectActor, null, null, targetToken, [event], null);
-    } catch (error) {
-      console.error("[ADD2E][ACTION_GATE][ONUSE][ERROR]", {
-        scriptPath,
-        actor: actor?.name,
-        target: cible?.name,
-        error
-      });
-    }
-  }
-}
-
-async function add2eResolveEquipmentAttackGate({ actor, weapon, sourceToken = null, targetToken = null, contact = false, args = {} } = {}) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-  if (typeof engine?.evaluateActionRules !== "function" || !actor || !weapon) {
-    return { allowed: true, details: [] };
-  }
-
-  targetToken ??= add2eActionGateTargetToken(args);
-  const cible = add2eActionGateTargetActor(targetToken);
-  if (!targetToken || !cible) return { allowed: true, details: [] };
-
-  sourceToken ??= add2eActionGateSourceToken(actor, args);
-  const actionTags = [...add2eEquipmentTags(weapon)];
-  const action = {
-    type: "attaque",
-    actor,
-    sourceActor: actor,
-    sourceToken,
-    targetActor: cible,
-    targetToken,
-    weapon,
-    contact,
-    actionTags
-  };
-  const actorTags = engine.getContextTags?.(actor) ?? engine.getActiveTags?.(actor) ?? [];
-  const targetTags = engine.getContextTags?.(cible) ?? engine.getActiveTags?.(cible) ?? [];
-
-  const ownerRules = await engine.evaluateActionRules(actor, {
-    ...action,
-    ruleScope: "owner",
-    subjectTags: targetTags
-  });
-  await add2eRunActionGateOnUse({
-    gateResults: ownerRules.gateResults,
-    actor,
-    cible,
-    sourceToken,
-    targetToken,
-    weapon,
-    contact,
-    actionTags
-  });
-  if (ownerRules.allowed === false) {
-    return { allowed: false, details: ownerRules.details ?? [] };
-  }
-
-  const targetRules = await engine.evaluateActionRules(cible, {
-    ...action,
-    ruleScope: "target",
-    subjectTags: actorTags,
-    saveActor: actor
-  });
-  await add2eRunActionGateOnUse({
-    gateResults: targetRules.gateResults,
-    actor,
-    cible,
-    sourceToken,
-    targetToken,
-    weapon,
-    contact,
-    actionTags
-  });
-  return {
-    allowed: targetRules.allowed !== false,
-    details: targetRules.details ?? []
-  };
-}
-
-let add2eAttackCore = null;
-
-function add2eCaptureAttackCore() {
-  const candidate = globalThis.add2eAttackRoll;
-  if (typeof candidate !== "function") return false;
-  if (candidate.name === "add2eAttackRollPending") return false;
-  if (candidate.__add2eThrownWeaponAttackBridge || candidate.__add2eWeaponUsageAttackBridge) return false;
-  add2eAttackCore = candidate;
-  return true;
-}
-
-function add2eInstallSingleAttackRoute() {
-  if (typeof add2eAttackCore !== "function") return false;
-  if (globalThis.add2eAttackRoll?.__add2eWeaponUsageAttackBridge === true) return true;
-
-  const bridge = async function add2eAttackRollWithWeaponUsage(args = {}) {
-    const actor = args.actor ?? (args.actorId ? game.actors?.get?.(args.actorId) : null);
-    const weapon = args.arme ?? (actor && args.itemId ? actor.items?.get?.(args.itemId) : null);
-    if (!actor || !weapon) return add2eAttackCore.call(this, args);
-
-    const usage = add2eResolveAutomaticWeaponUsage({ actor, weapon, args });
-    if (usage.ok === false) return false;
-
-    if (usage.mode === "throw") {
-      const available = await add2eValidateWeaponAttackAvailability({ actor, weapon, mode: "throw", notify: true });
-      if (!available) return false;
-    }
-
-    const attackWeapon = usage.profile.isHybrid
-      ? add2eModeAwareWeapon(weapon, usage.mode)
-      : weapon;
-
-    const actionGate = await add2eResolveEquipmentAttackGate({
-      actor,
-      weapon: attackWeapon,
-      sourceToken: usage.sourceToken,
-      targetToken: usage.targetToken,
-      contact: usage.auContact,
-      args
-    });
-    if (actionGate.allowed === false) return false;
-
-    // Les projectiles propulsés restent exclusivement gérés par le noyau d'attaque 04b.
-    if (!usage.profile.isThrown) return add2eAttackCore.call(this, { ...args, actor, arme: attackWeapon });
-
-    const result = await add2eAttackCore.call(this, { ...args, actor, arme: attackWeapon });
-    if (result !== true || usage.mode !== "throw") return result;
-
-    const consumedWeapon = await add2eConsumeThrownWeaponAfterAttack(actor, weapon);
-    return consumedWeapon?.ok === false ? false : result;
-  };
-
-  bridge.__add2eWeaponUsageAttackBridge = true;
-  bridge.__add2eWeaponUsageAttackOriginal = add2eAttackCore;
-  globalThis.add2eAttackRoll = bridge;
-  return true;
-}
-
 function add2eInstallEquipmentActions() {
   globalThis.add2eGetWeaponUsageProfile = add2eGetWeaponUsageProfile;
   globalThis.add2eValidateWeaponAttackAvailability = add2eValidateWeaponAttackAvailability;
@@ -701,16 +424,6 @@ function add2eInstallEquipmentActions() {
   globalThis.handleItemAction = handleItemAction;
   globalThis.ADD2E_EQUIPMENT_ACTIONS_VERSION = ADD2E_EQUIPMENT_ACTIONS_VERSION;
   add2eInstallWeaponUsageNormalization();
-
-  Hooks.once("ready", () => {
-    if (add2eCaptureAttackCore()) {
-      add2eInstallSingleAttackRoute();
-      return;
-    }
-    window.setTimeout(() => {
-      if (add2eCaptureAttackCore()) add2eInstallSingleAttackRoute();
-    }, 50);
-  });
 }
 
 add2eInstallEquipmentActions();
