@@ -1001,6 +1001,7 @@ export function installEffectsEngineCore(Engine) {
   installAbilityDerivedResolver(Engine);
   installEnginePrimitives(Engine);
   installCharacteristicEffectCanonicalization(Engine);
+  installCanonicalResourceDomain(Engine);
 
   globalThis.ADD2E_EFFECTS = Engine;
   globalThis.ADD2E_MODIFIER_RESOLVER_VERSION = ADD2E_MODIFIER_RESOLVER_VERSION;
@@ -1300,9 +1301,3 @@ function installCanonicalResourceDomain(Engine) {
   });
   globalThis.ADD2E_RESOURCE_DOMAIN_VERSION = ADD2E_RESOURCE_DOMAIN_VERSION;
 }
-
-const add2eInstallEffectsEngineCoreBase = installEffectsEngineCore;
-installEffectsEngineCore = function installEffectsEngineCoreWithResources(Engine) {
-  add2eInstallEffectsEngineCoreBase(Engine);
-  installCanonicalResourceDomain(Engine);
-};
