@@ -1086,7 +1086,6 @@ function refreshFamiliarHudControls() {
 }
 
 function scheduleFamiliarHudRefresh() {
-  familiarHudRefreshQueued = false;
   if (familiarHudRefreshQueued) return;
   familiarHudRefreshQueued = true;
   (globalThis.requestAnimationFrame ?? (callback => setTimeout(callback, 16)))(refreshFamiliarHudControls);
