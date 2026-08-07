@@ -4,7 +4,7 @@
 // Les restrictions de classe restent dans 03-equipment-rules.mjs.
 // ============================================================
 
-const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-07-24-thrown-availability-preflight-v8";
+const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-08-07-single-projectile-owner-v9";
 const ADD2E_WEAPON_TYPES = new Set(["arme", "weapon"]);
 const ADD2E_ARMOR_TYPES = new Set(["armure", "armor"]);
 
@@ -451,16 +451,15 @@ function add2eStackQuantity(item) {
 }
 
 async function add2eShowThrownWeaponUnavailable(weapon) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.alert) {
-    console.error("[ADD2E][EQUIPMENT][THROWN_AVAILABILITY][DIALOGV2_MISSING]", { weapon: weapon?.name, weaponId: weapon?.id });
-    return false;
+  if (typeof globalThis.add2eDialogAlert !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
   const weaponName = foundry.utils.escapeHTML(String(weapon?.name ?? "Cette arme"));
-  await DialogV2.alert({
+  await globalThis.add2eDialogAlert({
+    add2eTheme: "danger",
+    add2eClasses: ["add2e-thrown-weapon-unavailable"],
     window: { title: "Arme de lancer indisponible" },
     content: `<p><strong>${weaponName}</strong> n'est plus disponible pour être lancée.</p>`,
-    ok: { label: "Compris" },
     modal: true
   });
   return true;
@@ -486,21 +485,6 @@ async function add2eValidateWeaponAttackAvailability({ actor, weapon, actorId, w
 
   if (notify) await add2eShowThrownWeaponUnavailable(weapon);
   return false;
-}
-
-function add2eFindEquippedProjectile(actor, weapon) {
-  const compatible = globalThis.add2eGetEquippedProjectileForWeapon?.(actor, weapon) ?? null;
-  if (compatible) return compatible;
-  const isAmmo = globalThis.ADD2E_CONSUMABLES?.add2eIsAmmunition;
-  return [...(actor?.items ?? [])].find(item => item?.system?.equipee === true && typeof isAmmo === "function" && isAmmo(item)) ?? null;
-}
-
-async function add2eSpendProjectileAfterAttack(actor, weapon) {
-  const spend = globalThis.add2eSpendProjectileForAttack
-    ?? game?.add2e?.vendorProjectiles?.spendProjectileForAttack
-    ?? globalThis.ADD2E_VENDOR_PROJECTILES?.spendProjectileForAttack;
-  if (typeof spend !== "function") return { ok: false, reason: "projectile-api-unavailable" };
-  return spend({ actor, arme: weapon });
 }
 
 async function add2eConsumeThrownWeaponAfterAttack(actor, weapon) {
@@ -675,31 +659,19 @@ function add2eInstallSingleAttackRoute() {
     const actionGate = await add2eResolveEquipmentAttackGate({ actor, weapon, args });
     if (actionGate.allowed === false) return false;
 
-    if (!profile.isThrown && !profile.isProjectilePropulse) return add2eAttackCore.call(this, args);
+    // Les armes à projectile propulsé appartiennent désormais exclusivement au noyau 04b.
+    // Ce pont ne gère plus que le choix contact/lancer et la consommation des armes réellement lancées.
+    if (!profile.isThrown) return add2eAttackCore.call(this, args);
 
     const modeKey = add2eWeaponModeKey(actor.id, weapon.id);
     const defaultMode = profile.isHybrid ? "contact" : "throw";
-    let projectile = null;
-
-    if (profile.isProjectilePropulse) {
-      projectile = add2eFindEquippedProjectile(actor, weapon);
-      if (!projectile || add2eStackQuantity(projectile) <= 0) {
-        await add2eSpendProjectileAfterAttack(actor, weapon);
-        return false;
-      }
-    }
 
     if (profile.isHybrid) add2eSetTransientWeaponAttackMode(actor.id, weapon.id, "pending");
 
     try {
-      const attackWeapon = profile.isThrown ? add2eModeAwareWeapon(weapon, actor.id, weapon.id) : weapon;
+      const attackWeapon = add2eModeAwareWeapon(weapon, actor.id, weapon.id);
       const result = await add2eAttackCore.call(this, { ...args, actor, arme: attackWeapon });
       if (result !== true) return result;
-
-      if (profile.isProjectilePropulse) {
-        const consumedProjectile = await add2eSpendProjectileAfterAttack(actor, weapon);
-        return consumedProjectile?.ok === false ? false : result;
-      }
 
       const mode = profile.isHybrid
         ? add2eTakeTransientWeaponAttackMode(actor.id, weapon.id, defaultMode)
