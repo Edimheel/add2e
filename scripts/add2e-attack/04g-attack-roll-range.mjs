@@ -1,7 +1,7 @@
 // scripts/add2e-attack/04g-attack-roll-range.mjs
 // ADD2E — Portée, distance et contact pour les attaques.
 
-export const ADD2E_ATTACK_RANGE_VERSION = "2026-07-22-magic-weapon-range-v2";
+export const ADD2E_ATTACK_RANGE_VERSION = "2026-08-07-automatic-contact-range-v3";
 
 function add2eAttackRangeNormalize(value) {
   return String(value ?? "").trim().toLowerCase()
@@ -55,6 +55,16 @@ function add2eAttackRangeScaleToMaximum(ranges, maximum) {
 }
 
 function add2eAttackApplyMagicRangeRules(arme, base) {
+  if (arme?.system?.add2eSuppressMagicRange === true) {
+    return {
+      courte: Number(base.courte) || 0,
+      moyenne: Number(base.moyenne) || 0,
+      longue: Number(base.longue) || 0,
+      allShort: false,
+      details: []
+    };
+  }
+
   let ranges = { ...base };
   let allShort = false;
   const details = [];
