@@ -537,7 +537,7 @@ function add2eCollectMonsterFormData(root) {
   if (!form) return {};
 
   const flat = Object.fromEntries(new FormData(form).entries());
-  for (const checkbox of form.querySelectorAll('input[type="checkbox"][name]')) flat[input.name] = checkbox.checked;
+  for (const checkbox of form.querySelectorAll('input[type="checkbox"][name]')) flat[checkbox.name] = checkbox.checked;
   return foundry.utils.expandObject(flat);
 }
 
