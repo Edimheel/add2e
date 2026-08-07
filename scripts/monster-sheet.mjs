@@ -6,7 +6,7 @@
  * - Défense et sauvegardes exclusivement canoniques
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-08-07-canonical-monster-spell-resource-v16";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-08-07-canonical-monster-power-resource-v17";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const ADD2E_MONSTER_ACTOR_SHEET_V2 = foundry?.applications?.sheets?.ActorSheetV2;
@@ -354,6 +354,16 @@ function __add2eFindVirtualPowerEntry(actor, fakeId) {
   return null;
 }
 
+function __add2eResolvePowerResource(actor, sourceItem, power, index) {
+  const resolver = globalThis.add2eResolveObjectPowerResource;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des ressources de pouvoirs d’objets magiques est indisponible.");
+  }
+  return resolver(actor, sourceItem, power, index, {
+    consumer: "monster-sheet"
+  });
+}
+
 function __add2eMonsterSpellResourceEngine() {
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
   if (!engine
@@ -461,12 +471,29 @@ async function __add2eMigrateMonsterSpellMemorization(actor) {
   return updates.length;
 }
 
-function __add2eMonsterSpellView(sort, { isPower = false } = {}) {
+function __add2eMonsterSpellView(sort, { isPower = false, actor = null, sourceItem = null, powerEntry = null, powerIndex = 0 } = {}) {
   const power = isPower || sort?.system?.isPower === true || sort?.system?.isObjectPower === true;
-  const current = power
-    ? Math.max(0, Number(sort?.getFlag?.("add2e", "memorizedCount")) || 0)
-    : __add2eMonsterSpellResourceCount(sort);
-  const maximum = power ? Math.max(0, Number(sort?.system?.max) || 0) : null;
+  let current;
+  let maximum = null;
+  let available = true;
+  let resourceLabel;
+
+  if (power) {
+    const resource = __add2eResolvePowerResource(actor, sourceItem, powerEntry, powerIndex);
+    available = resource?.available !== false;
+    if (resource?.tracked === true) {
+      current = Math.max(0, Number(resource.current) || 0);
+      maximum = Math.max(0, Number(resource.maximum) || 0);
+      resourceLabel = `${current} / ${maximum}`;
+    } else {
+      current = null;
+      resourceLabel = "À volonté";
+    }
+  } else {
+    current = __add2eMonsterSpellResourceCount(sort);
+    resourceLabel = String(current);
+  }
+
   return {
     _id: sort.id,
     id: sort.id,
@@ -475,7 +502,9 @@ function __add2eMonsterSpellView(sort, { isPower = false } = {}) {
     system: sort.system,
     add2eIsPower: power,
     add2eResourceCount: current,
-    add2eResourceLabel: power && maximum > 0 ? `${current} / ${maximum}` : String(current)
+    add2eResourceMaximum: maximum,
+    add2eResourceAvailable: available,
+    add2eResourceLabel: resourceLabel
   };
 }
 
@@ -700,11 +729,17 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
 
     const sorts = this.actor.items
       .filter(i => i.type === "sort")
-      .map(sort => __add2eMonsterSpellView(sort));
+      .map(sort => __add2eMonsterSpellView(sort, { actor: this.actor }));
     for (const sourceItem of __add2eGetEquippedPowerItems(this.actor)) {
       for (const { power, index } of __add2eMagicPowerEntries(sourceItem)) {
         const virtualSort = __add2eBuildCanonicalVirtualPowerSpell(this.actor, sourceItem, power, index);
-        sorts.push(__add2eMonsterSpellView(virtualSort, { isPower: true }));
+        sorts.push(__add2eMonsterSpellView(virtualSort, {
+          isPower: true,
+          actor: this.actor,
+          sourceItem,
+          powerEntry: power,
+          powerIndex: index
+        }));
       }
     }
 
