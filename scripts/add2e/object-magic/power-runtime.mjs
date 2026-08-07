@@ -77,6 +77,104 @@ export async function add2eObjectPowerSetCharges(itemSource, power, _index, valu
   return add2eObjectSetGlobalCharges(itemSource, value);
 }
 
+function add2eObjectPowerName(power, itemSource = null) {
+  return String(power?.displayName ?? power?.name ?? power?.nom ?? power?.label ?? itemSource?.name ?? "Pouvoir").trim() || "Pouvoir";
+}
+
+export function add2eGetObjectPowerResource(actor, itemSource, power, index, options = {}) {
+  if (!itemSource || !power) throw new Error("Objet magique ou pouvoir introuvable pour la ressource de charges.");
+  const powerIndex = Math.max(0, Math.floor(Number(index) || 0));
+  const cost = add2eObjectPowerCost(power);
+  const maximum = add2eObjectPowerMaxCharges(itemSource, power, powerIndex);
+  if (cost > 0 && maximum <= 0) {
+    throw new Error(`Le pouvoir « ${add2eObjectPowerName(power, itemSource)} » consomme ${cost} charge(s), mais « ${itemSource.name} » n’a pas de réserve system.charges.max canonique.`);
+  }
+
+  const source = {
+    kind: "magic-item",
+    id: String(itemSource.id ?? ""),
+    uuid: String(itemSource.uuid ?? ""),
+    name: String(itemSource.name ?? "Objet magique")
+  };
+  const context = {
+    powerIndex,
+    powerName: add2eObjectPowerName(power, itemSource),
+    globalCharges: maximum > 0,
+    consumer: options.consumer ?? "object-magic/power-runtime",
+    ...(options.context ?? {})
+  };
+  const descriptor = cost > 0 ? {
+    id: `${itemSource.uuid ?? itemSource.id}:power-charge:global`,
+    type: "magic-item-charge",
+    label: options.label ?? `${itemSource.name} — ${add2eObjectPowerName(power, itemSource)}`,
+    document: itemSource,
+    actor,
+    item: itemSource,
+    target: "global",
+    get current() {
+      return add2eObjectPowerCurrentCharges(itemSource, power, powerIndex);
+    },
+    maximum,
+    cost,
+    recoveryPeriod: String(itemSource.system?.charges?.rechargePeriod ?? itemSource.system?.charges?.recharge ?? "").trim(),
+    source,
+    context,
+    write: next => add2eObjectPowerSetCharges(itemSource, power, powerIndex, next)
+  } : null;
+
+  return {
+    descriptor,
+    actor,
+    item: itemSource,
+    power,
+    index: powerIndex,
+    maximum,
+    cost,
+    tracked: cost > 0,
+    source,
+    context
+  };
+}
+
+export function add2eResolveObjectPowerResource(actor, itemSource, power, index, options = {}) {
+  const resource = add2eGetObjectPowerResource(actor, itemSource, power, index, options);
+  if (!resource.descriptor) {
+    return {
+      domain: "resource",
+      method: "ADD2E_EFFECTS.resolveResource",
+      id: `${itemSource?.uuid ?? itemSource?.id}:power-charge:at-will:${resource.index}`,
+      type: "magic-item-charge",
+      label: options.label ?? `${itemSource?.name ?? "Objet magique"} — ${add2eObjectPowerName(power, itemSource)}`,
+      document: itemSource,
+      actor,
+      item: itemSource,
+      target: "global",
+      source: resource.source,
+      current: null,
+      maximum: null,
+      cost: 0,
+      recovery: 0,
+      recoveryPeriod: null,
+      available: true,
+      missing: 0,
+      context: resource.context,
+      tracked: false
+    };
+  }
+
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!engine || typeof engine.resolveResource !== "function") {
+    throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour les charges d’objet magique.");
+  }
+  return {
+    ...engine.resolveResource(resource.descriptor, {
+      cost: resource.cost,
+      consumer: options.consumer ?? "object-magic/power-runtime"
+    }),
+    tracked: true
+  };
+}
+
 export function add2eMagicItemRechargeInfo(itemSource) {
   const charges = itemSource?.system?.charges;
   const maximum = add2eObjectGlobalChargeMax(itemSource);
@@ -183,13 +281,12 @@ export function add2eBuildVirtualObjectPowerSort(actor, itemSource, power, index
   const max = cost <= 0
     ? Math.max(1, add2eObjectPowerMaxCharges(itemSource, power, index))
     : add2eObjectPowerMaxCharges(itemSource, power, index);
-  const current = cost <= 0 ? 1 : add2eObjectPowerCurrentCharges(itemSource, power, index);
   const linkedSystem = power?.linkedSpell?.system && typeof power.linkedSpell.system === "object"
     ? add2eMagicClone(power.linkedSpell.system)
     : {};
   const fakeData = {
     _id: generatedId,
-    name: String(power?.name ?? power?.nom ?? power?.label ?? itemSource?.name ?? "Pouvoir").trim() || "Pouvoir",
+    name: add2eObjectPowerName(power, itemSource),
     type: "sort",
     img: power?.img || itemSource?.img || "icons/svg/aura.svg",
     system: {
@@ -208,6 +305,7 @@ export function add2eBuildVirtualObjectPowerSort(actor, itemSource, power, index
       cost,
       cout: cost,
       max,
+      resourceType: "magic-item-charge",
       isGlobalCharge: add2eObjectGlobalChargeMax(itemSource) > 0,
       onUse,
       onuse: onUse,
@@ -217,7 +315,6 @@ export function add2eBuildVirtualObjectPowerSort(actor, itemSource, power, index
     },
     flags: {
       add2e: {
-        memorizedCount: current,
         originalOnUse: onUse,
         sourceType: "objet_magique",
         sourceItemId: itemSource.id,
@@ -230,7 +327,6 @@ export function add2eBuildVirtualObjectPowerSort(actor, itemSource, power, index
   const sort = parent ? new Item(fakeData, { parent }) : new Item(fakeData);
   sort.getFlag = (scope, key) => {
     if (scope !== "add2e") return null;
-    if (key === "memorizedCount") return cost <= 0 ? 1 : add2eObjectPowerCurrentCharges(itemSource, power, index);
     if (key === "originalOnUse") return onUse;
     return fakeData.flags?.add2e?.[key] ?? null;
   };
@@ -242,7 +338,7 @@ export async function add2eExecuteObjectMagicPower(actor, itemSource, power, ind
     ui.notifications.error("Pouvoir d'objet magique introuvable.");
     return false;
   }
-  const powerName = String(power?.name ?? power?.nom ?? power?.label ?? itemSource.name ?? "Pouvoir").trim() || "Pouvoir";
+  const powerName = add2eObjectPowerName(power, itemSource);
   const onUse = add2eObjectPowerOnUsePath(power);
   if (!onUse) {
     ui.notifications.warn(`${powerName} n'a pas de script utilisable.`);
