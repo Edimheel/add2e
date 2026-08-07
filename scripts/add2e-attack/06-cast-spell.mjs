@@ -1,6 +1,6 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs, parchemins et composants.
-// Version : 2026-08-07-canonical-resource-cast-v4
+// Version : 2026-08-07-canonical-resource-cast-v5
 
 import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
@@ -309,55 +309,18 @@ function add2ePowerSource(item, sort) {
 }
 
 function add2ePowerResource(actor, item, sort) {
-  if (typeof globalThis.add2eObjectPowerCost !== "function"
-    || typeof globalThis.add2eObjectPowerMaxCharges !== "function"
-    || typeof globalThis.add2eObjectPowerCurrentCharges !== "function"
-    || typeof globalThis.add2eObjectPowerSetCharges !== "function") {
-    throw new Error("Le propriétaire canonique des charges d’objet magique est indisponible.");
+  if (typeof globalThis.add2eGetObjectPowerResource !== "function") {
+    throw new Error("Le propriétaire canonique de la ressource de pouvoir d’objet magique est indisponible.");
   }
-
   const { power, index } = add2ePowerSource(item, sort);
-  const cost = Math.max(0, Math.floor(Number(globalThis.add2eObjectPowerCost(power)) || 0));
-  const max = Math.max(0, Math.floor(Number(globalThis.add2eObjectPowerMaxCharges(item, power, index)) || 0));
-  if (cost > 0 && max <= 0) {
-    throw new Error(`Le pouvoir « ${sort.name} » consomme ${cost} charge(s), mais « ${item.name} » n’a pas de réserve system.charges.max canonique.`);
-  }
-
-  return {
-    descriptor: cost > 0 ? {
-      id: `${item.uuid ?? item.id}:power-charge:global`,
-      type: "magic-item-charge",
-      label: `${item.name} — ${sort.name}`,
-      document: item,
-      actor,
-      item,
-      target: "global",
-      get current() {
-        return Math.max(0, Number(globalThis.add2eObjectPowerCurrentCharges(item, power, index)) || 0);
-      },
-      maximum: max,
-      cost,
-      recoveryPeriod: norm(item.system?.charges?.recharge ?? ""),
-      source: {
-        kind: "magic-item",
-        id: String(item.id ?? ""),
-        uuid: String(item.uuid ?? ""),
-        name: String(item.name ?? "Objet magique")
-      },
-      context: {
-        powerIndex: index,
-        spellId: sort.id,
-        spellName: sort.name,
-        globalCharges: true,
-        consumer: "06-cast-spell"
-      },
-      write: next => globalThis.add2eObjectPowerSetCharges(item, power, index, next)
-    } : null,
-    power,
-    index,
-    max,
-    cost
-  };
+  return globalThis.add2eGetObjectPowerResource(actor, item, power, index, {
+    consumer: "06-cast-spell",
+    label: `${item.name} — ${sort.name}`,
+    context: {
+      spellId: sort.id,
+      spellName: sort.name
+    }
+  });
 }
 
 function add2eMemorizationResource(actor, sort) {
@@ -490,13 +453,13 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
       reservedCost = {
         kind: "power",
         weapon,
-        max: power.max,
+        max: power.maximum,
         cost,
         potion: add2ePowerIsPotion(weapon),
         before: availability.current,
         after: Math.max(0, availability.current - availability.cost)
       };
-      labelCharge = `Charges : ${reservedCost.after}/${power.max}`;
+      labelCharge = `Charges : ${reservedCost.after}/${power.maximum}`;
     } else {
       labelCharge = "Sans dépense de charge";
     }
