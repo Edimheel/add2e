@@ -337,7 +337,7 @@ function add2ePowerResource(actor, item, sort) {
       },
       maximum: max,
       cost,
-      recoveryPeriod: norm(item.system?.charges?.recharge?.type ?? ""),
+      recoveryPeriod: norm(item.system?.charges?.recharge ?? ""),
       source: {
         kind: "magic-item",
         id: String(item.id ?? ""),
