@@ -1,5 +1,5 @@
 // ADD2E — Documents arcaniques : parchemins, lecture, consommation et écriture.
-// Compatible Foundry V13/V14/V15. DialogV2 uniquement.
+// Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via l’API commune ADD2E.
 
 import {
   VERSION,
@@ -154,12 +154,22 @@ function scribingCandidates(actor, profile) {
   return candidates.sort((left, right) => left.entry.level - right.entry.level || left.entry.name.localeCompare(right.entry.name, "fr"));
 }
 
+function scrollDialogWait(options) {
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
+  return globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2eClasses: ["add2e-arcane-scroll-dialog"],
+    ...options
+  });
+}
+
 async function selectScribingProfile(actor, profiles) {
   if (profiles.length === 1) return profiles[0];
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) throw new Error("DialogV2 est introuvable.");
   const options = profiles.map((profile, index) => `<option value="${index}">${esc(profile.label)} — ${esc(profile.classItem?.name ?? profile.classKey)} niveau ${profile.classLevel}</option>`).join("");
-  const selected = await DialogV2.wait({
+  const selected = await scrollDialogWait({
+    add2ePrimaryAction: "select",
     window: { title: "Écrire un parchemin — liste" },
     modal: true,
     rejectClose: false,
@@ -173,11 +183,7 @@ async function selectScribingProfile(actor, profiles) {
         label: "Continuer",
         icon: "fa-solid fa-scroll",
         default: true,
-        callback: (_event, button, dialog) => {
-          const element = dialog?.element?.jquery ? dialog.element[0] : dialog?.element;
-          const form = button?.form ?? element?.querySelector?.("form.add2e-select-scroll-list");
-          return Number(form?.elements?.profileIndex?.value ?? -1);
-        }
+        callback: (_event, button) => Number(button?.form?.elements?.profileIndex?.value ?? -1)
       },
       { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => -1 }
     ]
@@ -186,15 +192,14 @@ async function selectScribingProfile(actor, profiles) {
 }
 
 async function selectScribingSpells(actor, profile, candidates) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) throw new Error("DialogV2 est introuvable.");
   const rows = candidates.map((candidate, index) => `<label style="display:grid;grid-template-columns:28px minmax(240px,1fr) 80px;gap:8px;align-items:center;padding:5px 6px;border-bottom:1px solid #d5c7a6;">
     <input type="checkbox" value="${index}">
     <span><b>${esc(candidate.entry.name)}</b></span>
     <span>Niv. ${candidate.entry.level}</span>
   </label>`).join("");
   const materialOptions = Object.values(ADD2E_SCROLL_MATERIALS).map(material => `<option value="${material.key}">${material.label} — ${material.minimumCostPoPerSheet} po minimum/feuille — ${material.failureModifier >= 0 ? "+" : ""}${material.failureModifier}% échec</option>`).join("");
-  return DialogV2.wait({
+  return scrollDialogWait({
+    add2ePrimaryAction: "scribe",
     window: { title: `Écrire un parchemin — ${profile.label}` },
     modal: true,
     rejectClose: false,
@@ -213,9 +218,8 @@ async function selectScribingSpells(actor, profile, candidates) {
         label: "Commencer la transcription",
         icon: "fa-solid fa-feather-pointed",
         default: true,
-        callback: (_event, button, dialog) => {
-          const element = dialog?.element?.jquery ? dialog.element[0] : dialog?.element;
-          const form = button?.form ?? element?.querySelector?.("form.add2e-scribe-scroll");
+        callback: (_event, button) => {
+          const form = button?.form;
           if (!form) return null;
           return {
             indexes: [...form.querySelectorAll('input[type="checkbox"][value]:checked')].map(input => Number(input.value)).filter(Number.isInteger),
@@ -329,7 +333,6 @@ export async function scribeScroll(actor) {
     totalDays += days;
     const failureChance = scrollFailureChance(candidate.entry.level, profile.classLevel, material);
     const roll = await new Roll("1d100").evaluate();
-    if (game.dice3d) await game.dice3d.showForRoll(roll);
     const total = Number(roll.total) || 100;
     const success = total > failureChance;
     attempts.push({ entry: clone(candidate.entry), roll, total, failureChance, success, days });
@@ -414,10 +417,9 @@ export async function scribeScroll(actor) {
 
 async function selectScrollSpell(scroll, candidates) {
   if (candidates.length === 1) return candidates[0];
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) return null;
   const options = candidates.map((candidate, index) => `<option value="${index}">${esc(candidate.entry.name)} — niveau ${candidate.entry.level} — ${esc(candidate.lists.map(listLabel).join(" / "))}</option>`).join("");
-  const selected = await DialogV2.wait({
+  const selected = await scrollDialogWait({
+    add2ePrimaryAction: "cast",
     window: { title: `Lire ${scroll.name}` },
     modal: true,
     rejectClose: false,
@@ -428,13 +430,9 @@ async function selectScrollSpell(scroll, candidates) {
         label: "Lancer le sort",
         icon: "fa-solid fa-scroll",
         default: true,
-        callback: (_event, button, dialog) => {
-          const element = dialog?.element?.jquery ? dialog.element[0] : dialog?.element;
-          const form = button?.form ?? element?.querySelector?.("form.add2e-cast-scroll");
-          return Number(form?.elements?.spellIndex?.value ?? -1);
-        }
+        callback: (_event, button) => Number(button?.form?.elements?.spellIndex?.value ?? -1)
       },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark" }
+      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => -1 }
     ]
   });
   return Number.isInteger(selected) && selected >= 0 ? candidates[selected] ?? null : null;
@@ -478,38 +476,96 @@ export async function castScroll(actor, scroll) {
   return globalThis.add2eCastSpell({ actor, sort: virtualSpell, mode: "scroll", sourceItem: scroll, sourceSpellKey: selected.entry.key });
 }
 
-export async function consumeScrollSpell(actor, scroll, spellKey) {
-  if (!actor || !scroll || !actor.items?.get?.(scroll.id)) return false;
+function scrollResourceEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!engine || typeof engine.consumeResource !== "function") {
+    throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour les parchemins.");
+  }
+  return engine;
+}
+
+function scrollSpellResource(actor, scroll, spellKey) {
   const sourceData = arcaneData(scroll);
   const entries = documentEntries(scroll);
   const selectedIndex = entries.findIndex(entry => entry.key === spellKey);
-  if (selectedIndex < 0) return false;
-  const remaining = entries.filter((_entry, index) => index !== selectedIndex);
-  const count = itemQuantity(scroll);
-  if (entries.length === 1) {
-    if (count > 1) {
-      await scroll.update({ "system.quantite": count - 1 }, { add2eInternal: true, add2eArcaneScroll: true, render: false });
-    } else {
-      await actor.deleteEmbeddedDocuments("Item", [scroll.id], { add2eInternal: true, add2eArcaneScroll: true, render: false });
+  if (selectedIndex < 0) return null;
+  const selected = entries[selectedIndex];
+
+  return {
+    id: `${scroll.uuid ?? scroll.id}:scroll-spell:${String(spellKey)}`,
+    type: "scroll-spell",
+    label: `${scroll.name} — ${selected.name}`,
+    document: scroll,
+    actor,
+    item: scroll,
+    target: String(spellKey),
+    current: 1,
+    maximum: 1,
+    cost: 1,
+    recovery: 0,
+    source: {
+      kind: "scroll",
+      id: String(scroll.id ?? ""),
+      uuid: String(scroll.uuid ?? ""),
+      name: String(scroll.name ?? "Parchemin")
+    },
+    context: {
+      spellKey: String(spellKey),
+      spellName: selected.name,
+      consumer: "07b-arcane-scrolls"
+    },
+    write: async next => {
+      if (Number(next) > 0) return 1;
+      if (!actor.items?.get?.(scroll.id)) throw new Error(`Le parchemin « ${scroll.name} » n’est plus présent sur l’acteur.`);
+
+      const liveEntries = documentEntries(scroll);
+      const liveIndex = liveEntries.findIndex(entry => entry.key === spellKey);
+      if (liveIndex < 0) throw new Error(`Le sort « ${selected.name} » n’est plus présent sur ${scroll.name}.`);
+      const remaining = liveEntries.filter((_entry, index) => index !== liveIndex);
+      const count = itemQuantity(scroll);
+
+      if (liveEntries.length === 1) {
+        if (count > 1) {
+          await scroll.update({ "system.quantite": count - 1 }, { add2eInternal: true, add2eArcaneScroll: true, add2eResource: true, render: false });
+        } else {
+          await actor.deleteEmbeddedDocuments("Item", [scroll.id], { add2eInternal: true, add2eArcaneScroll: true, add2eResource: true, render: false });
+        }
+        return 0;
+      }
+
+      if (count > 1) {
+        await scroll.update({ "system.quantite": count - 1 }, { add2eInternal: true, add2eArcaneScroll: true, add2eResource: true, render: false });
+        if (remaining.length) {
+          const partial = cleanEmbedded(scroll.toObject());
+          partial.name = `${scroll.name} (entamé)`;
+          partial.system ??= {};
+          partial.system.quantite = 1;
+          partial.system.arcaneDocument = { ...clone(sourceData), schema: 1, kind: "spell-scroll", spells: remaining };
+          await actor.createEmbeddedDocuments("Item", [partial], { add2eInternal: true, add2eArcaneScroll: true, add2eResource: true, render: false });
+        }
+        return 0;
+      }
+
+      if (remaining.length) {
+        await scroll.update({
+          "system.arcaneDocument": { ...clone(sourceData), schema: 1, kind: "spell-scroll", spells: remaining }
+        }, { add2eInternal: true, add2eArcaneScroll: true, add2eResource: true, render: false });
+      } else {
+        await actor.deleteEmbeddedDocuments("Item", [scroll.id], { add2eInternal: true, add2eArcaneScroll: true, add2eResource: true, render: false });
+      }
+      return 0;
     }
-    return true;
-  }
-  if (count > 1) {
-    await scroll.update({ "system.quantite": count - 1 }, { add2eInternal: true, add2eArcaneScroll: true, render: false });
-    if (remaining.length) {
-      const partial = cleanEmbedded(scroll.toObject());
-      partial.name = `${scroll.name} (entamé)`;
-      partial.system ??= {};
-      partial.system.quantite = 1;
-      partial.system.arcaneDocument = { ...clone(sourceData), schema: 1, kind: "spell-scroll", spells: remaining };
-      await actor.createEmbeddedDocuments("Item", [partial], { add2eInternal: true, add2eArcaneScroll: true, render: false });
-    }
-    return true;
-  }
-  if (remaining.length) {
-    await scroll.update({ "system.arcaneDocument": { ...clone(sourceData), schema: 1, kind: "spell-scroll", spells: remaining } }, { add2eInternal: true, add2eArcaneScroll: true, render: false });
-  } else {
-    await actor.deleteEmbeddedDocuments("Item", [scroll.id], { add2eInternal: true, add2eArcaneScroll: true, render: false });
-  }
-  return true;
+  };
+}
+
+export async function consumeScrollSpell(actor, scroll, spellKey) {
+  if (!actor || !scroll || !actor.items?.get?.(scroll.id)) return false;
+  const resource = scrollSpellResource(actor, scroll, spellKey);
+  if (!resource) return false;
+  const result = await scrollResourceEngine().consumeResource(resource, {
+    cost: 1,
+    reason: "consume-scroll-spell",
+    consumer: "07b-arcane-scrolls"
+  });
+  return result?.ok === true;
 }
