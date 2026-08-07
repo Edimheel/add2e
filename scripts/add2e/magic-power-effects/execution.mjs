@@ -186,8 +186,9 @@ function elapsedRounds(previous, current) {
 }
 
 function cloneUsage(value) {
-  try { return foundry.utils.deepClone(value ?? {}); }
-  catch (_error) { return JSON.parse(JSON.stringify(value ?? {})); }
+  if (value === null || value === undefined) return null;
+  try { return foundry.utils.deepClone(value); }
+  catch (_error) { return JSON.parse(JSON.stringify(value)); }
 }
 
 function frequencyMessage(spec, remaining) {
@@ -245,7 +246,7 @@ function usageResource(actor, item, power, index, spec, target = null) {
       consumer: "magic-power-effects/execution"
     },
     write: async next => {
-      const state = cloneUsage(item.getFlag?.("add2e", USAGE_FLAG) ?? {});
+      const state = cloneUsage(item.getFlag?.("add2e", USAGE_FLAG) ?? {}) ?? {};
       const entry = state[key] && typeof state[key] === "object" ? state[key] : {};
       if (!rollbackCaptured && next <= 0) {
         rollbackStamp = cloneUsage(target ? entry.targets?.[targetKey] ?? null : entry.global ?? null);
@@ -262,8 +263,11 @@ function usageResource(actor, item, power, index, spec, target = null) {
         else if (rollbackStamp) entry.global = rollbackStamp;
         else delete entry.global;
       }
-      entry.updatedAt = usageStamp();
-      state[key] = entry;
+      if (!entry.global && !entry.targets) delete state[key];
+      else {
+        entry.updatedAt = usageStamp();
+        state[key] = entry;
+      }
       await item.setFlag("add2e", USAGE_FLAG, state);
     }
   };
