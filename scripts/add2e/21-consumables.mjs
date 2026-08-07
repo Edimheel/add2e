@@ -7,7 +7,7 @@ import {
   add2eRefundSpellComponents as add2eCoreRefundSpellComponents
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_CONSUMABLES_VERSION = "2026-08-07-canonical-ammunition-resource-v8";
+const ADD2E_CONSUMABLES_VERSION = "2026-08-07-direct-projectile-owner-v9";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -277,16 +277,7 @@ export async function add2eEquipProjectile(actor, projectile) {
   return true;
 }
 
-export async function add2eReserveProjectile(actor, arme) {
-  const vendorApi = globalThis.ADD2E_VENDOR_PROJECTILES ?? game?.add2e?.vendorProjectiles;
-  if (vendorApi?.spendProjectileForAttack) return vendorApi.spendProjectileForAttack({ actor, arme });
-  return { ok: true, required: false, spent: 0, delegated: false };
-}
-
-export async function add2eConsumeProjectileReservation(_reservation) { return false; }
-export async function add2eRefundProjectileReservation(_reservation) { return false; }
-
-export async function add2eRegisterProjectileSpentInCombat(actor, projectile, quantity = 1) {
+async function add2eRegisterProjectileSpentInCombat(actor, projectile, quantity = 1) {
   const vendorApi = globalThis.ADD2E_VENDOR_PROJECTILES ?? game?.add2e?.vendorProjectiles;
   if (!vendorApi?.recordProjectileSpent) return false;
   return vendorApi.recordProjectileSpent({ actor, projectile, quantity: Math.max(1, Math.floor(add2eNumber(quantity, 1))) });
@@ -377,12 +368,6 @@ export async function add2eConsumeThrownWeapon(actor, weapon, quantity = 1) {
   const remaining = Math.max(0, Number(state?.after ?? add2eWeaponStackQuantity(weapon)) || 0);
   await add2eRegisterProjectileSpentInCombat(actor, weapon, spent);
   return { ok: true, spent, remaining };
-}
-
-export async function add2eRestoreProjectilesAtCombatEnd(combat) {
-  const vendorApi = globalThis.ADD2E_VENDOR_PROJECTILES ?? game?.add2e?.vendorProjectiles;
-  if (vendorApi?.recoverProjectilesForCombat) return vendorApi.recoverProjectilesForCombat(combat);
-  return false;
 }
 
 function add2eCleanComponentName(value) {
@@ -543,11 +528,6 @@ export async function add2eEquipHybridThrownWeaponAsContact(actor, weapon, sheet
   return action({ actor, action: "equip", itemId: weapon.id, itemType: weapon.type, sheet });
 }
 
-function add2eWrapAttackRollForProjectiles() {
-  globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED = "attack-owned-by-04-attack-roll";
-  return false;
-}
-
 const api = {
   version: ADD2E_CONSUMABLES_VERSION,
   add2eConsumablesSettings,
@@ -558,17 +538,11 @@ const api = {
   add2eGetEquippedProjectileForWeapon,
   add2eEquipProjectile,
   add2eEquipHybridThrownWeaponAsContact,
-  add2eReserveProjectile,
-  add2eConsumeProjectileReservation,
-  add2eRefundProjectileReservation,
-  add2eRegisterProjectileSpentInCombat,
   add2eConsumeThrownWeapon,
-  add2eRestoreProjectilesAtCombatEnd,
   add2eResolveSpellMaterialComponents,
   add2eReserveSpellComponents,
   add2eRefundSpellComponents,
   add2eTryMergeDroppedAmmunition,
-  add2eWrapAttackRollForProjectiles,
   add2eActorUsesProjectileInventory,
   add2eActorDocumentType
 };
@@ -578,9 +552,6 @@ globalThis.add2eGetCompatibleProjectiles = add2eGetCompatibleProjectiles;
 globalThis.add2eGetEquippedProjectileForWeapon = add2eGetEquippedProjectileForWeapon;
 globalThis.add2eEquipProjectile = add2eEquipProjectile;
 globalThis.add2eEquipHybridThrownWeaponAsContact = add2eEquipHybridThrownWeaponAsContact;
-globalThis.add2eReserveProjectile = add2eReserveProjectile;
-globalThis.add2eConsumeProjectileReservation = add2eConsumeProjectileReservation;
-globalThis.add2eRegisterProjectileSpentInCombat = add2eRegisterProjectileSpentInCombat;
 globalThis.add2eConsumeThrownWeapon = add2eConsumeThrownWeapon;
 globalThis.add2eReserveSpellComponents = add2eReserveSpellComponents;
 globalThis.add2eRefundSpellComponents = add2eRefundSpellComponents;
