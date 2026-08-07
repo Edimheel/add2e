@@ -80,6 +80,11 @@ function projectileKeys(item) {
 }
 function equippedProjectile(actor, weapon) {
   if (!usesProjectileInventory(actor) || !isPropelledWeapon(weapon)) return null;
+  const canonical = globalThis.add2eResolveProjectileForAttack;
+  if (typeof canonical === "function") {
+    try { return canonical({ actor, arme: weapon })?.projectile ?? null; }
+    catch (_error) {}
+  }
   const keys = projectileKeys(weapon).map(norm);
   const items = actorItems(actor).filter(item => item.id !== weapon.id && itemEquipped(item) && keys.some(key => norm(item.name).includes(key) || itemTags(item).some(tag => tag.includes(key))));
   return items.find(item => quantity(item) !== "0") ?? items[0] ?? null;
@@ -90,25 +95,67 @@ function range(item) {
   const values = [system.portee_courte ?? system.portee_short, system.portee_moyenne ?? system.portee_medium, system.portee_longue ?? system.portee_long].filter(value => value !== undefined && value !== null && String(value) !== "");
   return values.length ? values.join(" / ") : "Contact";
 }
-export function weapons(actor) { return actorItems(actor).filter(item => String(item.type ?? "").toLowerCase() === "arme" && itemEquipped(item)); }
+export function weapons(actor) { return actorItems(actor).filter(item => String(item.type ?? "").toLowerCase() === "arme"); }
+function projectileItems(actor) { return actorItems(actor).filter(isAmmunitionItem).sort((a, b) => String(a.name).localeCompare(String(b.name))); }
+function armorItems(actor) { return actorItems(actor).filter(item => String(item.type ?? "").toLowerCase() === "armure").sort((a, b) => String(a.name).localeCompare(String(b.name))); }
 export function features(actor) { return typeof globalThis.add2eGetActorActivableClassFeatures === "function" ? globalThis.add2eGetActorActivableClassFeatures(actor, { includeLocked: false }) ?? [] : []; }
 function declaredAction(actor) { try { return globalThis.add2eGetDeclaredInitiativeAction?.(actor) ?? null; } catch (_error) { return null; } }
 function declarationButton(actor, item, kind) {
   const declared = declaredAction(actor);
   const active = String(declared?.itemId ?? "") === String(item?.id ?? "") && declared?.kind === kind;
-  return `<button type="button" class="act initiative-declare${active ? " declared" : ""}" data-action="declare-initiative-${kind}" data-item-id="${esc(item.id)}">${active ? "Déclarée" : "Déclarer"}</button>`;
+  const title = active ? "Action choisie pour l’initiative" : "Choisir cette action pour l’initiative";
+  return `<button type="button" class="hud-icon-action initiative-declare${active ? " declared" : ""}" data-action="declare-initiative-${kind}" data-item-id="${esc(item.id)}" title="${esc(title)}" aria-label="${esc(title)}"><i class="fas fa-hourglass-start" aria-hidden="true"></i></button>`;
+}
+function equipmentButton(item) {
+  const equipped = itemEquipped(item);
+  const title = equipped ? `Déséquiper ${item.name}` : `Équiper ${item.name}`;
+  return `<button type="button" class="hud-icon-action equipment-toggle${equipped ? " equipped" : ""}" data-action="toggle-equipment" data-item-id="${esc(item.id)}" title="${esc(title)}" aria-label="${esc(title)}"><i class="fas ${equipped ? "fa-toggle-on" : "fa-toggle-off"}" aria-hidden="true"></i></button>`;
+}
+function equipmentState(item) {
+  return `<span class="${itemEquipped(item) ? "equip-ok" : "equip-off"}">${itemEquipped(item) ? "Équipé" : "Rangé"}</span>`;
+}
+function weaponRow(actor, item) {
+  const projectile = equippedProjectile(actor, item);
+  const propelled = isPropelledWeapon(item);
+  const dmg = propelled && projectile ? `Dégâts projectile ${damage(projectile)}` : `Dégâts ${damage(item)}`;
+  const ammo = propelled ? (usesProjectileInventory(actor) ? (projectile ? `<span class="ammo"><img src="${esc(projectile.img || "icons/svg/target.svg")}" alt="">${esc(projectile.name)} ×${esc(quantity(projectile))}</span>` : `<span class="ammo-missing">Aucune munition compatible équipée</span>`) : `<span class="ammo-free">Munition PNJ non suivie</span>`) : "";
+  const speed = num(item.system?.facteur_rapidité ?? item.system?.facteur_rapidite, 0);
+  return `<div class="row initiative-row combat-item-row"><button type="button" class="img-act" data-action="attack" data-item-id="${esc(item.id)}" title="Attaquer avec ${esc(item.name)}"><img src="${esc(item.img || "icons/svg/sword.svg")}" alt=""></button><div><div class="title">${esc(item.name)}</div><div class="meta">${equipmentState(item)}<span>${esc(dmg)}</span><span>Portée ${esc(range(item))}</span><span>Rapidité ${esc(speed || "—")}</span>${ammo}</div></div><div class="hud-row-actions">${equipmentButton(item)}${declarationButton(actor, item, "weapon")}</div></div>`;
+}
+function projectileRow(item) {
+  const system = item.system ?? {};
+  const type = system.sousType ?? system.sous_type ?? system.munitionType ?? "—";
+  return `<div class="row equipment-row combat-item-row"><img src="${esc(item.img || "icons/svg/target.svg")}" alt=""><div><div class="title">${esc(item.name)}</div><div class="meta">${equipmentState(item)}<span>Type ${esc(type)}</span><span>Dégâts ${esc(damage(item))}</span><span>Qté ${esc(quantity(item))}</span></div></div><div class="hud-row-actions">${equipmentButton(item)}</div></div>`;
+}
+function armorRow(item) {
+  const system = item.system ?? {};
+  const ca = system.ac ?? system.ca ?? "—";
+  const bonus = system.bonus_ac ?? "—";
+  return `<div class="row equipment-row combat-item-row"><img src="${esc(item.img || "icons/svg/shield.svg")}" alt=""><div><div class="title">${esc(item.name)}</div><div class="meta">${equipmentState(item)}<span>CA ${esc(ca)}</span><span>Bonus CA ${esc(bonus)}</span></div></div><div class="hud-row-actions">${equipmentButton(item)}</div></div>`;
 }
 export function weaponRows(actor) {
-  const rows = weapons(actor);
-  if (!rows.length) return `<div class="empty">Aucune arme équipée.</div>`;
-  return rows.map(item => {
-    const projectile = equippedProjectile(actor, item);
-    const propelled = isPropelledWeapon(item);
-    const dmg = propelled && projectile ? `Dégâts projectile ${damage(projectile)}` : `Dégâts ${damage(item)}`;
-    const ammo = propelled ? (usesProjectileInventory(actor) ? (projectile ? `<span class="ammo"><img src="${esc(projectile.img || "icons/svg/target.svg")}" alt="">${esc(projectile.name)} ×${esc(quantity(projectile))}</span>` : `<span class="ammo-missing">Aucune munition équipée</span>`) : `<span class="ammo-free">Munition PNJ non suivie</span>`) : "";
-    const speed = num(item.system?.facteur_rapidité ?? item.system?.facteur_rapidite, 0);
-    return `<div class="row initiative-row"><button type="button" class="img-act" data-action="attack" data-item-id="${esc(item.id)}" title="Attaquer avec ${esc(item.name)}"><img src="${esc(item.img || "icons/svg/sword.svg")}" alt=""></button><div><div class="title">${esc(item.name)}</div><div class="meta"><span>${esc(dmg)}</span><span>Portée ${esc(range(item))}</span><span>Rapidité ${esc(speed || "—")}</span>${ammo}</div></div>${declarationButton(actor, item, "weapon")}</div>`;
-  }).join("");
+  const weaponList = weapons(actor);
+  const projectileList = projectileItems(actor);
+  const armorList = armorItems(actor);
+  const prefix = `add2e-combat-${esc(actor?.id ?? "actor")}`;
+  const weaponHtml = weaponList.length ? weaponList.map(item => weaponRow(actor, item)).join("") : `<div class="empty">Aucune arme.</div>`;
+  const projectileHtml = projectileList.length ? projectileList.map(projectileRow).join("") : `<div class="empty">Aucun projectile.</div>`;
+  const armorHtml = armorList.length ? armorList.map(armorRow).join("") : `<div class="empty">Aucune armure.</div>`;
+  return `<div class="combat-layout">
+    <input class="combat-tab-radio" type="radio" name="${prefix}-tab" id="${prefix}-armes" checked>
+    <input class="combat-tab-radio" type="radio" name="${prefix}-tab" id="${prefix}-projectiles">
+    <input class="combat-tab-radio" type="radio" name="${prefix}-tab" id="${prefix}-armures">
+    <div class="combat-tabs">
+      <label for="${prefix}-armes">Armes <span>${weaponList.length}</span></label>
+      <label for="${prefix}-projectiles">Projectiles <span>${projectileList.length}</span></label>
+      <label for="${prefix}-armures">Armures <span>${armorList.length}</span></label>
+    </div>
+    <div class="combat-panels">
+      <div class="combat-panel combat-panel-armes">${weaponHtml}</div>
+      <div class="combat-panel combat-panel-projectiles">${projectileHtml}</div>
+      <div class="combat-panel combat-panel-armures">${armorHtml}</div>
+    </div>
+  </div>`;
 }
 function moneyRaw(actor) { const flag = actor?.getFlag?.("add2e", "monnaie"); if (flag && typeof flag === "object") return flag; const system = actor?.system ?? {}; return system.monnaie ?? system.argent ?? system.currency ?? {}; }
 function moneyPanel(actor) { return `<div class="money-row"><span class="money-title">Argent</span>${COINS.map(([key, label]) => `<span class="money-pill">${label} ${esc(Math.max(0, Math.floor(num(moneyRaw(actor)?.[key], 0))))}</span>`).join("")}</div>`; }
@@ -116,8 +163,8 @@ function equipmentItems(actor) { return actorItems(actor).filter(item => String(
 export function equipmentRows(actor) {
   const rows = equipmentItems(actor);
   const body = rows.length ? rows.map(item => {
-    const equipped = itemEquipped(item); const qty = quantity(item);
-    return `<div class="row equipment-row"><img src="${esc(item.img || "icons/svg/item-bag.svg")}" alt=""><div><div class="title">${esc(item.name)}${qty !== "—" ? ` ×${esc(qty)}` : ""}</div><div class="meta"><span>Équipement</span><span class="${equipped ? "equip-ok" : "equip-off"}">${equipped ? "Équipé" : "Non équipé"}</span></div></div><button type="button" class="act" data-action="toggle-equipment" data-item-id="${esc(item.id)}">${equipped ? "Retirer" : "Équiper"}</button></div>`;
+    const qty = quantity(item);
+    return `<div class="row equipment-row"><img src="${esc(item.img || "icons/svg/item-bag.svg")}" alt=""><div><div class="title">${esc(item.name)}${qty !== "—" ? ` ×${esc(qty)}` : ""}</div><div class="meta"><span>Équipement</span>${equipmentState(item)}</div></div><div class="hud-row-actions">${equipmentButton(item)}</div></div>`;
   }).join("") : `<div class="empty">Aucun équipement.</div>`;
   return `${moneyPanel(actor)}${body}`;
 }
