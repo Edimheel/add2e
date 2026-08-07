@@ -1,6 +1,6 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs, parchemins et composants.
-// Version : 2026-08-07-canonical-resource-cast-v3
+// Version : 2026-08-07-canonical-resource-cast-v4
 
 import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
@@ -435,6 +435,22 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
     return Boolean(refunded);
   }
 
+  async function finalizeComponents(reason = "") {
+    if (!componentReservation) return true;
+    const reservation = componentReservation;
+    componentReservation = null;
+    const finalize = globalThis.ADD2E_CONSUMABLES?.add2eFinalizeSpellComponents;
+    if (typeof finalize !== "function") {
+      throw new Error("Le finaliseur canonique ADD2E des composants de sort est indisponible.");
+    }
+    const finalized = await finalize(reservation);
+    if (!finalized) {
+      console.error("[ADD2E][CAST_SPELL][FINALIZE][COMPONENTS_FAILED]", { reason, actor: actor.name, sort: spellToUse?.name, reservation });
+      ui.notifications.error("Les composants ont été consommés, mais la suppression des piles épuisées doit être vérifiée par le MJ.");
+    }
+    return Boolean(finalized);
+  }
+
   async function reserveComponents() {
     if (scrollCast || sort.system?.isPower) return true;
     const api = globalThis.ADD2E_CONSUMABLES;
@@ -538,7 +554,12 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
       reservedCost.before = state.before;
       reservedCost.after = state.after;
     }
-    componentReservation = null;
+    try {
+      await finalizeComponents("échec divin");
+    } catch (error) {
+      console.error("[ADD2E][CAST_SPELL][DIVINE_FAILURE][COMPONENT_FINALIZE_ERROR]", error);
+      ui.notifications.error(error.message || "Les composants consommés n’ont pas pu être finalisés.");
+    }
     await refreshActorSpellSheets(actor, sort, reservedCost?.kind === "memorized" ? reservedCost.after : undefined);
     return false;
   }
@@ -641,7 +662,12 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
     return false;
   }
 
-  componentReservation = null;
+  try {
+    await finalizeComponents("lancement réussi");
+  } catch (error) {
+    console.error("[ADD2E][CAST_SPELL][COMPONENT_FINALIZE_ERROR]", error);
+    ui.notifications.error(error.message || "Les composants consommés n’ont pas pu être finalisés.");
+  }
 
   if (reservedCost?.kind === "power" && reservedCost.potion && reservedCost.after <= 0) {
     const potionId = reservedCost.weapon.id;
