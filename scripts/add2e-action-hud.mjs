@@ -13,7 +13,7 @@ export {
   add2eCloseActionHud
 } from "./add2e-action-hud/core.mjs";
 
-const ADD2E_HUD_COMPLEMENTS_VERSION = "2026-07-30-hud-multiple-attacks-guidance-v15";
+const ADD2E_HUD_COMPLEMENTS_VERSION = "2026-08-07-hud-thrown-resource-v16";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_COMPLEMENTS_STYLE_ID = "add2e-action-hud-complements-style";
 
@@ -144,15 +144,20 @@ function multipleAttackHtml(status) {
 function updateWeaponAttackButtons(section, actor, status) {
   for (const button of section.querySelectorAll('button[data-action="attack"][data-item-id]')) {
     const weapon = actor?.items?.get?.(button.dataset.itemId) ?? null;
-    let allowed = true;
-    try {
-      allowed = add2eCanActorWeaponAttackNow(actor, { weapon, combat: game.combat, notify: false }) !== false;
-    } catch (error) {
-      console.warn("[ADD2E][HUD][ATTAQUES_MULTIPLES][BUTTON]", error);
+    const resourceUnavailable = button.dataset.add2eResourceUnavailable === "thrown-weapon";
+    let allowed = !resourceUnavailable;
+    if (!resourceUnavailable) {
+      try {
+        allowed = add2eCanActorWeaponAttackNow(actor, { weapon, combat: game.combat, notify: false }) !== false;
+      } catch (error) {
+        console.warn("[ADD2E][HUD][ATTAQUES_MULTIPLES][BUTTON]", error);
+      }
     }
     button.disabled = !allowed;
     button.classList.toggle("a2e-multiple-attack-blocked", !allowed);
-    if (!allowed) {
+    if (resourceUnavailable) {
+      button.title = `${weapon?.name ?? "Cette arme"} indisponible : à ramasser en fin de combat`;
+    } else if (!allowed) {
       button.title = status?.css === "pending"
         ? "Première attaque déjà jouée : attaque suivante en fin de round"
         : "Aucune attaque restante ce round";
