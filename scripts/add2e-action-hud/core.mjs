@@ -137,6 +137,18 @@ function objectMagicPowerEntries(actor) {
 function objectMagicPowerDeclarationLabel(entry) {
   return `${entry.sourceItem?.name ?? "Objet magique"} — ${entry.virtualSpell?.name ?? "Pouvoir"}`;
 }
+function objectMagicPowerResource(actor, entry, consumer = "action-hud") {
+  if (typeof globalThis.add2eResolveObjectPowerResource !== "function") {
+    throw new Error("Le résolveur canonique de ressource des pouvoirs d’objets magiques est indisponible.");
+  }
+  return globalThis.add2eResolveObjectPowerResource(
+    actor,
+    entry.sourceItem,
+    entry.power,
+    entry.index,
+    { consumer }
+  );
+}
 function objectMagicPowerRows(actor) {
   const entries = objectMagicPowerEntries(actor);
   if (!entries.length) return "";
@@ -150,14 +162,28 @@ function objectMagicPowerRows(actor) {
       && String(declared?.itemId ?? "") === String(sourceItem.id ?? "")
       && String(declared?.label ?? "") === label;
     const activation = system.temps_incantation ?? system.casting_time ?? system.castingTime ?? "Objet magique";
-    const charges = Number(virtualSpell.getFlag?.("add2e", "memorizedCount") ?? 0) || 0;
-    const cost = Math.max(0, Number(system.cost ?? system.cout ?? 0) || 0);
+    const resource = objectMagicPowerResource(actor, entry, "action-hud:object-power-row");
+    const tracked = resource?.tracked === true;
+    const current = tracked ? Math.max(0, Number(resource.current) || 0) : null;
+    const maximum = tracked ? Math.max(0, Number(resource.maximum) || 0) : null;
+    const cost = Math.max(0, Number(resource?.cost) || 0);
+    const resourceAvailable = resource?.available !== false;
     const usable = globalThis.add2eMagicItemEquippedOrUsable?.(sourceItem) === true;
-    const useTitle = usable ? `Utiliser ${virtualSpell.name}` : `${sourceItem.name} doit être équipé pour utiliser ${virtualSpell.name}`;
-    const initiativeTitle = usable
-      ? "Choisir cette action pour départager les égalités d’initiative"
-      : `${sourceItem.name} doit être équipé avant de choisir cette action d’initiative`;
-    return `<div class="row initiative-row"><button type="button" class="img-act" data-action="use-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}" title="${esc(useTitle)}"${usable ? "" : " disabled"}><img src="${esc(virtualSpell.img || sourceItem.img || "icons/svg/aura.svg")}" alt=""></button><div><div class="title">${esc(virtualSpell.name)}</div><div class="meta"><span>${esc(sourceItem.name)}</span><span>Activation ${esc(activation)}</span><span>Charges ${charges}${cost > 0 ? ` · coût ${cost}` : ""}</span>${usable ? "" : '<span class="equip-off">Objet non équipé</span>'}</div></div><button type="button" class="hud-icon-action initiative-declare${active ? " declared" : ""}" data-action="declare-initiative-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}" title="${esc(initiativeTitle)}" aria-label="${esc(initiativeTitle)}"${usable ? "" : " disabled"}><i class="fas fa-hourglass-start" aria-hidden="true"></i></button></div>`;
+    const enabled = usable && resourceAvailable;
+    const resourceText = tracked
+      ? `Charges ${current}/${maximum} · coût ${cost} · ${resourceAvailable ? "disponible" : "indisponible"}`
+      : "À volonté · disponible";
+    const useTitle = !usable
+      ? `${sourceItem.name} doit être équipé pour utiliser ${virtualSpell.name}`
+      : !resourceAvailable
+        ? `${virtualSpell.name} indisponible : ${current} charge(s), ${cost} requise(s)`
+        : `Utiliser ${virtualSpell.name}`;
+    const initiativeTitle = !usable
+      ? `${sourceItem.name} doit être équipé avant de choisir cette action d’initiative`
+      : !resourceAvailable
+        ? `${virtualSpell.name} n’a pas assez de charges pour être déclaré`
+        : "Choisir cette action pour départager les égalités d’initiative";
+    return `<div class="row initiative-row"><button type="button" class="img-act" data-action="use-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}" title="${esc(useTitle)}"${enabled ? "" : " disabled"}><img src="${esc(virtualSpell.img || sourceItem.img || "icons/svg/aura.svg")}" alt=""></button><div><div class="title">${esc(virtualSpell.name)}</div><div class="meta"><span>Source : ${esc(resource?.source?.name ?? sourceItem.name)}</span><span>Activation ${esc(activation)}</span><span>${esc(resourceText)}</span>${usable ? "" : '<span class="equip-off">Objet non équipé</span>'}</div></div><button type="button" class="hud-icon-action initiative-declare${active ? " declared" : ""}" data-action="declare-initiative-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}" title="${esc(initiativeTitle)}" aria-label="${esc(initiativeTitle)}"${enabled ? "" : " disabled"}><i class="fas fa-hourglass-start" aria-hidden="true"></i></button></div>`;
   }).join("");
   return `<div class="spell-layout object-magic-power-layout"><div class="spell-list"><div class="spell-list-title">Pouvoirs d’objets magiques</div>${rows}</div></div>`;
 }
@@ -339,6 +365,10 @@ async function declareObjectMagicPower(actor, itemId, powerIndex) {
   const entry = resolveObjectMagicPower(actor, itemId, powerIndex);
   if (!entry) return ui.notifications.warn("Pouvoir d'objet magique introuvable.");
   if (globalThis.add2eMagicItemEquippedOrUsable?.(entry.sourceItem) !== true) return ui.notifications.warn(`${entry.sourceItem.name} doit être équipé avant de choisir ce pouvoir pour l’initiative.`);
+  const resource = objectMagicPowerResource(actor, entry, "action-hud:declare-object-power");
+  if (resource?.available === false) {
+    return ui.notifications.warn(`${entry.virtualSpell.name} n’a pas assez de charges (${resource.current}/${resource.cost} requise(s)).`);
+  }
   if (typeof globalThis.add2eDeclareInitiativeAction !== "function") return ui.notifications.error("Service canonique de déclaration d'initiative indisponible.");
   const activation = entry.virtualSpell.system?.initiativeSegment ?? entry.virtualSpell.system?.temps_incantation ?? entry.virtualSpell.system?.casting_time ?? entry.virtualSpell.system?.castingTime ?? "Objet magique";
   const declarationItem = {
