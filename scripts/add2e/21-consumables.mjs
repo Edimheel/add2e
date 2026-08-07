@@ -7,7 +7,7 @@ import {
   add2eRefundSpellComponents as add2eCoreRefundSpellComponents
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_CONSUMABLES_VERSION = "2026-07-25-canonical-ammunition-type-v7";
+const ADD2E_CONSUMABLES_VERSION = "2026-08-07-canonical-ammunition-resource-v8";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -85,6 +85,14 @@ function add2eEscapeHtml(value) {
   return div.innerHTML;
 }
 
+function add2eConsumableResourceEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!engine || typeof engine.consumeResource !== "function") {
+    throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour les consommables.");
+  }
+  return engine;
+}
+
 function add2eActorDocumentType(actor) {
   const candidates = [actor?.type, actor?._source?.type, actor?.baseActor?.type, actor?.document?.type, actor?.parent?.actor?.type]
     .filter(v => v !== null && v !== undefined && String(v).trim() !== "");
@@ -100,13 +108,17 @@ function add2eActorUsesProjectileInventory(actor) {
 }
 
 async function add2eDialogPopup({ title = "Information", content = "", modal = false } = {}) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (DialogV2?.alert) {
-    await DialogV2.alert({ window: { title }, content, ok: { label: "Compris" }, modal });
-    return true;
+  if (typeof globalThis.add2eDialogAlert !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
-  ui.notifications?.info?.(String(content).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() || title);
-  return false;
+  await globalThis.add2eDialogAlert({
+    add2eTheme: "danger",
+    add2eClasses: ["add2e-consumable-alert"],
+    window: { title },
+    content,
+    modal
+  });
+  return true;
 }
 
 async function add2eConsumablesAlert({ title = "Action impossible", message = "Action impossible.", icon = "fa-triangle-exclamation" } = {}) {
@@ -304,6 +316,38 @@ function add2eReturningThrownWeapon(actor, weapon) {
   return false;
 }
 
+function add2eThrownWeaponResource(actor, weapon, cost) {
+  return {
+    id: `${weapon.uuid ?? weapon.id}:thrown-weapon-stack`,
+    type: "thrown-weapon",
+    label: weapon.name,
+    document: weapon,
+    actor,
+    item: weapon,
+    target: String(weapon.id ?? "thrown-weapon"),
+    get current() {
+      return add2eWeaponStackQuantity(weapon);
+    },
+    maximum: null,
+    cost,
+    source: {
+      kind: "weapon",
+      id: String(weapon.id ?? ""),
+      uuid: String(weapon.uuid ?? ""),
+      name: String(weapon.name ?? "Arme de lancer")
+    },
+    context: {
+      consumer: "21-consumables:thrown-weapon",
+      actorId: String(actor?.id ?? ""),
+      itemId: String(weapon.id ?? "")
+    },
+    write: next => weapon.update({
+      "system.quantite": next,
+      "system.equipee": next > 0 ? weapon.system?.equipee === true : false
+    }, { add2eReason: "thrown-weapon-spent-resource", render: false })
+  };
+}
+
 export async function add2eConsumeThrownWeapon(actor, weapon, quantity = 1) {
   if (!actor || !weapon) return { ok: false, reason: "missing" };
   if (!add2eActorUsesProjectileInventory(actor)) return { ok: true, ignored: true, spent: 0 };
@@ -315,7 +359,12 @@ export async function add2eConsumeThrownWeapon(actor, weapon, quantity = 1) {
   }
 
   const spent = Math.max(1, Math.floor(add2eNumber(quantity, 1)));
-  if (available < spent) {
+  const result = await add2eConsumableResourceEngine().consumeResource(add2eThrownWeaponResource(actor, weapon, spent), {
+    cost: spent,
+    reason: "thrown-weapon-spent",
+    consumer: "21-consumables"
+  });
+  if (!result.ok) {
     await add2eConsumablesAlert({
       title: "Arme de lancer indisponible",
       message: `${weapon.name} n'est plus disponible pour être lancée.`,
@@ -324,12 +373,8 @@ export async function add2eConsumeThrownWeapon(actor, weapon, quantity = 1) {
     return { ok: false, reason: "empty", spent: 0 };
   }
 
-  const remaining = Math.max(0, available - spent);
-  await weapon.update({
-    "system.quantite": remaining,
-    "system.equipee": remaining > 0 ? weapon.system?.equipee === true : false
-  }, { add2eReason: "thrown-weapon-spent" });
-
+  const state = result.resources?.[0] ?? null;
+  const remaining = Math.max(0, Number(state?.after ?? add2eWeaponStackQuantity(weapon)) || 0);
   await add2eRegisterProjectileSpentInCombat(actor, weapon, spent);
   return { ok: true, spent, remaining };
 }
