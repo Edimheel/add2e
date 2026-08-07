@@ -2,7 +2,7 @@
 // Les projectiles dépensés en jeu passent par ce cœur vendeur et le relais MJ générique ADD2E_GM_OPERATION.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_VENDOR_VERSION = "2026-08-07-vendor-v25-thrown-recovery";
+export const ADD2E_VENDOR_VERSION = "2026-08-07-vendor-v26-thrown-reequip";
 export const VENDOR_SCOPE = "add2e";
 export const VENDOR_NAME = "Marchand de composants et projectiles";
 export const VENDOR_FOLDER = "ADD2E — Boutique";
@@ -95,11 +95,15 @@ function projectileResource(actor, projectile, { cost = 0, recovery = 0 } = {}) 
       actorId: String(actor.id ?? ""),
       projectileId: String(projectile.id ?? "")
     },
-    write: next => projectile.update(quantityUpdate(next), {
-      add2eInternal: true,
-      add2eReason: "projectile-resource",
-      render: false
-    })
+    write: next => {
+      const update = quantityUpdate(next);
+      if (resourceKind === "thrown-weapon" && recovery > 0 && Number(next) > 0) update["system.equipee"] = true;
+      return projectile.update(update, {
+        add2eInternal: true,
+        add2eReason: resourceKind === "thrown-weapon" && recovery > 0 ? "thrown-weapon-recovery-resource" : "projectile-resource",
+        render: false
+      });
+    }
   };
 }
 
@@ -137,39 +141,11 @@ export function isAmmunition(item) {
 
 function isThrownWeapon(item) {
   if (!item || isAmmunition(item)) return false;
-
-  const profile = globalThis.add2eGetWeaponUsageProfile?.(item);
-  if (profile && typeof profile === "object") return profile.isThrown === true;
-
-  const type = lower(item?.type);
-  if (!["arme", "weapon"].includes(type)) return false;
-
-  const s = item?.system ?? {};
-  const category = slug(s.categorie ?? s.category ?? "");
-  const t = tags(item);
-  const propelled = category === "projectile_propulse" || t.some(value => [
-    "projectile_propulse",
-    "usage:projectile_propulse",
-    "categorie:projectile_propulse",
-    "trait:projectile_propulse",
-    "type:projectile_propulse",
-    "arme:projectile_propulse"
-  ].includes(value));
-  if (propelled) return false;
-
-  return s.arme_de_jet === true
-    || s.armeDeJet === true
-    || s.isThrown === true
-    || category === "projectile_lance"
-    || t.some(value => [
-      "projectile_lance",
-      "usage:lancer",
-      "usage:jet",
-      "usage:arme_de_jet",
-      "categorie:projectile_lance",
-      "trait:arme_de_jet",
-      "type:arme_de_jet"
-    ].includes(value));
+  if (!["arme", "weapon"].includes(lower(item?.type))) return false;
+  if (typeof globalThis.add2eGetWeaponUsageProfile !== "function") {
+    throw new Error("Le propriétaire canonique du profil d’usage des armes est indisponible.");
+  }
+  return globalThis.add2eGetWeaponUsageProfile(item)?.isThrown === true;
 }
 
 function recoveryItemForEntry(actor, entry) {
@@ -997,6 +973,6 @@ export function registerGlobals() {
   globalThis.add2eSpendProjectileForAttack = spendProjectileForAttack;
   globalThis.add2eRecoverProjectilesForCombat = recoverProjectilesForCombat;
   globalThis.add2eAssignItemToToken = assignItemToToken;
-  globalThis.add2eAssignProjectileToToken = assignProjectileToToken;
+  globalThis.add2eAssignProjectileToToken = assignItemToToken;
   globalThis.add2eVendorActorUsesProjectileInventory = actorUsesProjectileInventory;
 }
