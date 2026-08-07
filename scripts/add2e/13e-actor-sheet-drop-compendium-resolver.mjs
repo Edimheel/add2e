@@ -1,5 +1,5 @@
 // ADD2E — Résolution compendium-first des drops personnage
-// Version : 2026-08-07-thrown-weapon-stack-drop-v4
+// Version : 2026-08-07-thrown-weapon-stack-drop-v5
 //
 // Module court chargé après le drop historique. Il force la résolution depuis
 // le compendium avant que les validateurs race/classe ne lisent raw.data.
@@ -7,7 +7,7 @@
 
 import { add2eGetWeaponUsageProfile } from "./03b-equipment-actions.mjs";
 
-const ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = "2026-08-07-thrown-weapon-stack-drop-v4";
+const ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = "2026-08-07-thrown-weapon-stack-drop-v5";
 globalThis.ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION;
 
 function add2eDropResolverNormalize(value) {
@@ -98,7 +98,7 @@ async function add2eDropResolverMergeThrownWeapon(actor, itemData, raw = {}) {
   const target = matches[0];
   const extras = matches.slice(1);
   const added = Math.max(1, add2eDropResolverWeaponQuantity(itemData));
-  const current = matches.reduce((total, item) => total + Math.max(1, add2eDropResolverWeaponQuantity(item)), 0);
+  const current = matches.reduce((total, item) => total + add2eDropResolverWeaponQuantity(item), 0);
   const total = current + added;
   const equipped = matches.some(item => item.system?.equipee === true || item.system?.equipped === true)
     || itemData?.system?.equipee === true
