@@ -290,72 +290,54 @@ function add2ePowerIsPotion(item) {
   return values.some(value => value === "potion" || value.startsWith("potion_") || value.endsWith("_potion") || value.includes("sous_type_potion"));
 }
 
-function add2ePowerGlobalMax(item, sort) {
-  const values = [
-    item?.system?.charges?.max,
-    item?.system?.charges?.maximum,
-    item?.system?.max_charges,
-    item?.system?.maxCharges,
-    item?.system?.chargesMax,
-    sort?.system?.max
-  ];
-  for (const value of values) {
-    if (value === undefined || value === null || value === "") continue;
-    const number = Number(value);
-    if (Number.isFinite(number) && number > 0) return number;
+function add2ePowerSource(item, sort) {
+  const index = Math.floor(Number(sort?.system?.powerIndex));
+  if (!Number.isFinite(index) || index < 0) {
+    throw new Error(`Indice de pouvoir canonique invalide pour « ${sort?.name ?? item?.name ?? "Pouvoir"} ».`);
   }
-  return 0;
+  const raw = item?.system?.pouvoirs;
+  const powers = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === "object"
+      ? Object.values(raw)
+      : [];
+  const power = powers[index] ?? null;
+  if (!power) {
+    throw new Error(`Pouvoir source introuvable à l’indice ${index} sur « ${item?.name ?? "Objet magique"} ».`);
+  }
+  return { power, index };
 }
 
-function add2ePowerReadCurrent(item, flagKey, max, isGlobal) {
-  if (isGlobal) {
-    const canonical = item?.system?.charges?.value
-      ?? item?.system?.charges?.current
-      ?? item?.system?.charges?.actuel
-      ?? item?.system?.charges?.remaining;
-    if (canonical !== undefined && canonical !== null && canonical !== "") {
-      const number = Number(canonical);
-      if (Number.isFinite(number)) return Math.max(0, Math.min(number, max));
-    }
+function add2ePowerResource(actor, item, sort) {
+  if (typeof globalThis.add2eObjectPowerCost !== "function"
+    || typeof globalThis.add2eObjectPowerMaxCharges !== "function"
+    || typeof globalThis.add2eObjectPowerCurrentCharges !== "function"
+    || typeof globalThis.add2eObjectPowerSetCharges !== "function") {
+    throw new Error("Le propriétaire canonique des charges d’objet magique est indisponible.");
   }
-  const flag = item?.getFlag?.("add2e", flagKey) ?? item?.flags?.add2e?.[flagKey];
-  if (flag !== undefined && flag !== null && flag !== "") {
-    const number = Number(flag);
-    if (Number.isFinite(number)) return Math.max(0, isGlobal ? Math.min(number, max) : number);
-  }
-  return max;
-}
 
-async function add2ePowerWriteCurrent(item, flagKey, value, max, isGlobal) {
-  const next = Math.max(0, isGlobal ? Math.min(Number(value) || 0, max) : Number(value) || 0);
-  const update = { [`flags.add2e.${flagKey}`]: next };
-  if (isGlobal && item?.system?.charges && typeof item.system.charges === "object") {
-    update["system.charges.value"] = next;
+  const { power, index } = add2ePowerSource(item, sort);
+  const cost = Math.max(0, Math.floor(Number(globalThis.add2eObjectPowerCost(power)) || 0));
+  const max = Math.max(0, Math.floor(Number(globalThis.add2eObjectPowerMaxCharges(item, power, index)) || 0));
+  if (cost > 0 && max <= 0) {
+    throw new Error(`Le pouvoir « ${sort.name} » consomme ${cost} charge(s), mais « ${item.name} » n’a pas de réserve system.charges.max canonique.`);
   }
-  await item.update(update, { add2eInternal: true, add2eReason: "object-power-charge-resource", render: false });
-  return next;
-}
 
-function add2ePowerResource(actor, item, sort, cost) {
-  const maxGlobal = add2ePowerGlobalMax(item, sort);
-  const isGlobal = maxGlobal > 0;
-  const flagKey = isGlobal ? "global_charges" : `charges_${sort.system.powerIndex}`;
-  const max = isGlobal ? maxGlobal : Math.max(0, Number(sort.system.max || 1) || 1);
   return {
-    descriptor: {
-      id: `${item.uuid ?? item.id}:power-charge:${isGlobal ? "global" : sort.system.powerIndex}`,
+    descriptor: cost > 0 ? {
+      id: `${item.uuid ?? item.id}:power-charge:global`,
       type: "magic-item-charge",
       label: `${item.name} — ${sort.name}`,
       document: item,
       actor,
       item,
-      target: isGlobal ? "global" : String(sort.system.powerIndex ?? "power"),
+      target: "global",
       get current() {
-        return add2ePowerReadCurrent(item, flagKey, max, isGlobal);
+        return Math.max(0, Number(globalThis.add2eObjectPowerCurrentCharges(item, power, index)) || 0);
       },
       maximum: max,
       cost,
-      recoveryPeriod: norm(item.system?.charges?.recoveryPeriod ?? item.system?.recharge ?? item.system?.rechargement ?? ""),
+      recoveryPeriod: norm(item.system?.charges?.recharge?.type ?? ""),
       source: {
         kind: "magic-item",
         id: String(item.id ?? ""),
@@ -363,17 +345,18 @@ function add2ePowerResource(actor, item, sort, cost) {
         name: String(item.name ?? "Objet magique")
       },
       context: {
-        powerIndex: sort.system.powerIndex,
+        powerIndex: index,
         spellId: sort.id,
         spellName: sort.name,
-        globalCharges: isGlobal,
+        globalCharges: true,
         consumer: "06-cast-spell"
       },
-      write: next => add2ePowerWriteCurrent(item, flagKey, next, max, isGlobal)
-    },
-    flagKey,
+      write: next => globalThis.add2eObjectPowerSetCharges(item, power, index, next)
+    } : null,
+    power,
+    index,
     max,
-    isGlobal
+    cost
   };
 }
 
@@ -476,10 +459,9 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
       ui.notifications.error("Objet source introuvable.");
       return false;
     }
-    const rawCost = sort.system.cost ?? sort.system.cout;
-    const cost = rawCost === undefined || rawCost === null || rawCost === "" ? 1 : Math.max(0, Math.floor(Number(rawCost) || 0));
+    const power = add2ePowerResource(actor, weapon, sort);
+    const cost = power.cost;
     if (cost > 0) {
-      const power = add2ePowerResource(actor, weapon, sort, cost);
       resource = power.descriptor;
       const availability = resourceEngine.checkResourceAvailability(resource, {
         cost,
@@ -492,10 +474,8 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
       reservedCost = {
         kind: "power",
         weapon,
-        flagKey: power.flagKey,
         max: power.max,
         cost,
-        isGlobal: power.isGlobal,
         potion: add2ePowerIsPotion(weapon),
         before: availability.current,
         after: Math.max(0, availability.current - availability.cost)
