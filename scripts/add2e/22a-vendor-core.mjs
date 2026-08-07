@@ -675,8 +675,7 @@ async function recordProjectileSpent({ actor, projectile, quantity: qty = 1 }) {
     itemId: projectile?.id,
     itemName: projectile?.name,
     img: projectile?.img,
-    quantity: Math.max(1, Math.floor(num(qty, 1))
-    )
+    quantity: Math.max(1, Math.floor(num(qty, 1)))
   };
 
   if (!payload.actorId || !(payload.itemId || payload.itemName)) return false;
@@ -896,7 +895,6 @@ export function patchAttackRollProjectileConsumption() {
 
 function bindMoneyInputs(sheet, root) {
   const actor = sheet?.actor ?? sheet?.document;
-  const root = sheet?.element?.jquery ? sheet.element[0] : sheet?.element;
   if (!actor || !root?.querySelectorAll) return;
   if (root.dataset?.add2eMoneyBound === "1") return;
   if (root.dataset) root.dataset.add2eMoneyBound = "1";
