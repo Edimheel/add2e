@@ -26,6 +26,17 @@ const HUMANOIDS = new Set([
   "gnoll", "ogre", "troll", "lizardman", "lizardfolk", "homme_lezard", "homme-lezard"
 ]);
 
+function resourceEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!engine
+    || typeof engine.checkResourceAvailability !== "function"
+    || typeof engine.consumeResources !== "function"
+    || typeof engine.recoverResources !== "function") {
+    throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour les pouvoirs magiques.");
+  }
+  return engine;
+}
+
 function constraintSources(power) {
   const effects = Array.isArray(power?.effects) ? power.effects : [];
   const constrained = effects.filter(effect => CONSTRAINT_KEYS.some(key => hasValue(effect?.[key])));
@@ -187,8 +198,116 @@ function frequencyMessage(spec, remaining) {
   return `Ce pouvoir est limité à une utilisation par ${label}. Il sera de nouveau disponible dans ${remaining} round(s) ADD2E.`;
 }
 
+function usagePreviousStamp(item, power, index, target = null) {
+  const state = item.getFlag?.("add2e", USAGE_FLAG) ?? {};
+  const entry = state?.[usageKey(power, index)] ?? {};
+  if (!target) return entry.global ?? null;
+  return entry.targets?.[String(target.uuid ?? target.id)] ?? null;
+}
+
+function usageRemaining(item, power, index, spec, target = null) {
+  const previous = usagePreviousStamp(item, power, index, target);
+  if (!previous) return 0;
+  return Math.max(0, spec.rounds - elapsedRounds(previous, usageStamp()));
+}
+
+function usageResource(actor, item, power, index, spec, target = null) {
+  const key = usageKey(power, index);
+  const targetKey = target ? String(target.uuid ?? target.id) : "global";
+  let rollbackStamp;
+  let rollbackCaptured = false;
+  return {
+    id: `${item.uuid ?? item.id}:magic-power-usage:${key}:${targetKey}`,
+    type: target ? "magic-power-frequency-target" : "magic-power-frequency",
+    label: target ? `${powerName(power, item)} — ${target.name}` : powerName(power, item),
+    document: item,
+    actor,
+    item,
+    target: targetKey,
+    get current() {
+      return usageRemaining(item, power, index, spec, target) <= 0 ? 1 : 0;
+    },
+    maximum: 1,
+    cost: 1,
+    recovery: 1,
+    recoveryPeriod: spec.unit,
+    source: {
+      kind: "magic-power",
+      id: String(item.id ?? ""),
+      uuid: String(item.uuid ?? ""),
+      name: String(item.name ?? "Objet magique")
+    },
+    context: {
+      powerKey: key,
+      powerIndex: index,
+      frequency: spec,
+      targetUuid: target ? String(target.uuid ?? target.id) : null,
+      consumer: "magic-power-effects/execution"
+    },
+    write: async next => {
+      const state = cloneUsage(item.getFlag?.("add2e", USAGE_FLAG) ?? {});
+      const entry = state[key] && typeof state[key] === "object" ? state[key] : {};
+      if (!rollbackCaptured && next <= 0) {
+        rollbackStamp = cloneUsage(target ? entry.targets?.[targetKey] ?? null : entry.global ?? null);
+        rollbackCaptured = true;
+      }
+      if (target) {
+        entry.targets = entry.targets && typeof entry.targets === "object" ? entry.targets : {};
+        if (next <= 0) entry.targets[targetKey] = usageStamp();
+        else if (rollbackStamp) entry.targets[targetKey] = rollbackStamp;
+        else delete entry.targets[targetKey];
+        if (!Object.keys(entry.targets).length) delete entry.targets;
+      } else {
+        if (next <= 0) entry.global = usageStamp();
+        else if (rollbackStamp) entry.global = rollbackStamp;
+        else delete entry.global;
+      }
+      entry.updatedAt = usageStamp();
+      state[key] = entry;
+      await item.setFlag("add2e", USAGE_FLAG, state);
+    }
+  };
+}
+
+function chargeResource(actor, item, power, index, cost) {
+  if (typeof globalThis.add2eObjectPowerCurrentCharges !== "function"
+    || typeof globalThis.add2eObjectPowerSetCharges !== "function") {
+    throw new Error("Le propriétaire des charges d’objet magique est indisponible.");
+  }
+  const maximum = typeof globalThis.add2eObjectPowerMaxCharges === "function"
+    ? Math.max(0, Number(globalThis.add2eObjectPowerMaxCharges(item, power, index)) || 0)
+    : null;
+  return {
+    id: `${item.uuid ?? item.id}:magic-power-charge:${index}`,
+    type: "magic-item-charge",
+    label: `${item.name} — ${powerName(power, item)}`,
+    document: item,
+    actor,
+    item,
+    target: String(index),
+    get current() {
+      return Math.max(0, Number(globalThis.add2eObjectPowerCurrentCharges(item, power, index)) || 0);
+    },
+    maximum,
+    cost,
+    recovery: cost,
+    source: {
+      kind: "magic-item",
+      id: String(item.id ?? ""),
+      uuid: String(item.uuid ?? ""),
+      name: String(item.name ?? "Objet magique")
+    },
+    context: {
+      powerIndex: index,
+      powerKey: usageKey(power, index),
+      consumer: "magic-power-effects/execution"
+    },
+    write: next => globalThis.add2eObjectPowerSetCharges(item, power, index, next)
+  };
+}
+
 async function validateConstraints(actor, item, power, index, sheet) {
-  const usage = { global: null, perTarget: null, targets: [] };
+  const usage = { global: null, perTarget: null, targets: [], resources: [] };
   const checkedActors = new Map();
   for (const effect of constraintSources(power)) {
     const parameters = resolveExecutionParameters(power, effect);
@@ -246,44 +365,26 @@ async function validateConstraints(actor, item, power, index, sheet) {
     usage.perTarget ??= frequencySpec(parameters.frequencyPerTarget ?? effect.frequencyPerTarget, true);
   }
   usage.targets = [...checkedActors.values()];
-
-  const state = item.getFlag?.("add2e", USAGE_FLAG) ?? {};
-  const entry = state?.[usageKey(power, index)] ?? {};
-  const stamp = usageStamp();
-  if (usage.global && entry.global) {
-    const elapsed = elapsedRounds(entry.global, stamp);
-    if (elapsed < usage.global.rounds) {
-      ui.notifications.warn(frequencyMessage(usage.global, usage.global.rounds - elapsed));
-      return { ok: false, reason: "frequency-global", usage };
-    }
-  }
+  if (usage.global) usage.resources.push(usageResource(actor, item, power, index, usage.global));
   if (usage.perTarget) {
-    const blocked = usage.targets.filter(target => {
-      const previous = entry.targets?.[String(target.uuid ?? target.id)];
-      return previous && elapsedRounds(previous, stamp) < usage.perTarget.rounds;
+    for (const target of usage.targets) usage.resources.push(usageResource(actor, item, power, index, usage.perTarget, target));
+  }
+
+  const engine = resourceEngine();
+  for (const resource of usage.resources) {
+    const availability = engine.checkResourceAvailability(resource, {
+      cost: 1,
+      consumer: "magic-power-effects/frequency-check"
     });
-    if (blocked.length) {
-      ui.notifications.warn(`Fréquence par cible non écoulée pour : ${blocked.map(target => target.name).join(", ")}.`);
-      return { ok: false, reason: "frequency-per-target", usage };
-    }
+    if (availability.ok) continue;
+    const target = usage.targets.find(candidate => String(candidate.uuid ?? candidate.id) === String(resource.target));
+    const spec = target ? usage.perTarget : usage.global;
+    const remaining = spec ? usageRemaining(item, power, index, spec, target ?? null) : 0;
+    if (target) ui.notifications.warn(`Fréquence par cible non écoulée pour : ${target.name}.`);
+    else ui.notifications.warn(frequencyMessage(spec, remaining));
+    return { ok: false, reason: target ? "frequency-per-target" : "frequency-global", usage };
   }
   return { ok: true, usage };
-}
-
-async function recordUsage(item, power, index, usage) {
-  if (!usage?.global && !usage?.perTarget) return;
-  const state = cloneUsage(item.getFlag?.("add2e", USAGE_FLAG) ?? {});
-  const key = usageKey(power, index);
-  const entry = state[key] && typeof state[key] === "object" ? state[key] : {};
-  const stamp = usageStamp();
-  if (usage.global) entry.global = stamp;
-  if (usage.perTarget) {
-    entry.targets = entry.targets && typeof entry.targets === "object" ? entry.targets : {};
-    for (const target of usage.targets ?? []) entry.targets[String(target.uuid ?? target.id)] = stamp;
-  }
-  entry.updatedAt = stamp;
-  state[key] = entry;
-  await item.setFlag("add2e", USAGE_FLAG, state);
 }
 
 async function assisted(actor, item, power, unresolvedTypes = []) {
@@ -340,6 +441,23 @@ async function executeRegisteredEffects(actor, item, power, index, sheet = null)
   return executionResult("skipped", { ok: false, complete: false, results, unresolvedTypes });
 }
 
+async function reserveResources(resources) {
+  if (!resources.length) return { ok: true, resources: [] };
+  return resourceEngine().consumeResources(resources, {
+    reason: "magic-power-execution-reserve",
+    consumer: "magic-power-effects/execution"
+  });
+}
+
+async function refundResources(resources, reason = "magic-power-execution-refund") {
+  if (!resources.length) return true;
+  const result = await resourceEngine().recoverResources(resources, {
+    reason,
+    consumer: "magic-power-effects/execution"
+  });
+  return result.ok === true;
+}
+
 export async function executePower(actor, item, power, index = 0, sheet = null) {
   if (!actor || !item || power?.kind !== "catalogue") {
     ui.notifications.error("Pouvoir du catalogue introuvable.");
@@ -353,13 +471,21 @@ export async function executePower(actor, item, power, index = 0, sheet = null) 
   const preflight = await validateConstraints(actor, item, clean, index, sheet);
   if (!preflight.ok) return false;
   if (!await confirmPower(actor, item, clean)) return false;
+
   const linked = !!linkedSpellEffect(clean);
   const cost = powerCost(clean);
-  const current = linked ? 0 : Number(globalThis.add2eObjectPowerCurrentCharges?.(item, clean, index)) || 0;
-  if (!linked && cost > 0 && current < cost) {
-    ui.notifications.warn(`${item.name} n'a pas assez de charges.`);
+  const usageResources = [...(preflight.usage?.resources ?? [])];
+  const localChargeResource = !linked && cost > 0 ? chargeResource(actor, item, clean, index, cost) : null;
+  const resources = localChargeResource ? [...usageResources, localChargeResource] : usageResources;
+  const reservation = await reserveResources(resources);
+  if (!reservation.ok) {
+    const unavailable = reservation.resources?.[0] ?? null;
+    ui.notifications.warn(unavailable
+      ? `${unavailable.label} n'est pas disponible (${unavailable.current}/${unavailable.cost}).`
+      : "La ressource nécessaire à ce pouvoir n'est plus disponible.");
     return false;
   }
+
   try {
     let result;
     if (passivePower(clean)) {
@@ -373,21 +499,31 @@ export async function executePower(actor, item, power, index = 0, sheet = null) 
     } else {
       result = normalizeExecutionResult(await linkedPower(actor, item, clean, index));
       if (result.status === "skipped") result = await executeRegisteredEffects(actor, item, clean, index, sheet);
-      if (result.status === "cancelled") return false;
-      if (linked && !result.ok) return false;
+      if (result.status === "cancelled") {
+        await refundResources(resources, "magic-power-cancelled");
+        return false;
+      }
+      if (linked && !result.ok) {
+        await refundResources(usageResources, "magic-power-linked-failed");
+        return false;
+      }
       if (!result.ok) result = await assisted(actor, item, clean, result.unresolvedTypes ?? effectTypes(clean));
     }
-    if (result.ok && cost > 0 && result.chargesManaged !== true && result.consumeCharges !== false) {
-      await globalThis.add2eObjectPowerSetCharges?.(item, clean, index, current - cost);
+
+    if (!result.ok) {
+      await refundResources(resources, "magic-power-failed");
+      return false;
     }
-    if (result.ok) {
-      await recordUsage(item, clean, index, preflight.usage);
-      sheet?._add2eRememberActiveTab?.();
-      sheet?.render?.(false);
-      return true;
+
+    if (localChargeResource && (result.chargesManaged === true || result.consumeCharges === false)) {
+      await refundResources([localChargeResource], "magic-power-charge-not-consumed");
     }
-    return false;
+
+    sheet?._add2eRememberActiveTab?.();
+    sheet?.render?.(false);
+    return true;
   } catch (error) {
+    await refundResources(resources, "magic-power-execution-error");
     console.error("[ADD2E][MAGIC_POWER_EFFECTS][EXECUTION]", {
       actor: actor.name,
       item: item.name,
