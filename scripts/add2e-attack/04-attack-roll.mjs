@@ -45,7 +45,7 @@ import {
   add2eCreateAttackChatCards
 } from "./04i-attack-roll-chat-card.mjs";
 
-const ADD2E_ATTACK_VERSION = "2026-08-07-automatic-hybrid-weapon-resolution-v7";
+const ADD2E_ATTACK_VERSION = "2026-08-07-automatic-hybrid-weapon-resolution-v8";
 const ADD2E_ATTACK_SNAPSHOT_VERSION = "2026-07-24-attack-resolution-snapshot-v1";
 const ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS = 1500;
 
@@ -151,6 +151,7 @@ function add2eAttackBuildContactWeaponView(weapon) {
   const sourceSystem = weapon?.system ?? {};
   const contactSystem = {
     ...sourceSystem,
+    add2eSuppressMagicRange: true,
     categorie: "melee",
     category: "melee",
     arme_de_jet: false,
@@ -162,6 +163,18 @@ function add2eAttackBuildContactWeaponView(weapon) {
     porteeCourte: 0,
     porteeMoyenne: 0,
     porteeLongue: 0,
+    portee_short: 0,
+    porteeShort: 0,
+    short_range: 0,
+    shortRange: 0,
+    portee_medium: 0,
+    porteeMedium: 0,
+    medium_range: 0,
+    mediumRange: 0,
+    portee_long: 0,
+    porteeLong: 0,
+    long_range: 0,
+    longRange: 0,
     tags: add2eAttackStripThrownTags(sourceSystem.tags),
     effectTags: add2eAttackStripThrownTags(sourceSystem.effectTags),
     effecttags: add2eAttackStripThrownTags(sourceSystem.effecttags)
