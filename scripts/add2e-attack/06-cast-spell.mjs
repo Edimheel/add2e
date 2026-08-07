@@ -1,6 +1,6 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs, parchemins et composants.
-// Version : 2026-08-06-canonical-resource-cast-v1
+// Version : 2026-08-07-canonical-resource-cast-v2
 
 import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
@@ -460,8 +460,9 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
     if (onUseManagesSpellComponents(scriptPath, spellToUse)) return true;
     componentReservation = await api.add2eReserveSpellComponents(actor, spellToUse);
     if (componentReservation?.blocked) {
+      const blockedMessage = componentReservation.message;
       componentReservation = null;
-      ui.notifications.warn(componentReservation?.message || "Composant matériel manquant.");
+      ui.notifications.warn(blockedMessage || "Composant matériel manquant.");
       return false;
     }
     return true;
@@ -534,7 +535,14 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
   if (divineFailure.failed) {
     if (!resource) {
       await refundComponents("échec divin sans ressource");
-      throw new Error("La ressource mémorisée du sort divin est introuvable.");
+      console.error("[ADD2E][CAST_SPELL][DIVINE_FAILURE_RESOURCE_MISSING]", {
+        actor: actor.name,
+        sort: sort.name,
+        sortId: sort.id,
+        castMode
+      });
+      ui.notifications.error("L’échec divin a été résolu, mais la ressource mémorisée du sort est introuvable.");
+      return false;
     }
     const consumed = await resourceEngine.consumeResource(resource, {
       reason: "divine-spell-failure",
