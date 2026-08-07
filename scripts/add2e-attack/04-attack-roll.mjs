@@ -45,7 +45,7 @@ import {
   add2eCreateAttackChatCards
 } from "./04i-attack-roll-chat-card.mjs";
 
-const ADD2E_ATTACK_VERSION = "2026-08-03-canonical-armor-classification-v6";
+const ADD2E_ATTACK_VERSION = "2026-08-07-automatic-hybrid-weapon-resolution-v7";
 const ADD2E_ATTACK_SNAPSHOT_VERSION = "2026-07-24-attack-resolution-snapshot-v1";
 const ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS = 1500;
 
@@ -116,6 +116,223 @@ function add2eResolveAttackSourceToken(actor) {
     ?? actor?.token?.object
     ?? actor?.token
     ?? null;
+}
+
+function add2eAttackUsageArray(value) {
+  if (Array.isArray(value)) return value.flatMap(add2eAttackUsageArray).filter(Boolean);
+  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(part => part.trim()).filter(Boolean);
+  return value === null || value === undefined || value === "" ? [] : [value];
+}
+
+function add2eAttackUsageNormalize(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[\s-]+/g, "_")
+    .replace(/_+/g, "_");
+}
+
+function add2eAttackStripThrownTags(value) {
+  const removed = new Set([
+    "projectile_lance",
+    "usage:lancer",
+    "usage:jet",
+    "usage:arme_de_jet",
+    "categorie:projectile_lance",
+    "trait:arme_de_jet",
+    "type:arme_de_jet"
+  ]);
+  return add2eAttackUsageArray(value).filter(tag => !removed.has(add2eAttackUsageNormalize(tag)));
+}
+
+function add2eAttackBuildContactWeaponView(weapon) {
+  const sourceSystem = weapon?.system ?? {};
+  const contactSystem = {
+    ...sourceSystem,
+    categorie: "melee",
+    category: "melee",
+    arme_de_jet: false,
+    armeDeJet: false,
+    isThrown: false,
+    portee_courte: 0,
+    portee_moyenne: 0,
+    portee_longue: 0,
+    porteeCourte: 0,
+    porteeMoyenne: 0,
+    porteeLongue: 0,
+    tags: add2eAttackStripThrownTags(sourceSystem.tags),
+    effectTags: add2eAttackStripThrownTags(sourceSystem.effectTags),
+    effecttags: add2eAttackStripThrownTags(sourceSystem.effecttags)
+  };
+
+  return new Proxy(weapon, {
+    get(target, property, receiver) {
+      if (property !== "system") return Reflect.get(target, property, receiver);
+      return contactSystem;
+    }
+  });
+}
+
+function add2eAttackResolveWeaponUsage({ actor, weapon, srcToken, cibleToken, auContact }) {
+  const resolver = globalThis.add2eGetWeaponUsageProfile;
+  if (typeof resolver !== "function") {
+    throw new Error("Le profil canonique ADD2E des usages d’armes est indisponible.");
+  }
+
+  const profile = resolver(weapon);
+  if (profile.isHybrid && (!srcToken || !cibleToken)) {
+    ui.notifications?.warn?.("Impossible de déterminer automatiquement l’usage de cette arme : token source ou cible manquant.");
+    return { ok: false, profile, mode: null, isContactAttack: false, weapon };
+  }
+
+  let mode = "other";
+  if (profile.isProjectilePropulse) mode = "projectile";
+  else if (profile.isThrown) mode = profile.isHybrid && auContact ? "contact" : "throw";
+  else if (profile.isContact) mode = "contact";
+
+  const attackWeapon = profile.isHybrid && mode === "contact"
+    ? add2eAttackBuildContactWeaponView(weapon)
+    : weapon;
+
+  return {
+    ok: true,
+    profile,
+    mode,
+    isContactAttack: mode === "contact",
+    weapon: attackWeapon
+  };
+}
+
+async function add2eAttackValidateThrownAvailability({ actor, sourceWeapon, mode }) {
+  if (mode !== "throw") return true;
+  const validator = globalThis.add2eValidateWeaponAttackAvailability;
+  if (typeof validator !== "function") {
+    throw new Error("Le validateur canonique ADD2E des armes lancées est indisponible.");
+  }
+  return validator({ actor, weapon: sourceWeapon, mode: "throw", notify: true });
+}
+
+async function add2eAttackConsumeThrownWeapon({ actor, sourceWeapon, mode }) {
+  if (mode !== "throw") return { ok: true, spent: 0 };
+  const api = globalThis.ADD2E_CONSUMABLES ?? game?.add2e?.consumables;
+  if (typeof api?.add2eConsumeThrownWeapon !== "function") {
+    console.error("[ADD2E][ATTAQUE][THROWN_CONSUME][API_MISSING]", { actor: actor?.name, weapon: sourceWeapon?.name });
+    return { ok: false, reason: "consumable-api-unavailable" };
+  }
+  return api.add2eConsumeThrownWeapon(actor, sourceWeapon, 1);
+}
+
+async function add2eAttackRunActionGateOnUse({ gateResults = [], actor, cible, sourceToken, targetToken, weapon, contact = false, actionTags = [] } = {}) {
+  for (const result of gateResults) {
+    if (result?.kind !== "save_gate") continue;
+    const rule = result?.rule ?? {};
+    const scriptPath = String(rule.onUse ?? rule.handler?.onUse ?? "").trim();
+    if (!scriptPath) continue;
+
+    try {
+      const response = await fetch(scriptPath, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const code = await response.text();
+      const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+      const effect = result?.source?.effect ?? null;
+      const effectActor = result?.source?.actor ?? cible ?? null;
+      const event = {
+        add2eMode: String(rule.onUseMode ?? rule.handler?.mode ?? "actionGateResolved"),
+        actionGate: {
+          kind: result.kind,
+          allowed: result.allowed !== false,
+          label: result.label ?? "",
+          save: result.save ?? null,
+          rule
+        },
+        effect,
+        effectId: effect?.id ?? null,
+        effectFlags: effect?.flags?.add2e ?? {},
+        action: {
+          type: "attaque",
+          actor,
+          sourceActor: actor,
+          sourceToken,
+          targetActor: cible,
+          targetToken,
+          weapon,
+          contact,
+          actionTags
+        }
+      };
+      const handler = new AsyncFunction("actor", "item", "sort", "token", "args", "sourceItem", code);
+      await handler.call(effect, effectActor, null, null, targetToken, [event], null);
+    } catch (error) {
+      console.error("[ADD2E][ACTION_GATE][ONUSE][ERROR]", {
+        scriptPath,
+        actor: actor?.name,
+        target: cible?.name,
+        error
+      });
+    }
+  }
+}
+
+async function add2eResolveAttackActionGate({ actor, cible, sourceToken, targetToken, weapon, contact = false } = {}) {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (typeof engine?.evaluateActionRules !== "function" || !actor || !weapon || !cible) {
+    return { allowed: true, details: [] };
+  }
+
+  const actionTags = add2eGetCombatStatProfile(weapon).tags ?? [];
+  const action = {
+    type: "attaque",
+    actor,
+    sourceActor: actor,
+    sourceToken,
+    targetActor: cible,
+    targetToken,
+    weapon,
+    contact,
+    actionTags
+  };
+  const actorTags = engine.getContextTags?.(actor) ?? engine.getActiveTags?.(actor) ?? [];
+  const targetTags = engine.getContextTags?.(cible) ?? engine.getActiveTags?.(cible) ?? [];
+
+  const ownerRules = await engine.evaluateActionRules(actor, {
+    ...action,
+    ruleScope: "owner",
+    subjectTags: targetTags
+  });
+  await add2eAttackRunActionGateOnUse({
+    gateResults: ownerRules.gateResults,
+    actor,
+    cible,
+    sourceToken,
+    targetToken,
+    weapon,
+    contact,
+    actionTags
+  });
+  if (ownerRules.allowed === false) return { allowed: false, details: ownerRules.details ?? [] };
+
+  const targetRules = await engine.evaluateActionRules(cible, {
+    ...action,
+    ruleScope: "target",
+    subjectTags: actorTags,
+    saveActor: actor
+  });
+  await add2eAttackRunActionGateOnUse({
+    gateResults: targetRules.gateResults,
+    actor,
+    cible,
+    sourceToken,
+    targetToken,
+    weapon,
+    contact,
+    actionTags
+  });
+  return {
+    allowed: targetRules.allowed !== false,
+    details: targetRules.details ?? []
+  };
 }
 
 function add2eResolveAttackThac0(actor) {
@@ -506,6 +723,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   if (!arme) return ui.notifications.warn("Arme introuvable !");
   if (!arme.system.equipee) return ui.notifications.warn(`L'arme "${arme.name}" n'est pas équipée !`);
 
+  const sourceWeapon = arme;
   const srcToken = add2eResolveAttackSourceToken(actor);
   const chatImg = srcToken?.document?.texture?.src || srcToken?.texture?.src || actor.img;
   const cibleToken = Array.from(game.user.targets ?? [])[0];
@@ -513,7 +731,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   const cible = add2eResolveAttackTokenActor(cibleToken);
   if (!cible) return ui.notifications.warn("La cible sélectionnée n'a pas d'acteur utilisable.");
 
-  const invocationKey = add2eBuildAttackInvocationKey({ actor, arme, cibleToken });
+  const invocationKey = add2eBuildAttackInvocationKey({ actor, arme: sourceWeapon, cibleToken });
   if (!add2eEnterAttackInvocationGuard(invocationKey, diagId)) return false;
 
   const { distanceCible, auContact } = add2eAttackMeasureContactAndDistance({
@@ -521,8 +739,36 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
     cibleToken,
     measureDistance: add2eMeasureTokenGridDistance
   });
+
+  const weaponUsage = add2eAttackResolveWeaponUsage({
+    actor,
+    weapon: sourceWeapon,
+    srcToken,
+    cibleToken,
+    auContact
+  });
+  if (weaponUsage.ok === false) return false;
+
+  const available = await add2eAttackValidateThrownAvailability({
+    actor,
+    sourceWeapon,
+    mode: weaponUsage.mode
+  });
+  if (!available) return false;
+
+  arme = weaponUsage.weapon;
   const rangeValidation = add2eAttackValidateRange({ arme, distanceCible, auContact });
   if (!rangeValidation.ok) return false;
+
+  const actionGate = await add2eResolveAttackActionGate({
+    actor,
+    cible,
+    sourceToken: srcToken,
+    targetToken: cibleToken,
+    weapon: arme,
+    contact: weaponUsage.isContactAttack
+  });
+  if (actionGate.allowed === false) return false;
 
   const preCombatProfile = add2eGetCombatStatProfile(arme);
   const backstabInfo = add2eGetBackstabInfo(actor);
@@ -531,7 +777,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   const defaultPositionInfo = add2eBuildManualPositionInfo("front", backArcInfo);
   const positionAttackAdjustment = add2eBuildPositionAttackAdjustment(cible, defaultPositionInfo);
   const specialAttackWeaponCompatible = !preCombatProfile.isProjectilePropulse;
-  const specialAttackPositionCompatible = auContact;
+  const specialAttackPositionCompatible = weaponUsage.isContactAttack;
   const canUseBackstab = backstabInfo.available && backstabInfo.multiplier > 1 && specialAttackWeaponCompatible && specialAttackPositionCompatible;
   const canUseAssassination = assassinationInfo.available && assassinationInfo.score > 0 && specialAttackWeaponCompatible && specialAttackPositionCompatible;
   const attackDistanceLabel = add2eAttackBuildDistanceLabel({ auContact, isDistanceWeapon: rangeValidation.isDistanceWeapon, distanceCible });
@@ -617,7 +863,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         type: "attaque",
         actionType: "attaque",
         ruleScope: "owner",
-        contact: auContact,
+        contact: weaponUsage.isContactAttack,
         distance: distanceCible,
         range: distanceCible,
         rangeBand: typePortee,
@@ -739,7 +985,8 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         diagId,
         actor: actor.name,
         target: cible.name,
-        weapon: arme.name,
+        weapon: sourceWeapon.name,
+        attackMode: weaponUsage.mode,
         totalBonusToucher,
         totalBonusDegats,
         snapshot,
@@ -779,7 +1026,14 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         ajustementCA,
         snapshot
       });
-      await add2eConsumeOneUseWeaponAfterAttack(actor, arme);
+
+      await add2eConsumeOneUseWeaponAfterAttack(actor, sourceWeapon);
+      const consumedThrown = await add2eAttackConsumeThrownWeapon({
+        actor,
+        sourceWeapon,
+        mode: weaponUsage.mode
+      });
+      if (consumedThrown?.ok === false) return false;
       return true;
     }
   });
