@@ -2,7 +2,7 @@
 // Les projectiles dépensés en jeu passent par ce cœur vendeur et le relais MJ générique ADD2E_GM_OPERATION.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_VENDOR_VERSION = "2026-08-07-vendor-v24-compatible-projectile-resource";
+export const ADD2E_VENDOR_VERSION = "2026-08-07-vendor-v25-thrown-recovery";
 export const VENDOR_SCOPE = "add2e";
 export const VENDOR_NAME = "Marchand de composants et projectiles";
 export const VENDOR_FOLDER = "ADD2E — Boutique";
@@ -69,9 +69,10 @@ function projectileResourceEngine() {
 
 function projectileResource(actor, projectile, { cost = 0, recovery = 0 } = {}) {
   if (!actor || !projectile) throw new Error("Projectile ou acteur introuvable pour la ressource canonique.");
+  const resourceKind = isThrownWeapon(projectile) ? "thrown-weapon" : "ammunition";
   return {
     id: `${projectile.uuid ?? projectile.id}:projectile-stack`,
-    type: "ammunition",
+    type: resourceKind,
     label: projectile.name,
     document: projectile,
     actor,
@@ -84,7 +85,7 @@ function projectileResource(actor, projectile, { cost = 0, recovery = 0 } = {}) 
     cost: Math.max(0, Math.floor(num(cost, 0))),
     recovery: Math.max(0, Math.floor(num(recovery, 0))),
     source: {
-      kind: "ammunition",
+      kind: resourceKind,
       id: String(projectile.id ?? ""),
       uuid: String(projectile.uuid ?? ""),
       name: String(projectile.name ?? "Projectile")
@@ -132,6 +133,51 @@ export function isAmmunition(item) {
   if (fields.some(v => accepted.has(v))) return true;
   if (t.some(v => accepted.has(v) || v.startsWith("munition:") || v.startsWith("projectile:"))) return true;
   return /\b(fleche|fleches|flèche|flèches|carreau|carreaux|trait|traits|bille|billes|pierre de fronde|pierres de fronde)\b/.test(name);
+}
+
+function isThrownWeapon(item) {
+  if (!item || isAmmunition(item)) return false;
+
+  const profile = globalThis.add2eGetWeaponUsageProfile?.(item);
+  if (profile && typeof profile === "object") return profile.isThrown === true;
+
+  const type = lower(item?.type);
+  if (!["arme", "weapon"].includes(type)) return false;
+
+  const s = item?.system ?? {};
+  const category = slug(s.categorie ?? s.category ?? "");
+  const t = tags(item);
+  const propelled = category === "projectile_propulse" || t.some(value => [
+    "projectile_propulse",
+    "usage:projectile_propulse",
+    "categorie:projectile_propulse",
+    "trait:projectile_propulse",
+    "type:projectile_propulse",
+    "arme:projectile_propulse"
+  ].includes(value));
+  if (propelled) return false;
+
+  return s.arme_de_jet === true
+    || s.armeDeJet === true
+    || s.isThrown === true
+    || category === "projectile_lance"
+    || t.some(value => [
+      "projectile_lance",
+      "usage:lancer",
+      "usage:jet",
+      "usage:arme_de_jet",
+      "categorie:projectile_lance",
+      "trait:arme_de_jet",
+      "type:arme_de_jet"
+    ].includes(value));
+}
+
+function recoveryItemForEntry(actor, entry) {
+  const byId = entry?.itemId ? actor?.items?.get?.(entry.itemId) ?? null : null;
+  if (byId && (isAmmunition(byId) || isThrownWeapon(byId))) return byId;
+  return Array.from(actor?.items ?? []).find(item =>
+    item?.name === entry?.itemName && (isAmmunition(item) || isThrownWeapon(item))
+  ) ?? null;
 }
 
 export function isComponent(item) {
@@ -726,10 +772,10 @@ export async function spendProjectileForAttack({ actor, arme } = {}) {
 
 async function showRecovery(rows) {
   if (!rows?.length) return false;
-  const body = rows.map(r => `<tr><td>${esc(r.actor)}</td><td>${esc(r.item)}</td><td>${r.spent}</td><td>${r.recovered}</td></tr>`).join("");
+  const body = rows.map(r => `<tr><td>${esc(r.actor)}</td><td>${esc(r.item)}</td><td>${esc(r.typeLabel ?? "Projectile")}</td><td>${r.spent}</td><td>${r.recovered}</td></tr>`).join("");
   return dialog({
     title: "Récupération des projectiles",
-    content: `<h3>Récupération des projectiles</h3><p>60 % des projectiles dépensés sont récupérés.</p><table><thead><tr><th>Acteur</th><th>Projectile</th><th>Dépensés</th><th>Récupérés</th></tr></thead><tbody>${body}</tbody></table>`
+    content: `<h3>Récupération des projectiles</h3><p>Les munitions ordinaires sont récupérées à 60 %. Les armes lancées sont ramassées intégralement.</p><table><thead><tr><th>Acteur</th><th>Projectile</th><th>Type</th><th>Dépensés</th><th>Récupérés</th></tr></thead><tbody>${body}</tbody></table>`
   });
 }
 
@@ -752,14 +798,25 @@ export async function recoverProjectilesForCombat(combat) {
       const spentQty = Math.max(0, Math.floor(num(ie.spent, 0)));
       if (!spentQty) continue;
 
-      const recovered = Math.max(0, Math.round(spentQty * RECOVERY_RATE));
-      const item = actor.items?.get(ie.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === ie.itemName && isAmmunition(i));
-      if (item && recovered) {
+      const item = recoveryItemForEntry(actor, ie);
+      const thrown = isThrownWeapon(item);
+      const recovered = item
+        ? thrown ? spentQty : Math.max(0, Math.round(spentQty * RECOVERY_RATE))
+        : 0;
+
+      if (!item) {
+        console.warn("[ADD2E][PROJECTILES][RECOVERY][ITEM_MISSING]", {
+          actor: actor.name,
+          itemId: ie.itemId ?? null,
+          itemName: ie.itemName ?? "Projectile",
+          spent: spentQty
+        });
+      } else if (recovered) {
         const result = await projectileResourceEngine().recoverResource(
           projectileResource(actor, item, { recovery: recovered }),
           {
             amount: recovered,
-            reason: "projectile-combat-recovery",
+            reason: thrown ? "thrown-weapon-combat-recovery" : "projectile-combat-recovery",
             consumer: "22a-vendor-core"
           }
         );
@@ -772,7 +829,15 @@ export async function recoverProjectilesForCombat(combat) {
         }
       }
 
-      const row = { actor: actor.name, actorId: actor.id, item: ie.itemName, spent: spentQty, recovered };
+      const row = {
+        actor: actor.name,
+        actorId: actor.id,
+        item: ie.itemName,
+        type: thrown ? "thrown-weapon" : "ammunition",
+        typeLabel: thrown ? "Arme lancée" : "Munition",
+        spent: spentQty,
+        recovered
+      };
       rows.push(row);
 
       for (const user of game.users ?? []) {
@@ -919,7 +984,7 @@ export function registerGlobals() {
       resolveProjectileForAttack,
       spendProjectileForAttack,
       recoverProjectilesForCombat,
-      recordProjectileSpent: recordProjectileSpentLocal
+      recordProjectileSpent
     },
     vendorMoney: { coins: COINS, get: getMoney, set: setMoney, format: formatMoney, toCopper, fromCopper }
   });
