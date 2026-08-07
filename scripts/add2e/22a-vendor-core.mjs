@@ -2,7 +2,7 @@
 // Les projectiles dépensés en jeu passent par ce cœur vendeur et le relais MJ générique ADD2E_GM_OPERATION.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_VENDOR_VERSION = "2026-08-07-vendor-v23-canonical-projectile-resource";
+export const ADD2E_VENDOR_VERSION = "2026-08-07-vendor-v24-compatible-projectile-resource";
 export const VENDOR_SCOPE = "add2e";
 export const VENDOR_NAME = "Marchand de composants et projectiles";
 export const VENDOR_FOLDER = "ADD2E — Boutique";
@@ -541,12 +541,57 @@ function isEquippedProjectile(item) {
   return s.equipee === true || s.equiped === true || s.equipped === true || f.equippedProjectile === true || f.carquoisEquipe === true || f.selectedProjectile === true;
 }
 
-function findEquippedProjectile(actor) {
-  return Array.from(actor?.items ?? []).filter(isAmmunition).find(isEquippedProjectile) ?? null;
+function projectileCompatibilityKeys(arme) {
+  const text = `${lower(arme?.name)} ${tags(arme).join(" ")}`;
+  if (/\barbalete\b/.test(text)) return ["carreau", "carreaux", "bolt"];
+  if (/\barc\b/.test(text)) return ["fleche", "fleches", "arrow"];
+  if (/\bfronde\b/.test(text)) return ["bille", "billes", "pierre", "pierres", "bullet"];
+  return [];
 }
 
-function projectileSummary(actor) {
-  return Array.from(actor?.items ?? []).filter(isAmmunition).map(i => `${i.name} (${quantity(i)})`).join(", ");
+function projectileMatchesWeapon(projectile, arme) {
+  const keys = projectileCompatibilityKeys(arme);
+  if (!keys.length) return true;
+  const text = `${lower(projectile?.name)} ${tags(projectile).join(" ")}`;
+  return keys.some(key => text.includes(key));
+}
+
+function findEquippedProjectile(actor, arme = null) {
+  const compatible = Array.from(actor?.items ?? [])
+    .filter(isAmmunition)
+    .filter(isEquippedProjectile)
+    .filter(item => !arme || projectileMatchesWeapon(item, arme));
+  return compatible.find(item => quantity(item) > 0) ?? compatible[0] ?? null;
+}
+
+export function resolveProjectileForAttack({ actor, arme } = {}) {
+  const required = weaponRequiresProjectile(arme);
+  const compatibility = projectileCompatibilityKeys(arme);
+  if (!required) {
+    return { ok: true, required: false, ignored: !actorUsesProjectileInventory(actor), projectile: null, current: null, compatibility };
+  }
+  if (!actorUsesProjectileInventory(actor)) {
+    return { ok: true, required: true, ignored: true, projectile: null, current: null, compatibility };
+  }
+
+  const projectile = findEquippedProjectile(actor, arme);
+  const current = projectile ? quantity(projectile) : 0;
+  return {
+    ok: !!projectile && current > 0,
+    required: true,
+    ignored: false,
+    projectile,
+    current,
+    compatibility
+  };
+}
+
+function projectileSummary(actor, arme = null) {
+  return Array.from(actor?.items ?? [])
+    .filter(isAmmunition)
+    .filter(item => !arme || projectileMatchesWeapon(item, arme))
+    .map(i => `${i.name} (${quantity(i)})`)
+    .join(", ");
 }
 
 function emitGmOperation(operation, payload) {
@@ -586,14 +631,7 @@ async function recordProjectileSpentLocal(payload = {}) {
     ? await fromUuid(payload.actorUuid).catch(() => null)
     : game.actors?.get?.(payload.actorId) ?? null;
 
-  if (!actorUsesProjectileInventory(actor)) {
-    console.log("[ADD2E][PROJECTILES][SPENT][SKIP_NON_PERSONNAGE]", {
-      actor: actor?.name ?? payload.actorName,
-      type: actor?.type ?? payload.actorType,
-      payload
-    });
-    return false;
-  }
+  if (!actorUsesProjectileInventory(actor)) return false;
 
   const actorId = actor.id ?? payload.actorId;
   const itemKey = payload.itemId ?? payload.itemName ?? null;
@@ -618,17 +656,6 @@ async function recordProjectileSpentLocal(payload = {}) {
 
   await combat.setFlag(VENDOR_SCOPE, PROJECTILE_FLAG, spent);
   if (requestId) seen.add(requestId);
-
-  console.log("[ADD2E][PROJECTILES][SPENT][RECORDED]", {
-    version: ADD2E_VENDOR_VERSION,
-    combat: combat.id,
-    actor: spent[actorId].actorName,
-    actorId,
-    item: entry.itemName,
-    itemId: entry.itemId,
-    spent: entry.spent,
-    requestId
-  });
   return true;
 }
 
@@ -648,7 +675,8 @@ async function recordProjectileSpent({ actor, projectile, quantity: qty = 1 }) {
     itemId: projectile?.id,
     itemName: projectile?.name,
     img: projectile?.img,
-    quantity: Math.max(1, Math.floor(num(qty, 1)))
+    quantity: Math.max(1, Math.floor(num(qty, 1))
+    )
   };
 
   if (!payload.actorId || !(payload.itemId || payload.itemName)) return false;
@@ -658,16 +686,18 @@ async function recordProjectileSpent({ actor, projectile, quantity: qty = 1 }) {
 }
 
 export async function spendProjectileForAttack({ actor, arme } = {}) {
-  if (!actorUsesProjectileInventory(actor)) return { ok: true, required: false, spent: 0, ignored: true };
-  if (!weaponRequiresProjectile(arme)) return { ok: true, required: false, spent: 0 };
+  const resolved = resolveProjectileForAttack({ actor, arme });
+  if (!resolved.required) return { ok: true, required: false, spent: 0, ignored: resolved.ignored };
+  if (resolved.ignored) return { ok: true, required: true, spent: 0, ignored: true };
 
-  const projectile = findEquippedProjectile(actor);
-  const qty = quantity(projectile);
-  if (!projectile || qty <= 0) {
-    const detail = projectileSummary(actor);
+  const projectile = resolved.projectile;
+  if (!resolved.ok || !projectile) {
+    const detail = projectileSummary(actor, arme);
     await alertBox(
       "Projectile indisponible",
-      detail ? `Aucun projectile équipé avec une quantité disponible. Projectiles dans le carquois : ${detail}.` : "Aucun projectile disponible dans le carquois."
+      detail
+        ? `Aucun projectile compatible équipé avec une quantité disponible. Projectiles compatibles dans le carquois : ${detail}.`
+        : "Aucun projectile compatible disponible dans le carquois."
     );
     return { ok: false, required: true, spent: 0 };
   }
@@ -763,7 +793,6 @@ export async function recoverProjectilesForCombat(combat) {
   }
 
   await showRecovery(rows);
-  console.log("[ADD2E][PROJECTILES][RECOVERY][DONE]", { version: ADD2E_VENDOR_VERSION, combat: combat.id, rows });
   return true;
 }
 
@@ -832,28 +861,31 @@ export function patchAttackRollProjectileConsumption() {
     if (!actorUsesProjectileInventory(actor)) return original.call(this, args);
 
     let attackArgs = args;
-    if (actor && arme && weaponRequiresProjectile(arme)) {
-      const projectile = findEquippedProjectile(actor);
-      if (!projectile || quantity(projectile) <= 0) {
-        await spendProjectileForAttack({ actor, arme });
-        return false;
-      }
-
-      const projectileSystem = projectile.system ?? {};
-      const weaponSystem = arme.system ?? {};
-      const systemForAttack = {
-        ...weaponSystem,
-        degats: projectileSystem.degats ?? projectileSystem.dégâts ?? weaponSystem.degats,
-        dégâts: projectileSystem.dégâts ?? projectileSystem.degats ?? weaponSystem.dégâts,
-        type_degats: projectileSystem.type_degats ?? weaponSystem.type_degats
-      };
-      const armeForAttack = new Proxy(arme, {
-        get(target, property, receiver) {
-          if (property === "system") return systemForAttack;
-          return Reflect.get(target, property, receiver);
+    if (actor && arme) {
+      const resolved = resolveProjectileForAttack({ actor, arme });
+      if (resolved.required) {
+        const projectile = resolved.projectile;
+        if (!resolved.ok || !projectile) {
+          await spendProjectileForAttack({ actor, arme });
+          return false;
         }
-      });
-      attackArgs = { ...args, actor, arme: armeForAttack };
+
+        const projectileSystem = projectile.system ?? {};
+        const weaponSystem = arme.system ?? {};
+        const systemForAttack = {
+          ...weaponSystem,
+          degats: projectileSystem.degats ?? projectileSystem.dégâts ?? weaponSystem.degats,
+          dégâts: projectileSystem.dégâts ?? projectileSystem.degats ?? weaponSystem.dégâts,
+          type_degats: projectileSystem.type_degats ?? weaponSystem.type_degats
+        };
+        const armeForAttack = new Proxy(arme, {
+          get(target, property, receiver) {
+            if (property === "system") return systemForAttack;
+            return Reflect.get(target, property, receiver);
+          }
+        });
+        attackArgs = { ...args, actor, arme: armeForAttack };
+      }
     }
 
     const r = await original.call(this, attackArgs);
@@ -864,6 +896,7 @@ export function patchAttackRollProjectileConsumption() {
 
 function bindMoneyInputs(sheet, root) {
   const actor = sheet?.actor ?? sheet?.document;
+  const root = sheet?.element?.jquery ? sheet.element[0] : sheet?.element;
   if (!actor || !root?.querySelectorAll) return;
   if (root.dataset?.add2eMoneyBound === "1") return;
   if (root.dataset) root.dataset.add2eMoneyBound = "1";
@@ -923,12 +956,14 @@ export function registerGlobals() {
     ensureVendorStock: ensureStock,
     updateVendorTokenSize: updateTokenSize,
     moveToFolder,
+    resolveProjectileForAttack,
     spendProjectileForAttack,
     recoverProjectilesForCombat,
     assignItemToToken,
     assignProjectileToToken,
     sceneTokenChoices,
     vendorProjectiles: {
+      resolveProjectileForAttack,
       spendProjectileForAttack,
       recoverProjectilesForCombat,
       recordProjectileSpent: recordProjectileSpentLocal
@@ -940,6 +975,7 @@ export function registerGlobals() {
   globalThis.ADD2E_VENDOR_PROJECTILES = game.add2e.vendorProjectiles;
   globalThis.add2eCreateDefaultVendor = createVendor;
   globalThis.add2eVendorMoney = game.add2e.vendorMoney;
+  globalThis.add2eResolveProjectileForAttack = resolveProjectileForAttack;
   globalThis.add2eSpendProjectileForAttack = spendProjectileForAttack;
   globalThis.add2eRecoverProjectilesForCombat = recoverProjectilesForCombat;
   globalThis.add2eAssignItemToToken = assignItemToToken;
