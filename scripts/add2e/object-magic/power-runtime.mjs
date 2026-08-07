@@ -33,6 +33,26 @@ function add2eObjectGlobalChargeMax(itemSource) {
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
 }
 
+function add2eObjectGlobalChargeCurrent(itemSource, maximum = add2eObjectGlobalChargeMax(itemSource)) {
+  if (maximum <= 0) return 0;
+  const value = Number(itemSource?.system?.charges?.value);
+  if (!Number.isFinite(value)) return maximum;
+  return Math.max(0, Math.min(Math.floor(value), maximum));
+}
+
+async function add2eObjectSetGlobalCharges(itemSource, value, reason = "object-magic-power-charges") {
+  const maximum = add2eObjectGlobalChargeMax(itemSource);
+  if (maximum <= 0) {
+    throw new Error(`L’objet magique « ${itemSource?.name ?? "Objet"} » ne possède pas de system.charges.max canonique.`);
+  }
+  const next = Math.max(0, Math.min(maximum, Math.floor(Number(value) || 0)));
+  await itemSource.update(
+    { "system.charges.value": next },
+    { add2eInternal: true, add2eReason: reason, render: false }
+  );
+  return next;
+}
+
 export function add2eObjectPowerMaxCharges(itemSource, power, _index) {
   const globalMax = add2eObjectGlobalChargeMax(itemSource);
   if (globalMax > 0) return globalMax;
@@ -45,10 +65,7 @@ export function add2eObjectPowerCurrentCharges(itemSource, power, _index) {
 
   const globalMax = add2eObjectGlobalChargeMax(itemSource);
   if (globalMax <= 0) return 0;
-
-  const current = Number(itemSource?.system?.charges?.value);
-  if (!Number.isFinite(current)) return globalMax;
-  return Math.max(0, Math.min(Math.floor(current), globalMax));
+  return add2eObjectGlobalChargeCurrent(itemSource, globalMax);
 }
 
 export async function add2eObjectPowerSetCharges(itemSource, power, _index, value) {
@@ -57,13 +74,94 @@ export async function add2eObjectPowerSetCharges(itemSource, power, _index, valu
     if (add2eObjectPowerCost(power) <= 0) return 1;
     throw new Error(`L’objet magique « ${itemSource?.name ?? "Objet"} » utilise des charges sans system.charges.max canonique.`);
   }
+  return add2eObjectSetGlobalCharges(itemSource, value);
+}
 
-  const next = Math.max(0, Math.min(globalMax, Math.floor(Number(value) || 0)));
-  await itemSource.update(
-    { "system.charges.value": next },
-    { add2eInternal: true, add2eReason: "object-magic-power-charges", render: false }
-  );
-  return next;
+export function add2eMagicItemRechargeInfo(itemSource) {
+  const charges = itemSource?.system?.charges;
+  const maximum = add2eObjectGlobalChargeMax(itemSource);
+  const current = add2eObjectGlobalChargeCurrent(itemSource, maximum);
+  const rechargeable = charges?.rechargeable === true;
+  const formula = String(charges?.rechargeFormula ?? "").trim();
+  return {
+    rechargeable,
+    formula,
+    current,
+    maximum,
+    available: rechargeable && Boolean(formula) && maximum > 0 && current < maximum
+  };
+}
+
+function add2eMagicItemRechargeResource(actor, itemSource) {
+  const info = add2eMagicItemRechargeInfo(itemSource);
+  return {
+    id: `${itemSource?.uuid ?? itemSource?.id}:magic-item-recharge`,
+    type: "magic-item-charge",
+    label: `${itemSource?.name ?? "Objet magique"} — charges`,
+    document: itemSource,
+    actor,
+    item: itemSource,
+    target: "global",
+    get current() {
+      return add2eObjectGlobalChargeCurrent(itemSource, info.maximum);
+    },
+    maximum: info.maximum,
+    recovery: 0,
+    source: {
+      kind: "magic-item",
+      id: String(itemSource?.id ?? ""),
+      uuid: String(itemSource?.uuid ?? ""),
+      name: String(itemSource?.name ?? "Objet magique")
+    },
+    context: {
+      consumer: "object-magic/power-runtime",
+      operation: "recharge"
+    },
+    write: next => add2eObjectSetGlobalCharges(itemSource, next, "object-magic-recharge")
+  };
+}
+
+export async function add2eRechargeMagicItemCharges(actor, itemSource) {
+  if (!itemSource) throw new Error("Objet magique introuvable pour la recharge.");
+  const info = add2eMagicItemRechargeInfo(itemSource);
+  if (!info.rechargeable) throw new Error(`L’objet magique « ${itemSource.name} » n’est pas rechargeable.`);
+  if (!info.formula) throw new Error(`L’objet magique « ${itemSource.name} » ne possède pas de rechargeFormula canonique.`);
+  if (info.maximum <= 0) throw new Error(`L’objet magique « ${itemSource.name} » ne possède pas de maximum de charges canonique.`);
+  if (info.current >= info.maximum) {
+    return { ok: false, reason: "full", item: itemSource, before: info.current, after: info.current, maximum: info.maximum };
+  }
+
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!engine || typeof engine.recoverResource !== "function") {
+    throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour la recharge d’objet magique.");
+  }
+
+  const roll = await new Roll(info.formula).evaluate();
+  const rolled = Math.max(0, Math.floor(Number(roll.total) || 0));
+  const recovery = await engine.recoverResource(add2eMagicItemRechargeResource(actor, itemSource), {
+    amount: rolled,
+    reason: "magic-item-recharge",
+    consumer: "object-magic/power-runtime"
+  });
+  if (!recovery?.ok) {
+    return { ok: false, reason: recovery?.reason ?? "resource-recovery-failed", item: itemSource, roll, formula: info.formula, rolled, recovery };
+  }
+
+  const state = recovery.resources?.[0] ?? null;
+  const before = Number(state?.before ?? info.current) || 0;
+  const after = Number(state?.after ?? add2eObjectGlobalChargeCurrent(itemSource, info.maximum)) || 0;
+  return {
+    ok: true,
+    item: itemSource,
+    roll,
+    formula: info.formula,
+    rolled,
+    recovered: Math.max(0, after - before),
+    before,
+    after,
+    maximum: Number(state?.maximum ?? info.maximum) || info.maximum,
+    recovery
+  };
 }
 
 export function add2eMagicPowerGeneratedId(item, index) {
@@ -221,10 +319,7 @@ export function add2eMagicObjectChargeInfo(item, _powers = null) {
   const max = add2eObjectGlobalChargeMax(item);
   if (max <= 0) return { current: 0, max: 0, label: "—" };
 
-  const rawCurrent = Number(item?.system?.charges?.value);
-  const current = Number.isFinite(rawCurrent)
-    ? Math.max(0, Math.min(Math.floor(rawCurrent), max))
-    : max;
+  const current = add2eObjectGlobalChargeCurrent(item, max);
   return { current, max, label: `${current}/${max}` };
 }
 
