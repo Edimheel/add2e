@@ -1,6 +1,6 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs, parchemins et composants.
-// Version : 2026-08-07-canonical-resource-cast-v2
+// Version : 2026-08-07-canonical-resource-cast-v3
 
 import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
@@ -578,10 +578,13 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
       const code = await response.text();
       const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
       const casterToken = getCasterToken(actor);
-      const actualSourceItem = spellToUse;
+      const actualSourceItem = sort.system?.isPower === true
+        ? sourceItem ?? reservedCost?.weapon ?? actor.items.get(sort.system.sourceWeaponId ?? sort.system.sourceItemId) ?? spellToUse
+        : spellToUse;
+      const executionItem = sort.system?.isPower === true ? actualSourceItem : spellToUse;
       const args = [{
         actor,
-        item: spellToUse,
+        item: executionItem,
         sort,
         token: casterToken,
         sourceItem: actualSourceItem,
@@ -589,7 +592,7 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
         castMode
       }];
       const fn = new AsyncFunction("actor", "item", "sort", "token", "args", "sourceItem", code);
-      const result = await fn.call(spellToUse, actor, spellToUse, sort, casterToken, args, actualSourceItem);
+      const result = await fn.call(executionItem, actor, executionItem, sort, casterToken, args, actualSourceItem);
       console.log("[ADD2E][CAST_SPELL][ONUSE_RESULT]", { sort: spellToUse.name, result, consumed: result === true, castMode });
 
       if (result === false) throw new Add2eCastAbort("onuse-false");
