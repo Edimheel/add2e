@@ -234,6 +234,14 @@ function add2eSheetRowsTotal(rows, predicate) {
   return rows.filter(predicate).reduce((total, row) => total + Number(row.numericValue || 0), 0);
 }
 
+function add2eSheetWeaponStackQuantity(weapon, combatProfile) {
+  if (combatProfile?.isLancer !== true) return null;
+  const raw = weapon?.system?.quantite ?? weapon?.system?.quantity;
+  if (raw === undefined || raw === null || raw === "") return 1;
+  const value = Number(raw);
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 1;
+}
+
 function add2eSheetWeaponRows(actor, weapons, thaco, engine) {
   return weapons.map(weapon => {
     const combatProfile = add2eGetCombatStatProfile(weapon);
@@ -261,6 +269,8 @@ function add2eSheetWeaponRows(actor, weapons, thaco, engine) {
     const damageDetailsTitle = damageRows.map(row => `${row.label} ${row.value}`).join(" · ") || "Aucun modificateur";
     const effectRows = [...attackRows, ...damageRows].filter(row => !["ability-table", "weapon-base-field"].includes(row.producer));
     const effectSummary = [...new Set(effectRows.map(row => `${row.label} ${row.value}`))].join(" · ");
+    const isThrown = combatProfile.isLancer === true;
+    const stackQuantity = add2eSheetWeaponStackQuantity(weapon, combatProfile);
 
     return {
       id: weapon.id,
@@ -272,6 +282,8 @@ function add2eSheetWeaponRows(actor, weapons, thaco, engine) {
       type: String(weapon.system?.type_degats ?? ""),
       speed: weapon.system?.facteur_rapidité ?? "—",
       combatProfile,
+      isThrown,
+      stackQuantity,
       abilityHitLabel: combatProfile.toucherCarac ? add2eAttackAbilityLabel(combatProfile.toucherCarac) : "—",
       abilityDamageLabel: combatProfile.degatsCarac ? add2eAttackAbilityLabel(combatProfile.degatsCarac) : "—",
       abilityHit,
