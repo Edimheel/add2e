@@ -16,14 +16,6 @@ function itemTextFields(item) {
   const flags = item?.flags?.add2e ?? {};
   return [item?.name, system.nom, system.categorie, system.category, system.sousType, system.sous_type, system.type, system.subtype, system.kind, system.slot, system.slug, system.composant, system.component, system.composantSlug, system.componentSlug, flags.vendorKind, flags.kind, flags.slug, flags.componentSlug, ...arr(system.tags), ...arr(system.effectTags), ...arr(system.effecttags), ...arr(flags.tags), ...arr(flags.effectTags), ...arr(flags.effecttags)].map(lower).filter(Boolean);
 }
-function toFieldArray(value) {
-  if (value === null || value === undefined || value === "") return [];
-  if (Array.isArray(value)) return value.flatMap(toFieldArray).filter(Boolean);
-  if (typeof value === "object") {
-    for (const key of ["tags", "effectTags", "effecttags", "list", "items", "value", "material", "materials", "components"]) if (value[key] !== undefined) return toFieldArray(value[key]);
-  }
-  return arr(value);
-}
 function isContainerLike(item) {
   const text = itemTags(item).join(" ");
   const name = norm(item?.name);
@@ -44,139 +36,22 @@ export function isSpellComponentItem(item) {
   if (fields.some(value => (value.includes("composant") && value.includes("sort")) || (value.includes("spell") && value.includes("component")))) return true;
   return isKnownLooseComponentName(item?.name) || isKnownLooseComponentName(item?.system?.nom);
 }
-function isOnlyComponentCode(value) {
-  const text = lower(value).replace(/[^a-z]/g, "");
-  return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(text);
-}
-function cleanComponentName(value) {
-  let text = String(value ?? "").trim();
-  text = text.replace(/[()\[\]{}]/g, " ").replace(/\s+/g, " ").trim().replace(/[.!?;:]+$/g, "").trim().replace(/^d['’]\s*/i, "").replace(/^(un|une)?\s*peu\s+de\s+/i, "").replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "").replace(/^(quelques|plusieurs)\s+/i, "").replace(/^(petit morceau de|morceau de|poignee de|poignée de)\s+/i, "");
-  return text.trim();
-}
-function rawRequirementName(value) { return typeof value === "object" && value ? value.name ?? value.nom ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id : value; }
-function rawRequirementQuantity(value) { return typeof value === "object" && value ? value.quantity ?? value.quantite ?? value.qty ?? value.nombre ?? value.count ?? value.value ?? 1 : 1; }
-function requirementKey(rawName) { const key = slug(cleanComponentName(rawName)); return ["eau_benite_ou_maudite", "eau_benite_maudite"].includes(key) ? "eau_benite" : key; }
-function makeRequirement(rawName, rawQty = 1) {
-  const name = cleanComponentName(rawName);
-  if (!name || isOnlyComponentCode(name)) return null;
-  const key = requirementKey(name);
-  return key ? { name, key, quantity: Math.max(1, Math.floor(num(rawQty, 1))) } : null;
-}
-function addComponentRequirement(out, rawName, rawQty = 1) {
-  const requirement = makeRequirement(rawName, rawQty);
-  if (!requirement) return;
-  const existing = out.find(entry => entry.key === requirement.key && !entry.alternatives);
-  if (existing) existing.quantity += requirement.quantity;
-  else out.push(requirement);
-}
-function addAlternativeRequirement(out, alternatives) {
-  const clean = alternatives.map(value => makeRequirement(rawRequirementName(value), rawRequirementQuantity(value))).filter(Boolean);
-  const unique = clean.filter((entry, index) => clean.findIndex(other => other.key === entry.key) === index);
-  if (!unique.length) return;
-  if (unique.length === 1) return addComponentRequirement(out, unique[0].name, unique[0].quantity);
-  out.push({ name: unique.map(entry => entry.name).join(" ou "), key: unique.map(entry => entry.key).join("__or__"), quantity: 1, alternatives: unique });
-}
-function isStructuredAlternative(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  const condition = lower(value.condition ?? value.conditions ?? value.note ?? value.notes ?? value.sourceCondition ?? "");
-  const consumption = lower(value.consommation ?? value.consumption ?? value.consume ?? "");
-  return condition.includes("alternative") || /\bou\b/i.test(condition) || (consumption.includes("optionnel") && condition.length > 0);
-}
-function collectComponentRequirement(out, value) {
-  if (value === null || value === undefined || value === "") return;
-  if (Array.isArray(value)) {
-    const alternatives = value.filter(isStructuredAlternative);
-    const alternativeKeys = new Set(alternatives.map(entry => `${rawRequirementName(entry)}|${rawRequirementQuantity(entry)}`));
-    if (alternatives.length > 1) addAlternativeRequirement(out, alternatives);
-    for (const entry of value) {
-      const key = `${rawRequirementName(entry)}|${rawRequirementQuantity(entry)}`;
-      if (alternatives.length > 1 && alternativeKeys.has(key)) continue;
-      collectComponentRequirement(out, entry);
-    }
-    return;
-  }
-  if (typeof value === "string") {
-    for (const rawPart of value.split(/[,;|\n]+|\bet\b/gi).map(part => part.trim()).filter(Boolean)) {
-      const alternatives = rawPart.replace(/[()\[\]{}]/g, " ").replace(/\s+/g, " ").trim().split(/\bou\b/gi).map(part => part.trim()).filter(Boolean);
-      if (alternatives.length > 1) addAlternativeRequirement(out, alternatives); else addComponentRequirement(out, rawPart, 1);
-    }
-    return;
-  }
-  if (typeof value === "object") {
-    const alternatives = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or;
-    if (Array.isArray(alternatives) && alternatives.length) return addAlternativeRequirement(out, alternatives);
-    const name = rawRequirementName(value);
-    if (name) addComponentRequirement(out, name, rawRequirementQuantity(value));
-  }
-}
-function componentRequirements(sort) {
-  const system = sort?.system ?? {};
-  const flags = sort?.flags?.add2e ?? {};
-  const out = [];
-  const primary = [system.composants_materiels, system.composantsMateriels, sort?.composants_materiels];
-  const fallback = [system.composants_requis, system.composantsMateriel, system.composant_materiel, system.composantMateriel, system.materiel, system.matériel, system.material, system.materialComponent, system.materialComponents, system.material_components, system.requiredComponents, system.componentsRequired, system.components?.material, system.components?.materials, system.components?.materialComponent, system.components?.materialComponents, system.composants_materiels_objets, sort?.materialComponents, sort?.composants_requis, sort?.composants_materiels_objets, flags.composants_requis, flags.composants, flags.components, flags.requiredComponents, flags.effectTags, flags.effecttags];
-  for (const field of primary.filter(value => value !== undefined && value !== null && value !== "")) collectComponentRequirement(out, field);
-  if (!out.length) for (const field of fallback.filter(value => value !== undefined && value !== null && value !== "")) collectComponentRequirement(out, field);
-  for (const tag of [...toFieldArray(system.tags), ...toFieldArray(system.effectTags), ...toFieldArray(system.effecttags), ...toFieldArray(flags.tags), ...toFieldArray(flags.effectTags), ...toFieldArray(flags.effecttags)]) {
-    const text = String(tag ?? "").trim();
-    for (const prefix of ["composant", "component", "spell_component"]) if (new RegExp(`^${prefix}[:_]`, "i").test(text)) addComponentRequirement(out, text.replace(new RegExp(`^${prefix}[:_]`, "i"), ""), 1);
-  }
-  return out;
-}
-function componentKeyVariants(value) {
-  const base = slug(cleanComponentName(String(value ?? "").replace(/^(composant|component|spell_component)[:_]/i, "")));
-  const keys = new Set(base ? [base] : []);
-  if (base.endsWith("s") && base.length > 4) keys.add(base.replace(/s+$/g, ""));
-  if (base.includes("eau_benite") && base.includes("maudite")) ["eau_benite", "eau_maudite", "eau_benite_ou_maudite", "eau_benite_maudite"].forEach(key => keys.add(key));
-  if (base === "eau_benite" || base === "eau_maudite") keys.add("eau_benite_ou_maudite");
-  return [...keys].filter(Boolean);
-}
-function componentKeys(item) { const keys = new Set(); for (const field of itemTextFields(item)) for (const key of componentKeyVariants(field)) keys.add(key); return [...keys]; }
-function compatibleComponentKey(itemKey, requirementKey) {
-  if (!itemKey || !requirementKey) return false;
-  if (itemKey === requirementKey || itemKey.includes(requirementKey) || requirementKey.includes(itemKey)) return true;
-  return ["eau_benite", "eau_maudite"].includes(requirementKey) && ["eau_benite_ou_maudite", "eau_benite_maudite"].includes(itemKey);
-}
 export function quantity(item) {
   const system = item?.system ?? {};
   const value = system.quantite ?? system.quantity ?? system.qty ?? system.nombre ?? system.nb ?? system.uses?.value ?? system.charges?.value;
   return value === undefined || value === null || value === "" ? "—" : String(value);
 }
-function quantityNumber(item, fallback = 1) { const value = quantity(item); return value === "—" ? fallback : num(value, fallback); }
-function requirementKeys(requirement) { return componentKeyVariants(requirement?.key ?? requirement?.name); }
-function candidateComponentItems(actor, requirement = null) {
-  const reqKeys = requirement ? requirementKeys(requirement) : [];
-  return actorItems(actor).filter(item => {
-    if (String(item?.type ?? "").toLowerCase() !== "objet" || isAmmunitionItem(item) || isContainerLike(item)) return false;
-    if (isSpellComponentItem(item)) return true;
-    const keys = componentKeys(item);
-    return reqKeys.some(reqKey => keys.some(itemKey => compatibleComponentKey(itemKey, reqKey)));
-  });
-}
-function findActorComponent(actor, requirement) {
-  const reqKeys = requirementKeys(requirement);
-  const matches = candidateComponentItems(actor, requirement).filter(item => { const keys = componentKeys(item); return reqKeys.some(reqKey => keys.some(itemKey => compatibleComponentKey(itemKey, reqKey))); });
-  return matches.find(item => quantityNumber(item, 0) >= Number(requirement?.quantity ?? 1)) ?? matches[0] ?? null;
-}
-function findActorComponentForRequirement(actor, requirement) {
-  if (!requirement?.alternatives?.length) {
-    const item = findActorComponent(actor, requirement);
-    return item && quantityNumber(item, 0) >= Number(requirement?.quantity ?? 1) ? { item, requirement } : null;
-  }
-  for (const alternative of requirement.alternatives) {
-    const item = findActorComponent(actor, alternative);
-    if (item && quantityNumber(item, 0) >= Number(alternative.quantity ?? 1)) return { item, requirement: alternative, group: requirement };
-  }
-  return null;
-}
 function spellComponentBadges(actor, sort) {
-  const requirements = componentRequirements(sort);
-  if (!requirements.length) return "";
-  return `<span class="component-title">Composants</span>${requirements.map(requirement => {
-    const owned = !!findActorComponentForRequirement(actor, requirement);
-    const quantityLabel = requirement.quantity > 1 && !requirement.alternatives ? ` ×${requirement.quantity}` : "";
-    const title = owned ? "Composant disponible" : "Composant manquant ou quantité insuffisante";
-    return `<span class="${owned ? "component-ok" : "component-bad"}" title="${esc(title)}">${esc(requirement.name)}${quantityLabel}</span>`;
+  const resolver = globalThis.add2eGetSpellComponentStatus;
+  if (typeof resolver !== "function") {
+    throw new Error("Le propriétaire canonique des composants de sorts est indisponible pour le HUD.");
+  }
+  const statuses = resolver(actor, sort);
+  if (!Array.isArray(statuses) || !statuses.length) return "";
+  return `<span class="component-title">Composants</span>${statuses.map(status => {
+    const quantityLabel = Number(status.quantity) > 1 && !status.alternatives ? ` ×${Number(status.quantity)}` : "";
+    const title = status.available ? "Composant disponible" : "Composant manquant ou quantité insuffisante";
+    return `<span class="${status.available ? "component-ok" : "component-bad"}" title="${esc(title)}">${esc(status.name)}${quantityLabel}</span>`;
   }).join("")}`;
 }
 export function isAmmunitionItem(item) {
