@@ -2,7 +2,7 @@
 // Les pouvoirs virtuels proviennent exclusivement du runtime canonique.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
-const ADD2E_OBJECT_MAGIC_POSTPROCESS_VERSION = "2026-07-30-canonical-object-power-postprocess-v2";
+const ADD2E_OBJECT_MAGIC_POSTPROCESS_VERSION = "2026-08-07-canonical-object-power-resource-v3";
 globalThis.ADD2E_OBJECT_MAGIC_POSTPROCESS_VERSION = ADD2E_OBJECT_MAGIC_POSTPROCESS_VERSION;
 
 function add2eMagicPowerDescription(power) {
@@ -84,6 +84,15 @@ function add2eObjectMagicBuildVirtualSort(actor, item, power, index) {
   return globalThis.add2eBuildVirtualObjectPowerSort(actor, item, power, index);
 }
 
+function add2eObjectMagicPowerResourceState(actor, item, power, index) {
+  if (typeof globalThis.add2eResolveObjectPowerResource !== "function") {
+    throw new Error("Le résolveur canonique de ressource des pouvoirs d'objets magiques est indisponible.");
+  }
+  return globalThis.add2eResolveObjectPowerResource(actor, item, power, index, {
+    consumer: "13b-actor-sheet-object-magic-postprocess"
+  });
+}
+
 function add2eObjectMagicActorDocument(sheet, data) {
   const candidates = [sheet?.actor, sheet?.document, sheet?.object, data?.actor];
   const actor = candidates.find(candidate =>
@@ -95,9 +104,13 @@ function add2eObjectMagicActorDocument(sheet, data) {
   return actor;
 }
 
-function add2eObjectMagicPowerRow(virtualSpell, itemSource, power, index) {
+function add2eObjectMagicPowerRow(actor, virtualSpell, itemSource, power, index) {
   const system = virtualSpell?.system ?? {};
-  const charges = Number(virtualSpell?.getFlag?.("add2e", "memorizedCount") ?? 0) || 0;
+  const resource = add2eObjectMagicPowerResourceState(actor, itemSource, power, index);
+  const tracked = resource?.tracked === true;
+  const charges = tracked ? Math.max(0, Number(resource.current) || 0) : 1;
+  const maximum = tracked ? Math.max(0, Number(resource.maximum) || 0) : 1;
+  const cost = Math.max(0, Number(resource?.cost) || 0);
   return {
     id: virtualSpell?.id || virtualSpell?._id,
     name: virtualSpell?.name || "Pouvoir",
@@ -109,8 +122,14 @@ function add2eObjectMagicPowerRow(virtualSpell, itemSource, power, index) {
     sourceItemDescription: system.sourceItemDescription || itemSource?.system?.description || "",
     powerIndex: system.powerIndex ?? index,
     charges,
-    max: Number(system.max ?? 0) || 0,
-    cost: Number(system.cost ?? system.cout ?? 0) || 0,
+    max: maximum,
+    cost,
+    resourceTracked: tracked,
+    resourceAvailable: resource?.available !== false,
+    resourceMissing: Math.max(0, Number(resource?.missing) || 0),
+    resourceType: resource?.type ?? "magic-item-charge",
+    resourceSource: resource?.source?.name ?? itemSource?.name ?? "Objet magique",
+    resourceLabel: tracked ? `${charges}/${maximum}` : "À volonté",
     temps_incantation: system.temps_incantation ?? system.castingTime ?? system.casting_time ?? "Objet magique",
     onUse: system.onUse || system.onuse || system.on_use || "",
     onuse: system.onuse || system.onUse || system.on_use || "",
@@ -153,7 +172,7 @@ function add2eInstallObjectMagicGetDataPostprocess() {
 
         for (const { power, index } of powerEntries) {
           const virtualSpell = add2eObjectMagicBuildVirtualSort(actor, itemSource, power, index);
-          const row = add2eObjectMagicPowerRow(virtualSpell, itemSource, power, index);
+          const row = add2eObjectMagicPowerRow(actor, virtualSpell, itemSource, power, index);
 
           if (potion) {
             potionsForHbs.push({
