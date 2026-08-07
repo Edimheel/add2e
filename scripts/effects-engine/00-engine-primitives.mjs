@@ -1,5 +1,5 @@
 // ADD2E — Effects Engine / primitives d’effets temporaires et configurés.
-// Compatible Foundry V13/V14/V15 — DialogV2 et cartes communes ADD2E.
+// Compatible Foundry V13/V14/V15 — API commune des fenêtres et cartes ADD2E.
 
 import { add2eTimeEffectData } from "../add2e/19a-time-engine.mjs";
 import {
@@ -267,9 +267,13 @@ export function installEnginePrimitives(Engine) {
       const targets = potionTargets(actor, config.selfOnly === true);
       if (!targets.length) return false;
       if (config.confirm === true) {
-        const DialogV2 = foundry.applications?.api?.DialogV2;
-        if (!DialogV2?.confirm) throw new Error("DialogV2 est indisponible.");
-        const accepted = await DialogV2.confirm({
+        if (typeof globalThis.add2eDialogConfirm !== "function") {
+          throw new Error("L’API de fenêtre ADD2E est indisponible.");
+        }
+        const accepted = await globalThis.add2eDialogConfirm({
+          add2eTheme: "wizard",
+          add2ePrimaryAction: "yes",
+          add2eClasses: ["add2e-configured-effect-confirm"],
           window: { title: config.name || "Effet" },
           modal: true,
           content: `<div class="add2e-dialog"><p><b>${escapeHtml(config.name || "Effet")}</b></p><p>Cible(s) : <b>${escapeHtml(targets.map(target => target.name).join(", "))}</b></p>${config.saveNote ? `<p>${escapeHtml(config.saveNote)}</p>` : ""}<p>Appliquer l’effet ?</p></div>`,
