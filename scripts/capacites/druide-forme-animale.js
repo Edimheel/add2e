@@ -1,11 +1,9 @@
 /* ADD2E — Druide : Forme animale. ApplicationV2/DialogV2, V13/V14/V15.
  * La forme reste active jusqu'au retour volontaire ou à la suppression de son effet.
  */
-const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-02-canonical-transformation-profile-v9";
+const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-07-canonical-categorized-resource-v10";
 const SCOPE = "druid-animal-form";
 const TRANSFORM_GROUP = "physical-form";
-const DAY_ROUNDS = 1440;
-const USAGE_FLAG = "capabilityUsage";
 const EQUIPPED_FIELDS = Object.freeze([
   "equipee", "equipped", "equipe", "équipé", "porte", "portee", "porté", "worn"
 ]);
@@ -143,6 +141,28 @@ const currentTick = () => {
   const tick = typeof engine?.currentTick === "function" ? Number(engine.currentTick()) : NaN;
   return Number.isFinite(tick) ? Math.max(0, Math.floor(tick)) : null;
 };
+
+function resourceEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!engine
+    || typeof engine.checkResourceAvailability !== "function"
+    || typeof engine.transactResources !== "function") {
+    throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour la forme animale.");
+  }
+  return engine;
+}
+
+function categoryUsage(currentActor, currentFeature, category) {
+  const builder = globalThis.add2eGetClassFeatureUsageResource;
+  if (typeof builder !== "function") {
+    throw new Error("Le propriétaire canonique ADD2E des utilisations de capacités est indisponible.");
+  }
+  const usage = builder(currentActor, currentFeature, { category });
+  if (!usage?.descriptor) {
+    throw new Error(`Ressource de forme animale introuvable pour la catégorie « ${category} ».`);
+  }
+  return usage;
+}
 
 const hp = currentActor => {
   const system = currentActor?.system ?? {};
@@ -462,10 +482,8 @@ async function apply(currentActor, token, form, tick, recovery) {
 }
 
 async function choose(available, currentEffect, tokens) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications.error("Forme animale : DialogV2 est indisponible.");
-    return null;
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
 
   const formOptions = FORMS
@@ -483,11 +501,13 @@ async function choose(available, currentEffect, tokens) {
     return `<option value="${esc(`${token.parent?.id}:${token.id}`)}"${selected}>${esc(tokenName)} — ${esc(sceneName)}</option>`;
   }).join("");
 
-  return DialogV2.wait({
+  return globalThis.add2eDialogWait({
+    add2eTheme: "druid",
+    add2ePrimaryAction: available.length ? "transform" : "return",
+    add2eClasses: ["add2e-druid-animal-form"],
     window: { title: "Forme animale du druide" },
-    position: { width: 600 },
     content: [
-      '<form style="display:grid;gap:8px;font-family:var(--font-primary);">',
+      '<form class="add2e-druid-animal-form-form" style="display:grid;gap:8px;font-family:var(--font-primary);">',
       "<div>La forme reste active jusqu'au retour volontaire ou à la suppression de son effet.</div>",
       available.length
         ? `<label>Forme <select name="formKey" style="width:100%">${formOptions}</select></label>`
@@ -502,7 +522,7 @@ async function choose(available, currentEffect, tokens) {
         ? [{
           action: "transform",
           label: "Prendre la forme",
-          icon: "fa-solid fa-paw",
+          icon: "<i class='fas fa-paw'></i>",
           default: true,
           callback: (_event, button) => ({
             action: "transform",
@@ -515,18 +535,18 @@ async function choose(available, currentEffect, tokens) {
         ? [{
           action: "return",
           label: "Revenir à la forme normale",
-          icon: "fa-solid fa-person",
+          icon: "<i class='fas fa-person'></i>",
           callback: () => ({ action: "return" })
         }]
         : []),
       {
         action: "cancel",
         label: "Annuler",
-        icon: "fa-solid fa-xmark",
+        icon: "<i class='fas fa-times'></i>",
         callback: () => null
       }
     ],
-    rejectClose: false
+    close: () => null
   });
 }
 
@@ -594,16 +614,21 @@ if (!tokens.length && !activeEffect) {
   return false;
 }
 
-const day = Math.floor(tick / DAY_ROUNDS);
-const root = actor.getFlag("add2e", USAGE_FLAG) ?? {};
-const previous = root?.[SCOPE] ?? {};
-const categories = ["reptile", "oiseau", "mammifere"];
-const used = Number(previous.dayIndex) === day
-  && previous.categories
-  && typeof previous.categories === "object"
-  ? previous.categories
-  : {};
-const available = categories.filter(category => used?.[category]?.used !== true);
+const categories = Array.isArray(feature?.uses?.categories)
+  ? [...new Set(feature.uses.categories.map(norm).filter(Boolean))]
+  : [];
+if (!categories.length) {
+  throw new Error("Forme animale : aucune catégorie canonique n’est déclarée dans feature.uses.categories.");
+}
+
+const engine = resourceEngine();
+const available = categories.filter(category => {
+  const usage = categoryUsage(actor, feature, category);
+  return engine.checkResourceAvailability(usage.descriptor, {
+    cost: 1,
+    consumer: "druide-forme-animale:availability"
+  }).ok;
+});
 const choice = await choose(available, activeEffect, tokens);
 
 if (!choice) return false;
@@ -644,31 +669,21 @@ if (game.dice3d) void game.dice3d.showForRoll(roll);
 const die = Math.max(1, Math.min(6, Number(roll.total) || 1));
 const percent = die * 10;
 const recovery = Math.min(lost, Math.ceil(lost * percent / 100));
-const result = await apply(actor, selectedToken, form, tick, recovery);
-
-const nextUsed = {
-  ...used,
-  [form.category]: {
-    used: true,
-    usedAtTick: tick,
-    formKey: form.key,
-    formName: form.label,
-    recoveryRoll: die,
-    recoveryPercent: percent,
-    recoveryPoints: result.applied
-  }
-};
-
-await actor.setFlag("add2e", USAGE_FLAG, {
-  ...root,
-  [SCOPE]: {
-    version: ADD2E_DRUIDE_FORME_ANIMALE_VERSION,
-    reset: { type: "add2e-day", rounds: DAY_ROUNDS },
-    dayIndex: day,
-    categories: nextUsed,
-    updatedAtTick: tick
-  }
+const usage = categoryUsage(actor, feature, form.category);
+const transaction = await engine.transactResources(usage.descriptor, async () => (
+  apply(actor, selectedToken, form, tick, recovery)
+), {
+  reason: "druid-animal-form-use",
+  consumer: "druide-forme-animale"
 });
+if (!transaction?.ok) {
+  ui.notifications.warn(`La catégorie ${form.category} n’est plus disponible aujourd’hui.`);
+  return false;
+}
+const result = transaction.result;
+if (!result?.effect) {
+  throw new Error("Forme animale : la transaction de ressource n’a pas produit de transformation valide.");
+}
 
 await chat(
   actor,
