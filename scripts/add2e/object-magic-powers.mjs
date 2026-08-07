@@ -10,6 +10,8 @@ import {
 import {
   add2eBuildVirtualObjectPowerSort as add2eBuildVirtualObjectPowerSortRuntime,
   add2eExecuteObjectMagicPower as add2eExecuteObjectMagicPowerRuntime,
+  add2eGetObjectPowerResource,
+  add2eResolveObjectPowerResource,
   add2eMagicItemEquippedOrUsable as add2eMagicItemEquippedOrUsableRuntime,
   add2eMagicLooksMagical,
   add2eMagicObjectActivePowerEntries as add2eMagicObjectActivePowerEntriesRuntime,
@@ -328,6 +330,8 @@ Object.assign(globalThis, {
   add2eObjectPowerMaxCharges,
   add2eObjectPowerCurrentCharges,
   add2eObjectPowerSetCharges,
+  add2eGetObjectPowerResource,
+  add2eResolveObjectPowerResource,
   add2eBuildVirtualObjectPowerSort: add2eBuildDisplayVirtualObjectPowerSort,
   add2eExecuteObjectMagicPower: add2eExecuteObjectMagicPowerGuarded,
   add2eMagicItemEquippedOrUsable: add2eMagicItemPowerUsable,
