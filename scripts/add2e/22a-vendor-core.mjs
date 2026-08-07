@@ -675,7 +675,7 @@ async function recordProjectileSpent({ actor, projectile, quantity: qty = 1 }) {
     itemId: projectile?.id,
     itemName: projectile?.name,
     img: projectile?.img,
-    quantity: Math.max(1, Math.floor(num(qty, 1)))
+    quantity: Math.max(1, Math.floor(num(qty, 1))
   };
 
   if (!payload.actorId || !(payload.itemId || payload.itemName)) return false;
@@ -846,51 +846,6 @@ export function registerRecoveryHooks() {
   Hooks.on("updateCombat", (c, ch) => {
     if (ch?.active === false || ch?.round === null) recover(c, "updateCombat");
   });
-}
-
-export function patchAttackRollProjectileConsumption() {
-  if (globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V22_PROJECTILE_RECOVERY) return;
-  const original = globalThis.add2eAttackRoll;
-  if (typeof original !== "function") return;
-
-  globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V22_PROJECTILE_RECOVERY = true;
-  globalThis.add2eAttackRoll = async function add2eAttackRollWithProjectiles(args = {}) {
-    const actor = args.actor ?? (args.actorId ? game.actors?.get(args.actorId) : null);
-    const arme = args.arme ?? (actor && args.itemId ? actor.items?.get(args.itemId) : null);
-    if (!actorUsesProjectileInventory(actor)) return original.call(this, args);
-
-    let attackArgs = args;
-    if (actor && arme) {
-      const resolved = resolveProjectileForAttack({ actor, arme });
-      if (resolved.required) {
-        const projectile = resolved.projectile;
-        if (!resolved.ok || !projectile) {
-          await spendProjectileForAttack({ actor, arme });
-          return false;
-        }
-
-        const projectileSystem = projectile.system ?? {};
-        const weaponSystem = arme.system ?? {};
-        const systemForAttack = {
-          ...weaponSystem,
-          degats: projectileSystem.degats ?? projectileSystem.dégâts ?? weaponSystem.degats,
-          dégâts: projectileSystem.dégâts ?? projectileSystem.degats ?? weaponSystem.dégâts,
-          type_degats: projectileSystem.type_degats ?? weaponSystem.type_degats
-        };
-        const armeForAttack = new Proxy(arme, {
-          get(target, property, receiver) {
-            if (property === "system") return systemForAttack;
-            return Reflect.get(target, property, receiver);
-          }
-        });
-        attackArgs = { ...args, actor, arme: armeForAttack };
-      }
-    }
-
-    const r = await original.call(this, attackArgs);
-    if (r === true && actor && arme) await spendProjectileForAttack({ actor, arme });
-    return r;
-  };
 }
 
 function bindMoneyInputs(sheet, root) {
