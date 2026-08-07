@@ -246,14 +246,11 @@ export function equipmentRows(actor) {
   }).join("") : `<div class="empty">Aucun équipement.</div>`;
   return `${moneyPanel(actor)}${body}`;
 }
-function sumPreparedTree(value) { if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, value); if (typeof value === "string") return Math.max(0, num(value, 0)); if (!value || typeof value !== "object") return 0; return Object.values(value).reduce((sum, child) => sum + sumPreparedTree(child), 0); }
 export function preparedCount(sort) {
-  const flags = sort?.flags?.add2e ?? {}; const system = sort?.system ?? {};
-  const direct = [sort?.getFlag?.("add2e", "memorizedCount"), flags.memorizedCount, flags.preparedCount, system.memorizedCount, system.preparedCount, system.prepared, system.memorise, system.memorized, system.memorisation?.value, system.memorisation, system.slots?.prepared, system.slots?.value];
-  let best = direct.reduce((maximum, value) => { const numeric = num(value, NaN); return Number.isFinite(numeric) ? Math.max(maximum, numeric) : maximum; }, 0);
-  best = Math.max(best, sumPreparedTree(sort?.getFlag?.("add2e", "memorizedByList")), sumPreparedTree(flags.memorizedByList), sumPreparedTree(flags.preparedByList), sumPreparedTree(system.memorizedByList), sumPreparedTree(system.preparedByList));
-  try { best = Math.max(best, Number(globalThis.add2eGetTotalMemorizedCount?.(sort)) || 0); } catch (_error) {}
-  return Math.max(0, best);
+  if (typeof globalThis.add2eGetTotalMemorizedCount !== "function") {
+    throw new Error("Le propriétaire canonique de la mémorisation des sorts est indisponible pour le HUD.");
+  }
+  return Math.max(0, Number(globalThis.add2eGetTotalMemorizedCount(sort)) || 0);
 }
 function isObjectPowerSpell(sort) { const system = sort?.system ?? {}; if (system.isPower === true || system.isObjectPower === true || system.sourceWeaponId || system.sourceItemId || system.powerIndex !== undefined) return true; try { return globalThis.add2eIsObjectMagicSpellForPreparation?.(sort) === true; } catch (_error) { return false; } }
 export function spells(actor) { return actorItems(actor).filter(item => String(item.type ?? "").toLowerCase() === "sort" && !isObjectPowerSpell(item) && preparedCount(item) > 0); }
