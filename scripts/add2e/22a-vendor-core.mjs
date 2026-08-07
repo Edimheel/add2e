@@ -973,6 +973,6 @@ export function registerGlobals() {
   globalThis.add2eSpendProjectileForAttack = spendProjectileForAttack;
   globalThis.add2eRecoverProjectilesForCombat = recoverProjectilesForCombat;
   globalThis.add2eAssignItemToToken = assignItemToToken;
-  globalThis.add2eAssignProjectileToToken = assignItemToToken;
+  globalThis.add2eAssignProjectileToToken = assignProjectileToToken;
   globalThis.add2eVendorActorUsesProjectileInventory = actorUsesProjectileInventory;
 }
