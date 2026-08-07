@@ -40,6 +40,7 @@
                       <tr title="Toucher : {{row.attackDetailsTitle}}&#10;Dégâts : {{row.damageDetailsTitle}}">
                         <td>
                           <b>{{row.name}}</b>
+                          {{#if row.isThrown}}<div class="a2e-small">Qté : {{row.stackQuantity}}</div>{{/if}}
                           {{#if row.projectileName}}<div class="a2e-small">{{row.projectileName}} ×{{row.projectileQuantity}}</div>{{/if}}
                           {{#if row.projectileMissing}}<div class="a2e-small equip-red">Projectile manquant</div>{{/if}}
                         </td>
@@ -101,6 +102,7 @@
                       <td><img class="arme-img-attack" data-item-id="{{row.id}}" src="{{row.img}}" title="Attaquer avec {{row.name}}" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;"></td>
                       <td>
                         <b>{{row.name}}</b>
+                        {{#if row.isThrown}}<div class="a2e-small">Qté : {{row.stackQuantity}}</div>{{/if}}
                         {{#if row.projectileName}}<div class="a2e-small">{{row.projectileName}} ×{{row.projectileQuantity}}</div>{{/if}}
                         {{#if row.projectileMissing}}<div class="a2e-small equip-red">Projectile manquant</div>{{/if}}
                       </td>
