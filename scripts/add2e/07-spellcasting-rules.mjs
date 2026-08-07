@@ -667,10 +667,9 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
         }
       }
       const nextByList = add2eGetMemorizedByList(sort);
-      if (next > 0) nextByList[key] = next;
-      else delete nextByList[key];
+      nextByList[key] = next;
       for (const listKey of Object.keys(nextByList)) {
-        if ((Number(nextByList[listKey]) || 0) <= 0) delete nextByList[listKey];
+        if (listKey !== key && (Number(nextByList[listKey]) || 0) <= 0) delete nextByList[listKey];
       }
       const total = Object.values(nextByList).reduce((sum, amount) => sum + (Number(amount) || 0), 0);
       await sort.update({
