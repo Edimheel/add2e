@@ -1,7 +1,8 @@
 /**
  * ADD2E — Pierre Magique
  * Clerc niveau 1
- * Version : 2026-06-06-pierre-magique-time-engine-v1
+ * Compatible Foundry V13/V14/V15.
+ * Version : 2026-08-07-pierre-magique-resource-v2
  *
  * Le fichier d'origine indique durationRounds: 0.
  * La migration utilise donc le moteur de temps en durée spéciale, sans expiration automatique inventée.
@@ -9,26 +10,16 @@
  * Contrat onUse : true = consommé ; false = non consommé.
  */
 
-console.log("%c[ADD2E][PIERRE_MAGIQUE] 2026-06-06-pierre-magique-time-engine-v1", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][PIERRE_MAGIQUE] 2026-08-07-pierre-magique-resource-v2", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
-  const DialogV2 = foundry.applications?.api?.DialogV2;
-  if (!DialogV2) {
-    ui.notifications.error("Pierre Magique : DialogV2 introuvable.");
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    ui.notifications.error("Pierre Magique : l’API de fenêtre ADD2E est indisponible.");
     return false;
   }
-
-  const esc = value => String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
-  function chatStyleData() {
-    return CONST.CHAT_MESSAGE_STYLES
-      ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
-      : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    ui.notifications.error("Pierre Magique : les constructeurs de cartes ADD2E sont indisponibles.");
+    return false;
   }
 
   function sourceItemFromContext() {
@@ -46,9 +37,17 @@ const __add2eOnUseResult = await (async () => {
 
   function casterTokenFor(caster) {
     return canvas.tokens?.controlled?.[0]
-      ?? ((typeof token !== "undefined" && token) ? token : null)
+      ?? ((typeof token !== "undefined" && token?.actor) ? token : null)
       ?? caster?.getActiveTokens?.()[0]
       ?? null;
+  }
+
+  function resourceEngine() {
+    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+    if (!engine || typeof engine.recoverResource !== "function") {
+      throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour Pierre Magique.");
+    }
+    return engine;
   }
 
   function tags() {
@@ -114,6 +113,55 @@ const __add2eOnUseResult = await (async () => {
     };
   }
 
+  function magicStoneResource(caster, sourceItem, existing, qty) {
+    const list = tags();
+    const flags = {
+      add2e: {
+        ...timeFlags({ sourceItem, caster, qty }),
+        createdBySpell: "Pierre Magique",
+        spellUuid: sourceItem?.uuid ?? null,
+        casterUuid: caster?.uuid ?? null,
+        tags: list
+      }
+    };
+    return {
+      id: `${existing.uuid ?? existing.id}:magic-stone-stack`,
+      type: "generated-ammunition",
+      label: existing.name,
+      document: existing,
+      actor: caster,
+      item: existing,
+      target: "quantity",
+      get current() {
+        return Math.max(0, Number(existing.system?.quantite ?? existing.system?.quantity ?? 0) || 0);
+      },
+      maximum: null,
+      recovery: qty,
+      source: {
+        kind: "spell",
+        id: String(sourceItem?.id ?? ""),
+        uuid: String(sourceItem?.uuid ?? ""),
+        name: String(sourceItem?.name ?? "Pierre Magique")
+      },
+      context: {
+        consumer: "pierre-magique",
+        casterId: String(caster?.id ?? ""),
+        sourceItemId: String(sourceItem?.id ?? "")
+      },
+      write: next => existing.update({
+        "system.quantite": next,
+        "system.quantity": next,
+        "system.tags": list,
+        "system.description": "Pierres enchantées par le sort Pierre Magique. Durée spéciale, à suivre selon la règle validée par le MJ.",
+        flags
+      }, {
+        add2eInternal: true,
+        add2eReason: "magic-stone-resource-recovery",
+        render: false
+      })
+    };
+  }
+
   async function createOrUpdateStones({ caster, sourceItem, qty }) {
     const itemName = "Pierre magique";
     const list = tags();
@@ -127,19 +175,20 @@ const __add2eOnUseResult = await (async () => {
       }
     };
 
-    const existing = Array.from(caster.items ?? []).find(i =>
-      i.type === "objet" && String(i.name ?? "").toLowerCase() === itemName.toLowerCase()
+    const existing = Array.from(caster.items ?? []).find(candidate =>
+      candidate.type === "objet" && String(candidate.name ?? "").toLowerCase() === itemName.toLowerCase()
     );
 
     if (existing) {
-      const currentQty = Number(existing.system?.quantite ?? existing.system?.quantity ?? 0) || 0;
-      await existing.update({
-        "system.quantite": currentQty + qty,
-        "system.quantity": currentQty + qty,
-        "system.tags": list,
-        "system.description": "Pierres enchantées par le sort Pierre Magique. Durée spéciale, à suivre selon la règle validée par le MJ.",
-        flags
-      });
+      const recovered = await resourceEngine().recoverResource(
+        magicStoneResource(caster, sourceItem, existing, qty),
+        {
+          amount: qty,
+          reason: "magic-stone-created",
+          consumer: "pierre-magique"
+        }
+      );
+      if (!recovered.ok) throw new Error("La pile de pierres magiques n’a pas pu être augmentée.");
       return existing;
     }
 
@@ -163,8 +212,8 @@ const __add2eOnUseResult = await (async () => {
 
   async function applyTrackingEffect(caster, data) {
     const oldIds = Array.from(caster.effects ?? [])
-      .filter(e => (e.flags?.add2e?.tags ?? []).includes("sort:pierre_magique"))
-      .map(e => e.id)
+      .filter(effect => (effect.flags?.add2e?.tags ?? []).includes("sort:pierre_magique"))
+      .map(effect => effect.id)
       .filter(Boolean);
     if (oldIds.length) await caster.deleteEmbeddedDocuments("ActiveEffect", oldIds);
     await caster.createEmbeddedDocuments("ActiveEffect", [data]);
@@ -172,35 +221,28 @@ const __add2eOnUseResult = await (async () => {
   }
 
   async function createChat({ caster, sourceItem, qty }) {
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: caster }),
-      content: `
-        <div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,#fffaf0 0%,#fff7df 100%);border:1.5px solid #e2bc63;overflow:hidden;padding:0;font-family:var(--font-primary);">
-          <div style="background:linear-gradient(90deg,#6f4b12 0%,#b88924 100%);padding:8px 12px;color:white;display:flex;align-items:center;gap:10px;border-bottom:2px solid #8a611d;">
-            <img src="${esc(caster?.img || "icons/svg/mystery-man.svg")}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
-            <div style="line-height:1.2;flex:1;">
-              <div style="font-weight:bold;font-size:1.05em;">${esc(caster?.name ?? "Lanceur")}</div>
-              <div style="font-size:0.85em;opacity:0.95;">lance <b>${esc(sourceItem?.name ?? "Pierre Magique")}</b></div>
-            </div>
-            <div style="text-align:right;font-size:0.78em;opacity:0.95;">Sort divin</div>
-            <img src="${esc(sourceItem?.img || "systems/add2e/assets/icones/sorts/pierre-magique.webp")}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
-          </div>
-          <div style="padding:10px;">
-            <div style="border:1px solid #e2bc63;background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:#6f4b12;">
-              <div style="font-weight:bold;color:#2f8f46;">PIERRES MAGIQUES CRÉÉES</div>
-              <div>Quantité : <b>${esc(qty)}</b>.</div>
-              <div>Durée : <b>spéciale / non expirée automatiquement</b>.</div>
-            </div>
-            <details style="margin-top:8px;background:white;border:1px solid #e2bc63;border-radius:6px;">
-              <summary style="cursor:pointer;color:#6f4b12;font-weight:600;padding:6px;">Règle appliquée</summary>
-              <div style="padding:8px;font-size:0.85em;line-height:1.45;color:#6f4b12;">
-                Enchante jusqu'à trois petites pierres pouvant être lancées comme projectiles magiques. Le fichier d'origine ne définit pas de durée en rounds ; le suivi est donc marqué comme durée spéciale.
-              </div>
-            </details>
-          </div>
-        </div>`,
-      ...chatStyleData()
-    });
+    const card = {
+      actor: caster,
+      title: sourceItem?.name ?? "Pierre Magique",
+      icon: "fas fa-gem",
+      variant: "spell",
+      source: {
+        name: caster?.name ?? "Lanceur",
+        img: caster?.img ?? sourceItem?.img ?? "icons/svg/mystery-man.svg",
+        type: "Sort divin"
+      },
+      rows: [
+        { label: "Pierres créées", value: String(qty) },
+        { label: "Dégâts", value: "1d4" },
+        { label: "Durée", value: "Spéciale" }
+      ],
+      trustedBodyHtml: "<p>Les pierres créées sont des projectiles magiques. Aucune expiration automatique en rounds n’est appliquée tant que la durée exacte n’est pas validée dans le système.</p>",
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: caster })
+      }
+    };
+    globalThis.add2eBuildChatCard(card);
+    return globalThis.add2eCreateChatCard(card);
   }
 
   const sourceItem = sourceItemFromContext();
@@ -220,12 +262,13 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  const result = await DialogV2.wait({
+  const result = await globalThis.add2eDialogWait({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "cast",
+    add2eClasses: ["add2e-pierre-magique-dialog"],
     window: { title: "Lancement : Pierre Magique" },
-    add2eTheme: "cleric",
-    add2eImg: sourceItem.img || "systems/add2e/assets/icones/sorts/pierre-magique.webp",
     content: `
-      <form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">
+      <form class="add2e-pierre-magique-form" style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">
         <div class="form-group">
           <label style="font-weight:bold;">Nombre de pierres :</label>
           <input type="number" name="qty" value="3" min="1" max="3" step="1" style="width:100%;">
@@ -238,13 +281,18 @@ const __add2eOnUseResult = await (async () => {
       {
         action: "cast",
         label: "Lancer",
-        icon: "fa-solid fa-gem",
+        icon: "<i class='fas fa-gem'></i>",
         default: true,
-        callback: (event, button) => ({ qty: Number(button.form.elements.qty?.value || 3) })
+        callback: (_event, button) => ({ qty: Number(button.form.elements.qty?.value || 3) })
       },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
+      }
     ],
-    rejectClose: false
+    close: () => null
   });
 
   if (!result) return false;
@@ -258,8 +306,8 @@ const __add2eOnUseResult = await (async () => {
     const casterToken = casterTokenFor(caster);
     await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX?.(casterToken ?? caster, "divine");
     await globalThis.ADD2E_PLAY_SPELL_FX?.("pierre_magique", { casterToken });
-  } catch (err) {
-    console.warn("[ADD2E][PIERRE_MAGIQUE][VFX][IGNORED]", err);
+  } catch (error) {
+    console.warn("[ADD2E][PIERRE_MAGIQUE][VFX][IGNORED]", error);
   }
 
   await createChat({ caster, sourceItem, qty });
