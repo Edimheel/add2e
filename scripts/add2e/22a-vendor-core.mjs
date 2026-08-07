@@ -2,7 +2,7 @@
 // Les projectiles dépensés en jeu passent par ce cœur vendeur et le relais MJ générique ADD2E_GM_OPERATION.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_VENDOR_VERSION = "2026-08-07-vendor-v26-thrown-reequip";
+export const ADD2E_VENDOR_VERSION = "2026-08-07-vendor-v27-explicit-projectile-type";
 export const VENDOR_SCOPE = "add2e";
 export const VENDOR_NAME = "Marchand de composants et projectiles";
 export const VENDOR_FOLDER = "ADD2E — Boutique";
@@ -146,6 +146,12 @@ function isThrownWeapon(item) {
     throw new Error("Le propriétaire canonique du profil d’usage des armes est indisponible.");
   }
   return globalThis.add2eGetWeaponUsageProfile(item)?.isThrown === true;
+}
+
+function projectileSpentType(value, item = null) {
+  const type = String(value ?? "").trim().toLowerCase();
+  if (type === "thrown-weapon" || type === "ammunition") return type;
+  return isThrownWeapon(item) ? "thrown-weapon" : "ammunition";
 }
 
 function recoveryItemForEntry(actor, entry) {
@@ -659,6 +665,8 @@ async function recordProjectileSpentLocal(payload = {}) {
   const itemKey = payload.itemId ?? payload.itemName ?? null;
   if (!actorId || !itemKey) return false;
 
+  const item = payload.itemId ? actor.items?.get?.(payload.itemId) ?? null : null;
+  const type = projectileSpentType(payload.type, item);
   const spent = foundry.utils.deepClone(await combat.getFlag(VENDOR_SCOPE, PROJECTILE_FLAG) ?? {});
   spent[actorId] ??= { actorId, actorName: actor.name ?? payload.actorName ?? "Acteur", items: {} };
   spent[actorId].actorName = actor.name ?? payload.actorName ?? spent[actorId].actorName;
@@ -667,6 +675,7 @@ async function recordProjectileSpentLocal(payload = {}) {
     itemId: payload.itemId ?? null,
     itemName: payload.itemName ?? "Projectile",
     img: payload.img ?? null,
+    type,
     spent: 0
   };
 
@@ -674,6 +683,7 @@ async function recordProjectileSpentLocal(payload = {}) {
   entry.itemId = payload.itemId ?? entry.itemId ?? null;
   entry.itemName = payload.itemName ?? entry.itemName ?? "Projectile";
   entry.img = payload.img ?? entry.img ?? null;
+  entry.type = type;
   entry.spent = Math.max(0, Math.floor(num(entry.spent, 0))) + Math.max(1, Math.floor(num(payload.quantity, 1)));
 
   await combat.setFlag(VENDOR_SCOPE, PROJECTILE_FLAG, spent);
@@ -697,6 +707,7 @@ async function recordProjectileSpent({ actor, projectile, quantity: qty = 1 }) {
     itemId: projectile?.id,
     itemName: projectile?.name,
     img: projectile?.img,
+    type: projectileSpentType(null, projectile),
     quantity: Math.max(1, Math.floor(num(qty, 1)))
   };
 
@@ -775,7 +786,8 @@ export async function recoverProjectilesForCombat(combat) {
       if (!spentQty) continue;
 
       const item = recoveryItemForEntry(actor, ie);
-      const thrown = isThrownWeapon(item);
+      const type = projectileSpentType(ie.type, item);
+      const thrown = type === "thrown-weapon";
       const recovered = item
         ? thrown ? spentQty : Math.max(0, Math.round(spentQty * RECOVERY_RATE))
         : 0;
@@ -785,6 +797,7 @@ export async function recoverProjectilesForCombat(combat) {
           actor: actor.name,
           itemId: ie.itemId ?? null,
           itemName: ie.itemName ?? "Projectile",
+          type,
           spent: spentQty
         });
       } else if (recovered) {
@@ -809,7 +822,7 @@ export async function recoverProjectilesForCombat(combat) {
         actor: actor.name,
         actorId: actor.id,
         item: ie.itemName,
-        type: thrown ? "thrown-weapon" : "ammunition",
+        type,
         typeLabel: thrown ? "Arme lancée" : "Munition",
         spent: spentQty,
         recovered
