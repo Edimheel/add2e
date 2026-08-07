@@ -1,7 +1,8 @@
 // ADD2E — Core vendeur : stock, monnaie, achats et affectation MJ.
 // Les projectiles dépensés en jeu passent par ce cœur vendeur et le relais MJ générique ADD2E_GM_OPERATION.
+// Compatible Foundry V13/V14/V15.
 
-export const ADD2E_VENDOR_VERSION = "2026-06-02-vendor-v22-projectile-recovery-registration";
+export const ADD2E_VENDOR_VERSION = "2026-08-07-vendor-v23-canonical-projectile-resource";
 export const VENDOR_SCOPE = "add2e";
 export const VENDOR_NAME = "Marchand de composants et projectiles";
 export const VENDOR_FOLDER = "ADD2E — Boutique";
@@ -54,6 +55,51 @@ function actorType(actor) {
 
 function actorUsesProjectileInventory(actor) {
   return actorType(actor) === "personnage";
+}
+
+function projectileResourceEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!engine
+    || typeof engine.consumeResource !== "function"
+    || typeof engine.recoverResource !== "function") {
+    throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour les projectiles.");
+  }
+  return engine;
+}
+
+function projectileResource(actor, projectile, { cost = 0, recovery = 0 } = {}) {
+  if (!actor || !projectile) throw new Error("Projectile ou acteur introuvable pour la ressource canonique.");
+  return {
+    id: `${projectile.uuid ?? projectile.id}:projectile-stack`,
+    type: "ammunition",
+    label: projectile.name,
+    document: projectile,
+    actor,
+    item: projectile,
+    target: String(projectile.id ?? "projectile"),
+    get current() {
+      return quantity(projectile);
+    },
+    maximum: null,
+    cost: Math.max(0, Math.floor(num(cost, 0))),
+    recovery: Math.max(0, Math.floor(num(recovery, 0))),
+    source: {
+      kind: "ammunition",
+      id: String(projectile.id ?? ""),
+      uuid: String(projectile.uuid ?? ""),
+      name: String(projectile.name ?? "Projectile")
+    },
+    context: {
+      consumer: "22a-vendor-core",
+      actorId: String(actor.id ?? ""),
+      projectileId: String(projectile.id ?? "")
+    },
+    write: next => projectile.update(quantityUpdate(next), {
+      add2eInternal: true,
+      add2eReason: "projectile-resource",
+      render: false
+    })
+  };
 }
 
 function packIds(kind) {
@@ -216,10 +262,19 @@ function isResponsibleGM() {
 }
 
 export async function dialog({ title = "Marchand", content = "", yes = "Compris", no = "Fermer" } = {}) {
-  const D = foundry?.applications?.api?.DialogV2;
-  if (D?.confirm) return D.confirm({ window: { title }, content, yes: { label: yes }, no: { label: no }, modal: true });
-  ui.notifications?.warn?.(content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim());
-  return false;
+  if (typeof globalThis.add2eDialogConfirm !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
+  return globalThis.add2eDialogConfirm({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "yes",
+    add2eClasses: ["add2e-vendor-dialog"],
+    window: { title },
+    content,
+    yes: { label: yes },
+    no: { label: no },
+    modal: true
+  });
 }
 
 export const alertBox = (title, message) => dialog({
@@ -617,9 +672,27 @@ export async function spendProjectileForAttack({ actor, arme } = {}) {
     return { ok: false, required: true, spent: 0 };
   }
 
-  await projectile.update(quantityUpdate(qty - 1), { add2eReason: "projectile-spent-attack" });
+  const consumed = await projectileResourceEngine().consumeResource(
+    projectileResource(actor, projectile, { cost: 1 }),
+    {
+      cost: 1,
+      reason: "projectile-spent-attack",
+      consumer: "22a-vendor-core"
+    }
+  );
+  if (!consumed.ok) {
+    await alertBox("Projectile indisponible", `${projectile.name} n’est plus disponible.`);
+    return { ok: false, required: true, spent: 0 };
+  }
+
   await recordProjectileSpent({ actor, projectile, quantity: 1 });
-  return { ok: true, required: true, spent: 1, projectile };
+  return {
+    ok: true,
+    required: true,
+    spent: 1,
+    projectile,
+    remaining: Math.max(0, Number(consumed.resources?.[0]?.after ?? quantity(projectile)) || 0)
+  };
 }
 
 async function showRecovery(rows) {
@@ -652,7 +725,23 @@ export async function recoverProjectilesForCombat(combat) {
 
       const recovered = Math.max(0, Math.round(spentQty * RECOVERY_RATE));
       const item = actor.items?.get(ie.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === ie.itemName && isAmmunition(i));
-      if (item && recovered) await item.update(quantityUpdate(quantity(item) + recovered), { add2eReason: "projectile-combat-recovery" });
+      if (item && recovered) {
+        const result = await projectileResourceEngine().recoverResource(
+          projectileResource(actor, item, { recovery: recovered }),
+          {
+            amount: recovered,
+            reason: "projectile-combat-recovery",
+            consumer: "22a-vendor-core"
+          }
+        );
+        if (!result.ok) {
+          console.warn("[ADD2E][PROJECTILES][RECOVERY][RESOURCE_FAILED]", {
+            actor: actor.name,
+            item: item.name,
+            recovered
+          });
+        }
+      }
 
       const row = { actor: actor.name, actorId: actor.id, item: ie.itemName, spent: spentQty, recovered };
       rows.push(row);
@@ -687,11 +776,6 @@ export function registerSockets() {
 
     if (data.type === SOCKET_RECOVERY) {
       if (data.userId === game.user?.id) await showRecovery(data.rows ?? []);
-      return;
-    }
-
-    if (data.type === GM_OPERATION_TYPE && data.operation === GM_OPERATION_PROJECTILE_SPENT) {
-      await recordProjectileSpentLocal(data.payload ?? {});
       return;
     }
 
