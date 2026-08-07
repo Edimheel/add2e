@@ -4,7 +4,10 @@
 // Les restrictions de classe restent dans 03-equipment-rules.mjs.
 // ============================================================
 
-const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-08-07-single-projectile-owner-v9";
+import { add2eMeasureTokenGridDistance } from "../add2e-attack/03-attack-rules.mjs";
+import { add2eAttackMeasureContactAndDistance } from "../add2e-attack/04g-attack-roll-range.mjs";
+
+const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-08-07-automatic-hybrid-weapon-mode-v10";
 const ADD2E_WEAPON_TYPES = new Set(["arme", "weapon"]);
 const ADD2E_ARMOR_TYPES = new Set(["armure", "armor"]);
 
@@ -374,32 +377,6 @@ export async function handleItemAction({ actor, action, itemId, itemType, sheet 
   return false;
 }
 
-function add2eWeaponModeStore() {
-  if (!(globalThis.__ADD2E_WEAPON_ATTACK_MODES_V2 instanceof Map)) {
-    globalThis.__ADD2E_WEAPON_ATTACK_MODES_V2 = new Map();
-  }
-  return globalThis.__ADD2E_WEAPON_ATTACK_MODES_V2;
-}
-
-function add2eWeaponModeKey(actorId, weaponId) {
-  return `${String(actorId ?? "")}|${String(weaponId ?? "")}`;
-}
-
-function add2eSetTransientWeaponAttackMode(actorId, weaponId, mode) {
-  if (!actorId || !weaponId) return "pending";
-  const value = String(mode ?? "").toLowerCase();
-  const normalized = value === "contact" || value === "throw" ? value : "pending";
-  add2eWeaponModeStore().set(add2eWeaponModeKey(actorId, weaponId), normalized);
-  return normalized;
-}
-
-function add2eTakeTransientWeaponAttackMode(actorId, weaponId, fallback = "contact") {
-  const key = add2eWeaponModeKey(actorId, weaponId);
-  const mode = add2eWeaponModeStore().get(key) ?? fallback;
-  add2eWeaponModeStore().delete(key);
-  return String(mode ?? "").toLowerCase() === "throw" ? "throw" : "contact";
-}
-
 function add2eStripThrownTags(value) {
   const removed = new Set([
     "projectile_lance",
@@ -413,12 +390,13 @@ function add2eStripThrownTags(value) {
   return add2eEquipmentArray(value).filter(tag => !removed.has(add2eEquipmentNormalize(tag)));
 }
 
-function add2eModeAwareWeapon(weapon, actorId, weaponId) {
+function add2eModeAwareWeapon(weapon, mode) {
+  if (mode !== "contact") return weapon;
+
   const sourceSystem = weapon?.system ?? {};
   const canonicalTags = add2eCanonicalWeaponUsageTags(weapon) ?? sourceSystem.tags;
-  const thrownSystem = { ...sourceSystem, tags: canonicalTags };
   const contactSystem = {
-    ...thrownSystem,
+    ...sourceSystem,
     categorie: "melee",
     category: "melee",
     arme_de_jet: false,
@@ -430,16 +408,15 @@ function add2eModeAwareWeapon(weapon, actorId, weaponId) {
     porteeCourte: 0,
     porteeMoyenne: 0,
     porteeLongue: 0,
-    tags: add2eStripThrownTags(thrownSystem.tags),
-    effectTags: add2eStripThrownTags(thrownSystem.effectTags),
-    effecttags: add2eStripThrownTags(thrownSystem.effecttags)
+    tags: add2eStripThrownTags(canonicalTags),
+    effectTags: add2eStripThrownTags(sourceSystem.effectTags),
+    effecttags: add2eStripThrownTags(sourceSystem.effecttags)
   };
-  const key = add2eWeaponModeKey(actorId, weaponId);
 
   return new Proxy(weapon, {
     get(target, property, receiver) {
       if (property !== "system") return Reflect.get(target, property, receiver);
-      return add2eWeaponModeStore().get(key) === "contact" ? contactSystem : thrownSystem;
+      return contactSystem;
     }
   });
 }
@@ -514,7 +491,34 @@ function add2eActionGateSourceToken(actor, args = {}) {
     ?? null;
 }
 
-async function add2eRunActionGateOnUse({ gateResults = [], actor, cible, sourceToken, targetToken, weapon, actionTags = [] } = {}) {
+function add2eResolveAutomaticWeaponUsage({ actor, weapon, args = {} } = {}) {
+  const profile = add2eGetWeaponUsageProfile(weapon);
+  const sourceToken = add2eActionGateSourceToken(actor, args);
+  const targetToken = add2eActionGateTargetToken(args);
+
+  let distanceCible = 0;
+  let auContact = false;
+  if (sourceToken && targetToken) {
+    ({ distanceCible, auContact } = add2eAttackMeasureContactAndDistance({
+      srcToken: sourceToken,
+      cibleToken: targetToken,
+      measureDistance: add2eMeasureTokenGridDistance
+    }));
+  }
+
+  if (profile.isHybrid && (!sourceToken || !targetToken)) {
+    ui.notifications?.warn?.("Impossible de déterminer automatiquement si l’arme doit être utilisée au contact ou lancée : token source ou cible manquant.");
+    return { ok: false, profile, sourceToken, targetToken, distanceCible, auContact, mode: null };
+  }
+
+  const mode = profile.isThrown
+    ? (profile.isHybrid && auContact ? "contact" : "throw")
+    : "other";
+
+  return { ok: true, profile, sourceToken, targetToken, distanceCible, auContact, mode };
+}
+
+async function add2eRunActionGateOnUse({ gateResults = [], actor, cible, sourceToken, targetToken, weapon, contact = false, actionTags = [] } = {}) {
   for (const result of gateResults) {
     if (result?.kind !== "save_gate") continue;
     const rule = result?.rule ?? {};
@@ -548,7 +552,7 @@ async function add2eRunActionGateOnUse({ gateResults = [], actor, cible, sourceT
           targetActor: cible,
           targetToken,
           weapon,
-          contact: false,
+          contact,
           actionTags
         }
       };
@@ -565,17 +569,17 @@ async function add2eRunActionGateOnUse({ gateResults = [], actor, cible, sourceT
   }
 }
 
-async function add2eResolveEquipmentAttackGate({ actor, weapon, args = {} } = {}) {
-  const engine = globalThis.Add2eEffectsEngine;
+async function add2eResolveEquipmentAttackGate({ actor, weapon, sourceToken = null, targetToken = null, contact = false, args = {} } = {}) {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
   if (typeof engine?.evaluateActionRules !== "function" || !actor || !weapon) {
     return { allowed: true, details: [] };
   }
 
-  const targetToken = add2eActionGateTargetToken(args);
+  targetToken ??= add2eActionGateTargetToken(args);
   const cible = add2eActionGateTargetActor(targetToken);
   if (!targetToken || !cible) return { allowed: true, details: [] };
 
-  const sourceToken = add2eActionGateSourceToken(actor, args);
+  sourceToken ??= add2eActionGateSourceToken(actor, args);
   const actionTags = [...add2eEquipmentTags(weapon)];
   const action = {
     type: "attaque",
@@ -585,7 +589,7 @@ async function add2eResolveEquipmentAttackGate({ actor, weapon, args = {} } = {}
     targetActor: cible,
     targetToken,
     weapon,
-    contact: false,
+    contact,
     actionTags
   };
   const actorTags = engine.getContextTags?.(actor) ?? engine.getActiveTags?.(actor) ?? [];
@@ -603,6 +607,7 @@ async function add2eResolveEquipmentAttackGate({ actor, weapon, args = {} } = {}
     sourceToken,
     targetToken,
     weapon,
+    contact,
     actionTags
   });
   if (ownerRules.allowed === false) {
@@ -622,6 +627,7 @@ async function add2eResolveEquipmentAttackGate({ actor, weapon, args = {} } = {}
     sourceToken,
     targetToken,
     weapon,
+    contact,
     actionTags
   });
   return {
@@ -650,39 +656,36 @@ function add2eInstallSingleAttackRoute() {
     const weapon = args.arme ?? (actor && args.itemId ? actor.items?.get?.(args.itemId) : null);
     if (!actor || !weapon) return add2eAttackCore.call(this, args);
 
-    const profile = add2eGetWeaponUsageProfile(weapon);
-    if (profile.isThrown && !profile.isHybrid) {
+    const usage = add2eResolveAutomaticWeaponUsage({ actor, weapon, args });
+    if (usage.ok === false) return false;
+
+    if (usage.mode === "throw") {
       const available = await add2eValidateWeaponAttackAvailability({ actor, weapon, mode: "throw", notify: true });
       if (!available) return false;
     }
 
-    const actionGate = await add2eResolveEquipmentAttackGate({ actor, weapon, args });
+    const attackWeapon = usage.profile.isHybrid
+      ? add2eModeAwareWeapon(weapon, usage.mode)
+      : weapon;
+
+    const actionGate = await add2eResolveEquipmentAttackGate({
+      actor,
+      weapon: attackWeapon,
+      sourceToken: usage.sourceToken,
+      targetToken: usage.targetToken,
+      contact: usage.auContact,
+      args
+    });
     if (actionGate.allowed === false) return false;
 
-    // Les armes à projectile propulsé appartiennent désormais exclusivement au noyau 04b.
-    // Ce pont ne gère plus que le choix contact/lancer et la consommation des armes réellement lancées.
-    if (!profile.isThrown) return add2eAttackCore.call(this, args);
+    // Les projectiles propulsés restent exclusivement gérés par le noyau d'attaque 04b.
+    if (!usage.profile.isThrown) return add2eAttackCore.call(this, { ...args, actor, arme: attackWeapon });
 
-    const modeKey = add2eWeaponModeKey(actor.id, weapon.id);
-    const defaultMode = profile.isHybrid ? "contact" : "throw";
+    const result = await add2eAttackCore.call(this, { ...args, actor, arme: attackWeapon });
+    if (result !== true || usage.mode !== "throw") return result;
 
-    if (profile.isHybrid) add2eSetTransientWeaponAttackMode(actor.id, weapon.id, "pending");
-
-    try {
-      const attackWeapon = add2eModeAwareWeapon(weapon, actor.id, weapon.id);
-      const result = await add2eAttackCore.call(this, { ...args, actor, arme: attackWeapon });
-      if (result !== true) return result;
-
-      const mode = profile.isHybrid
-        ? add2eTakeTransientWeaponAttackMode(actor.id, weapon.id, defaultMode)
-        : "throw";
-      if (mode !== "throw") return result;
-
-      const consumedWeapon = await add2eConsumeThrownWeaponAfterAttack(actor, weapon);
-      return consumedWeapon?.ok === false ? false : result;
-    } finally {
-      if (profile.isHybrid) add2eWeaponModeStore().delete(modeKey);
-    }
+    const consumedWeapon = await add2eConsumeThrownWeaponAfterAttack(actor, weapon);
+    return consumedWeapon?.ok === false ? false : result;
   };
 
   bridge.__add2eWeaponUsageAttackBridge = true;
@@ -693,7 +696,6 @@ function add2eInstallSingleAttackRoute() {
 
 function add2eInstallEquipmentActions() {
   globalThis.add2eGetWeaponUsageProfile = add2eGetWeaponUsageProfile;
-  globalThis.add2eSetTransientWeaponAttackMode = add2eSetTransientWeaponAttackMode;
   globalThis.add2eValidateWeaponAttackAvailability = add2eValidateWeaponAttackAvailability;
   globalThis.add2eHandleItemAction = handleItemAction;
   globalThis.handleItemAction = handleItemAction;
@@ -701,7 +703,6 @@ function add2eInstallEquipmentActions() {
   add2eInstallWeaponUsageNormalization();
 
   Hooks.once("ready", () => {
-    // Le noyau 04 est chargé avant ready ; aucun pont consommable n'existe encore.
     if (add2eCaptureAttackCore()) {
       add2eInstallSingleAttackRoute();
       return;
