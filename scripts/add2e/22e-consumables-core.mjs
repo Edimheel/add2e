@@ -14,7 +14,7 @@ import {
   esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-06-24-consumables-core-v16-resolved-hud-materials";
+export const ADD2E_CONSUMABLES_VERSION = "2026-08-07-consumables-core-v17-canonical-resource";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -53,23 +53,30 @@ function componentSettingEnabled() {
   }
 }
 
+function componentResourceEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!engine
+    || typeof engine.consumeResources !== "function"
+    || typeof engine.recoverResources !== "function") {
+    throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour les composants de sort.");
+  }
+  return engine;
+}
+
 async function componentAlert(message, title = "Composant manquant") {
   const clean = String(message || "Composant matériel manquant.").trim();
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  const content = `<div class="add2e-dialog add2e-consumable-alert">
-    <h3 style="margin:0 0 0.45rem 0;"><i class="fas fa-pouch"></i> ${esc(title)}</h3>
-    <p style="margin:0;">${esc(clean)}</p>
-  </div>`;
-  if (DialogV2?.alert) {
-    await DialogV2.alert({ window: { title }, content, ok: { label: "Compris" }, modal: true });
-    return true;
+  if (typeof globalThis.add2eDialogAlert !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
-  if (DialogV2?.confirm) {
-    await DialogV2.confirm({ window: { title }, content, yes: { label: "Compris" }, no: { label: "Fermer" }, modal: true });
-    return true;
-  }
-  ui.notifications?.warn?.(clean);
-  return false;
+  return globalThis.add2eDialogAlert({
+    add2eTheme: "wizard",
+    add2eClasses: ["add2e-consumable-alert"],
+    window: { title },
+    content: `<div class="add2e-dialog add2e-consumable-alert">
+      <h3 style="margin:0 0 0.45rem 0;"><i class="fas fa-pouch"></i> ${esc(title)}</h3>
+      <p style="margin:0;">${esc(clean)}</p>
+    </div>`
+  });
 }
 
 function itemTextFields(item) {
@@ -330,12 +337,16 @@ function compatibleComponentKey(itemKey, requirementKey) {
   return itemKey.includes(requirementKey) || requirementKey.includes(itemKey);
 }
 
-function findActorComponent(actor, requirement) {
+function matchingActorComponents(actor, requirement) {
   const reqKeys = requirementKeys(requirement);
-  const matches = [...(actor?.items ?? [])].filter(isSpellComponentItem).filter(item => {
+  return [...(actor?.items ?? [])].filter(isSpellComponentItem).filter(item => {
     const keys = componentKeys(item);
     return reqKeys.some(reqKey => keys.some(itemKey => compatibleComponentKey(itemKey, reqKey)));
   });
+}
+
+function findActorComponent(actor, requirement) {
+  const matches = matchingActorComponents(actor, requirement);
   return matches.find(item => quantity(item) >= Number(requirement?.quantity ?? 1)) ?? matches[0] ?? null;
 }
 
@@ -482,43 +493,185 @@ function installZeroQuantityComponentCleanup() {
   return true;
 }
 
-async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
-  if (!componentSettingEnabled()) return { ok: true, skipped: true, consumed: [] };
+function projectedComponentQuantity(projected, item) {
+  if (!item?.id) return 0;
+  return projected.has(item.id) ? projected.get(item.id) : quantity(item);
+}
+
+function findProjectedComponentForRequirement(actor, requirement, projected) {
+  const candidates = requirement?.alternatives?.length ? requirement.alternatives : [requirement];
+  for (const candidate of candidates) {
+    const required = Math.max(1, Math.floor(Number(candidate?.quantity ?? 1) || 1));
+    const item = matchingActorComponents(actor, candidate)
+      .find(component => projectedComponentQuantity(projected, component) >= required) ?? null;
+    if (item) return { item, requirement: candidate, group: requirement?.alternatives?.length ? requirement : null };
+  }
+  return null;
+}
+
+function buildSpellComponentConsumptionPlan(actor, sort, requirements = null) {
+  if (!componentSettingEnabled()) return { ok: true, skipped: true, allocations: [] };
   const requirementsToReserve = Array.isArray(requirements) && requirements.length ? requirements : spellComponentRequirements(sort);
   if (!requirementsToReserve.length) {
-    if (!spellHasMaterialComponent(sort)) return { ok: true, skipped: true, consumed: [] };
-    return { ok: false, blocked: true, consumed: [], message: `${sort?.name ?? "Ce sort"} requiert une composante matérielle, mais aucun composant précis n'est déclaré sur le sort.` };
+    if (!spellHasMaterialComponent(sort)) return { ok: true, skipped: true, allocations: [] };
+    return {
+      ok: false,
+      blocked: true,
+      allocations: [],
+      message: `${sort?.name ?? "Ce sort"} requiert une composante matérielle, mais aucun composant précis n'est déclaré sur le sort.`
+    };
   }
-  const consumed = [];
+
+  const projected = new Map();
+  const allocations = new Map();
   for (const requirement of requirementsToReserve) {
-    const found = findActorComponentForRequirement(actor, requirement);
-    const item = found?.item ?? null;
-    const selectedRequirement = found?.requirement ?? requirement;
-    const before = quantity(item);
-    if (!item || before < selectedRequirement.quantity) {
-      for (const entry of [...consumed].reverse()) {
-        const live = actor?.items?.get?.(entry.itemId);
-        if (live && quantity(live) === entry.after) await live.update(quantityUpdate(entry.before), { add2eReason: "spell-component-reserve-rollback" });
-      }
-      return { ok: false, blocked: true, consumed: [], missing: requirement, message: `${actor?.name ?? "Le lanceur"} n'a pas le composant requis : ${requirement.name} (${requirement.quantity}).` };
+    const found = findProjectedComponentForRequirement(actor, requirement, projected);
+    if (!found?.item) {
+      return {
+        ok: false,
+        blocked: true,
+        allocations: [],
+        missing: requirement,
+        message: `${actor?.name ?? "Le lanceur"} n'a pas le composant requis : ${requirement.name} (${requirement.quantity}).`
+      };
     }
-    if (selectedRequirement.consume === false || isReusableComponentItem(item)) continue;
-    const after = before - selectedRequirement.quantity;
-    await item.update(quantityUpdate(after), { add2eReason: "spell-component-reserved-gm" });
-    consumed.push({ itemId: item.id, itemName: item.name, requirement: selectedRequirement, groupRequirement: found?.group, before, after, quantity: selectedRequirement.quantity, deleted: false });
+    const selectedRequirement = found.requirement;
+    if (selectedRequirement.consume === false || isReusableComponentItem(found.item)) continue;
+
+    const required = Math.max(1, Math.floor(Number(selectedRequirement.quantity ?? 1) || 1));
+    const item = found.item;
+    const current = projectedComponentQuantity(projected, item);
+    projected.set(item.id, current - required);
+
+    const allocation = allocations.get(item.id) ?? {
+      item,
+      itemId: item.id,
+      itemName: item.name,
+      before: quantity(item),
+      quantity: 0,
+      requirements: []
+    };
+    allocation.quantity += required;
+    allocation.after = allocation.before - allocation.quantity;
+    allocation.requirements.push({ requirement: selectedRequirement, groupRequirement: found.group ?? null });
+    allocations.set(item.id, allocation);
   }
+
+  return { ok: true, blocked: false, skipped: false, allocations: [...allocations.values()] };
+}
+
+function componentResourceDescriptor(actor, allocation, mode = "consume") {
+  const item = allocation?.item ?? actor?.items?.get?.(allocation?.itemId) ?? null;
+  if (!item) throw new Error("Composant de sort introuvable pour la transaction resource.");
+  const refund = mode === "recover";
+  return {
+    id: `${item.uuid ?? item.id}:spell-component`,
+    type: "spell-component",
+    label: item.name,
+    document: item,
+    actor,
+    item,
+    target: String(item.id ?? "component"),
+    get current() {
+      return quantity(item);
+    },
+    maximum: refund ? Math.max(0, Number(allocation.before) || 0) : null,
+    cost: refund ? 0 : Math.max(0, Number(allocation.quantity) || 0),
+    recovery: refund ? Math.max(0, Number(allocation.quantity) || 0) : 0,
+    source: {
+      kind: "spell-component",
+      id: String(item.id ?? ""),
+      uuid: String(item.uuid ?? ""),
+      name: String(item.name ?? "Composant")
+    },
+    context: {
+      actorId: String(actor?.id ?? ""),
+      itemId: String(item.id ?? ""),
+      consumer: refund ? "22e-consumables-core:refund" : "22e-consumables-core:reserve"
+    },
+    write: next => item.update(quantityUpdate(next), {
+      add2eReason: refund ? "spell-component-refund-resource" : "spell-component-reserve-resource",
+      render: false
+    })
+  };
+}
+
+async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
+  const plan = buildSpellComponentConsumptionPlan(actor, sort, requirements);
+  if (!plan.ok || plan.skipped) {
+    return {
+      ...plan,
+      consumed: [],
+      actorId: actor?.id,
+      sortId: sort?.id,
+      sortName: sort?.name
+    };
+  }
+  if (!plan.allocations.length) {
+    return { ok: true, blocked: false, actorId: actor?.id, sortId: sort?.id, sortName: sort?.name, consumed: [] };
+  }
+
+  const engine = componentResourceEngine();
+  const descriptors = plan.allocations.map(allocation => componentResourceDescriptor(actor, allocation, "consume"));
+  const transaction = await engine.consumeResources(descriptors, {
+    reason: "spell-component-reserve",
+    consumer: "22e-consumables-core"
+  });
+  if (!transaction.ok) {
+    const unavailable = transaction.resources?.[0] ?? null;
+    return {
+      ok: false,
+      blocked: true,
+      consumed: [],
+      actorId: actor?.id,
+      sortId: sort?.id,
+      sortName: sort?.name,
+      message: unavailable
+        ? `${actor?.name ?? "Le lanceur"} n'a plus assez de ${unavailable.label} (${unavailable.current}/${unavailable.cost}).`
+        : "Les composants matériels nécessaires ne sont plus disponibles."
+    };
+  }
+
+  const allocationsByItem = new Map(plan.allocations.map(allocation => [String(allocation.itemId), allocation]));
+  const consumed = (transaction.resources ?? []).map(state => {
+    const allocation = allocationsByItem.get(String(state.item?.id ?? state.target ?? ""));
+    const first = allocation?.requirements?.[0] ?? {};
+    return {
+      itemId: allocation?.itemId ?? state.item?.id ?? null,
+      itemName: allocation?.itemName ?? state.label,
+      requirement: first.requirement ?? null,
+      groupRequirement: first.groupRequirement ?? null,
+      before: state.before,
+      after: state.after,
+      quantity: Math.max(0, Number(allocation?.quantity ?? state.cost) || 0),
+      deleted: false
+    };
+  });
   return { ok: true, blocked: false, actorId: actor?.id, sortId: sort?.id, sortName: sort?.name, consumed };
 }
 
 async function refundSpellComponentsLocal(reservation) {
   const actor = game.actors?.get(reservation?.actorId);
   if (!actor) return false;
-  for (const entry of [...(reservation?.consumed ?? [])].reverse()) {
+  const allocations = [];
+  for (const entry of reservation?.consumed ?? []) {
     const item = actor.items?.get(entry.itemId);
-    if (!item || quantity(item) !== Number(entry.after)) return false;
-    await item.update(quantityUpdate(entry.before), { add2eReason: "spell-component-refund-gm" });
+    if (!item) return false;
+    allocations.push({
+      item,
+      itemId: item.id,
+      itemName: item.name,
+      before: Math.max(0, Number(entry.before) || 0),
+      after: Math.max(0, Number(entry.after) || 0),
+      quantity: Math.max(0, Number(entry.quantity) || 0)
+    });
   }
-  return true;
+  if (!allocations.length) return true;
+  const result = await componentResourceEngine().recoverResources(
+    allocations.map(allocation => componentResourceDescriptor(actor, allocation, "recover")),
+    { reason: "spell-component-refund", consumer: "22e-consumables-core" }
+  );
+  return result.ok === true;
 }
 
 function requestGmComponentOperation(operation, payload) {
