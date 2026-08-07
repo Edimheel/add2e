@@ -1,5 +1,10 @@
 // ADD2E — Actor sheet listeners : sorts, mémorisation, pouvoirs d'objets et parchemins.
 
+import {
+  add2eMagicItemRechargeInfo,
+  add2eRechargeMagicItemCharges
+} from "./object-magic/power-runtime.mjs";
+
 let ADD2E_SCROLL_SPELL_INDEX_PROMISE = null;
 
 function add2eScrollNorm(value) {
@@ -523,6 +528,100 @@ function add2eBindArcaneScrollControls(sheet, html) {
   });
 }
 
+function add2eBindMagicItemRechargeControls(sheet, html) {
+  const actor = sheet?.actor;
+  if (!actor?.items) return;
+
+  const buttons = html.find(".add2e-magic-recharge-button");
+  buttons.each(function() {
+    const itemId = String(this.closest?.("[data-add2e-recharge-item]")?.dataset?.itemId ?? "");
+    const item = actor.items.get(itemId);
+    const info = item ? add2eMagicItemRechargeInfo(item) : null;
+    this.style.display = info?.available ? "inline-flex" : "none";
+    this.disabled = !info?.available;
+    this.title = info?.available
+      ? `Recharger ${item.name} (${info.formula})`
+      : info?.rechargeable && info?.current >= info?.maximum
+        ? "Charges déjà au maximum"
+        : "Recharge indisponible";
+  });
+
+  buttons.off("click.add2eMagicRecharge").on("click.add2eMagicRecharge", async function(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const itemId = String(this.closest?.("[data-add2e-recharge-item]")?.dataset?.itemId ?? "");
+    const item = actor.items.get(itemId);
+    if (!item) throw new Error("Objet magique introuvable pour la recharge depuis la feuille.");
+
+    const info = add2eMagicItemRechargeInfo(item);
+    if (!info.available) {
+      if (info.rechargeable && info.current >= info.maximum) ui.notifications.info(`${item.name} possède déjà toutes ses charges.`);
+      else ui.notifications.warn(`${item.name} ne peut pas être rechargé.`);
+      return false;
+    }
+    if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+      throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles pour la recharge d’objet magique.");
+    }
+
+    sheet._add2eRememberActiveTab?.(html);
+    this.disabled = true;
+    try {
+      const result = await add2eRechargeMagicItemCharges(actor, item);
+      if (!result.ok) {
+        if (result.reason === "full") ui.notifications.info(`${item.name} possède déjà toutes ses charges.`);
+        else ui.notifications.warn(`La recharge de ${item.name} a échoué.`);
+        return false;
+      }
+
+      const card = {
+        actor,
+        title: "Recharge d’objet magique",
+        icon: "fas fa-battery-half",
+        variant: "magic",
+        source: {
+          name: item.name,
+          img: item.img,
+          type: "Objet magique"
+        },
+        rows: [
+          { label: "Formule", value: result.formula },
+          { label: "Résultat", value: String(result.rolled) },
+          { label: "Charges", value: `${result.before} → ${result.after} / ${result.maximum}` },
+          { label: "Récupérées", value: String(result.recovered) }
+        ],
+        message: result.recovered > 0
+          ? `${result.recovered} charge(s) récupérée(s).`
+          : "Aucune charge récupérée.",
+        chatData: {
+          speaker: ChatMessage.getSpeaker({ actor }),
+          rolls: result.roll ? [result.roll] : [],
+          flags: {
+            add2e: {
+              chatCardType: "magic-item-recharge",
+              itemId: item.id,
+              itemUuid: item.uuid,
+              formula: result.formula,
+              rolled: result.rolled,
+              recovered: result.recovered,
+              before: result.before,
+              after: result.after,
+              maximum: result.maximum
+            }
+          }
+        }
+      };
+      globalThis.add2eBuildChatCard(card);
+      await globalThis.add2eCreateChatCard(card);
+      ui.notifications.info(`${item.name} récupère ${result.recovered} charge(s).`);
+      await sheet.render(false);
+      return true;
+    } finally {
+      this.disabled = false;
+    }
+  });
+}
+
 function add2eBindModernSheetSpellPreparationControls(sheet, html) {
   const actor = sheet?.actor ?? null;
   const root = html?.jquery ? html[0] : (html?.[0] ?? html);
@@ -575,6 +674,7 @@ export function add2eBindActorSheetSpellListeners(sheet, html) {
   // modernes de préparation doivent conserver ce document exact au clic.
   add2eBindModernSheetSpellPreparationControls(self, html);
   add2eBindArcaneScrollControls(self, html);
+  add2eBindMagicItemRechargeControls(self, html);
 
   html.find('.toggle-sort-desc-chat').off('click').on('click', function(ev) {
     ev.preventDefault();
