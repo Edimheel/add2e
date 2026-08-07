@@ -28,12 +28,14 @@ import { injectStyle } from "./styles.mjs";
 import { installActionHudRuntime } from "./runtime.mjs";
 
 const CAPABILITY_GROUPS = new Set(["classe", "race", "familier"]);
+const COMBAT_GROUPS = new Set(["armes", "projectiles", "armures"]);
 
 let hudActor = null;
 let hudToken = null;
 let activeTab = "attaques";
 let selectedSpellGroup = null;
 let selectedCapabilityGroup = "classe";
+let selectedCombatGroup = "armes";
 let dragging = false;
 let resizing = false;
 let manualIntentUntil = 0;
@@ -262,7 +264,7 @@ function hudHtml(actor, token = null) {
   const spellsAndPowers = `${spellHtml}${objectPowerContent}`;
   const tab = (key, icon, label) => `<button type="button" class="a2e-hud-tab ${activeTab === key ? "active" : ""}" data-tab="${key}"><i class="${icon}"></i> ${label}</button>`;
   const section = (key, html) => `<section class="${activeTab === key ? "active" : ""}" data-section="${key}">${html}</section>`;
-  return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor))}${section("sorts", spellsAndPowers)}${section("capacites", capabilityRows(actor))}${section("equipement", equipmentRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Combat")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("equipement", "fas fa-box-open", "Équipement")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
+  return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor, selectedCombatGroup))}${section("sorts", spellsAndPowers)}${section("capacites", capabilityRows(actor))}${section("equipement", equipmentRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Combat")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("equipement", "fas fa-box-open", "Équipement")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
 }
 export function renderHud(actor = null, token = null, { reason = "render" } = {}) {
   if (dragging || resizing) return false;
@@ -277,6 +279,7 @@ export function renderHud(actor = null, token = null, { reason = "render" } = {}
   hudActor = actor;
   hudToken = token ?? tokenFor(actor);
   if (!TABS.includes(activeTab)) activeTab = "attaques";
+  if (!COMBAT_GROUPS.has(selectedCombatGroup)) selectedCombatGroup = "armes";
   const element = existing ?? document.createElement("div");
   element.id = HUD_ID;
   element.innerHTML = hudHtml(actor, hudToken);
@@ -370,6 +373,11 @@ async function handleAction(event, actor, button) {
   const action = button.dataset.action;
   try {
     if (action === "toggle-collapse") return setCollapsed(!hud()?.classList.contains("collapsed"), true);
+    if (action === "select-combat-group") {
+      const group = String(button.dataset.combatGroup ?? "armes");
+      selectedCombatGroup = COMBAT_GROUPS.has(group) ? group : "armes";
+      return renderHud(actor, tokenFor(actor), { reason: "select-combat-group" });
+    }
     if (action === "select-spell-group") { selectedSpellGroup = button.dataset.spellGroup || selectedSpellGroup; return renderHud(actor, tokenFor(actor), { reason: "select-spell-group" }); }
     if (action === "select-capability-group") {
       const group = String(button.dataset.capabilityGroup ?? "classe");
@@ -429,8 +437,17 @@ async function toggleEquipment(actor, itemId) {
 async function removeEffect(actor, effectId) {
   const effect = actor?.effects?.get?.(effectId) ?? effects(actor).find(entry => String(entry.id ?? entry._id ?? "") === String(effectId));
   if (!effect) return ui.notifications.warn("Effet introuvable.");
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  const confirmed = DialogV2?.confirm ? await DialogV2.confirm({ window: { title: "Supprimer l'effet" }, content: `<p>Supprimer <strong>${esc(effectDisplayName(effect))}</strong> ?</p>`, yes: { label: "Supprimer", icon: "fas fa-trash" }, no: { label: "Annuler" } }) : true;
+  if (typeof globalThis.add2eDialogConfirm !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  const confirmed = await globalThis.add2eDialogConfirm({
+    add2eTheme: "danger",
+    add2ePrimaryAction: "yes",
+    add2eClasses: ["add2e-hud-remove-effect-dialog"],
+    window: { title: "Supprimer l'effet" },
+    content: `<p>Supprimer <strong>${esc(effectDisplayName(effect))}</strong> ?</p>`,
+    yes: { label: "Supprimer", icon: "<i class='fas fa-trash'></i>" },
+    no: { label: "Annuler", icon: "<i class='fas fa-times'></i>" },
+    modal: true
+  });
   if (!confirmed) return false;
   if (actor?.effects?.get?.(effect.id)) await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
   else if (typeof effect.delete === "function") await effect.delete();
@@ -483,7 +500,7 @@ export function followCombat(combat = game.combat, forceOpen = false) {
   const token = combatant?.token?.object ?? (combatant?.tokenId ? canvas?.tokens?.get?.(combatant.tokenId) : null) ?? null;
   return renderHud(combatant.actor, token, { reason: "canonical-combat" });
 }
-export function getRuntimeState() { return { actor: hudActor ?? currentActor(), token: hudToken, activeTab, selectedSpellGroup, selectedCapabilityGroup, dragging, resizing }; }
+export function getRuntimeState() { return { actor: hudActor ?? currentActor(), token: hudToken, activeTab, selectedSpellGroup, selectedCapabilityGroup, selectedCombatGroup, dragging, resizing }; }
 
 installActionHudRuntime({ renderHud, refreshHud, closeHud, resetHudPosition, applyGeometry, pointerDown, bindCanvasControlledTokenClick, setManualIntent, followCombat, getRuntimeState });
 
