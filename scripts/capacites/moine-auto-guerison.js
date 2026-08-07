@@ -3,8 +3,7 @@
  * Script exécuté via on_use d'une classFeature.
  * Compatible Foundry V13 / V14 / V15.
  */
-const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-07-27-shared-chat-card-v5";
-const ADD2E_MOINE_AUTO_GUERISON_DAY_ROUNDS = 1440;
+const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-08-07-canonical-resource-v6";
 
 globalThis.ADD2E_MOINE_AUTO_GUERISON_VERSION = ADD2E_MOINE_AUTO_GUERISON_VERSION;
 
@@ -45,57 +44,6 @@ function a2eMonkClassItem(currentActor, currentFeature) {
     const tags = Array.isArray(system.tags) ? system.tags.map(normalize) : [];
     return label === "moine" || tags.includes("classe_moine") || tags.includes("classe:moine");
   }) ?? null;
-}
-
-function a2eMonkCurrentTick() {
-  const engine = game?.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
-  try {
-    const tick = Number(engine?.currentTick?.());
-    if (Number.isFinite(tick)) return Math.max(0, Math.floor(tick));
-  } catch (_error) {}
-
-  try {
-    const tick = Number(game.settings?.get?.("add2e", "worldTimeTick"));
-    if (Number.isFinite(tick)) return Math.max(0, Math.floor(tick));
-  } catch (_error) {}
-
-  const worldTime = Number(game.time?.worldTime);
-  return Number.isFinite(worldTime) ? Math.max(0, Math.floor(worldTime / 60)) : 0;
-}
-
-function a2eMonkCooldownState(currentActor, currentTick) {
-  const raw = currentActor.getFlag("add2e", "moine.autoGuerison");
-  const data = raw && typeof raw === "object" ? raw : {};
-  const lastUseTick = Number(data.lastUseTick ?? data.usedAtTick);
-  const storedAvailableAtTick = Number(data.availableAtTick);
-  const availableAtTick = Number.isFinite(storedAvailableAtTick)
-    ? Math.max(0, Math.floor(storedAvailableAtTick))
-    : (Number.isFinite(lastUseTick)
-      ? Math.max(0, Math.floor(lastUseTick)) + ADD2E_MOINE_AUTO_GUERISON_DAY_ROUNDS
-      : null);
-  const remainingRounds = availableAtTick === null
-    ? 0
-    : Math.max(0, availableAtTick - currentTick);
-
-  return {
-    data,
-    lastUseTick: Number.isFinite(lastUseTick) ? Math.max(0, Math.floor(lastUseTick)) : null,
-    availableAtTick,
-    remainingRounds
-  };
-}
-
-function a2eMonkFormatRounds(rounds) {
-  let remaining = Math.max(0, Math.ceil(Number(rounds) || 0));
-  const days = Math.floor(remaining / 1440);
-  remaining %= 1440;
-  const hours = Math.floor(remaining / 60);
-  const rest = remaining % 60;
-  const parts = [];
-  if (days) parts.push(`${days} jour(s)`);
-  if (hours) parts.push(`${hours} heure(s)`);
-  if (rest || !parts.length) parts.push(`${rest} round(s)`);
-  return parts.join(" et ");
 }
 
 function a2eGetMonkRow(classItem, level) {
@@ -143,13 +91,6 @@ if (!healFormula) {
   return false;
 }
 
-const currentTick = a2eMonkCurrentTick();
-const cooldown = a2eMonkCooldownState(actor, currentTick);
-if (cooldown.remainingRounds > 0) {
-  ui.notifications.warn(`Auto-guérison déjà utilisée : disponible dans ${a2eMonkFormatRounds(cooldown.remainingRounds)}.`);
-  return false;
-}
-
 const current = a2eNum(actor.system?.pdv, 0);
 const max = a2eNum(actor.system?.points_de_coup, current);
 const healRoll = await a2eRollMonkHealFormula(healFormula);
@@ -166,19 +107,10 @@ if (gained <= 0) {
   return false;
 }
 
-const availableAtTick = currentTick + ADD2E_MOINE_AUTO_GUERISON_DAY_ROUNDS;
-await actor.update({ "system.pdv": healed });
-await actor.setFlag("add2e", "moine.autoGuerison", {
-  used: true,
-  lastUseTick: currentTick,
-  availableAtTick,
-  cooldownRounds: ADD2E_MOINE_AUTO_GUERISON_DAY_ROUNDS,
-  amount: gained,
-  formula: healFormula,
-  rollTotal: healAmount,
-  timeEngineVersion: globalThis.ADD2E_TIME_ENGINE_VERSION ?? game?.add2e?.time?.version ?? null,
-  at: Date.now()
-});
+await actor.update(
+  { "system.pdv": healed },
+  { add2eInternal: true, add2eReason: "monk-self-heal", render: false }
+);
 
 const buildChatCard = globalThis.add2eBuildChatCard;
 const createChatCard = globalThis.add2eCreateChatCard;
@@ -194,8 +126,16 @@ const cardOptions = {
     { label: "Récupération", value: `+${gained} PV` },
     { label: "Formule", value: `${healFormula} → ${healAmount}` },
     { label: "PV", value: `${current} → ${healed} / ${max}` },
-    { label: "Utilisation", value: "1 / jour" }
-  ]
+    { label: "Utilisation", value: feature?.uses?.label ?? "1 / jour" }
+  ],
+  chatData: {
+    flags: {
+      add2e: {
+        sourceCapacite: "moine-auto-guerison",
+        version: ADD2E_MOINE_AUTO_GUERISON_VERSION
+      }
+    }
+  }
 };
 buildChatCard(cardOptions);
 await createChatCard(cardOptions);
