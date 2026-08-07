@@ -5,6 +5,7 @@ import {
   ADD2E_VENDOR_VERSION,
   VENDOR_SETTING,
   registerRecoveryHooks,
+  patchAttackRollProjectileConsumption,
   patchActorSheetMoney,
   registerGlobals,
   isVendorActor,
@@ -537,6 +538,7 @@ Hooks.once("ready", async () => {
   await enforceShopTokenPresentation().catch(err => console.warn("[ADD2E][SHOP][TOKEN_PRESENTATION]", err));
 
   registerRecoveryHooks();
+  patchAttackRollProjectileConsumption();
   patchActorSheetMoney();
   patchVendorTokenClick();
   patchArmorerTokenClick();
