@@ -683,69 +683,29 @@ export function add2eBindActorSheetSpellListeners(sheet, html) {
     if (debug) console.log("Sort réel trouvé", !!sort, sort);
 
     if (!sort) {
+      if (typeof globalThis.add2eMagicItemEquippedOrUsable !== "function"
+        || typeof globalThis.add2eMagicObjectPowerArray !== "function"
+        || typeof globalThis.add2eMagicPowerGeneratedId !== "function"
+        || typeof globalThis.add2eBuildVirtualObjectPowerSort !== "function") {
+        throw new Error("Le runtime canonique des pouvoirs d’objets magiques est indisponible.");
+      }
+
       const itemSources = self.actor.items.filter(i => {
         if (!["arme", "armure", "objet", "object", "magic", "objet_magique"].includes(String(i.type || "").toLowerCase())) return false;
-        if (typeof add2eMagicItemEquippedOrUsable === "function") {
-          if (!add2eMagicItemEquippedOrUsable(i)) return false;
-        } else if (i.system?.equipee === false) return false;
-        const pouvoirs = typeof add2eMagicObjectPowerArray === "function" ? add2eMagicObjectPowerArray(i) : [];
-        return pouvoirs.length > 0;
+        if (!globalThis.add2eMagicItemEquippedOrUsable(i)) return false;
+        return globalThis.add2eMagicObjectPowerArray(i).length > 0;
       });
 
       if (debug) console.log("Sources objets magiques candidates", itemSources.map(i => ({ id: i.id, name: i.name, type: i.type })));
 
       for (const itemSource of itemSources) {
-        const pouvoirs = typeof add2eMagicObjectPowerArray === "function" ? add2eMagicObjectPowerArray(itemSource) : [];
+        const pouvoirs = globalThis.add2eMagicObjectPowerArray(itemSource);
 
         for (let idx = 0; idx < pouvoirs.length; idx++) {
-          const generatedId = typeof add2eMagicPowerGeneratedId === "function" ? add2eMagicPowerGeneratedId(itemSource, idx) : itemSource.id.substring(0, 14) + idx.toString().padStart(2, "0");
+          const generatedId = globalThis.add2eMagicPowerGeneratedId(itemSource, idx);
           if (generatedId !== sortId) continue;
 
-          if (typeof add2eBuildVirtualObjectPowerSort === "function") {
-            sort = add2eBuildVirtualObjectPowerSort(self.actor, itemSource, pouvoirs[idx], idx);
-          } else {
-            const p = pouvoirs[idx];
-            const onUse = String(p?.onUse ?? p?.onuse ?? p?.on_use ?? p?.script ?? "").trim();
-            const cost = Math.max(0, Number(p?.cout ?? p?.cost ?? 0) || 0);
-            const maxGlobal = Number(itemSource.system?.charges?.max ?? itemSource.system?.max_charges ?? 0) || 0;
-            const isGlobal = maxGlobal > 0;
-            const max = cost <= 0 ? 1 : (isGlobal ? maxGlobal : (Number(p?.max ?? p?.charges ?? 1) || 1));
-
-            sort = new Item({
-              _id: generatedId,
-              name: String(p?.name ?? p?.nom ?? itemSource.name ?? "Pouvoir"),
-              type: "sort",
-              img: p?.img || itemSource.img,
-              system: {
-                niveau: Number(p?.niveau ?? p?.level ?? 1) || 1,
-                école: p?.ecole || p?.["école"] || "Magique",
-                description: p?.description || "",
-                composantes: "Objet",
-                temps_incantation: p?.activation || "Objet magique",
-                isPower: true,
-                isObjectPower: true,
-                sourceWeaponId: itemSource.id,
-                sourceItemId: itemSource.id,
-                sourceItemName: itemSource.name,
-                powerIndex: idx,
-                cost,
-                cout: cost,
-                max,
-                isGlobalCharge: isGlobal,
-                onUse,
-                onuse: onUse,
-                on_use: onUse
-              },
-              flags: { add2e: { memorizedCount: cost <= 0 ? 1 : max, originalOnUse: onUse, sourceType: "objet_magique", sourceItemId: itemSource.id, sourceItemName: itemSource.name, powerIndex: idx } }
-            }, { parent: self.actor });
-
-            sort.getFlag = (scope, key) => {
-              if (scope !== "add2e") return null;
-              if (key === "memorizedCount") return cost <= 0 ? 1 : max;
-              if (key === "originalOnUse") return onUse;
-              return sort.flags?.add2e?.[key] ?? null;
-            };
-          }
+          sort = globalThis.add2eBuildVirtualObjectPowerSort(self.actor, itemSource, pouvoirs[idx], idx);
           break;
         }
         if (sort) break;
