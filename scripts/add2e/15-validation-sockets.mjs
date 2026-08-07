@@ -13,7 +13,7 @@ const PROJECTILE_FLAG = "projectilesDepensesCombat";
 const FAMILIAR_SCOPE = "add2e";
 const FAMILIAR_FLAG = "familiar";
 const FAMILIAR_RANGE_DEFAULT = 12;
-const VERSION = "2026-07-28-gm-relay-canonical-familiar-hp-v9";
+const VERSION = "2026-08-07-gm-relay-projectile-type-v10";
 const TAG = "[ADD2E][GM-RELAY]";
 
 const FAMILIAR_ASSETS = Object.freeze({
@@ -333,6 +333,11 @@ async function updateToken(payload = {}) {
   return token.update(payload.updateData ?? {});
 }
 
+function projectileSpendType(value) {
+  const type = String(value ?? "").trim().toLowerCase();
+  return type === "ammunition" || type === "thrown-weapon" ? type : null;
+}
+
 async function vendorRecordProjectileSpent(payload = {}) {
   const combat = game.combats?.get?.(payload.combatId) ?? game.combat;
   if (!combat?.getFlag || !combat?.setFlag) return console.warn(`${TAG}[PROJECTILE_SPENT] combat introuvable`, payload);
@@ -341,15 +346,17 @@ async function vendorRecordProjectileSpent(payload = {}) {
   if (!actorId || !itemKey) return console.warn(`${TAG}[PROJECTILE_SPENT] payload incomplet`, payload);
   const spent = clone(await combat.getFlag(VENDOR_SCOPE, PROJECTILE_FLAG) ?? {});
   const quantity = Math.max(1, Math.floor(num(payload.quantity, 1)));
+  const type = projectileSpendType(payload.type);
   spent[actorId] ??= { actorId, actorName: payload.actorName ?? "", items: {} };
   spent[actorId].actorName = payload.actorName ?? spent[actorId].actorName ?? "";
   spent[actorId].items ??= {};
-  spent[actorId].items[itemKey] ??= { itemId: payload.itemId ?? null, itemName: payload.itemName ?? "Projectile", img: payload.img ?? null, spent: 0 };
+  spent[actorId].items[itemKey] ??= { itemId: payload.itemId ?? null, itemName: payload.itemName ?? "Projectile", img: payload.img ?? null, type, spent: 0 };
   const item = spent[actorId].items[itemKey];
   item.spent = Math.max(0, num(item.spent, 0)) + quantity;
   item.itemId = payload.itemId ?? item.itemId ?? null;
   item.itemName = payload.itemName ?? item.itemName ?? "Projectile";
   item.img = payload.img ?? item.img ?? null;
+  item.type = type ?? item.type ?? null;
   await combat.setFlag(VENDOR_SCOPE, PROJECTILE_FLAG, spent);
   return true;
 }
