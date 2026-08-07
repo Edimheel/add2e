@@ -186,63 +186,27 @@ export async function add2eExecuteObjectMagicPower(actor, itemSource, power, ind
   }
   const powerName = String(power?.name ?? power?.nom ?? power?.label ?? itemSource.name ?? "Pouvoir").trim() || "Pouvoir";
   const onUse = add2eObjectPowerOnUsePath(power);
-  const cost = add2eObjectPowerCost(power);
-  const current = add2eObjectPowerCurrentCharges(itemSource, power, index);
   if (!onUse) {
     ui.notifications.warn(`${powerName} n'a pas de script utilisable.`);
     return false;
   }
-  if (cost > 0 && current < cost) {
-    ui.notifications.warn(`${itemSource.name} n'a pas assez de charges pour utiliser ${powerName}.`);
+  if (typeof globalThis.add2eCastSpell !== "function") {
+    ui.notifications.error("Le lanceur canonique ADD2E des sorts et pouvoirs est indisponible.");
     return false;
   }
+
   const sort = add2eBuildVirtualObjectPowerSort(actor, itemSource, power, index);
-  try {
-    const url = onUse.includes("?") ? `${onUse}&cb=${Date.now()}` : `${onUse}?cb=${Date.now()}`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-    const code = await response.text();
-    const AsyncFunction = Object.getPrototypeOf(async function() {}).constructor;
-    const scope = {
-      actor,
-      item: itemSource,
-      sourceItem: itemSource,
-      sort,
-      power,
-      pouvoir: power,
-      powerIndex: index,
-      isObjectPower: true
-    };
-    const args = [{ actor, item: itemSource, sourceItem: itemSource, sort, power, pouvoir: power, powerIndex: index, scope }];
-    const runner = new AsyncFunction(
-      "actor", "item", "sourceItem", "sort", "power", "pouvoir", "powerIndex", "scope", "args",
-      "game", "ui", "ChatMessage", "Roll", "foundry", "canvas",
-      code
-    );
-    const result = await runner(
-      actor, itemSource, itemSource, sort, power, power, index, scope, args,
-      game, ui, ChatMessage, Roll, foundry, canvas
-    );
-    if (result !== false && cost > 0) {
-      await add2eObjectPowerSetCharges(itemSource, power, index, current - cost);
-    }
-    if (result !== false) {
-      sheet?._add2eRememberActiveTab?.();
-      sheet?.render?.(false);
-      return true;
-    }
-    return false;
-  } catch (error) {
-    console.error("[ADD2E][OBJET_MAGIQUE][POUVOIR_ERREUR]", {
-      actor: actor.name,
-      item: itemSource.name,
-      power: powerName,
-      onUse,
-      error
-    });
-    ui.notifications.error(`Erreur pendant l'utilisation de ${powerName} : ${error.message}`);
-    return false;
-  }
+  const result = await globalThis.add2eCastSpell({
+    actor,
+    sort,
+    mode: "power",
+    sourceItem: itemSource
+  });
+  if (result !== true) return false;
+
+  sheet?._add2eRememberActiveTab?.();
+  sheet?.render?.(false);
+  return true;
 }
 
 function add2eMagicItemIsPotion(item) {
