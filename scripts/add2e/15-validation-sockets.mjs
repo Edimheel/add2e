@@ -68,15 +68,6 @@ function relayNormalize(value) {
     .replace(/_+/g, "_");
 }
 
-function relaySlug(value) {
-  return String(value ?? "")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[’']/g, "_")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
 function isResponsibleGM() {
   if (!game.user?.isGM) return false;
   if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
@@ -360,31 +351,6 @@ async function vendorRecordProjectileSpent(payload = {}) {
   item.itemName = payload.itemName ?? item.itemName ?? "Projectile";
   item.img = payload.img ?? item.img ?? null;
   await combat.setFlag(VENDOR_SCOPE, PROJECTILE_FLAG, spent);
-  return true;
-}
-
-function componentItem(actor, payload = {}) {
-  if (!actor) return null;
-  if (payload.itemId && actor.items?.get?.(payload.itemId)) return actor.items.get(payload.itemId);
-  const wanted = relaySlug(payload.componentSlug ?? payload.itemSlug ?? payload.itemName ?? payload.componentName);
-  if (!wanted) return null;
-  return Array.from(actor.items ?? []).find(item => {
-    const system = item.system ?? {};
-    const flags = item.flags?.add2e ?? {};
-    if (relaySlug(system.slug ?? system.composantSlug ?? item.name) === wanted) return true;
-    const tags = [system.tags, system.effectTags, flags.tags].flatMap(value => Array.isArray(value) ? value : typeof value === "string" ? value.split(/[,;|]/g) : []);
-    return tags.some(tag => relaySlug(String(tag).replace(/^composant:/i, "")) === wanted);
-  }) ?? null;
-}
-
-async function consumeSpellComponent(payload = {}) {
-  const actor = await resolveActor(payload);
-  if (!actor) return console.warn(`${TAG}[COMPONENT] acteur introuvable`, payload);
-  const item = componentItem(actor, payload);
-  if (!item) return console.warn(`${TAG}[COMPONENT] composant introuvable`, { actor: actor.name, payload });
-  const quantity = Math.max(1, Math.floor(num(payload.quantity, 1)));
-  const before = Math.max(0, num(item.system?.quantite ?? item.system?.quantity, 0));
-  await item.update({ "system.quantite": Math.max(0, before - quantity) }, { add2eReason: "gm-relay-consume-spell-component" });
   return true;
 }
 
@@ -1120,6 +1086,7 @@ function refreshFamiliarHudControls() {
 }
 
 function scheduleFamiliarHudRefresh() {
+  familiarHudRefreshQueued = false;
   if (familiarHudRefreshQueued) return;
   familiarHudRefreshQueued = true;
   (globalThis.requestAnimationFrame ?? (callback => setTimeout(callback, 16)))(refreshFamiliarHudControls);
@@ -1270,7 +1237,6 @@ function registerSocketRelays() {
     updateToken,
     createActiveEffect,
     vendorRecordProjectileSpent,
-    consumeSpellComponent,
     createFamiliar,
     setFamiliarFollow
   };
