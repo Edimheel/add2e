@@ -1,4 +1,5 @@
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-06-shared-dialog-api-v22";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-07-canonical-class-feature-resource-v23";
+const ADD2E_CLASS_FEATURE_USAGE_FLAG = "classFeatureUsage";
 
 const GENERIC_ACTIONS = new Map([
   ["monk-surprise-reduite", "probability_check"],
@@ -95,6 +96,165 @@ function keyOf(value) {
     .replace(/[’']/g, "")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
+}
+
+class Add2eClassFeatureUsageAbort extends Error {
+  constructor() {
+    super("Utilisation de capacité annulée.");
+    this.name = "Add2eClassFeatureUsageAbort";
+  }
+}
+
+function classFeatureResourceEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!engine
+    || typeof engine.checkResourceAvailability !== "function"
+    || typeof engine.transactResources !== "function") {
+    throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour les capacités de classe.");
+  }
+  return engine;
+}
+
+function classFeatureUsageMaximum(feature, level) {
+  const uses = feature?.uses;
+  if (!uses || typeof uses !== "object" || Array.isArray(uses)) return 0;
+  const direct = Number(uses.max);
+  if (Number.isFinite(direct)) return Math.max(0, Math.floor(direct));
+
+  const expression = String(uses.maxFrom ?? "").replace(/\s+/g, "").toLowerCase();
+  if (!expression) return 0;
+  if (expression === "floor((level-1)/5)+1") return Math.max(1, Math.floor((level - 1) / 5) + 1);
+  throw new Error(`Formule uses.maxFrom non prise en charge pour « ${nameOf(feature) || "Capacité"} » : ${uses.maxFrom}`);
+}
+
+function classFeatureUsagePeriod(feature) {
+  return keyOf(feature?.uses?.per ?? "");
+}
+
+function classFeatureUsagePeriodKey(period) {
+  const worldTime = Math.max(0, Math.floor(Number(game.time?.worldTime) || 0));
+  if (period === "combat") return `combat:${game.combat?.id ?? "hors-combat"}`;
+  if (period === "day") return `day:${Math.floor(worldTime / 86400)}`;
+  if (period === "week") return `week:${Math.floor(worldTime / (86400 * 7))}`;
+  if (period === "10_years") return `10-years:${Math.floor(worldTime / (86400 * 365 * 10))}`;
+  if (period === "career") return "career";
+  if (period === "at_will" || period === "atwill") return "at-will";
+  if (!period) return "";
+  throw new Error(`Période uses.per non prise en charge : ${period}.`);
+}
+
+function classFeatureUsageResource(actor, feature) {
+  const level = featureLevel(actor, feature);
+  if (level === null) throw new Error(`Niveau de classe introuvable pour « ${nameOf(feature) || "Capacité"} ».`);
+
+  const maximum = classFeatureUsageMaximum(feature, level);
+  const period = classFeatureUsagePeriod(feature);
+  const periodKey = classFeatureUsagePeriodKey(period);
+  if (maximum <= 0 || periodKey === "at-will") return null;
+
+  const classItemId = String(feature?._add2eClassItemId ?? "").trim();
+  const classItem = classItemId ? actor.items?.get?.(classItemId) : null;
+  if (!classItem) throw new Error(`Item de classe source introuvable pour « ${nameOf(feature) || "Capacité"} ».`);
+
+  const featureKey = keyOf(feature);
+  if (!featureKey) throw new Error(`Identifiant canonique introuvable pour « ${nameOf(feature) || "Capacité"} ».`);
+
+  const readState = () => {
+    const all = classItem.getFlag?.("add2e", ADD2E_CLASS_FEATURE_USAGE_FLAG)
+      ?? classItem.flags?.add2e?.[ADD2E_CLASS_FEATURE_USAGE_FLAG]
+      ?? {};
+    const entry = all?.[featureKey];
+    if (!entry || String(entry.periodKey ?? "") !== periodKey) return { used: 0, entry: null };
+    return { used: Math.max(0, Math.floor(Number(entry.used) || 0)), entry };
+  };
+
+  const descriptor = {
+    id: `${classItem.uuid ?? classItem.id}:class-feature:${featureKey}:${periodKey}`,
+    type: "class-feature-use",
+    label: nameOf(feature) || "Capacité de classe",
+    document: classItem,
+    actor,
+    item: classItem,
+    target: featureKey,
+    get current() {
+      return Math.max(0, maximum - Math.min(maximum, readState().used));
+    },
+    maximum,
+    cost: 1,
+    recoveryPeriod: period,
+    source: {
+      kind: "class-feature",
+      id: `${classItem.id}:${featureKey}`,
+      uuid: `${classItem.uuid}#${featureKey}`,
+      name: nameOf(feature) || "Capacité de classe"
+    },
+    context: {
+      classItemId: classItem.id,
+      classItemUuid: classItem.uuid,
+      classKey: feature?._add2eClassSlug ?? null,
+      featureKey,
+      period,
+      periodKey,
+      level,
+      consumer: "04-class-active-abilities"
+    },
+    write: async next => {
+      const currentMap = clone(
+        classItem.getFlag?.("add2e", ADD2E_CLASS_FEATURE_USAGE_FLAG)
+        ?? classItem.flags?.add2e?.[ADD2E_CLASS_FEATURE_USAGE_FLAG]
+        ?? {}
+      ) ?? {};
+      const clamped = Math.max(0, Math.min(maximum, Math.floor(Number(next) || 0)));
+      const used = maximum - clamped;
+      if (used <= 0) delete currentMap[featureKey];
+      else {
+        currentMap[featureKey] = {
+          period,
+          periodKey,
+          used,
+          max: maximum,
+          updatedAt: Date.now()
+        };
+      }
+      await classItem.update(
+        { [`flags.add2e.${ADD2E_CLASS_FEATURE_USAGE_FLAG}`]: currentMap },
+        { add2eInternal: true, add2eReason: "class-feature-resource", render: false }
+      );
+    }
+  };
+
+  return { descriptor, maximum, period, periodKey, featureKey, classItem };
+}
+
+async function executeWithClassFeatureUsage(actor, feature, callback) {
+  const usage = classFeatureUsageResource(actor, feature);
+  if (!usage) return callback();
+
+  const engine = classFeatureResourceEngine();
+  const availability = engine.checkResourceAvailability(usage.descriptor, {
+    cost: 1,
+    consumer: "04-class-active-abilities:check"
+  });
+  if (!availability.ok) {
+    const label = feature?.uses?.label ? ` (${feature.uses.label})` : "";
+    ui.notifications.warn(`${usage.descriptor.label} n’est plus disponible pour cette période${label}.`);
+    return false;
+  }
+
+  try {
+    const transaction = await engine.transactResources(usage.descriptor, async () => {
+      const result = await callback();
+      if (result === false) throw new Add2eClassFeatureUsageAbort();
+      return result;
+    }, {
+      reason: "class-feature-use",
+      consumer: "04-class-active-abilities"
+    });
+    return transaction.result !== false;
+  } catch (error) {
+    if (error instanceof Add2eClassFeatureUsageAbort) return false;
+    throw error;
+  }
 }
 
 function canonicalThiefKey(value) {
@@ -674,17 +834,20 @@ async function execute(actor, feature, sheet = null) {
 
   let resolvedOnUse = null;
   try {
-    const loaded = await loadOnUseCode(path);
-    resolvedOnUse = loaded.url;
-    const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
-    const run = new AsyncFunction(
-      "actor", "feature", "item", "sort", "game", "ui", "ChatMessage", "Roll", "foundry", "canvas",
-      loaded.code
-    );
-    const result = await run(actor, feature, feature, null, game, ui, ChatMessage, Roll, foundry, canvas);
-    sheet?._add2eRememberActiveTab?.();
-    sheet?.render?.(false);
-    return result !== false;
+    const runOnUse = async () => {
+      const loaded = await loadOnUseCode(path);
+      resolvedOnUse = loaded.url;
+      const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+      const run = new AsyncFunction(
+        "actor", "feature", "item", "sort", "game", "ui", "ChatMessage", "Roll", "foundry", "canvas",
+        loaded.code
+      );
+      const result = await run(actor, feature, feature, null, game, ui, ChatMessage, Roll, foundry, canvas);
+      sheet?._add2eRememberActiveTab?.();
+      sheet?.render?.(false);
+      return result !== false;
+    };
+    return await executeWithClassFeatureUsage(actor, feature, runOnUse);
   } catch (error) {
     console.error("[ADD2E][CAPACITE][ON_USE][ERREUR]", {
       actor: actor.name,
@@ -776,3 +939,4 @@ globalThis.add2eGetActorClassProgression = progression;
 globalThis.add2eGetActorThiefProgression = thiefProgression;
 globalThis.add2eResolveSlowFallProtection = slowFall;
 globalThis.add2eIsActionBlocked = actionBlocked;
+globalThis.add2eGetClassFeatureUsageResource = classFeatureUsageResource;
