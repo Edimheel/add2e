@@ -1,4 +1,4 @@
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-07-canonical-class-feature-resource-v24";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-07-canonical-class-feature-resource-v25";
 const ADD2E_CLASS_FEATURE_USAGE_FLAG = "classFeatureUsage";
 
 const GENERIC_ACTIONS = new Map([
@@ -137,15 +137,32 @@ function classFeatureUsagePeriod(feature) {
   return keyOf(feature?.uses?.per ?? "");
 }
 
+function classFeatureUsageTime() {
+  const engine = game?.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE;
+  if (typeof engine?.currentTick !== "function" || typeof engine?.toRounds !== "function") {
+    throw new Error("Le moteur de temps canonique ADD2E est indisponible pour les ressources de classe.");
+  }
+  const tick = Number(engine.currentTick());
+  const hourRounds = Number(engine.toRounds(1, "hour"));
+  if (!Number.isFinite(tick) || !Number.isFinite(hourRounds) || hourRounds <= 0) {
+    throw new Error("Le moteur de temps ADD2E a renvoyé un état invalide pour les ressources de classe.");
+  }
+  return {
+    tick: Math.max(0, Math.floor(tick)),
+    dayRounds: Math.max(1, Math.floor(hourRounds * 24))
+  };
+}
+
 function classFeatureUsagePeriodKey(period) {
-  const worldTime = Math.max(0, Math.floor(Number(game.time?.worldTime) || 0));
   if (period === "combat") return `combat:${game.combat?.id ?? "hors-combat"}`;
-  if (period === "day") return `day:${Math.floor(worldTime / 86400)}`;
-  if (period === "week") return `week:${Math.floor(worldTime / (86400 * 7))}`;
-  if (period === "10_years") return `10-years:${Math.floor(worldTime / (86400 * 365 * 10))}`;
   if (period === "career") return "career";
   if (period === "at_will" || period === "atwill") return "at-will";
   if (!period) return "";
+
+  const { tick, dayRounds } = classFeatureUsageTime();
+  if (period === "day") return `day:${Math.floor(tick / dayRounds)}`;
+  if (period === "week") return `week:${Math.floor(tick / (dayRounds * 7))}`;
+  if (period === "10_years") return `10-years:${Math.floor(tick / (dayRounds * 365 * 10))}`;
   throw new Error(`Période uses.per non prise en charge : ${period}.`);
 }
 
