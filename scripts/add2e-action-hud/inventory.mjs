@@ -71,23 +71,12 @@ export function isPropelledWeapon(item) {
   const system = item?.system ?? {};
   return system.projectile_propulse === true || system.arme_a_projectile === true || tags.includes("projectile_propulse") || tags.includes("usage_projectile_propulse") || ["arc", "arbalete", "fronde"].some(key => name.includes(key));
 }
-function projectileKeys(item) {
-  const text = `${norm(item?.name)} ${itemTags(item).join(" ")}`;
-  if (text.includes("arbalete")) return ["carreau", "carreaux", "bolt"];
-  if (text.includes("arc")) return ["fleche", "fleches", "arrow"];
-  if (text.includes("fronde")) return ["bille", "billes", "pierre", "pierres", "bullet"];
-  return ["munition", "projectile", "ammo"];
-}
 function equippedProjectile(actor, weapon) {
   if (!usesProjectileInventory(actor) || !isPropelledWeapon(weapon)) return null;
-  const canonical = globalThis.add2eResolveProjectileForAttack;
-  if (typeof canonical === "function") {
-    try { return canonical({ actor, arme: weapon })?.projectile ?? null; }
-    catch (_error) {}
+  if (typeof globalThis.add2eResolveProjectileForAttack !== "function") {
+    throw new Error("Le résolveur canonique des projectiles est indisponible pour le HUD.");
   }
-  const keys = projectileKeys(weapon).map(norm);
-  const items = actorItems(actor).filter(item => item.id !== weapon.id && itemEquipped(item) && keys.some(key => norm(item.name).includes(key) || itemTags(item).some(tag => tag.includes(key))));
-  return items.find(item => quantity(item) !== "0") ?? items[0] ?? null;
+  return globalThis.add2eResolveProjectileForAttack({ actor, arme: weapon })?.projectile ?? null;
 }
 function damage(item) { const system = item?.system ?? {}; return system?.dégâts?.contre_moyen ?? system?.degats?.contre_moyen ?? system?.degats_moyen ?? system?.damage ?? system?.degats ?? system?.dmg ?? "—"; }
 function range(item) {
@@ -133,29 +122,22 @@ function armorRow(item) {
   const bonus = system.bonus_ac ?? "—";
   return `<div class="row equipment-row combat-item-row"><img src="${esc(item.img || "icons/svg/shield.svg")}" alt=""><div><div class="title">${esc(item.name)}</div><div class="meta">${equipmentState(item)}<span>CA ${esc(ca)}</span><span>Bonus CA ${esc(bonus)}</span></div></div><div class="hud-row-actions">${equipmentButton(item)}</div></div>`;
 }
-export function weaponRows(actor) {
+export function weaponRows(actor, selectedGroup = "armes") {
   const weaponList = weapons(actor);
   const projectileList = projectileItems(actor);
   const armorList = armorItems(actor);
-  const prefix = `add2e-combat-${esc(actor?.id ?? "actor")}`;
-  const weaponHtml = weaponList.length ? weaponList.map(item => weaponRow(actor, item)).join("") : `<div class="empty">Aucune arme.</div>`;
-  const projectileHtml = projectileList.length ? projectileList.map(projectileRow).join("") : `<div class="empty">Aucun projectile.</div>`;
-  const armorHtml = armorList.length ? armorList.map(armorRow).join("") : `<div class="empty">Aucune armure.</div>`;
-  return `<div class="combat-layout">
-    <input class="combat-tab-radio" type="radio" name="${prefix}-tab" id="${prefix}-armes" checked>
-    <input class="combat-tab-radio" type="radio" name="${prefix}-tab" id="${prefix}-projectiles">
-    <input class="combat-tab-radio" type="radio" name="${prefix}-tab" id="${prefix}-armures">
-    <div class="combat-tabs">
-      <label for="${prefix}-armes">Armes <span>${weaponList.length}</span></label>
-      <label for="${prefix}-projectiles">Projectiles <span>${projectileList.length}</span></label>
-      <label for="${prefix}-armures">Armures <span>${armorList.length}</span></label>
-    </div>
-    <div class="combat-panels">
-      <div class="combat-panel combat-panel-armes">${weaponHtml}</div>
-      <div class="combat-panel combat-panel-projectiles">${projectileHtml}</div>
-      <div class="combat-panel combat-panel-armures">${armorHtml}</div>
-    </div>
-  </div>`;
+  const groups = [
+    { key: "armes", label: "Armes", count: weaponList.length },
+    { key: "projectiles", label: "Projectiles", count: projectileList.length },
+    { key: "armures", label: "Armures", count: armorList.length }
+  ];
+  const active = groups.some(group => group.key === selectedGroup) ? selectedGroup : "armes";
+  const tabs = groups.map(group => `<button type="button" class="combat-tab${active === group.key ? " active" : ""}" data-action="select-combat-group" data-combat-group="${group.key}">${group.label} <span>${group.count}</span></button>`).join("");
+  let rows = "";
+  if (active === "projectiles") rows = projectileList.length ? projectileList.map(projectileRow).join("") : `<div class="empty">Aucun projectile.</div>`;
+  else if (active === "armures") rows = armorList.length ? armorList.map(armorRow).join("") : `<div class="empty">Aucune armure.</div>`;
+  else rows = weaponList.length ? weaponList.map(item => weaponRow(actor, item)).join("") : `<div class="empty">Aucune arme.</div>`;
+  return `<div class="combat-layout"><div class="combat-tabs">${tabs}</div><div class="combat-list" data-combat-group-content="${active}">${rows}</div></div>`;
 }
 function moneyRaw(actor) { const flag = actor?.getFlag?.("add2e", "monnaie"); if (flag && typeof flag === "object") return flag; const system = actor?.system ?? {}; return system.monnaie ?? system.argent ?? system.currency ?? {}; }
 function moneyPanel(actor) { return `<div class="money-row"><span class="money-title">Argent</span>${COINS.map(([key, label]) => `<span class="money-pill">${label} ${esc(Math.max(0, Math.floor(num(moneyRaw(actor)?.[key], 0))))}</span>`).join("")}</div>`; }
