@@ -675,7 +675,7 @@ async function recordProjectileSpent({ actor, projectile, quantity: qty = 1 }) {
     itemId: projectile?.id,
     itemName: projectile?.name,
     img: projectile?.img,
-    quantity: Math.max(1, Math.floor(num(qty, 1))
+    quantity: Math.max(1, Math.floor(num(qty, 1)))
   };
 
   if (!payload.actorId || !(payload.itemId || payload.itemName)) return false;
