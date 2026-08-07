@@ -1,4 +1,4 @@
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-07-canonical-class-feature-resource-v23";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-07-canonical-class-feature-resource-v24";
 const ADD2E_CLASS_FEATURE_USAGE_FLAG = "classFeatureUsage";
 
 const GENERIC_ACTIONS = new Map([
@@ -127,6 +127,12 @@ function classFeatureUsageMaximum(feature, level) {
   throw new Error(`Formule uses.maxFrom non prise en charge pour « ${nameOf(feature) || "Capacité"} » : ${uses.maxFrom}`);
 }
 
+function classFeatureUsageCategories(feature) {
+  const raw = feature?.uses?.categories;
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(raw.map(keyOf).filter(Boolean))];
+}
+
 function classFeatureUsagePeriod(feature) {
   return keyOf(feature?.uses?.per ?? "");
 }
@@ -143,11 +149,28 @@ function classFeatureUsagePeriodKey(period) {
   throw new Error(`Période uses.per non prise en charge : ${period}.`);
 }
 
-function classFeatureUsageResource(actor, feature) {
+function classFeatureUsageResource(actor, feature, options = {}) {
   const level = featureLevel(actor, feature);
   if (level === null) throw new Error(`Niveau de classe introuvable pour « ${nameOf(feature) || "Capacité"} ».`);
 
-  const maximum = classFeatureUsageMaximum(feature, level);
+  const configuredMaximum = classFeatureUsageMaximum(feature, level);
+  const categories = classFeatureUsageCategories(feature);
+  const category = keyOf(options.category ?? options.resourceCategory ?? "");
+  if (categories.length) {
+    if (configuredMaximum !== categories.length) {
+      throw new Error(`Contrat uses invalide pour « ${nameOf(feature) || "Capacité"} » : max=${configuredMaximum}, catégories=${categories.length}.`);
+    }
+    if (!category) {
+      throw new Error(`Une catégorie de ressource est requise pour « ${nameOf(feature) || "Capacité"} ».`);
+    }
+    if (!categories.includes(category)) {
+      throw new Error(`Catégorie de ressource inconnue pour « ${nameOf(feature) || "Capacité"} » : ${category}.`);
+    }
+  } else if (category) {
+    throw new Error(`La capacité « ${nameOf(feature) || "Capacité"} » ne déclare aucune catégorie de ressource.`);
+  }
+
+  const maximum = categories.length ? 1 : configuredMaximum;
   const period = classFeatureUsagePeriod(feature);
   const periodKey = classFeatureUsagePeriodKey(period);
   if (maximum <= 0 || periodKey === "at-will") return null;
@@ -158,24 +181,25 @@ function classFeatureUsageResource(actor, feature) {
 
   const featureKey = keyOf(feature);
   if (!featureKey) throw new Error(`Identifiant canonique introuvable pour « ${nameOf(feature) || "Capacité"} ».`);
+  const resourceKey = category ? `${featureKey}:${category}` : featureKey;
 
   const readState = () => {
     const all = classItem.getFlag?.("add2e", ADD2E_CLASS_FEATURE_USAGE_FLAG)
       ?? classItem.flags?.add2e?.[ADD2E_CLASS_FEATURE_USAGE_FLAG]
       ?? {};
-    const entry = all?.[featureKey];
+    const entry = all?.[resourceKey];
     if (!entry || String(entry.periodKey ?? "") !== periodKey) return { used: 0, entry: null };
     return { used: Math.max(0, Math.floor(Number(entry.used) || 0)), entry };
   };
 
   const descriptor = {
-    id: `${classItem.uuid ?? classItem.id}:class-feature:${featureKey}:${periodKey}`,
+    id: `${classItem.uuid ?? classItem.id}:class-feature:${resourceKey}:${periodKey}`,
     type: "class-feature-use",
-    label: nameOf(feature) || "Capacité de classe",
+    label: category ? `${nameOf(feature) || "Capacité de classe"} — ${category}` : (nameOf(feature) || "Capacité de classe"),
     document: classItem,
     actor,
     item: classItem,
-    target: featureKey,
+    target: category || featureKey,
     get current() {
       return Math.max(0, maximum - Math.min(maximum, readState().used));
     },
@@ -184,8 +208,8 @@ function classFeatureUsageResource(actor, feature) {
     recoveryPeriod: period,
     source: {
       kind: "class-feature",
-      id: `${classItem.id}:${featureKey}`,
-      uuid: `${classItem.uuid}#${featureKey}`,
+      id: `${classItem.id}:${resourceKey}`,
+      uuid: `${classItem.uuid}#${resourceKey}`,
       name: nameOf(feature) || "Capacité de classe"
     },
     context: {
@@ -193,6 +217,10 @@ function classFeatureUsageResource(actor, feature) {
       classItemUuid: classItem.uuid,
       classKey: feature?._add2eClassSlug ?? null,
       featureKey,
+      resourceKey,
+      category: category || null,
+      categories,
+      configuredMaximum,
       period,
       periodKey,
       level,
@@ -206,13 +234,14 @@ function classFeatureUsageResource(actor, feature) {
       ) ?? {};
       const clamped = Math.max(0, Math.min(maximum, Math.floor(Number(next) || 0)));
       const used = maximum - clamped;
-      if (used <= 0) delete currentMap[featureKey];
+      if (used <= 0) delete currentMap[resourceKey];
       else {
-        currentMap[featureKey] = {
+        currentMap[resourceKey] = {
           period,
           periodKey,
           used,
           max: maximum,
+          category: category || null,
           updatedAt: Date.now()
         };
       }
@@ -223,10 +252,23 @@ function classFeatureUsageResource(actor, feature) {
     }
   };
 
-  return { descriptor, maximum, period, periodKey, featureKey, classItem };
+  return {
+    descriptor,
+    maximum,
+    configuredMaximum,
+    period,
+    periodKey,
+    featureKey,
+    resourceKey,
+    category: category || null,
+    categories,
+    classItem
+  };
 }
 
 async function executeWithClassFeatureUsage(actor, feature, callback) {
+  if (classFeatureUsageCategories(feature).length) return callback();
+
   const usage = classFeatureUsageResource(actor, feature);
   if (!usage) return callback();
 
