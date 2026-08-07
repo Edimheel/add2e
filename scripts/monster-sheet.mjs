@@ -6,13 +6,12 @@
  * - Défense et sauvegardes exclusivement canoniques
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-08-05-monster-tab-render-race-fix-v14";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-08-07-canonical-object-power-resource-v15";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const ADD2E_MONSTER_ACTOR_SHEET_V2 = foundry?.applications?.sheets?.ActorSheetV2;
 if (!ADD2E_MONSTER_ACTOR_SHEET_V2) throw new Error("[ADD2E] ActorSheetV2 introuvable pour la feuille de monstre.");
 const ActorsCollection = foundry.documents.collections.Actors;
-const ItemDocument = foundry.documents.Item;
 
 const ADD2E_LINKED_PACKS = {
   weapons: "add2e.armes",
@@ -298,51 +297,48 @@ async function __add2eHydrateMonsterLinkedItems(actor, options = {}) {
   }
 }
 
+function __add2eMagicPowerEntries(item) {
+  const resolver = globalThis.add2eMagicObjectActivePowerEntries;
+  if (typeof resolver !== "function") {
+    throw new Error("Le propriétaire canonique ADD2E des pouvoirs d’objets magiques est indisponible.");
+  }
+  return resolver(item) ?? [];
+}
+
 function __add2eGetEquippedPowerItems(actor) {
-  return actor.items.filter(i => ADD2E_EQUIPPABLE_POWER_TYPES.has(i.type) && i.system?.equipee === true && Array.isArray(i.system?.pouvoirs));
+  const usable = globalThis.add2eMagicItemEquippedOrUsable;
+  if (typeof usable !== "function") {
+    throw new Error("Le propriétaire canonique ADD2E de l’état utilisable des objets magiques est indisponible.");
+  }
+  return actor.items.filter(item =>
+    ADD2E_EQUIPPABLE_POWER_TYPES.has(item.type)
+    && usable(item) === true
+    && __add2eMagicPowerEntries(item).length > 0
+  );
 }
 
-function __add2eBuildVirtualPowerSpell(actor, sourceItem, idx, p) {
-  const validFakeId = sourceItem.id.substring(0, 14) + idx.toString().padStart(2, "0");
-  const fakeSpellData = {
-    _id: validFakeId,
-    name: `${p.name}`,
-    type: "sort",
-    img: p.img || sourceItem.img,
-    system: {
-      niveau: p.niveau || 1,
-      école: p.ecole || p.école || "Magique",
-      description: p.description || "",
-      composantes: "Objet",
-      temps_incantation: p.temps_incantation || { valeur: "1", unite: "" },
-      portee: p.portee || { valeur: "Obj", unite: "" },
-      duree: p.duree || { valeur: "Spec", unite: "" },
-      isPower: true,
-      sourceItemId: sourceItem.id,
-      sourceWeaponId: sourceItem.id,
-      powerIndex: idx,
-      cost: p.cout || p.cost || 1,
-      max: p.max || 1,
-      onUse: p.onUse || ""
-    }
-  };
-
-  const virtualSpell = new ItemDocument(fakeSpellData, { parent: actor });
-  virtualSpell.getFlag = (scope, key) => {
-    if (scope === "add2e" && key === "memorizedCount") {
-      const charges = sourceItem.getFlag("add2e", `charges_${idx}`);
-      return charges !== undefined ? charges : (p.max ?? 1);
-    }
-    return null;
-  };
-  return virtualSpell;
+function __add2eBuildCanonicalVirtualPowerSpell(actor, sourceItem, power, index) {
+  const builder = globalThis.add2eBuildVirtualObjectPowerSort;
+  if (typeof builder !== "function") {
+    throw new Error("Le constructeur canonique ADD2E des pouvoirs d’objets magiques est indisponible.");
+  }
+  return builder(actor, sourceItem, power, index);
 }
 
-function __add2eFindVirtualPowerSpell(actor, fakeId) {
+function __add2eFindVirtualPowerEntry(actor, fakeId) {
+  const idBuilder = globalThis.add2eMagicPowerGeneratedId;
   for (const sourceItem of __add2eGetEquippedPowerItems(actor)) {
-    for (const [idx, p] of sourceItem.system.pouvoirs.entries()) {
-      const candidateId = sourceItem.id.substring(0, 14) + idx.toString().padStart(2, "0");
-      if (candidateId === fakeId) return __add2eBuildVirtualPowerSpell(actor, sourceItem, idx, p);
+    for (const { power, index } of __add2eMagicPowerEntries(sourceItem)) {
+      const candidateId = typeof idBuilder === "function"
+        ? idBuilder(sourceItem, index)
+        : sourceItem.id.substring(0, 14) + String(index).padStart(2, "0");
+      if (candidateId !== fakeId) continue;
+      return {
+        sourceItem,
+        power,
+        index,
+        sort: __add2eBuildCanonicalVirtualPowerSpell(actor, sourceItem, power, index)
+      };
     }
   }
   return null;
@@ -567,7 +563,9 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
 
     const sorts = this.actor.items.filter(i => i.type === "sort");
     for (const sourceItem of __add2eGetEquippedPowerItems(this.actor)) {
-      for (const [idx, p] of sourceItem.system.pouvoirs.entries()) sorts.push(__add2eBuildVirtualPowerSpell(this.actor, sourceItem, idx, p));
+      for (const { power, index } of __add2eMagicPowerEntries(sourceItem)) {
+        sorts.push(__add2eBuildCanonicalVirtualPowerSpell(this.actor, sourceItem, power, index));
+      }
     }
 
     const sortsParNiveau = {};
@@ -838,15 +836,33 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
       if (globalThis.add2eAttackRoll) globalThis.add2eAttackRoll({ actor: this.actor, arme: item });
     });
 
-    html.find(".sort-cast-img").off("click.add2e-monster-cast").on("click.add2e-monster-cast", event => {
+    html.find(".sort-cast-img").off("click.add2e-monster-cast").on("click.add2e-monster-cast", async event => {
       event.preventDefault();
       const sortId = $(event.currentTarget).data("sortId");
-      let item = this.actor.items.get(sortId);
-      if (!item) item = __add2eFindVirtualPowerSpell(this.actor, sortId);
-      if (item && globalThis.add2eCastSpell) {
-        globalThis.add2eCastSpell({ actor: this.actor, sort: item });
+      const embeddedSpell = this.actor.items.get(sortId);
+
+      if (embeddedSpell) {
+        if (typeof globalThis.add2eCastSpell !== "function") {
+          throw new Error("Le lanceur canonique ADD2E des sorts est indisponible.");
+        }
+        await globalThis.add2eCastSpell({ actor: this.actor, sort: embeddedSpell });
         this.render(false);
+        return;
       }
+
+      const powerEntry = __add2eFindVirtualPowerEntry(this.actor, sortId);
+      if (!powerEntry) return;
+      if (typeof globalThis.add2eExecuteObjectMagicPower !== "function") {
+        throw new Error("L’exécuteur canonique ADD2E des pouvoirs d’objets magiques est indisponible.");
+      }
+      await globalThis.add2eExecuteObjectMagicPower(
+        this.actor,
+        powerEntry.sourceItem,
+        powerEntry.power,
+        powerEntry.index,
+        this
+      );
+      this.render(false);
     });
 
     html.find(".sort-memorize-plus").off("click.add2e-monster-mem-plus").on("click.add2e-monster-mem-plus", async event => {
