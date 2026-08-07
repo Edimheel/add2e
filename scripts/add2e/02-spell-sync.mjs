@@ -4,7 +4,7 @@
 // Compatible Foundry V13 / V14 / V15
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-07-02-spell-sync-shared-item-v7";
+const ADD2E_SPELL_SYNC_VERSION = "2026-08-07-spell-sync-canonical-memorization-v8";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
@@ -152,6 +152,8 @@ function add2eSpellSyncPrepareCompendiumData(data) {
   clean.img ||= "icons/svg/book.svg";
   clean.flags ??= {};
   clean.flags.add2e ??= {};
+  delete clean.flags.add2e.memorizedCount;
+  delete clean.flags.add2e.memorizedByList;
 
   if (!Array.isArray(clean.system.composants_materiels)) clean.system.composants_materiels = [];
   if (!Array.isArray(clean.system.spellLists)) clean.system.spellLists = add2eSpellSyncArray(clean.system.spellLists);
@@ -370,9 +372,10 @@ function add2eSpellSyncExistingKeys(actor, cache = null, options = {}) {
 
 function add2eSpellSyncMemorizationSnapshot(item) {
   const rawByList = item?.getFlag?.("add2e", "memorizedByList") ?? item?.flags?.add2e?.memorizedByList ?? {};
-  const byList = rawByList && typeof rawByList === "object" && !Array.isArray(rawByList) ? add2eSpellSyncClone(rawByList) : {};
-  const count = Math.max(0, Number(item?.getFlag?.("add2e", "memorizedCount") ?? item?.flags?.add2e?.memorizedCount ?? 0) || 0);
-  return { byList, count };
+  const byList = rawByList && typeof rawByList === "object" && !Array.isArray(rawByList)
+    ? add2eSpellSyncClone(rawByList)
+    : {};
+  return { byList };
 }
 
 function add2eSpellSyncLevelSignature(actor) {
@@ -413,8 +416,13 @@ async function add2eResetActorSpellMemorization(actor, reason = "level-down") {
   for (const sort of actor.items.filter(item => String(item?.type ?? "").toLowerCase() === "sort")) {
     const snapshot = add2eSpellSyncMemorizationSnapshot(sort);
     const hasByList = Object.values(snapshot.byList).some(value => Number(value) > 0);
-    if (snapshot.count <= 0 && !hasByList) continue;
-    updates.push({ _id: sort.id, "flags.add2e.memorizedCount": 0, "flags.add2e.memorizedByList": {} });
+    const hasLegacy = Object.prototype.hasOwnProperty.call(sort?.flags?.add2e ?? {}, "memorizedCount");
+    if (!hasByList && !hasLegacy) continue;
+    updates.push({
+      _id: sort.id,
+      "flags.add2e.memorizedByList": {},
+      "flags.add2e.-=memorizedCount": null
+    });
   }
   if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eSpellSync: true, reason });
   if (updates.length) console.info("[ADD2E][SPELL_SYNC][MEMORIZED_RESET]", { actor: actor.name, reason, reset: updates.length });
@@ -821,7 +829,6 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
       const identity = add2eSpellSyncIdentityKey(data.name, data.system ?? {});
       const memory = memories.get(identity);
       if (memory && options.preserveMemorization !== false) {
-        foundry.utils.setProperty(data, "flags.add2e.memorizedCount", memory.count);
         foundry.utils.setProperty(data, "flags.add2e.memorizedByList", memory.byList);
       }
       return data;
