@@ -1,7 +1,7 @@
 // systems/add2e/scripts/capacites/ranger-suivants.js
 // ADD2E — Ranger : Appel des suivants
 
-const ADD2E_RANGER_SUIVANTS_VERSION = "2026-07-27-shared-chat-card-v1";
+const ADD2E_RANGER_SUIVANTS_VERSION = "2026-08-07-canonical-resource-v2";
 globalThis.ADD2E_RANGER_SUIVANTS_VERSION = ADD2E_RANGER_SUIVANTS_VERSION;
 
 function a2eRangerFeatureLevel(currentActor, currentFeature) {
@@ -28,15 +28,8 @@ if (niveau < 10) {
   return false;
 }
 
-const used = await actor.getFlag("add2e", "rangerSuivantsUtilises");
-if (used) {
-  ui.notifications.warn("Les suivants du ranger ont déjà été appelés pour ce personnage.");
-  return false;
-}
-
 const roll = await (new Roll("2d12")).evaluate({ async: true });
 if (game.dice3d) await game.dice3d.showForRoll(roll);
-await actor.setFlag("add2e", "rangerSuivantsUtilises", { used: true, total: roll.total, at: Date.now() });
 
 const buildChatCard = globalThis.add2eBuildChatCard;
 const createChatCard = globalThis.add2eCreateChatCard;
@@ -51,7 +44,7 @@ const cardOptions = {
   variant: "ability",
   rows: [
     { label: "Nombre de suivants", value: String(roll.total) },
-    { label: "Usage", value: "Unique pour ce ranger" }
+    { label: "Usage", value: feature?.uses?.label ?? "Unique pour ce ranger" }
   ],
   message: "Le MJ détermine la nature de la troupe attirée.",
   trustedBodyHtml: "<p>Les suivants perdus ne sont pas automatiquement remplacés.</p>",
