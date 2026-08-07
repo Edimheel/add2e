@@ -1,5 +1,5 @@
 /* ADD2E — Paladin : Appel du destrier */
-const ADD2E_PALADIN_APPEL_DESTRIER_VERSION = "2026-07-07-class-level";
+const ADD2E_PALADIN_APPEL_DESTRIER_VERSION = "2026-08-07-canonical-resource-v2";
 globalThis.ADD2E_PALADIN_APPEL_DESTRIER_VERSION = ADD2E_PALADIN_APPEL_DESTRIER_VERSION;
 
 function a2ePalFeatureLevel(currentActor, currentFeature) {
@@ -26,28 +26,39 @@ if (level < 4) {
   return false;
 }
 
-const existing = actor.getFlag("add2e", "paladin.destrier");
-if (existing?.called) {
-  ui.notifications.warn("Le destrier du paladin a déjà été appelé. En cas de mort du destrier, le délai de dix ans doit être géré par le MJ.");
-  return false;
+const buildChatCard = globalThis.add2eBuildChatCard;
+const createChatCard = globalThis.add2eCreateChatCard;
+if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
+  throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
 }
 
-await actor.setFlag("add2e", "paladin.destrier", {
-  called: true,
-  at: Date.now(),
-  note: "Un seul destrier tous les dix ans. Cheval de guerre lourd intelligent, 5 DV, 5d8+5 PV, CA 5, vitesse 18."
-});
-
-await ChatMessage.create({
-  speaker: ChatMessage.getSpeaker({ actor }),
-  content: `
-    <div class="add2e-chat-card">
-      <h3>Appel du destrier</h3>
-      <p><b>${actor.name}</b> appelle son destrier de paladin.</p>
-      <p>Destrier attendu : cheval de guerre lourd intelligent, <b>5 DV</b>, <b>5d8+5 PV</b>, <b>CA 5</b>, vitesse d’un cheval de guerre moyen.</p>
-      <p>Un seul destrier peut être appelé tous les dix ans.</p>
-    </div>
-  `
-});
-
+const cardOptions = {
+  actor,
+  title: "Appel du destrier",
+  icon: "fas fa-horse",
+  variant: "ability",
+  source: {
+    name: actor.name,
+    img: actor.img,
+    type: "Capacité de paladin"
+  },
+  rows: [
+    { label: "Destrier", value: "Cheval de guerre lourd intelligent" },
+    { label: "Dés de vie", value: "5 DV" },
+    { label: "Points de vie", value: "5d8+5" },
+    { label: "Classe d’armure", value: "CA 5" },
+    { label: "Utilisation", value: feature?.uses?.label ?? "Un appel tous les dix ans" }
+  ],
+  trustedBodyHtml: "<p>Le MJ détermine les circonstances permettant au paladin de rejoindre et d’obtenir son destrier.</p>",
+  chatData: {
+    flags: {
+      add2e: {
+        sourceCapacite: "paladin-appel-destrier",
+        version: ADD2E_PALADIN_APPEL_DESTRIER_VERSION
+      }
+    }
+  }
+};
+buildChatCard(cardOptions);
+await createChatCard(cardOptions);
 return true;
