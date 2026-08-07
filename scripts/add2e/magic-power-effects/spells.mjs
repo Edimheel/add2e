@@ -231,27 +231,29 @@ export function spellOptions(entries, selectedUuid = "", selectedName = "") {
 }
 
 export async function chooseSpell(currentUuid = "", currentName = "") {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) throw new Error("DialogV2 est indisponible.");
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
   const entries = await spellIndex();
   if (!entries.length) {
     ui.notifications.warn(`Le compendium ${SPELL_PACK_ID} ne contient aucun Item de type sort disponible.`);
     return null;
   }
-  return DialogV2.wait({
+  return globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "select",
+    add2eClasses: ["add2e-magic-spell-selector"],
     window: { title: "Choisir le sort équivalent" },
     modal: true,
-    rejectClose: false,
-    content: `<div class="add2e-dialog" style="min-width:620px;padding:10px;display:grid;gap:8px;"><p style="margin:0;">Associez le pouvoir à un sort du compendium ADD2E. Ce choix est enregistré dans l'objet.</p><select name="spellUuid" size="14" style="width:100%;">${spellOptions(entries, currentUuid, currentName)}</select></div>`,
+    content: `<form class="add2e-magic-spell-selector-form" style="min-width:620px;padding:10px;display:grid;gap:8px;"><p style="margin:0;">Associez le pouvoir à un sort du compendium ADD2E. Ce choix est enregistré dans l'objet.</p><select name="spellUuid" size="14" style="width:100%;">${spellOptions(entries, currentUuid, currentName)}</select></form>`,
     buttons: [
       {
         action: "select",
         label: "Associer ce sort",
-        icon: "fa-solid fa-link",
+        icon: "<i class='fas fa-link'></i>",
         default: true,
-        callback: (_event, button, dialog) => {
-          const root = button?.form ?? dialog?.element;
-          const select = root?.querySelector?.('[name="spellUuid"]');
+        callback: (_event, button) => {
+          const select = button?.form?.elements?.spellUuid ?? button?.form?.querySelector?.('[name="spellUuid"]');
           const uuid = referenceText(select?.value);
           const name = referenceText(select?.selectedOptions?.[0]?.dataset?.spellName);
           const entry = entries.find(candidate => candidate.uuid === uuid) ?? null;
@@ -264,8 +266,14 @@ export async function chooseSpell(currentUuid = "", currentName = "") {
           } : null;
         }
       },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-    ]
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
+      }
+    ],
+    close: () => null
   });
 }
 
