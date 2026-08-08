@@ -5,7 +5,7 @@ import "./13d-actor-sheet-listeners-core.mjs";
 
 const ADD2E_SHEET_LISTENER_RECOVERY_VERSION = "2026-07-05-sheet-tabs-force-ex-v1";
 
-const ADD2E_SCROLL_WRITING_VERSION = "2026-07-27-shared-chat-card-v2";
+const ADD2E_SCROLL_WRITING_VERSION = "2026-08-08-2z-common-dialog-v3";
 const ADD2E_SCROLL_WRITING_LISTS = new Set(["magicien", "illusionniste"]);
 let ADD2E_SCROLL_WRITING_INDEX_PROMISE = null;
 
@@ -368,21 +368,22 @@ async function add2eWriteKnownSpellToScroll(actor, spell) {
     return false;
   }
 
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.confirm) {
-    ui.notifications.error("DialogV2 est introuvable.");
-    return false;
+  if (typeof globalThis.add2eDialogConfirm !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
 
   const listLabel = compatibleLists
     .map(list => list === "illusionniste" ? "Illusionniste" : "Magicien")
     .join(" / ");
 
-  const confirmed = await DialogV2.confirm({
+  const confirmed = await globalThis.add2eDialogConfirm({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "yes",
+    add2eClasses: ["add2e-scroll-writing-dialog"],
     window: { title: `Écrire un parchemin — ${sourceDocument.name}` },
     modal: true,
     content: `
-      <div class="add2e-dialog" style="min-width:520px;padding:8px;">
+      <div class="add2e-scroll-writing-content" style="min-width:520px;padding:8px;">
         <p><b>${add2eScrollWritingEsc(actor.name)}</b> va écrire un parchemin contenant <b>${add2eScrollWritingEsc(sourceDocument.name)}</b>.</p>
         <p>Niveau : <b>${add2eScrollWritingLevel(sourceDocument)}</b> — liste : <b>${add2eScrollWritingEsc(listLabel)}</b>.</p>
         <p>Le parchemin sera ajouté à l'équipement et pourra être lancé une fois sans préparation ni composant.</p>
@@ -391,11 +392,11 @@ async function add2eWriteKnownSpellToScroll(actor, spell) {
     `,
     yes: {
       label: "Écrire le parchemin",
-      icon: "fa-solid fa-pen-nib"
+      icon: "<i class='fas fa-pen-nib'></i>"
     },
     no: {
       label: "Annuler",
-      icon: "fa-solid fa-xmark"
+      icon: "<i class='fas fa-times'></i>"
     }
   });
 
