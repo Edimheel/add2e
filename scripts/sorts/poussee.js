@@ -3,7 +3,7 @@
  * Sauvegarde, carte de chat et compatibilité Foundry V13/V14/V15.
  */
 
-const ADD2E_PUSH_VERSION = "2026-07-23-canonical-save-executor-v4";
+const ADD2E_PUSH_VERSION = "2026-08-08-2z-canonical-resource-relay-v5";
 console.log("[ADD2E][POUSSÉE][VERSION]", ADD2E_PUSH_VERSION);
 
 return await (async () => {
@@ -23,28 +23,23 @@ return await (async () => {
     return false;
   }
 
-  const refund = async (reason = "") => {
+  const cancelCast = async (reason = "") => {
     if (reason) ui.notifications.warn(reason);
-    if (sourceItem.type !== "sort") {
-      const currentGlobal = sourceItem.getFlag("add2e", "global_charges");
-      if (currentGlobal !== undefined) {
-        await sourceItem.setFlag("add2e", "global_charges", Number(currentGlobal || 0) + 1);
-      }
-    }
+    return false;
   };
 
   const targets = Array.from(game.user?.targets ?? []).filter(target => target?.actor);
   if (!targets.length) {
-    await refund("Poussée : cible au moins une créature.");
+    await cancelCast("Poussée : cible au moins une créature.");
     return false;
   }
 
   if (typeof globalThis.add2eRollSavingThrow !== "function") {
-    await refund("Poussée : l’exécuteur canonique de sauvegardes est indisponible.");
+    await cancelCast("Poussée : l’exécuteur canonique de sauvegardes est indisponible.");
     return false;
   }
   if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
-    await refund("Poussée : le constructeur commun des cartes de chat est indisponible.");
+    await cancelCast("Poussée : le constructeur commun des cartes de chat est indisponible.");
     return false;
   }
 
@@ -68,7 +63,7 @@ return await (async () => {
       showDice: true
     });
     if (!save?.ok) {
-      await refund(`Poussée : aucune sauvegarde contre les sortilèges pour ${targetToken.actor.name}.`);
+      await cancelCast(`Poussée : aucune sauvegarde contre les sortilèges pour ${targetToken.actor.name}.`);
       return false;
     }
     preparedTargets.push({ targetToken, targetActor: targetToken.actor, save });
@@ -103,17 +98,33 @@ return await (async () => {
         duration: { rounds: 1 },
         disabled: false,
         description: "La créature a perdu l'équilibre et ne peut pas attaquer ce round-ci.",
-        flags: { add2e: { tags: ["stun", "incapacitated", "perturbe_equilibre"] } }
+        flags: {
+          add2e: {
+            tags: ["stun", "incapacitated", "perturbe_equilibre", "sort:poussee"],
+            spellName: sourceItem.name ?? "Poussée",
+            spellKey: "poussee",
+            sourceItemUuid: sourceItem.uuid
+          }
+        }
       };
 
-      if (game.socket) {
+      if (game.user?.isGM || targetActor.isOwner) {
+        await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+      } else if (game.socket) {
         game.socket.emit("system.add2e", {
-          type: "applyActiveEffect",
-          actorId: targetActor.id,
-          effectData
+          type: "ADD2E_GM_OPERATION",
+          operation: "createActiveEffect",
+          payload: {
+            actorId: targetActor.id,
+            actorUuid: targetActor.uuid,
+            sceneId: canvas.scene?.id,
+            tokenId: targetToken.id,
+            effectData
+          }
         });
       } else {
-        await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+        ui.notifications.error("Relais MJ ADD2E indisponible : impossible d'appliquer l'effet de Poussée.");
+        return false;
       }
     }
 
