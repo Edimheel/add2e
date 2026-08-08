@@ -4,7 +4,7 @@
 // Les restrictions de classe restent dans 03-equipment-rules.mjs.
 // ============================================================
 
-const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-08-07-equipment-profile-owner-v11";
+const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-08-08-projectile-availability-v12";
 const ADD2E_WEAPON_TYPES = new Set(["arme", "weapon"]);
 const ADD2E_ARMOR_TYPES = new Set(["armure", "armor"]);
 
@@ -380,19 +380,37 @@ function add2eStackQuantity(item) {
   return Math.max(0, Math.floor(Number(value) || 0));
 }
 
-async function add2eShowThrownWeaponUnavailable(weapon) {
+async function add2eShowAttackResourceUnavailable({ weapon, title, message, className }) {
   if (typeof globalThis.add2eDialogAlert !== "function") {
     throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
   const weaponName = foundry.utils.escapeHTML(String(weapon?.name ?? "Cette arme"));
   await globalThis.add2eDialogAlert({
     add2eTheme: "danger",
-    add2eClasses: ["add2e-thrown-weapon-unavailable"],
-    window: { title: "Arme de lancer indisponible" },
-    content: `<p><strong>${weaponName}</strong> n'est plus disponible pour être lancée.</p>`,
+    add2eClasses: [className],
+    window: { title },
+    content: `<p><strong>${weaponName}</strong> ${message}</p>`,
     modal: true
   });
   return true;
+}
+
+async function add2eShowThrownWeaponUnavailable(weapon) {
+  return add2eShowAttackResourceUnavailable({
+    weapon,
+    title: "Arme de lancer indisponible",
+    message: "n'est plus disponible pour être lancée.",
+    className: "add2e-thrown-weapon-unavailable"
+  });
+}
+
+async function add2eShowPropelledProjectileUnavailable(weapon) {
+  return add2eShowAttackResourceUnavailable({
+    weapon,
+    title: "Munition indisponible",
+    message: "nécessite une munition compatible équipée et disponible.",
+    className: "add2e-propelled-projectile-unavailable"
+  });
 }
 
 export async function add2eValidateWeaponAttackAvailability({ actor, weapon, actorId, weaponId, mode = "auto", notify = true } = {}) {
@@ -402,18 +420,31 @@ export async function add2eValidateWeaponAttackAvailability({ actor, weapon, act
 
   const profile = add2eGetWeaponUsageProfile(weapon);
   const normalizedMode = String(mode ?? "auto").toLowerCase();
-  const usesThrownWeapon = profile.isThrown && (!profile.isHybrid || normalizedMode === "throw");
-  if (!usesThrownWeapon) return true;
-
   const consumables = globalThis.ADD2E_CONSUMABLES ?? game?.add2e?.consumables;
-  if (typeof consumables?.add2eActorUsesProjectileInventory !== "function") {
-    console.error("[ADD2E][EQUIPMENT][THROWN_AVAILABILITY][CONSUMABLE_API_MISSING]", { actor: actor.name, weapon: weapon.name });
+
+  const usesThrownWeapon = profile.isThrown && (!profile.isHybrid || normalizedMode === "throw");
+  if (usesThrownWeapon) {
+    if (typeof consumables?.add2eActorUsesProjectileInventory !== "function") {
+      console.error("[ADD2E][EQUIPMENT][THROWN_AVAILABILITY][CONSUMABLE_API_MISSING]", { actor: actor.name, weapon: weapon.name });
+      return false;
+    }
+    if (!consumables.add2eActorUsesProjectileInventory(actor)) return true;
+    if (add2eStackQuantity(weapon) > 0) return true;
+    if (notify) await add2eShowThrownWeaponUnavailable(weapon);
     return false;
   }
-  if (!consumables.add2eActorUsesProjectileInventory(actor)) return true;
-  if (add2eStackQuantity(weapon) > 0) return true;
 
-  if (notify) await add2eShowThrownWeaponUnavailable(weapon);
+  const usesPropelledProjectile = profile.requiresEquippedProjectile && normalizedMode !== "contact" && normalizedMode !== "throw";
+  if (!usesPropelledProjectile) return true;
+
+  const projectileApi = globalThis.ADD2E_VENDOR_PROJECTILES ?? game?.add2e?.vendorProjectiles;
+  if (typeof projectileApi?.resolveProjectileForAttack !== "function") {
+    console.error("[ADD2E][EQUIPMENT][PROJECTILE_AVAILABILITY][RESOURCE_API_MISSING]", { actor: actor.name, weapon: weapon.name });
+    return false;
+  }
+  const resolved = projectileApi.resolveProjectileForAttack({ actor, arme: weapon });
+  if (resolved?.ignored === true || resolved?.ok === true) return true;
+  if (notify) await add2eShowPropelledProjectileUnavailable(weapon);
   return false;
 }
 
