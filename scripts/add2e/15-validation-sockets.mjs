@@ -189,7 +189,7 @@ async function applyDamage(payload = {}) {
   const max = num(system.points_de_coup, NaN)
     || num(system.pv_max, NaN)
     || num(system.points_de_vie, NaN)
-    || num(system.hp?.max, 0)
+    || num(system.hp?.max, NaN)
     || num(system.attributes?.hp?.max, 0);
   const current = [system.pdv, system.pv, system.hp?.value, system.attributes?.hp?.value]
     .map(value => num(value, NaN))
