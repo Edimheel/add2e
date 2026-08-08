@@ -593,7 +593,7 @@ export function ownedShopQuantity(actor, entry) {
     if (shopItemSourceKey(item) === entry?._shop?.key) return total + Math.max(1, quantity(item));
     if (!shopItemSourceKey(item) && slug(item?.name) === slug(entry?.name)) return total + Math.max(1, quantity(item));
     return total;
-  }, 0;
+  }, 0);
 }
 
 export async function setShopStock(shop, entryOrReference, value) {
