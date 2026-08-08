@@ -13,7 +13,7 @@ export {
   add2eCloseActionHud
 } from "./add2e-action-hud/core.mjs";
 
-const ADD2E_HUD_COMPLEMENTS_VERSION = "2026-08-07-hud-thrown-resource-v16";
+const ADD2E_HUD_COMPLEMENTS_VERSION = "2026-08-08-hud-spell-effects-v17";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_COMPLEMENTS_STYLE_ID = "add2e-action-hud-complements-style";
 
@@ -23,8 +23,6 @@ let rootObserver = null;
 let observedRoot = null;
 let thiefRenderScheduled = false;
 let thiefRendering = false;
-let racialEffectsRenderScheduled = false;
-let racialEffectsRendering = false;
 let multipleAttackRenderScheduled = false;
 let multipleAttackRendering = false;
 let horizontalAttackRendering = false;
@@ -62,10 +60,6 @@ function ensureStyles() {
     #${ADD2E_HUD_ID} .a2e-hud-thief-activity{display:grid;gap:7px;padding:9px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07)}
     #${ADD2E_HUD_ID} .a2e-hud-thief-warning{border:2px solid #8b0000;background:rgba(255,70,70,.82);color:#111;text-align:center;font-weight:900;line-height:1.3}
     #${ADD2E_HUD_ID} .a2e-hud-thief-warning h3{margin:0;color:#111;font-size:1.08em}
-    #${ADD2E_HUD_ID} .a2e-hud-racial-panel{display:grid;gap:6px;padding:7px;border:1px solid rgba(126,181,221,.74);border-radius:10px;background:rgba(41,81,125,.24)}
-    #${ADD2E_HUD_ID} .a2e-hud-racial-title{color:#d9ebff;font-size:.82em;font-weight:950}
-    #${ADD2E_HUD_ID} .a2e-hud-racial-row{border-color:rgba(126,181,221,.54);background:rgba(10,24,42,.24)}
-    #${ADD2E_HUD_ID} .a2e-hud-racial-description{color:#d8e8fa;font-size:.78em;line-height:1.35;margin-top:3px}
     #${ADD2E_HUD_ID} .a2e-hud-multiple-attacks{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:center;margin-bottom:8px;padding:8px 10px;border:1px solid rgba(214,176,90,.7);border-radius:10px;background:rgba(77,57,22,.38);color:#fff3c6}
     #${ADD2E_HUD_ID} .a2e-hud-multiple-attacks.extra{border-color:#93df79;background:rgba(48,111,38,.46);box-shadow:0 0 0 1px rgba(147,223,121,.2)}
     #${ADD2E_HUD_ID} .a2e-hud-multiple-attacks.used{border-color:rgba(145,145,145,.62);background:rgba(58,58,58,.42);color:#ddd}
@@ -322,74 +316,9 @@ function scheduleThiefActivity() {
   });
 }
 
-function racialEngine() {
-  const engine = globalThis.Add2eEffectsEngine;
-  if (typeof engine?.getRacialPassiveEffects === "function") return engine;
-  if (typeof engine?.getRacialVirtualEffects === "function") return engine;
-  return null;
-}
-
-function racialPassives(actor) {
-  const engine = racialEngine();
-  if (!engine) return [];
-  return engine.getRacialPassiveEffects?.(actor)
-    ?? engine.getRacialVirtualEffects?.(actor)?.filter(effect => effect?.kind !== "capability")
-    ?? [];
-}
-
-function racialEffectsSignature(actor, passives) {
-  return JSON.stringify({
-    actorId: actor?.id ?? "",
-    passives: passives.map(effect => [effect.id, effect.name, effect.description, effect.duration])
-  });
-}
-
-function racialPassiveRow(effect) {
-  return `<div class="row effect-row a2e-hud-racial-row"><img src="${esc(effect.img || "icons/svg/aura.svg")}" alt=""><div><div class="title">${esc(effect.name)}</div><div class="meta"><span>${esc(effect.sourceName || "Race")}</span><span>${esc(effect.duration || "Permanent")}</span></div><div class="a2e-hud-racial-description">${esc(effect.description)}</div></div><span aria-hidden="true"></span></div>`;
-}
-
-function renderRacialEffects() {
-  if (racialEffectsRendering) return;
-  const root = document.getElementById(ADD2E_HUD_ID);
-  const actor = currentHudActor();
-  const section = root?.querySelector?.('[data-section="effets"]');
-  if (!root || !actor || !section) return;
-  const passives = racialPassives(actor);
-  const existing = section.querySelector(':scope > .a2e-hud-racial-effects');
-  if (!passives.length) {
-    existing?.remove?.();
-    return;
-  }
-  const signature = racialEffectsSignature(actor, passives);
-  if (existing?.dataset?.add2eHudRacialSignature === signature) return;
-  racialEffectsRendering = true;
-  withMutationSuppressed(() => {
-    ensureStyles();
-    existing?.remove?.();
-    const panel = document.createElement("div");
-    panel.className = "a2e-hud-racial-panel a2e-hud-racial-effects";
-    panel.dataset.add2eHudRacialSignature = signature;
-    panel.innerHTML = `<div class="a2e-hud-racial-title"><i class="fas fa-dna"></i> Effets raciaux</div>${passives.map(racialPassiveRow).join("")}`;
-    section.prepend(panel);
-    for (const empty of section.querySelectorAll(':scope > .empty')) empty.remove();
-  });
-  racialEffectsRendering = false;
-}
-
-function scheduleRacialEffects() {
-  if (racialEffectsRenderScheduled) return;
-  racialEffectsRenderScheduled = true;
-  const raf = globalThis.requestAnimationFrame ?? (callback => window.setTimeout(callback, 16));
-  raf(() => {
-    racialEffectsRenderScheduled = false;
-    renderRacialEffects();
-  });
-}
-
 function scheduleComplements() {
   scheduleMultipleAttackGuidance();
   scheduleThiefActivity();
-  scheduleRacialEffects();
 }
 
 function observeHudRoot(root) {
@@ -424,11 +353,6 @@ function installHudComplements() {
   });
   Hooks.on("updateCombat", () => scheduleMultipleAttackGuidance());
   Hooks.on("add2eInitiativeTurnChanged", () => scheduleMultipleAttackGuidance());
-  for (const hookName of ["createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) {
-    Hooks.on(hookName, effect => {
-      if (effect?.parent?.id === currentHudActor()?.id) scheduleComplements();
-    });
-  }
 
   const refresh = globalThis.add2eRefreshActionHud;
   if (typeof refresh === "function" && !refresh.__add2eHudComplements) {
