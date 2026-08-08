@@ -3,7 +3,7 @@
 // Compatible Foundry V13/V14/V15.
 
 export const ADD2E_SHOP_ENGINE_VERSION = "2026-08-08-shop-catalog-v1";
-export const ADD2E_VENDOR_VERSION = "2026-08-08-vendor-v30-shared-shop-catalog";
+export const ADD2E_VENDOR_VERSION = "2026-08-08-vendor-v31-canonical-shop-api";
 export const VENDOR_SCOPE = "add2e";
 export const VENDOR_NAME = "Marchand de composants et projectiles";
 export const VENDOR_FOLDER = "ADD2E — Boutique";
@@ -593,7 +593,7 @@ export function ownedShopQuantity(actor, entry) {
     if (shopItemSourceKey(item) === entry?._shop?.key) return total + Math.max(1, quantity(item));
     if (!shopItemSourceKey(item) && slug(item?.name) === slug(entry?.name)) return total + Math.max(1, quantity(item));
     return total;
-  }, 0);
+  }, 0;
 }
 
 export async function setShopStock(shop, entryOrReference, value) {
@@ -767,9 +767,6 @@ registerShopDefinition({
   catalogIdentity: (item, kind) => `${kind}:${slug(item?.name)}`
 });
 
-export const isVendorActor = actor => getShopType(actor) === "general";
-export const getVendorDisplayItems = vendor => getShopDisplayItems(vendor ?? "general");
-
 export async function findVendor() {
   return Array.from(game.actors ?? []).find(actor => getShopType(actor) === "general" || actor?.name === VENDOR_NAME) ?? null;
 }
@@ -821,33 +818,6 @@ export async function ensureStock(vendor) {
   return items.length;
 }
 
-export async function ensureVendorOnLaunch() {
-  if (!game.user?.isGM) return;
-  const vendor = await findVendor();
-  if (vendor) {
-    await moveToFolder(vendor);
-    await updateTokenSize(vendor);
-    await ensureStock(vendor);
-    return;
-  }
-  await createVendor();
-}
-
-export async function buy(args) {
-  const shop = args?.vendor ?? args?.shop ?? null;
-  if (game.user?.isGM) {
-    const result = await shopBuyLocal({ shop, buyer: args?.buyer, item: args?.item, quantity: args?.quantity }, { confirm: true });
-    if (!result.ok && !result.cancelled) await alertBox("Achat impossible", result.message);
-    else if (result.ok) ui.notifications?.info?.(result.message);
-    return result.ok;
-  }
-  return requestShopBuy({ shop, buyer: args?.buyer, item: args?.item, quantity: args?.quantity });
-}
-
-export const stockMax = item => Math.max(0, Math.floor(num(item?._shop?.maximum, item?._shop?.defaultStock ?? defaultStock(item))));
-export const restockAll = vendor => restockShop(vendor);
-export const setStock = (vendor, item, value) => setShopStock(vendor, item, value);
-
 export function getBuyer() {
   const character = game.user?.character;
   if (character && !isShopActor(character) && (character.isOwner || game.user?.isGM)) return character;
@@ -855,20 +825,6 @@ export function getBuyer() {
   if (controlled && !isShopActor(controlled) && (controlled.isOwner || game.user?.isGM)) return controlled;
   return null;
 }
-
-export function sceneTokenChoices() {
-  return Array.from(canvas?.tokens?.placeables ?? [])
-    .filter(token => token?.actor && !isShopActor(token.actor))
-    .map(token => ({ token, tokenId: token.id, label: `${token.name} — ${token.actor.name}` }))
-    .sort((left, right) => String(left.label).localeCompare(String(right.label)));
-}
-
-export async function assignItemToToken({ vendor, shop, item, token, quantity: requestedQuantity } = {}) {
-  const actor = token?.actor ?? null;
-  return assignShopItem({ shop: shop ?? vendor, buyer: actor, item, quantity: requestedQuantity });
-}
-
-export const assignProjectileToToken = assignItemToToken;
 
 // ---------------------------------------------------------------------------
 // Projectiles de combat — ressource canonique
@@ -1121,7 +1077,7 @@ export function registerRecoveryHooks() {
 }
 
 // ---------------------------------------------------------------------------
-// Feuille, globals publics et compatibilité des consommateurs existants
+// Feuille et API canoniques
 // ---------------------------------------------------------------------------
 
 function bindMoneyInputs(sheet, root) {
@@ -1174,44 +1130,27 @@ export function patchActorSheetMoney() {
 
 export function registerGlobals() {
   game.add2e = game.add2e ?? {};
-  Object.assign(game.add2e, {
-    shopEngineVersion: ADD2E_SHOP_ENGINE_VERSION,
-    shop: {
-      registerDefinition: registerShopDefinition,
-      definition: getShopDefinition,
-      displayItems: getShopDisplayItems,
-      resolveDocument: resolveShopCatalogDocument,
-      buyLocal: shopBuyLocal,
-      requestBuy: requestShopBuy,
-      restock: restockShop,
-      setStock: setShopStock,
-      assign: assignShopItem,
-      migrate: migrateLegacyShopInventory
-    },
-    vendorVersion: ADD2E_VENDOR_VERSION,
-    createDefaultVendor: createVendor,
-    findDefaultVendor: findVendor,
-    ensureVendorStock: ensureStock,
-    updateVendorTokenSize: updateTokenSize,
-    moveToFolder,
+  game.add2e.shopEngineVersion = ADD2E_SHOP_ENGINE_VERSION;
+  game.add2e.shop = {
+    registerDefinition: registerShopDefinition,
+    definition: getShopDefinition,
+    displayItems: getShopDisplayItems,
+    resolveDocument: resolveShopCatalogDocument,
+    buyLocal: shopBuyLocal,
+    requestBuy: requestShopBuy,
+    restock: restockShop,
+    setStock: setShopStock,
+    assign: assignShopItem,
+    migrate: migrateLegacyShopInventory
+  };
+  game.add2e.vendorVersion = ADD2E_VENDOR_VERSION;
+  game.add2e.vendorProjectiles = {
     resolveProjectileForAttack,
     spendProjectileForAttack,
     recoverProjectilesForCombat,
-    assignItemToToken,
-    assignProjectileToToken,
-    sceneTokenChoices,
-    vendorProjectiles: { resolveProjectileForAttack, spendProjectileForAttack, recoverProjectilesForCombat, recordProjectileSpent },
-    vendorMoney: { coins: COINS, get: getMoney, set: setMoney, format: formatMoney, toCopper, fromCopper }
-  });
+    recordProjectileSpent
+  };
 
   globalThis.ADD2E_VENDOR_VERSION = ADD2E_VENDOR_VERSION;
   globalThis.ADD2E_VENDOR_PROJECTILES = game.add2e.vendorProjectiles;
-  globalThis.add2eCreateDefaultVendor = createVendor;
-  globalThis.add2eVendorMoney = game.add2e.vendorMoney;
-  globalThis.add2eResolveProjectileForAttack = resolveProjectileForAttack;
-  globalThis.add2eSpendProjectileForAttack = spendProjectileForAttack;
-  globalThis.add2eRecoverProjectilesForCombat = recoverProjectilesForCombat;
-  globalThis.add2eAssignItemToToken = assignItemToToken;
-  globalThis.add2eAssignProjectileToToken = assignProjectileToToken;
-  globalThis.add2eVendorActorUsesProjectileInventory = actorUsesProjectileInventory;
 }
