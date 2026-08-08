@@ -30,7 +30,7 @@ const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
 const FAMILIAR_SCOPE = "add2e";
 const FAMILIAR_FLAG = "familiar";
 const FAMILIAR_RANGE_DEFAULT = 12;
-const VERSION = "2026-08-08-gm-relay-components-v12";
+const VERSION = "2026-08-08-gm-relay-item-mutation-v13";
 const TAG = "[ADD2E][GM-RELAY]";
 
 const FAMILIAR_ASSETS = Object.freeze({
@@ -189,7 +189,7 @@ async function applyDamage(payload = {}) {
   const max = num(system.points_de_coup, NaN)
     || num(system.pv_max, NaN)
     || num(system.points_de_vie, NaN)
-    || num(system.hp?.max, NaN)
+    || num(system.hp?.max, 0)
     || num(system.attributes?.hp?.max, 0);
   const current = [system.pdv, system.pv, system.hp?.value, system.attributes?.hp?.value]
     .map(value => num(value, NaN))
@@ -348,6 +348,27 @@ async function updateToken(payload = {}) {
   const token = scene?.tokens?.get?.(payload.tokenId) ?? null;
   if (!scene || !token) return console.warn(`${TAG}[UPDATE_TOKEN] scène/token introuvable`, payload);
   return token.update(payload.updateData ?? {});
+}
+
+async function mutateEmbeddedItem(payload = {}) {
+  const actor = await resolveActor(payload);
+  if (!actor) return console.warn(`${TAG}[MUTATE_ITEM] acteur introuvable`, payload);
+  const itemId = String(payload.itemId ?? "").trim();
+  const item = itemId ? actor.items?.get?.(itemId) ?? null : null;
+  if (!item) return console.warn(`${TAG}[MUTATE_ITEM] item introuvable`, payload);
+  const action = String(payload.action ?? "update").trim().toLowerCase();
+  if (action === "delete") {
+    await item.delete({ add2eReason: String(payload.reason ?? "gm-relay-item-delete") });
+    return true;
+  }
+  if (action === "update") {
+    const updateData = clone(payload.updateData ?? {});
+    delete updateData._id;
+    await item.update(updateData, { add2eReason: String(payload.reason ?? "gm-relay-item-update") });
+    return true;
+  }
+  console.warn(`${TAG}[MUTATE_ITEM] action inconnue`, action, payload);
+  return false;
 }
 
 function familiarLink(actor) {
@@ -1230,6 +1251,7 @@ function registerSocketRelays() {
     createAmbientLight,
     deleteAmbientLight,
     updateToken,
+    mutateEmbeddedItem,
     createActiveEffect,
     vendorRecordProjectileSpent: recordProjectileSpentOperation,
     shopBuy: handleShopBuyOperation,
