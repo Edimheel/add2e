@@ -1,13 +1,14 @@
-// ADD2E — Vendeur système : orchestration minimale des boutiques.
-// Architecture : le cœur gère les données, les ApplicationV2 gèrent les fenêtres.
+// ADD2E — Orchestration des boutiques sur le moteur SHOP commun.
+// Les catalogues restent dans les compendiums ; les Actors ne portent que leur état commercial.
+// Compatible Foundry V13/V14/V15.
 
 import {
   ADD2E_VENDOR_VERSION,
   VENDOR_SETTING,
+  getShopType,
   registerRecoveryHooks,
   patchActorSheetMoney,
   registerGlobals,
-  isVendorActor,
   findVendor,
   createVendor,
   moveToFolder as moveVendorToFolder,
@@ -26,8 +27,6 @@ import {
   ADD2E_ARMORER_VERSION,
   ARMORER_SETTING,
   registerGlobals as registerArmorerGlobals,
-  registerSockets as registerArmorerSockets,
-  isArmorerActor,
   findArmorer,
   createArmorer,
   moveToFolder as moveArmorerToFolder,
@@ -48,44 +47,23 @@ import {
   registerSockets as registerConsumablesSockets
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-07-06-shop-tiles-v4";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-08-08-shop-compendium-catalog-v5";
 const ADD2E_SHOP_HP_VERSION = "2026-06-15-shop-hp-one-multiclass-v1";
 const ADD2E_SHOP_HP = 1;
 const SPELL_COMPONENTS_SETTING = "gestionComposantsSorts";
-const ADD2E_SHOP_TILE_VERSION = "2026-07-06-shop-tiles-v4";
+const ADD2E_SHOP_TILE_VERSION = "2026-08-08-shop-tiles-v5";
 const ADD2E_SHOP_TILE_FLAG_SCOPE = "add2e";
 const ADD2E_SHOP_TILE_FLAG_KEY = "shopType";
-const ADD2E_SHOP_TILE_TYPES = new Set(["vendor", "armorer"]);
+const ADD2E_SHOP_TILE_TYPES = new Set(["vendor", "general", "armorer"]);
 const ADD2E_SHOP_TILE_CLICK_DISTANCE = 8;
 const ADD2E_SHOP_TILE_CLICK_DURATION = 1200;
-
-// Seuls ces champs sont répliqués depuis le compendium vers le stock déjà
-// existant de l'armurier. Prix, quantité et paramètres de stock sont conservés.
-const ARMORER_WEAPON_RULE_FIELDS = [
-  "tags",
-  "effectTags",
-  "effecttags",
-  "categorie",
-  "category",
-  "type_arme",
-  "typeArme",
-  "arme_de_jet",
-  "armeDeJet",
-  "isThrown",
-  "utilise_munition",
-  "utiliseMunition",
-  "projectileConsomme",
-  "carquois",
-  "portee_courte",
-  "portee_moyenne",
-  "portee_longue",
-  "porteeCourte",
-  "porteeMoyenne",
-  "porteeLongue"
-];
+const SHOP_TILE_OPEN_LOCKS = new Map();
+const SHOP_TILE_CANVAS_STATE = { stage: null, down: null, onDown: null, onUp: null, onCancel: null };
+let shopActorsHiddenHookRegistered = false;
+let shopTileHooksRegistered = false;
 
 function isShopActor(actor) {
-  return isVendorActor(actor) || isArmorerActor(actor);
+  return !!getShopType(actor);
 }
 
 function shopTokenDisplayAlwaysValue() {
@@ -108,139 +86,31 @@ function shopHitPointUpdate() {
 }
 
 function shopActorNeedsHitPointUpdate(actor) {
-  const sys = actor?.system ?? {};
-  const values = [
-    sys.pdv,
-    sys.pv,
-    sys.points_de_coup,
-    sys.points_de_vie,
-    sys.pv_max,
-    sys.hp?.value,
-    sys.hp?.max,
-    sys.attributes?.hp?.value,
-    sys.attributes?.hp?.max
-  ];
-  return actor?.getFlag?.("add2e", "shopHpVersion") !== ADD2E_SHOP_HP_VERSION
-    || values.some(value => Number(value) !== ADD2E_SHOP_HP);
-}
-
-function armorerRuleSlug(value) {
-  return String(value ?? "")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[’']/g, "_")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-function armorerRuleKey(item) {
-  return `arme:${armorerRuleSlug(item?.name)}`;
-}
-
-function armorerClone(value) {
-  if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
-  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
-}
-
-function armorerSameValue(a, b) {
-  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-}
-
-async function getArmorerWeaponSources() {
-  const docs = [];
-  const seen = new Set();
-  const ids = ["add2e.armes", "world.armes"];
-
-  for (const [id, pack] of game.packs ?? []) {
-    const text = `${id} ${pack?.metadata?.label ?? ""}`;
-    if (/\barmes?\b|weapons?/i.test(text) && !ids.includes(id)) ids.push(id);
-  }
-
-  for (const id of ids) {
-    const pack = game.packs?.get?.(id);
-    if (!pack) continue;
-    let packDocs = [];
-    try {
-      packDocs = await pack.getDocuments();
-    } catch (error) {
-      console.warn("[ADD2E][ARMORER][SOURCE_SYNC][PACK_READ_FAIL]", id, error);
-      continue;
-    }
-
-    for (const doc of packDocs) {
-      if (doc?.type !== "arme") continue;
-      const key = armorerRuleKey(doc);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      docs.push(doc);
-    }
-  }
-
-  return docs;
-}
-
-/**
- * Met à jour le stock préexistant de l'armurier sans écraser son économie.
- * Les nouveaux achats recopient alors la bonne arme depuis ce stock.
- */
-async function syncArmorerWeaponRules(armorer) {
-  if (!game.user?.isGM || !armorer) return 0;
-
-  const sources = await getArmorerWeaponSources();
-  const sourceByKey = new Map(sources.map(source => [armorerRuleKey(source), source]));
-  const updates = [];
-
-  for (const stockItem of armorer.items ?? []) {
-    if (stockItem?.type !== "arme") continue;
-
-    const catalogKey = stockItem.getFlag?.("add2e", "armorerCatalogKey") ?? armorerRuleKey(stockItem);
-    const source = sourceByKey.get(catalogKey) ?? sourceByKey.get(armorerRuleKey(stockItem));
-    if (!source) continue;
-
-    const sourceSystem = source.system ?? {};
-    const update = { _id: stockItem.id };
-    let changed = false;
-
-    for (const field of ARMORER_WEAPON_RULE_FIELDS) {
-      if (!Object.prototype.hasOwnProperty.call(sourceSystem, field)) continue;
-      if (armorerSameValue(stockItem.system?.[field], sourceSystem[field])) continue;
-      update[`system.${field}`] = armorerClone(sourceSystem[field]);
-      changed = true;
-    }
-
-    if (changed) updates.push(update);
-  }
-
-  if (updates.length) {
-    await armorer.updateEmbeddedDocuments("Item", updates, { add2eReason: "armorer-sync-source-weapon-rules" });
-  }
-
-  return updates.length;
+  const system = actor?.system ?? {};
+  const values = [system.pdv, system.pv, system.points_de_coup, system.points_de_vie, system.pv_max, system.hp?.value, system.hp?.max, system.attributes?.hp?.value, system.attributes?.hp?.max];
+  return actor?.getFlag?.("add2e", "shopHpVersion") !== ADD2E_SHOP_HP_VERSION || values.some(value => Number(value) !== ADD2E_SHOP_HP);
 }
 
 async function enforceShopHitPoints() {
   if (!game.user?.isGM) return false;
-
   for (const actor of game.actors ?? []) {
     if (!isShopActor(actor) || !shopActorNeedsHitPointUpdate(actor)) continue;
     await actor.update(shopHitPointUpdate(), { add2eReason: "shop-hit-points-one" });
   }
-
   game.add2e = game.add2e ?? {};
   game.add2e.shopHpVersion = ADD2E_SHOP_HP_VERSION;
-  globalThis.ADD2E_SHOP_HP_VERSION = ADD2E_SHOP_HP_VERSION;
   return true;
 }
 
 async function enforceShopActors() {
   if (!game.user?.isGM) return false;
 
-  let vendor = findVendor();
+  let vendor = await findVendor();
   if (!vendor) vendor = await createVendor({ force: true });
   if (vendor) {
     await moveVendorToFolder(vendor);
     await updateVendorTokenSize(vendor);
-    if (!Array.from(vendor.items ?? []).some(item => item?.getFlag?.("add2e", "vendorItem") === true)) await ensureVendorStock(vendor);
+    await ensureVendorStock(vendor);
   }
 
   let armorer = findArmorer();
@@ -249,7 +119,6 @@ async function enforceShopActors() {
     await moveArmorerToFolder(armorer);
     await updateArmorerTokenSize(armorer);
     await ensureArmorerStock(armorer);
-    await syncArmorerWeaponRules(armorer);
   }
 
   return true;
@@ -258,7 +127,6 @@ async function enforceShopActors() {
 async function enforceShopTokenPresentation() {
   if (!game.user?.isGM) return false;
   const displayName = shopTokenDisplayAlwaysValue();
-
   for (const actor of game.actors ?? []) {
     if (!isShopActor(actor)) continue;
     const update = {};
@@ -284,13 +152,12 @@ async function enforceShopTokenPresentation() {
 
   game.add2e = game.add2e ?? {};
   game.add2e.shopOrchestrationVersion = ADD2E_SHOP_ORCHESTRATION_VERSION;
-  globalThis.ADD2E_SHOP_ORCHESTRATION_VERSION = ADD2E_SHOP_ORCHESTRATION_VERSION;
   return true;
 }
 
 function hideShopActorsFromPlayers() {
-  if (globalThis.__ADD2E_HIDE_SHOP_ACTORS_FROM_PLAYERS_V3) return;
-  globalThis.__ADD2E_HIDE_SHOP_ACTORS_FROM_PLAYERS_V3 = true;
+  if (shopActorsHiddenHookRegistered) return;
+  shopActorsHiddenHookRegistered = true;
   Hooks.on("renderActorDirectory", (_app, html) => {
     if (game.user?.isGM) return;
     const root = html?.jquery ? html[0] : html;
@@ -309,9 +176,7 @@ function tileDocument(tile) {
 
 function shopTileType(tile) {
   const document = tileDocument(tile);
-  const raw = document?.getFlag?.(ADD2E_SHOP_TILE_FLAG_SCOPE, ADD2E_SHOP_TILE_FLAG_KEY)
-    ?? document?.flags?.[ADD2E_SHOP_TILE_FLAG_SCOPE]?.[ADD2E_SHOP_TILE_FLAG_KEY]
-    ?? "";
+  const raw = document?.getFlag?.(ADD2E_SHOP_TILE_FLAG_SCOPE, ADD2E_SHOP_TILE_FLAG_KEY) ?? document?.flags?.[ADD2E_SHOP_TILE_FLAG_SCOPE]?.[ADD2E_SHOP_TILE_FLAG_KEY] ?? "";
   const type = String(raw ?? "").trim().toLowerCase();
   return ADD2E_SHOP_TILE_TYPES.has(type) ? type : "";
 }
@@ -324,9 +189,8 @@ function shopTileKey(tile) {
 function shopTileOpenLock(tile) {
   const key = `${game.user?.id ?? "unknown"}:${shopTileKey(tile) ?? "unknown"}`;
   const now = Date.now();
-  const locks = globalThis.__ADD2E_SHOP_TILE_OPEN_LOCK ??= {};
-  if (locks[key] && now - locks[key] < 750) return false;
-  locks[key] = now;
+  if (SHOP_TILE_OPEN_LOCKS.has(key) && now - SHOP_TILE_OPEN_LOCKS.get(key) < 750) return false;
+  SHOP_TILE_OPEN_LOCKS.set(key, now);
   return true;
 }
 
@@ -356,7 +220,6 @@ function shopTilePointerPosition(event) {
       if (point && Number.isFinite(point.x) && Number.isFinite(point.y)) return { x: point.x, y: point.y };
     } catch (_error) {}
   }
-
   const getLocalPosition = event?.getLocalPosition ?? event?.data?.getLocalPosition;
   if (typeof getLocalPosition === "function") {
     try {
@@ -364,7 +227,6 @@ function shopTilePointerPosition(event) {
       if (point && Number.isFinite(point.x) && Number.isFinite(point.y)) return { x: point.x, y: point.y };
     } catch (_error) {}
   }
-
   return null;
 }
 
@@ -375,74 +237,61 @@ function shopTileContainsPoint(tile, point) {
   const width = Number(document?.width);
   const height = Number(document?.height);
   if (![x, y, width, height, point?.x, point?.y].every(Number.isFinite) || width <= 0 || height <= 0) return false;
-
   let px = point.x;
   let py = point.y;
   const rotation = Number(document?.rotation ?? 0);
   if (Number.isFinite(rotation) && rotation !== 0) {
-    const centerX = x + (width / 2);
-    const centerY = y + (height / 2);
+    const centerX = x + width / 2;
+    const centerY = y + height / 2;
     const radians = (-rotation * Math.PI) / 180;
     const dx = px - centerX;
     const dy = py - centerY;
     px = centerX + (dx * Math.cos(radians)) - (dy * Math.sin(radians));
     py = centerY + (dx * Math.sin(radians)) + (dy * Math.cos(radians));
   }
-
   return px >= x && px <= x + width && py >= y && py <= y + height;
 }
 
 function shopTileAtPoint(point) {
   const tiles = Array.from(canvas?.tiles?.placeables ?? [])
     .filter(tile => shopTileType(tile) && tile?.isVisible !== false)
-    .sort((left, right) => {
-      const leftZ = Number(left?.zIndex ?? left?.document?.sort ?? 0);
-      const rightZ = Number(right?.zIndex ?? right?.document?.sort ?? 0);
-      return rightZ - leftZ;
-    });
+    .sort((left, right) => Number(right?.zIndex ?? right?.document?.sort ?? 0) - Number(left?.zIndex ?? left?.document?.sort ?? 0));
   return tiles.find(tile => shopTileContainsPoint(tile, point)) ?? null;
 }
 
 function bindShopTileCanvasClick() {
-  const state = globalThis.__ADD2E_SHOP_TILE_CANVAS_CLICK_V4 ??= {};
   const stage = canvas?.stage;
-  if (!stage?.on || state.stage === stage) return;
-
-  if (state.stage?.off) {
-    state.stage.off("pointerdown", state.onDown);
-    state.stage.off("pointerup", state.onUp);
-    state.stage.off("pointerupoutside", state.onCancel);
-    state.stage.off("pointercancel", state.onCancel);
+  if (!stage?.on || SHOP_TILE_CANVAS_STATE.stage === stage) return;
+  if (SHOP_TILE_CANVAS_STATE.stage?.off) {
+    SHOP_TILE_CANVAS_STATE.stage.off("pointerdown", SHOP_TILE_CANVAS_STATE.onDown);
+    SHOP_TILE_CANVAS_STATE.stage.off("pointerup", SHOP_TILE_CANVAS_STATE.onUp);
+    SHOP_TILE_CANVAS_STATE.stage.off("pointerupoutside", SHOP_TILE_CANVAS_STATE.onCancel);
+    SHOP_TILE_CANVAS_STATE.stage.off("pointercancel", SHOP_TILE_CANVAS_STATE.onCancel);
   }
-
-  state.stage = stage;
-  state.down = null;
-  state.onDown = event => {
+  SHOP_TILE_CANVAS_STATE.stage = stage;
+  SHOP_TILE_CANVAS_STATE.down = null;
+  SHOP_TILE_CANVAS_STATE.onDown = event => {
     if (game.user?.isGM || !shopTileIsPrimaryPointer(event)) return;
     const point = shopTilePointerPosition(event);
     if (!point) return;
-    state.down = { pointerId: shopTilePointerId(event), point, time: Date.now() };
+    SHOP_TILE_CANVAS_STATE.down = { pointerId: shopTilePointerId(event), point, time: Date.now() };
   };
-  state.onCancel = () => { state.down = null; };
-  state.onUp = event => {
+  SHOP_TILE_CANVAS_STATE.onCancel = () => { SHOP_TILE_CANVAS_STATE.down = null; };
+  SHOP_TILE_CANVAS_STATE.onUp = event => {
     if (game.user?.isGM || !shopTileIsPrimaryPointer(event)) return;
-    const down = state.down;
-    state.down = null;
+    const down = SHOP_TILE_CANVAS_STATE.down;
+    SHOP_TILE_CANVAS_STATE.down = null;
     if (!down || down.pointerId !== shopTilePointerId(event)) return;
-
     const point = shopTilePointerPosition(event);
     if (!point || Date.now() - down.time > ADD2E_SHOP_TILE_CLICK_DURATION) return;
-    const distance = Math.hypot(point.x - down.point.x, point.y - down.point.y);
-    if (distance > ADD2E_SHOP_TILE_CLICK_DISTANCE) return;
-
+    if (Math.hypot(point.x - down.point.x, point.y - down.point.y) > ADD2E_SHOP_TILE_CLICK_DISTANCE) return;
     const tile = shopTileAtPoint(point);
     if (tile) window.setTimeout(() => { void openShopFromTile(tile); }, 0);
   };
-
-  stage.on("pointerdown", state.onDown);
-  stage.on("pointerup", state.onUp);
-  stage.on("pointerupoutside", state.onCancel);
-  stage.on("pointercancel", state.onCancel);
+  stage.on("pointerdown", SHOP_TILE_CANVAS_STATE.onDown);
+  stage.on("pointerup", SHOP_TILE_CANVAS_STATE.onUp);
+  stage.on("pointerupoutside", SHOP_TILE_CANVAS_STATE.onCancel);
+  stage.on("pointercancel", SHOP_TILE_CANVAS_STATE.onCancel);
 }
 
 function appElement(html) {
@@ -462,7 +311,6 @@ function injectShopTileConfigField(app, html) {
   const root = appElement(html);
   const form = root?.matches?.("form") ? root : root?.querySelector?.("form");
   if (!form || form.querySelector(".add2e-shop-tile-field")) return;
-
   const type = shopTileType(tile);
   const group = globalThis.document.createElement("div");
   group.className = "form-group add2e-shop-tile-field";
@@ -471,20 +319,19 @@ function injectShopTileConfigField(app, html) {
     <div class="form-fields">
       <select id="add2e-shop-tile-type" name="flags.add2e.shopType">
         <option value="" ${type === "" ? "selected" : ""}>Aucune</option>
-        <option value="vendor" ${type === "vendor" ? "selected" : ""}>Marchand</option>
+        <option value="general" ${type === "vendor" || type === "general" ? "selected" : ""}>Marchand général</option>
         <option value="armorer" ${type === "armorer" ? "selected" : ""}>Armurier</option>
       </select>
     </div>
     <p class="hint">Les joueurs ouvrent cette boutique par clic simple sur la tuile.</p>`;
-
   const footer = form.querySelector("footer.form-footer, .form-footer, .sheet-footer");
   if (footer?.parentElement) footer.before(group);
   else form.append(group);
 }
 
 function registerShopTileHooks() {
-  if (globalThis.__ADD2E_SHOP_TILE_HOOKS_V4) return;
-  globalThis.__ADD2E_SHOP_TILE_HOOKS_V4 = true;
+  if (shopTileHooksRegistered) return;
+  shopTileHooksRegistered = true;
   Hooks.on("renderTileConfig", injectShopTileConfigField);
   Hooks.on("canvasReady", bindShopTileCanvasClick);
 }
@@ -492,22 +339,20 @@ function registerShopTileHooks() {
 Hooks.once("init", () => {
   game.settings.register("add2e", VENDOR_SETTING, {
     name: "ADD2E — Création du vendeur système",
-    hint: "Version du vendeur de composants, projectiles et équipements créé automatiquement.",
+    hint: "Version du marchand général créé automatiquement.",
     scope: "world",
     config: false,
     type: String,
     default: ""
   });
-
   game.settings.register("add2e", ARMORER_SETTING, {
     name: "ADD2E — Création de l’armurier système",
-    hint: "Version de l’armurier d’armes et armures créé automatiquement.",
+    hint: "Version de l’armurier créé automatiquement.",
     scope: "world",
     config: false,
     type: String,
     default: ""
   });
-
   game.settings.register("add2e", SPELL_COMPONENTS_SETTING, {
     name: "ADD2E — Gestion des composants de sorts",
     hint: "Si coché, les sorts vérifient et consomment les composants matériels. Décochez cette option pour ignorer les composants.",
@@ -516,7 +361,6 @@ Hooks.once("init", () => {
     type: Boolean,
     default: true
   });
-
   registerVendorDirectoryButton();
   registerArmorerDirectoryButton();
   hideShopActorsFromPlayers();
@@ -529,12 +373,11 @@ Hooks.once("ready", async () => {
   registerUiGlobals();
   registerArmorerGlobals();
   registerArmorerUiGlobals();
-  registerArmorerSockets();
   registerConsumablesSockets();
 
-  await enforceShopActors().catch(err => console.warn("[ADD2E][SHOP][ENSURE_ACTORS]", err));
-  await enforceShopHitPoints().catch(err => console.warn("[ADD2E][SHOP][HIT_POINTS]", err));
-  await enforceShopTokenPresentation().catch(err => console.warn("[ADD2E][SHOP][TOKEN_PRESENTATION]", err));
+  await enforceShopActors().catch(error => console.warn("[ADD2E][SHOP][ENSURE_ACTORS]", error));
+  await enforceShopHitPoints().catch(error => console.warn("[ADD2E][SHOP][HIT_POINTS]", error));
+  await enforceShopTokenPresentation().catch(error => console.warn("[ADD2E][SHOP][TOKEN_PRESENTATION]", error));
 
   registerRecoveryHooks();
   patchActorSheetMoney();
