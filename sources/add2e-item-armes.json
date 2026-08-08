@@ -88,7 +88,8 @@
         "description": "",
         "ajustement_ca_reference": "etoile du matin",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "fleau"
+        "type_arme": "fleau",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -200,7 +201,8 @@
         "description": "",
         "ajustement_ca_reference": "epee courte",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -315,7 +317,8 @@
         "description": "",
         "ajustement_ca_reference": "javelot",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "javelot"
+        "type_arme": "javelot",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -527,12 +530,16 @@
         "effectTags": [
           "arme",
           "type_arme:hachette",
-          "slug:hachette"
+          "slug:hachette",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "tags": [
           "arme",
           "type_arme:hachette",
-          "slug:hachette"
+          "slug:hachette",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "famille_arme": "hache",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -543,7 +550,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "hachette",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -759,12 +767,16 @@
         "effectTags": [
           "arme",
           "type_arme:lance",
-          "slug:lance_a_une_main"
+          "slug:lance_a_une_main",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "tags": [
           "arme",
           "type_arme:lance",
-          "slug:lance_a_une_main"
+          "slug:lance_a_une_main",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "famille_arme": "lance",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -777,7 +789,8 @@
         "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:lance de fantassin_melee.",
         "portee_source_reference": "ajustement_ca_reference:lance de fantassin_melee",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -877,12 +890,16 @@
         "effectTags": [
           "arme",
           "type_arme:dague",
-          "slug:dague"
+          "slug:dague",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "tags": [
           "arme",
           "type_arme:dague",
-          "slug:dague"
+          "slug:dague",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -893,7 +910,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "dague",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -1026,7 +1044,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arbalete_lourde",
         "portee_reference_mode": "lanceur_exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {
@@ -1283,12 +1302,16 @@
         "effectTags": [
           "arme",
           "type_arme:marteau",
-          "slug:marteau_de_guerre"
+          "slug:marteau_de_guerre",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "tags": [
           "arme",
           "type_arme:marteau",
-          "slug:marteau_de_guerre"
+          "slug:marteau_de_guerre",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "famille_arme": "marteau",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -1299,7 +1322,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "marteau_de_guerre",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -1418,7 +1442,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arbalete_legere",
         "portee_reference_mode": "lanceur_exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {
@@ -1658,12 +1683,16 @@
         "effectTags": [
           "arme",
           "type_arme:dague",
-          "slug:dague_de_pierre"
+          "slug:dague_de_pierre",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "tags": [
           "arme",
           "type_arme:dague",
-          "slug:dague_de_pierre"
+          "slug:dague_de_pierre",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -1677,7 +1706,8 @@
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:dague_melee.",
         "portee_source_reference": "ajustement_ca_reference:dague_melee",
         "portee_operationnelle": true,
-        "portee_reference_ligne": "dague"
+        "portee_reference_ligne": "dague",
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -1803,7 +1833,8 @@
         "description": "",
         "ajustement_ca_reference": "hache d armes",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "hache"
+        "type_arme": "hache",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -1927,7 +1958,8 @@
         "munition_par_defaut": "fleche_de_guerre",
         "utilise_munition": true,
         "projectileConsomme": true,
-        "carquois": true
+        "carquois": true,
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {
@@ -2303,7 +2335,8 @@
         "description": "",
         "ajustement_ca_reference": "epee large",
         "ajustement_ca_source": "exact_or_table",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -2429,7 +2462,8 @@
         "description": "",
         "ajustement_ca_reference": "epee batarde",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -2555,7 +2589,8 @@
         "description": "",
         "ajustement_ca_reference": "hache d armes",
         "ajustement_ca_source": "exact_or_table",
-        "type_arme": "hache"
+        "type_arme": "hache",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -2793,7 +2828,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_long",
         "portee_reference_mode": "lanceur_exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {
@@ -3052,7 +3088,8 @@
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:flechette.",
         "portee_source_reference": "ajustement_ca_reference:flechette",
         "portee_operationnelle": true,
-        "portee_reference_ligne": "flechette"
+        "portee_reference_ligne": "flechette",
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {
@@ -3449,7 +3486,8 @@
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:flechette.",
         "portee_source_reference": "ajustement_ca_reference:flechette",
         "portee_operationnelle": true,
-        "portee_reference_ligne": "flechette"
+        "portee_reference_ligne": "flechette",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -3689,12 +3727,16 @@
         "effectTags": [
           "arme",
           "type_arme:massue",
-          "slug:massue"
+          "slug:massue",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "tags": [
           "arme",
           "type_arme:massue",
-          "slug:massue"
+          "slug:massue",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "famille_arme": [
           "massue",
@@ -3708,7 +3750,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "massue",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -3820,7 +3863,8 @@
         "description": "",
         "ajustement_ca_reference": "marteau de lucerne",
         "ajustement_ca_source": "exact_or_table",
-        "type_arme": "arme_hast"
+        "type_arme": "arme_hast",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -3932,7 +3976,8 @@
         "description": "",
         "ajustement_ca_reference": "lance de fantassin_melee",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "lance"
+        "type_arme": "lance",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -4061,7 +4106,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_court",
         "portee_reference_mode": "lanceur_exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -4187,7 +4233,8 @@
         "description": "",
         "ajustement_ca_reference": "epee courte",
         "ajustement_ca_source": "exact_or_table",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -4554,7 +4601,8 @@
         "description": "",
         "ajustement_ca_reference": "lance cheval lourd",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "lance"
+        "type_arme": "lance",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -4669,7 +4717,8 @@
         "description": "",
         "ajustement_ca_reference": "lance cheval leger",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "lance"
+        "type_arme": "lance",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -4781,7 +4830,8 @@
         "description": "",
         "ajustement_ca_reference": "espadon",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -4911,7 +4961,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "fronde_pierre",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -5035,7 +5086,8 @@
         "munition_par_defaut": "fleche_de_vol",
         "utilise_munition": true,
         "projectileConsomme": true,
-        "carquois": true
+        "carquois": true,
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {
@@ -5279,7 +5331,8 @@
         "description": "",
         "ajustement_ca_reference": "dague_melee",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "dague"
+        "type_arme": "dague",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -5393,12 +5446,16 @@
         "effectTags": [
           "arme",
           "type_arme:dague",
-          "slug:couteau_de_pierre"
+          "slug:couteau_de_pierre",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "tags": [
           "arme",
           "type_arme:dague",
-          "slug:couteau_de_pierre"
+          "slug:couteau_de_pierre",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -5412,7 +5469,8 @@
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:dague_melee.",
         "portee_source_reference": "ajustement_ca_reference:dague_melee",
         "portee_operationnelle": true,
-        "portee_reference_ligne": "dague"
+        "portee_reference_ligne": "dague",
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -5541,7 +5599,8 @@
         "description": "",
         "ajustement_ca_reference": "lance cheval moyen",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "lance"
+        "type_arme": "lance",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -5665,7 +5724,8 @@
         "munition_par_defaut": "carreau_leger",
         "utilise_munition": true,
         "projectileConsomme": true,
-        "carquois": true
+        "carquois": true,
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -5797,7 +5857,8 @@
         "description": "",
         "ajustement_ca_reference": "baton",
         "ajustement_ca_source": "exact_or_table",
-        "type_arme": "baton"
+        "type_arme": "baton",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -6044,7 +6105,8 @@
         "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:javelot.",
         "portee_source_reference": "ajustement_ca_reference:javelot",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -6294,7 +6356,8 @@
         "munition_par_defaut": "fleche_de_guerre",
         "utilise_munition": true,
         "projectileConsomme": true,
-        "carquois": true
+        "carquois": true,
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {
@@ -6426,7 +6489,8 @@
         "description": "",
         "ajustement_ca_reference": "lance de fantassin_melee",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "lance"
+        "type_arme": "lance",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -6668,7 +6732,8 @@
         "description": "",
         "ajustement_ca_reference": "dague_melee",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "dague"
+        "type_arme": "dague",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -6906,7 +6971,8 @@
         "munition_par_defaut": "carreau_d_arbalete_de_poing",
         "utilise_munition": true,
         "projectileConsomme": true,
-        "carquois": true
+        "carquois": true,
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -7045,7 +7111,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "javelot",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -7157,7 +7224,8 @@
         "description": "",
         "ajustement_ca_reference": "epee longue",
         "ajustement_ca_source": "exact_or_table",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -7295,7 +7363,8 @@
         "munition_par_defaut": "fleche_de_vol",
         "utilise_munition": true,
         "projectileConsomme": true,
-        "carquois": true
+        "carquois": true,
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {
@@ -8255,7 +8324,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "javelot",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -9080,7 +9150,8 @@
         "description": "",
         "ajustement_ca_reference": "lance de fantassin_melee",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "lance"
+        "type_arme": "lance",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -9192,7 +9263,8 @@
         "description": "",
         "ajustement_ca_reference": "cimeterre",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -9304,7 +9376,8 @@
         "description": "",
         "ajustement_ca_reference": "lance de fantassin_melee",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "lance"
+        "type_arme": "lance",
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -9419,7 +9492,8 @@
         "description": "",
         "ajustement_ca_reference": "lance cheval lourd",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "lance"
+        "type_arme": "lance",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -10124,12 +10198,16 @@
         "effectTags": [
           "arme",
           "type_arme:dague",
-          "slug:dague_en_os"
+          "slug:dague_en_os",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "tags": [
           "arme",
           "type_arme:dague",
-          "slug:dague_en_os"
+          "slug:dague_en_os",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -10143,7 +10221,8 @@
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:dague_melee.",
         "portee_source_reference": "ajustement_ca_reference:dague_melee",
         "portee_operationnelle": true,
-        "portee_reference_ligne": "dague"
+        "portee_reference_ligne": "dague",
+        "materiau": "os"
       },
       "effects": [],
       "flags": {
@@ -10269,7 +10348,8 @@
         "description": "",
         "ajustement_ca_reference": "pertuisane",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "outil_combat"
+        "type_arme": "outil_combat",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -10395,7 +10475,8 @@
         "description": "",
         "ajustement_ca_reference": "dague_melee",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "dague"
+        "type_arme": "dague",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -10495,12 +10576,16 @@
         "effectTags": [
           "arme",
           "type_arme:dague",
-          "slug:couteau"
+          "slug:couteau",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "tags": [
           "arme",
           "type_arme:dague",
-          "slug:couteau"
+          "slug:couteau",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -10514,7 +10599,8 @@
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:dague_melee.",
         "portee_source_reference": "ajustement_ca_reference:dague_melee",
         "portee_operationnelle": true,
-        "portee_reference_ligne": "dague"
+        "portee_reference_ligne": "dague",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -10644,7 +10730,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "flechette",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {
@@ -10888,7 +10975,8 @@
         "description": "",
         "ajustement_ca_reference": "javelot",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "javelot"
+        "type_arme": "javelot",
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -11265,7 +11353,8 @@
         "description": "",
         "ajustement_ca_reference": "espadon",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -11379,12 +11468,16 @@
         "effectTags": [
           "arme",
           "type_arme:lance",
-          "slug:lance_de_pierre_a_une_main"
+          "slug:lance_de_pierre_a_une_main",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "tags": [
           "arme",
           "type_arme:lance",
-          "slug:lance_de_pierre_a_une_main"
+          "slug:lance_de_pierre_a_une_main",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "famille_arme": "lance",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -11397,7 +11490,8 @@
         "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:lance de fantassin_melee.",
         "portee_source_reference": "ajustement_ca_reference:lance de fantassin_melee",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -11635,7 +11729,8 @@
         "description": "",
         "ajustement_ca_reference": "masse fantassin",
         "ajustement_ca_source": "exact_or_table",
-        "type_arme": "masse"
+        "type_arme": "masse",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -11753,7 +11848,8 @@
         "description": "",
         "ajustement_ca_reference": "epee longue",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -11867,12 +11963,16 @@
         "effectTags": [
           "arme",
           "type_arme:dague",
-          "slug:couteau_en_os"
+          "slug:couteau_en_os",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "tags": [
           "arme",
           "type_arme:dague",
-          "slug:couteau_en_os"
+          "slug:couteau_en_os",
+          "usage:corps_a_corps",
+          "usage:lancer"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -11886,7 +11986,8 @@
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:dague_melee.",
         "portee_source_reference": "ajustement_ca_reference:dague_melee",
         "portee_operationnelle": true,
-        "portee_reference_ligne": "dague"
+        "portee_reference_ligne": "dague",
+        "materiau": "os"
       },
       "effects": [],
       "flags": {
@@ -12368,7 +12469,8 @@
         "description": "",
         "ajustement_ca_reference": "cimeterre",
         "ajustement_ca_source": "exact_or_table",
-        "type_arme": "cimeterre"
+        "type_arme": "cimeterre",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -12635,7 +12737,8 @@
         "munition_par_defaut": "carreau_lourd",
         "utilise_munition": true,
         "projectileConsomme": true,
-        "carquois": true
+        "carquois": true,
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -12767,7 +12870,8 @@
         "description": "",
         "ajustement_ca_reference": "lance de fantassin_melee",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "lance"
+        "type_arme": "lance",
+        "materiau": "bois_epais"
       },
       "effects": [],
       "flags": {
@@ -13221,7 +13325,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_long",
         "portee_reference_mode": "lanceur_exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {
@@ -13463,7 +13568,8 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_long",
         "portee_reference_mode": "lanceur_exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {
@@ -13598,7 +13704,8 @@
         "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:arbalete legere.",
         "portee_source_reference": "ajustement_ca_reference:arbalete legere",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "materiau": "bois_fin"
       },
       "effects": [],
       "flags": {

@@ -25,7 +25,11 @@
         "nom": "Armure de cuir à pointes",
         "ac": 7,
         "description": "Variante de cuir clouté munie de pointes.",
-        "tags": ["armure", "type_armure:cuir_cloute", "slug:armure_de_cuir_a_pointes"],
+        "tags": [
+          "armure",
+          "type_armure:cuir_cloute",
+          "slug:armure_de_cuir_a_pointes"
+        ],
         "poids": 25,
         "poids_unite": "lb",
         "prix": "20 po",
@@ -33,20 +37,41 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "materiau": "",
+        "materiau": "cuir",
         "type_armure": "cuir_cloute",
         "structure": ""
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.269Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.269Z"
+        }
       },
       "_id": "20mlGCNF9KiYDG7k",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190704, "modifiedTime": 1783421542482, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190704,
+        "modifiedTime": 1783421542482,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Besantine",
@@ -56,7 +81,11 @@
         "nom": "Besantine",
         "ac": 7,
         "description": "Armure de cuir clouté ou besantine.",
-        "tags": ["armure", "type_armure:cuir_cloute", "slug:besantine"],
+        "tags": [
+          "armure",
+          "type_armure:cuir_cloute",
+          "slug:besantine"
+        ],
         "poids": 20,
         "poids_unite": "lb",
         "prix": "20 po",
@@ -64,18 +93,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "cuir_cloute"
+        "type_armure": "cuir_cloute",
+        "materiau": "cuir"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.680Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.680Z"
+        }
       },
       "_id": "31DvQew66PfREzCv",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190708, "modifiedTime": 1781541190708, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190708,
+        "modifiedTime": 1781541190708,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Armure d'écailles",
@@ -85,7 +136,11 @@
         "nom": "Armure d'écailles",
         "ac": 6,
         "description": "Armure d'écailles.",
-        "tags": ["armure", "type_armure:ecailles", "slug:armure_decailles"],
+        "tags": [
+          "armure",
+          "type_armure:ecailles",
+          "slug:armure_decailles"
+        ],
         "poids": 40,
         "poids_unite": "lb",
         "prix": "120 po",
@@ -93,18 +148,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "ecailles"
+        "type_armure": "ecailles",
+        "materiau": "metal_dur"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.122Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.122Z"
+        }
       },
       "_id": "4ruRniSw5SKUMO4M",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190702, "modifiedTime": 1783421528689, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190702,
+        "modifiedTime": 1783421528689,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Tunique métallique",
@@ -113,7 +190,11 @@
       "system": {
         "nom": "Tunique métallique",
         "ac": 5,
-        "tags": ["armure", "type_armure:tunique_metallique", "slug:tunique_metallique"],
+        "tags": [
+          "armure",
+          "type_armure:tunique_metallique",
+          "slug:tunique_metallique"
+        ],
         "poids": 30,
         "poids_unite": "lb",
         "prix": "20 po",
@@ -121,18 +202,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "tunique_metallique"
+        "type_armure": "tunique_metallique",
+        "materiau": "metal_dur"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.655Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:59.646Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.655Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:59.646Z"
+        }
       },
       "_id": "B9NSMZFK7Y1s8XJf",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190717, "modifiedTime": 1781541190717, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190717,
+        "modifiedTime": 1781541190717,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Torse blindé",
@@ -141,7 +244,11 @@
       "system": {
         "nom": "Torse blindé",
         "ac": 4,
-        "tags": ["armure", "type_armure:torse_blinde", "slug:torse_blinde"],
+        "tags": [
+          "armure",
+          "type_armure:torse_blinde",
+          "slug:torse_blinde"
+        ],
         "poids": 40,
         "poids_unite": "lb",
         "prix": "35 po",
@@ -149,18 +256,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "torse_blinde"
+        "type_armure": "torse_blinde",
+        "materiau": "metal_dur"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.655Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:59.577Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.655Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:59.577Z"
+        }
       },
       "_id": "CKXuVqZ8ldO5rFB4",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190716, "modifiedTime": 1781541190716, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190716,
+        "modifiedTime": 1781541190716,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Cotte de mailles",
@@ -169,7 +298,11 @@
       "system": {
         "nom": "Cotte de mailles",
         "ac": 5,
-        "tags": ["armure", "type_armure:mailles", "slug:cotte_de_mailles"],
+        "tags": [
+          "armure",
+          "type_armure:mailles",
+          "slug:cotte_de_mailles"
+        ],
         "poids": 25,
         "poids_unite": "lb",
         "prix": "15 po",
@@ -177,18 +310,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "mailles"
+        "type_armure": "mailles",
+        "materiau": "metal_dur"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:59.099Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:59.099Z"
+        }
       },
       "_id": "D3BkMmwltdjZ9sPM",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190712, "modifiedTime": 1781541190712, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190712,
+        "modifiedTime": 1781541190712,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Brigandine",
@@ -198,7 +353,11 @@
         "nom": "Brigandine",
         "ac": 6,
         "description": "Brigandine.",
-        "tags": ["armure", "type_armure:brigandine", "slug:brigandine"],
+        "tags": [
+          "armure",
+          "type_armure:brigandine",
+          "slug:brigandine"
+        ],
         "poids": 35,
         "poids_unite": "lb",
         "prix": "120 po",
@@ -206,18 +365,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "brigandine"
+        "type_armure": "brigandine",
+        "materiau": "metal_dur"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:59.027Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:59.027Z"
+        }
       },
       "_id": "HMoU7GfjFc41cI5X",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190711, "modifiedTime": 1781541190711, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190711,
+        "modifiedTime": 1781541190711,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Jaseran",
@@ -227,7 +408,11 @@
         "nom": "Jaseran",
         "ac": 6,
         "description": "Jaseran, proche de l'armure d'écailles.",
-        "tags": ["armure", "type_armure:ecailles", "slug:jaseran"],
+        "tags": [
+          "armure",
+          "type_armure:ecailles",
+          "slug:jaseran"
+        ],
         "poids": 40,
         "poids_unite": "lb",
         "prix": "120 po",
@@ -235,18 +420,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "ecailles"
+        "type_armure": "ecailles",
+        "materiau": "metal_dur"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.655Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:59.510Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.655Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:59.510Z"
+        }
       },
       "_id": "IHzv1ij2iyPb2vAP",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190716, "modifiedTime": 1781541190716, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190716,
+        "modifiedTime": 1781541190716,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Bouclier rond",
@@ -255,7 +462,11 @@
       "system": {
         "nom": "Bouclier rond",
         "ac": 1,
-        "tags": ["bouclier", "type_bouclier:rond", "slug:bouclier_rond"],
+        "tags": [
+          "bouclier",
+          "type_bouclier:rond",
+          "slug:bouclier_rond"
+        ],
         "poids": 5,
         "poids_unite": "lb",
         "prix": "5 po",
@@ -269,13 +480,34 @@
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.958Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.958Z"
+        }
       },
       "_id": "IfVWIOgph7xtqeLS",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190710, "modifiedTime": 1781541190710, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190710,
+        "modifiedTime": 1781541190710,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Cuir bouilli",
@@ -285,7 +517,11 @@
         "nom": "Cuir bouilli",
         "ac": 8,
         "description": "Variante d'armure de cuir.",
-        "tags": ["armure", "type_armure:cuir", "slug:cuir_bouilli"],
+        "tags": [
+          "armure",
+          "type_armure:cuir",
+          "slug:cuir_bouilli"
+        ],
         "poids": 15,
         "poids_unite": "lb",
         "prix": "5 po",
@@ -293,18 +529,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "cuir"
+        "type_armure": "cuir",
+        "materiau": "cuir"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:59.234Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:59.234Z"
+        }
       },
       "_id": "JgKjZE3ORt3G5yNn",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190713, "modifiedTime": 1781541190713, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190713,
+        "modifiedTime": 1781541190713,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Armure d'écailles d'elfe de mer",
@@ -314,7 +572,11 @@
         "nom": "Armure d'écailles d'elfe de mer",
         "ac": 6,
         "description": "Variante d'armure d'écailles des elfes de mer.",
-        "tags": ["armure", "type_armure:ecailles", "slug:armure_decailles_delfe_de_mer"],
+        "tags": [
+          "armure",
+          "type_armure:ecailles",
+          "slug:armure_decailles_delfe_de_mer"
+        ],
         "poids": 25,
         "poids_unite": "lb",
         "prix": "rare",
@@ -329,13 +591,34 @@
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.197Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.197Z"
+        }
       },
       "_id": "KEIqCmG2AfycMhNz",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190703, "modifiedTime": 1783421536030, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190703,
+        "modifiedTime": 1783421536030,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Bouclier lourd",
@@ -344,7 +627,11 @@
       "system": {
         "nom": "Bouclier lourd",
         "ac": 2,
-        "tags": ["bouclier", "type_bouclier:lourd", "slug:bouclier_lourd"],
+        "tags": [
+          "bouclier",
+          "type_bouclier:lourd",
+          "slug:bouclier_lourd"
+        ],
         "poids": 10,
         "poids_unite": "lb",
         "prix": "15 po",
@@ -358,13 +645,34 @@
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.887Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.887Z"
+        }
       },
       "_id": "KdgZog7v90clqI7g",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190709, "modifiedTime": 1781541190709, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190709,
+        "modifiedTime": 1781541190709,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Armure à bandes",
@@ -374,14 +682,18 @@
         "nom": "Armure à bandes",
         "ac": 4,
         "description": "Armure à bandes.",
-        "tags": ["armure", "type_armure:bandes", "slug:armure_a_bandes"],
+        "tags": [
+          "armure",
+          "type_armure:bandes",
+          "slug:armure_a_bandes"
+        ],
         "poids": 35,
         "poids_unite": "lb",
         "prix": "200 po",
         "categorie": "Lourde",
         "equipee": false,
         "magique": false,
-        "materiau": "",
+        "materiau": "metal_dur",
         "bouclier": false,
         "type_armure": "bandes",
         "structure": ""
@@ -389,13 +701,34 @@
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:57.967Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:57.967Z"
+        }
       },
       "_id": "W7w7945s2HfzPMX9",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190700, "modifiedTime": 1781541190700, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190700,
+        "modifiedTime": 1781541190700,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Armure annelée",
@@ -405,14 +738,18 @@
         "nom": "Armure annelée",
         "ac": 7,
         "description": "Armure annelée.",
-        "tags": ["armure", "type_armure:annelee", "slug:armure_annelee"],
+        "tags": [
+          "armure",
+          "type_armure:annelee",
+          "slug:armure_annelee"
+        ],
         "poids": 30,
         "poids_unite": "lb",
         "prix": "100 po",
         "categorie": "Moyenne",
         "equipee": false,
         "magique": false,
-        "materiau": "",
+        "materiau": "metal_dur",
         "bouclier": false,
         "type_armure": "annelee",
         "structure": ""
@@ -420,13 +757,34 @@
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.043Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.043Z"
+        }
       },
       "_id": "fogxW81GoIyOYSNq",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190701, "modifiedTime": 1781541190701, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190701,
+        "modifiedTime": 1781541190701,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Armure de monnaie",
@@ -436,7 +794,11 @@
         "nom": "Armure de monnaie",
         "ac": 6,
         "description": "Variante d'armure d'écailles utilisant des pièces.",
-        "tags": ["armure", "type_armure:ecailles", "slug:armure_de_monnaie"],
+        "tags": [
+          "armure",
+          "type_armure:ecailles",
+          "slug:armure_de_monnaie"
+        ],
         "poids": 40,
         "poids_unite": "lb",
         "prix": "variable",
@@ -444,18 +806,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "ecailles"
+        "type_armure": "ecailles",
+        "materiau": "metal_dur"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.339Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.339Z"
+        }
       },
       "_id": "hDkQegbo2O3K8Tmo",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190704, "modifiedTime": 1781541190704, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190704,
+        "modifiedTime": 1781541190704,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Cuir clouté",
@@ -464,7 +848,11 @@
       "system": {
         "nom": "Cuir clouté",
         "ac": 6,
-        "tags": ["armure", "type_armure:cuir_cloute", "slug:cuir_cloute"],
+        "tags": [
+          "armure",
+          "type_armure:cuir_cloute",
+          "slug:cuir_cloute"
+        ],
         "poids": 20,
         "poids_unite": "lb",
         "prix": "12 po",
@@ -472,18 +860,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "cuir_cloute"
+        "type_armure": "cuir_cloute",
+        "materiau": "cuir"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:59.303Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:59.303Z"
+        }
       },
       "_id": "hVW8QOApBvB0oUl2",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190714, "modifiedTime": 1781541190714, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190714,
+        "modifiedTime": 1781541190714,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Cuir",
@@ -492,14 +902,18 @@
       "system": {
         "nom": "Cuir",
         "ac": 7,
-        "tags": ["armure", "type_armure:cuir", "slug:cuir"],
+        "tags": [
+          "armure",
+          "type_armure:cuir",
+          "slug:cuir"
+        ],
         "poids": 15,
         "poids_unite": "lb",
         "prix": "10 po",
         "categorie": "Légère",
         "equipee": false,
         "magique": false,
-        "materiau": "",
+        "materiau": "cuir",
         "bouclier": false,
         "type_armure": "cuir",
         "structure": "",
@@ -508,13 +922,34 @@
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:59.168Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:59.168Z"
+        }
       },
       "_id": "iedX3HnDqV0J7pHW",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190712, "modifiedTime": 1781541190712, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190712,
+        "modifiedTime": 1781541190712,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Gambison",
@@ -524,7 +959,11 @@
         "nom": "Gambison",
         "ac": 8,
         "description": "Armure matelassée ou gambison.",
-        "tags": ["armure", "type_armure:rembourree", "slug:gambison"],
+        "tags": [
+          "armure",
+          "type_armure:rembourree",
+          "slug:gambison"
+        ],
         "poids": 10,
         "poids_unite": "lb",
         "prix": "5 po",
@@ -532,18 +971,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "rembourree"
+        "type_armure": "rembourree",
+        "materiau": "tissu"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.655Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:59.443Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.655Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:59.443Z"
+        }
       },
       "_id": "jDgW7EWMHtebPXDF",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190715, "modifiedTime": 1781541190715, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190715,
+        "modifiedTime": 1781541190715,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Armure rembourrée",
@@ -552,7 +1013,11 @@
       "system": {
         "nom": "Armure rembourrée",
         "ac": 8,
-        "tags": ["armure", "type_armure:rembourree", "slug:armure_rembourree"],
+        "tags": [
+          "armure",
+          "type_armure:rembourree",
+          "slug:armure_rembourree"
+        ],
         "poids": 10,
         "poids_unite": "lb",
         "prix": "5 po",
@@ -560,18 +1025,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "rembourree"
+        "type_armure": "rembourree",
+        "materiau": "tissu"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.612Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.612Z"
+        }
       },
       "_id": "kD82vfdKJFyJvWUP",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190707, "modifiedTime": 1781541190707, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190707,
+        "modifiedTime": 1781541190707,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Armure feuilletée",
@@ -581,7 +1068,11 @@
         "nom": "Armure feuilletée",
         "ac": 4,
         "description": "Armure feuilletée.",
-        "tags": ["armure", "type_armure:feuilletee", "slug:armure_feuilletee"],
+        "tags": [
+          "armure",
+          "type_armure:feuilletee",
+          "slug:armure_feuilletee"
+        ],
         "poids": 40,
         "poids_unite": "lb",
         "prix": "80 po",
@@ -589,18 +1080,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "feuilletee"
+        "type_armure": "feuilletee",
+        "materiau": "metal_dur"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.545Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.545Z"
+        }
       },
       "_id": "oTfv4IU1AvqoY8dm",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190707, "modifiedTime": 1781541190707, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190707,
+        "modifiedTime": 1781541190707,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Bouclier de tour",
@@ -609,7 +1122,11 @@
       "system": {
         "nom": "Bouclier de tour",
         "ac": 3,
-        "tags": ["bouclier", "type_bouclier:tour", "slug:bouclier_de_tour"],
+        "tags": [
+          "bouclier",
+          "type_bouclier:tour",
+          "slug:bouclier_de_tour"
+        ],
         "poids": 15,
         "poids_unite": "lb",
         "prix": "20 po",
@@ -625,13 +1142,34 @@
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.748Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.748Z"
+        }
       },
       "_id": "sSt0Bi61BFraQD0g",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190709, "modifiedTime": 1781541190709, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190709,
+        "modifiedTime": 1781541190709,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Cuirasse",
@@ -641,7 +1179,11 @@
         "nom": "Cuirasse",
         "ac": 6,
         "description": "Cuirasse ou armure de peau.",
-        "tags": ["armure", "type_armure:cuirasse", "slug:cuirasse"],
+        "tags": [
+          "armure",
+          "type_armure:cuirasse",
+          "slug:cuirasse"
+        ],
         "poids": 30,
         "poids_unite": "lb",
         "prix": "15 po",
@@ -649,18 +1191,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "cuirasse"
+        "type_armure": "cuirasse",
+        "materiau": "cuir"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:59.374Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:59.374Z"
+        }
       },
       "_id": "spCOXIEy5clEPQoL",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190714, "modifiedTime": 1781541190714, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190714,
+        "modifiedTime": 1781541190714,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Armure de plaques",
@@ -669,7 +1233,11 @@
       "system": {
         "nom": "Armure de plaques",
         "ac": 3,
-        "tags": ["armure", "type_armure:plaques", "slug:armure_de_plaques"],
+        "tags": [
+          "armure",
+          "type_armure:plaques",
+          "slug:armure_de_plaques"
+        ],
         "poids": 50,
         "poids_unite": "lb",
         "prix": "50 po",
@@ -677,18 +1245,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "plaques"
+        "type_armure": "plaques",
+        "materiau": "metal_dur"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.476Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.476Z"
+        }
       },
       "_id": "w32Vo1BwWK1objFN",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190706, "modifiedTime": 1781541190706, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190706,
+        "modifiedTime": 1781541190706,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
       "name": "Armure de peau",
@@ -698,7 +1288,11 @@
         "nom": "Armure de peau",
         "ac": 6,
         "description": "Armure de peau.",
-        "tags": ["armure", "type_armure:peau", "slug:armure_de_peau"],
+        "tags": [
+          "armure",
+          "type_armure:peau",
+          "slug:armure_de_peau"
+        ],
         "poids": 30,
         "poids_unite": "lb",
         "prix": "15 po",
@@ -706,18 +1300,40 @@
         "equipee": false,
         "magique": false,
         "bouclier": false,
-        "type_armure": "peau"
+        "type_armure": "peau",
+        "materiau": "cuir"
       },
       "folder": null,
       "effects": [],
       "flags": {
-        "add2eExport": {"folderPath": "Armures", "sourceFolderId": "oewKfdhMHYYKikxO", "exportedAt": "2026-05-24T15:22:17.654Z"},
-        "add2e": {"importedBy": "ADD2E import universel", "importerVersion": "2026-05-26-v14-folders-spells-class-level", "importedAt": "2026-06-15T16:30:58.409Z"}
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:30:58.409Z"
+        }
       },
       "_id": "xNnzDaVesNNNMKsh",
       "sort": 0,
-      "ownership": {"default": 0, "3qitoEt1cN3Qhvig": 3},
-      "_stats": {"coreVersion": "14.363", "systemId": "add2e", "systemVersion": "0.1.18", "createdTime": 1781541190705, "modifiedTime": 1781541190705, "lastModifiedBy": "3qitoEt1cN3Qhvig", "compendiumSource": null, "duplicateSource": null, "exportSource": null}
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.18",
+        "createdTime": 1781541190705,
+        "modifiedTime": 1781541190705,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     }
   ]
 }

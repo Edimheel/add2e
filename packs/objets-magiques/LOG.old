@@ -1,3 +1,6 @@
-2026/07/20-17:42:30.385678 7f677eefc0 Recovering log #237
-2026/07/20-17:42:30.402032 7f677eefc0 Delete type=3 #236
-2026/07/20-17:42:30.402110 7f677eefc0 Delete type=0 #237
+2026/08/06-17:18:16.263639 7f74f9efc0 Log #241: 284 ops saved to Table #242 OK
+2026/08/06-17:18:16.263809 7f74f9efc0 Archiving /data/Data/systems/add2e/packs/objets-magiques/000241.log: OK
+2026/08/06-17:18:16.267150 7f74f9efc0 Table #235: 316 entries OK
+2026/08/06-17:18:16.273282 7f74f9efc0 Table #242: 284 entries OK
+2026/08/06-17:18:16.273654 7f74f9efc0 Archiving /data/Data/systems/add2e/packs/objets-magiques/MANIFEST-000240: OK
+2026/08/06-17:18:16.280267 7f74f9efc0 **** Repaired leveldb /data/Data/systems/add2e/packs/objets-magiques; recovered 2 files; 1354768 bytes. Some data may have been lost. ****

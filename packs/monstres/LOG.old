@@ -1,3 +1,6 @@
-2026/07/20-17:42:30.107026 7fa4d6efc0 Recovering log #602
-2026/07/20-17:42:30.123380 7fa4d6efc0 Delete type=3 #601
-2026/07/20-17:42:30.123456 7fa4d6efc0 Delete type=0 #602
+2026/08/06-17:18:15.828338 7f767cefc0 Log #617: 308 ops saved to Table #621 OK
+2026/08/06-17:18:15.828588 7f767cefc0 Archiving /data/Data/systems/add2e/packs/monstres/000617.log: OK
+2026/08/06-17:18:15.841604 7f767cefc0 Table #619: 1337 entries OK
+2026/08/06-17:18:15.846151 7f767cefc0 Table #620: 532 entries OK
+2026/08/06-17:18:15.849764 7f767cefc0 Table #621: 308 entries OK
+2026/08/06-17:18:15.856780 7f767cefc0 **** Repaired leveldb /data/Data/systems/add2e/packs/monstres; recovered 3 files; 2997046 bytes. Some data may have been lost. ****

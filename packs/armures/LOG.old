@@ -1,3 +1,6 @@
-2026/07/20-17:42:30.360128 7fa4d6efc0 Recovering log #466
-2026/07/20-17:42:30.378757 7fa4d6efc0 Delete type=3 #465
-2026/07/20-17:42:30.378828 7fa4d6efc0 Delete type=0 #466
+2026/08/06-17:18:16.145830 7f757aefc0 Log #470: 75 ops saved to Table #471 OK
+2026/08/06-17:18:16.146062 7f757aefc0 Archiving /data/Data/systems/add2e/packs/armures/000470.log: OK
+2026/08/06-17:18:16.146179 7f757aefc0 Table #410: 24 entries OK
+2026/08/06-17:18:16.146296 7f757aefc0 Table #471: 75 entries OK
+2026/08/06-17:18:16.146436 7f757aefc0 Archiving /data/Data/systems/add2e/packs/armures/MANIFEST-000469: OK
+2026/08/06-17:18:16.185142 7f757aefc0 **** Repaired leveldb /data/Data/systems/add2e/packs/armures; recovered 2 files; 26438 bytes. Some data may have been lost. ****

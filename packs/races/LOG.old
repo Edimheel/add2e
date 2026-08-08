@@ -1,3 +1,5 @@
-2026/07/20-17:42:30.226272 7f677eefc0 Recovering log #743
-2026/07/20-17:42:30.246188 7f677eefc0 Delete type=0 #743
-2026/07/20-17:42:30.246253 7f677eefc0 Delete type=3 #742
+2026/08/06-17:18:15.926931 7f75fbefc0 Log #747: 0 ops saved to Table #748 OK
+2026/08/06-17:18:15.927046 7f75fbefc0 Archiving /data/Data/systems/add2e/packs/races/000747.log: OK
+2026/08/06-17:18:15.927199 7f75fbefc0 Table #687: 8 entries OK
+2026/08/06-17:18:15.927332 7f75fbefc0 Archiving /data/Data/systems/add2e/packs/races/MANIFEST-000746: OK
+2026/08/06-17:18:15.940177 7f75fbefc0 **** Repaired leveldb /data/Data/systems/add2e/packs/races; recovered 1 files; 10165 bytes. Some data may have been lost. ****
