@@ -1,7 +1,7 @@
 // ADD2E — API commune des fenêtres DialogV2.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 uniquement.
 
-const ADD2E_DIALOG_UI_VERSION = "2026-08-06-dialog-ui-v2";
+const ADD2E_DIALOG_UI_VERSION = "2026-08-08-dialog-ui-v3";
 globalThis.ADD2E_DIALOG_UI_VERSION = ADD2E_DIALOG_UI_VERSION;
 
 const ADD2E_DIALOG_THEMES = Object.freeze({
@@ -569,7 +569,7 @@ const ADD2E_DIALOG_UI = Object.freeze({
   wait: (options, ...rest) => callDialog("wait", options, ...rest),
   confirm: (options, ...rest) => callDialog("confirm", options, ...rest),
   prompt: (options, ...rest) => callDialog("prompt", options, ...rest),
-  alert: (options, ...rest) => callDialog("alert", options, ...rest),
+  alert: (options, ...rest) => callDialog("prompt", options, ...rest),
   prepareOptions,
   decorate,
   ensureStyles
