@@ -718,7 +718,6 @@ export function handleShopBuyResult(data = {}) {
   if (data.userId !== game.user?.id) return false;
   (data.ok ? ui.notifications?.info : ui.notifications?.warn)?.(data.message ?? (data.ok ? "Achat effectué." : "Achat impossible."));
   Hooks.callAll?.("add2eShopMoneyChanged", data);
-  if (data.shopType === "armorer") Hooks.callAll?.("add2eArmorerMoneyChanged", data);
   return true;
 }
 
