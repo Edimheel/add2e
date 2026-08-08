@@ -1,5 +1,5 @@
 // Charme-personne — ADD2E
-// Version : 2026-08-08-2z-canonical-resource-relay-v11
+// Version : 2026-08-08-2z-single-dice-v12
 // Compatible Foundry V13/V14/V15.
 
 return await (async () => {
@@ -297,7 +297,7 @@ return await (async () => {
       effectType: "charme",
       tags: ["mental", "charme"],
       createChat: false,
-      showDice: true
+      showDice: false
     });
     if (!save?.ok) {
       await cancelCast(`Charme-personne : aucune sauvegarde contre les sortilèges pour ${targetActor.name}.`);
