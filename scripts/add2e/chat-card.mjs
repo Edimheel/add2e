@@ -7,6 +7,29 @@ const ADD2E_CHAT_CARD_VARIANTS = new Set([
   "healing", "success", "failure", "time"
 ]);
 const ADD2E_GLOBAL_UI_VERSION = "2026-07-24-global-ui-trusted-body-v2";
+const ADD2E_CHAT_CARD_PRESENTATION_VERSION = "2026-08-08-player-card-v1";
+const ADD2E_CHAT_CARD_PRESENTATIONS = new Set(["player", "full"]);
+const ADD2E_CHAT_CARD_HIDDEN_PLAYER_ROWS = new Set([
+  "classe_retenue",
+  "classes_retenues",
+  "niveau_du_lanceur",
+  "niveau_lanceur",
+  "formule",
+  "formule_de_degats",
+  "ecole",
+  "ecole_de_magie",
+  "source",
+  "version",
+  "script",
+  "operation",
+  "priorite",
+  "mode_de_fonctionnement",
+  "mots_cles",
+  "parametre",
+  "parametres"
+]);
+const ADD2E_CHAT_CARD_TECHNICAL_TEXT = /\b(?:foundry|moteur|canonique|script|socket|globalthis|api|applicationv2|dialogv2|onuse|uuid|flag|flags|tag|tags|debug|diagnostic)\b/i;
+const ADD2E_CHAT_CARD_GM_TEXT = /\b(?:mj|maitre de jeu|maitre du donjon|maître de jeu|maître du donjon|arbitrage)\b/i;
 
 function add2eChatCardEscape(value) {
   const text = String(value ?? "");
@@ -24,6 +47,44 @@ function add2eChatCardEscape(value) {
 function add2eChatCardVariant(value) {
   const variant = String(value ?? "neutral").trim().toLowerCase();
   return ADD2E_CHAT_CARD_VARIANTS.has(variant) ? variant : "neutral";
+}
+
+function add2eChatCardPresentation(value) {
+  const presentation = String(value ?? "player").trim().toLowerCase();
+  return ADD2E_CHAT_CARD_PRESENTATIONS.has(presentation) ? presentation : "player";
+}
+
+function add2eChatCardNormalize(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eChatCardIsTechnicalText(value) {
+  const text = String(value ?? "").trim();
+  return !!text && (ADD2E_CHAT_CARD_TECHNICAL_TEXT.test(text) || ADD2E_CHAT_CARD_GM_TEXT.test(text));
+}
+
+function add2eChatCardPlayerRow(row) {
+  if (!row || (row.label === undefined && row.value === undefined)) return false;
+  const label = String(row.label ?? "").trim();
+  const value = String(row.value ?? "").trim();
+  if (ADD2E_CHAT_CARD_HIDDEN_PLAYER_ROWS.has(add2eChatCardNormalize(label))) return false;
+  if (add2eChatCardIsTechnicalText(label) || add2eChatCardIsTechnicalText(value)) return false;
+  return true;
+}
+
+function add2eChatCardPlayerMessage(message, presentation = "player") {
+  const text = String(message ?? "").trim();
+  if (!text) return "";
+  if (add2eChatCardPresentation(presentation) === "full") return text;
+  return add2eChatCardIsTechnicalText(text) ? "" : text;
 }
 
 function add2eChatCardIcon(value) {
@@ -65,9 +126,12 @@ function add2eChatCardIdentityMeta(identity) {
   return [identity.type, identity.meta].filter(Boolean).join(" · ");
 }
 
-function add2eChatCardRows(rows = []) {
+function add2eChatCardRows(rows = [], presentation = "player") {
+  const resolvedPresentation = add2eChatCardPresentation(presentation);
   return (Array.isArray(rows) ? rows : [])
-    .filter(row => row && (row.label !== undefined || row.value !== undefined))
+    .filter(row => resolvedPresentation === "full"
+      ? row && (row.label !== undefined || row.value !== undefined)
+      : add2eChatCardPlayerRow(row))
     .map(row => `<div class="add2e-card-label">${add2eChatCardEscape(row.label ?? "")}</div><div class="add2e-card-value">${add2eChatCardEscape(row.value ?? "—")}</div>`)
     .join("");
 }
@@ -82,9 +146,11 @@ export function add2eBuildChatCard({
   rows = [],
   message = "",
   trustedBodyHtml = "",
-  colors = {}
+  colors = {},
+  presentation = "player"
 } = {}) {
   const resolvedVariant = add2eChatCardVariant(variant);
+  const resolvedPresentation = add2eChatCardPresentation(presentation);
   const resolvedSource = add2eChatCardIdentity(source, {
     name: actor?.name ?? "Source",
     img: actor?.img ?? ADD2E_CHAT_CARD_IMAGE_FALLBACK
@@ -96,9 +162,10 @@ export function add2eBuildChatCard({
   const targetHtml = resolvedTarget?.name
     ? `<div class="add2e-card-target"><img class="add2e-card-target-image" src="${add2eChatCardEscape(resolvedTarget.img)}" alt=""><div><span class="add2e-card-target-label">Cible</span><strong>${add2eChatCardEscape(resolvedTarget.name)}</strong>${targetMeta ? `<span>${add2eChatCardEscape(targetMeta)}</span>` : ""}</div></div>`
     : "";
-  const rowHtml = add2eChatCardRows(rows);
-  const messageHtml = String(message ?? "").trim()
-    ? `<div class="add2e-card-message">${add2eChatCardEscape(message)}</div>`
+  const rowHtml = add2eChatCardRows(rows, resolvedPresentation);
+  const playerMessage = add2eChatCardPlayerMessage(message, resolvedPresentation);
+  const messageHtml = playerMessage
+    ? `<div class="add2e-card-message">${add2eChatCardEscape(playerMessage)}</div>`
     : "";
   const internalHtml = String(trustedBodyHtml ?? "").trim();
 
@@ -518,5 +585,6 @@ globalThis.add2eBuildChatCard = add2eBuildChatCard;
 globalThis.add2eCreateChatCard = add2eCreateChatCard;
 globalThis.add2eEnhanceCanonicalMagicPowerWindow = enhanceCanonicalPowerWindow;
 globalThis.ADD2E_GLOBAL_UI_VERSION = ADD2E_GLOBAL_UI_VERSION;
+globalThis.ADD2E_CHAT_CARD_PRESENTATION_VERSION = ADD2E_CHAT_CARD_PRESENTATION_VERSION;
 ensureGlobalStyles();
 installGlobalUiHooks();
