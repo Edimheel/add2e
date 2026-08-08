@@ -161,31 +161,37 @@ function scrollLearningSource(scroll, entry) {
 
 async function selectScrollLearningEntry(scroll, entries) {
   if (entries.length === 1) return entries[0];
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) throw new Error("DialogV2 est introuvable.");
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
   const options = entries.map((entry, index) => {
     const lists = Array.from(entry?.lists ?? []).map(listLabel).join(" / ") || "Liste inconnue";
     return `<option value="${index}">${esc(entry.name)} — niveau ${Number(entry.level) || 1} — ${esc(lists)}</option>`;
   }).join("");
-  const selected = await DialogV2.wait({
+  const selected = await globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "copy",
+    add2eClasses: ["add2e-copy-scroll-dialog"],
     window: { title: `Recopier depuis ${scroll.name}` },
     modal: true,
     rejectClose: false,
-    content: `<form class="add2e-copy-scroll" style="min-width:520px;padding:8px;"><p>Choisissez le sort à tenter de recopier dans le livre personnel.</p><label style="display:grid;gap:5px;"><b>Sort</b><select name="spellIndex">${options}</select></label></form>`,
+    content: `<form class="add2e-copy-scroll"><p>Choisissez le sort à tenter de recopier dans le livre personnel.</p><label><b>Sort</b><select name="spellIndex">${options}</select></label></form>`,
     buttons: [
       {
         action: "copy",
         label: "Recopier le sort",
-        icon: "fa-solid fa-copy",
+        icon: "<i class='fas fa-copy'></i>",
         default: true,
-        callback: (_event, button, dialog) => {
-          const element = dialog?.element?.jquery ? dialog.element[0] : dialog?.element;
-          const form = button?.form ?? element?.querySelector?.("form.add2e-copy-scroll");
-          return Number(form?.elements?.spellIndex?.value ?? -1);
-        }
+        callback: (_event, button) => Number(button.form?.elements?.spellIndex?.value ?? -1)
       },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => -1 }
-    ]
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => -1
+      }
+    ],
+    close: () => -1
   });
   return Number.isInteger(selected) && selected >= 0 ? entries[selected] ?? null : null;
 }
