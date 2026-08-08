@@ -2,7 +2,7 @@
 // Les projectiles dépensés en jeu passent par ce cœur vendeur et le relais MJ générique ADD2E_GM_OPERATION.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_VENDOR_VERSION = "2026-08-07-vendor-v27-explicit-projectile-type";
+export const ADD2E_VENDOR_VERSION = "2026-08-08-vendor-v28-single-projectile-recovery";
 export const VENDOR_SCOPE = "add2e";
 export const VENDOR_NAME = "Marchand de composants et projectiles";
 export const VENDOR_FOLDER = "ADD2E — Boutique";
@@ -13,6 +13,8 @@ export const SOCKET_RECOVERY = "ADD2E_PROJECTILE_RECOVERY_RESULT";
 export const RECOVERY_RATE = 0.6;
 export const GM_OPERATION_TYPE = "ADD2E_GM_OPERATION";
 export const GM_OPERATION_PROJECTILE_SPENT = "vendorRecordProjectileSpent";
+
+const PROJECTILE_RECOVERY_IN_FLIGHT = new Map();
 
 export const COINS = [
   { key: "pp", label: "PP", pc: 500 },
@@ -773,80 +775,90 @@ export async function recoverProjectilesForCombat(combat) {
   const recoveredCombats = recoveryCombatSet();
   if (recoveredCombats.has(recoveryKey)) return false;
 
-  const spent = foundry.utils.deepClone(await combat.getFlag(VENDOR_SCOPE, PROJECTILE_FLAG) ?? {});
-  const rows = [];
-  const byUser = {};
+  const pending = PROJECTILE_RECOVERY_IN_FLIGHT.get(recoveryKey);
+  if (pending) return pending;
 
-  for (const ae of Object.values(spent)) {
-    const actor = game.actors?.get(ae.actorId);
-    if (!actor || !actorUsesProjectileInventory(actor)) continue;
+  const recoveryPromise = (async () => {
+    const spent = foundry.utils.deepClone(await combat.getFlag(VENDOR_SCOPE, PROJECTILE_FLAG) ?? {});
+    const rows = [];
+    const byUser = {};
 
-    for (const ie of Object.values(ae.items ?? {})) {
-      const spentQty = Math.max(0, Math.floor(num(ie.spent, 0)));
-      if (!spentQty) continue;
+    for (const ae of Object.values(spent)) {
+      const actor = game.actors?.get(ae.actorId);
+      if (!actor || !actorUsesProjectileInventory(actor)) continue;
 
-      const item = recoveryItemForEntry(actor, ie);
-      const type = projectileSpentType(ie.type, item);
-      const thrown = type === "thrown-weapon";
-      const recovered = item
-        ? thrown ? spentQty : Math.max(0, Math.round(spentQty * RECOVERY_RATE))
-        : 0;
+      for (const ie of Object.values(ae.items ?? {})) {
+        const spentQty = Math.max(0, Math.floor(num(ie.spent, 0)));
+        if (!spentQty) continue;
 
-      if (!item) {
-        console.warn("[ADD2E][PROJECTILES][RECOVERY][ITEM_MISSING]", {
-          actor: actor.name,
-          itemId: ie.itemId ?? null,
-          itemName: ie.itemName ?? "Projectile",
-          type,
-          spent: spentQty
-        });
-      } else if (recovered) {
-        const result = await projectileResourceEngine().recoverResource(
-          projectileResource(actor, item, { recovery: recovered }),
-          {
-            amount: recovered,
-            reason: thrown ? "thrown-weapon-combat-recovery" : "projectile-combat-recovery",
-            consumer: "22a-vendor-core"
-          }
-        );
-        if (!result.ok) {
-          console.warn("[ADD2E][PROJECTILES][RECOVERY][RESOURCE_FAILED]", {
+        const item = recoveryItemForEntry(actor, ie);
+        const type = projectileSpentType(ie.type, item);
+        const thrown = type === "thrown-weapon";
+        const recovered = item
+          ? thrown ? spentQty : Math.max(0, Math.round(spentQty * RECOVERY_RATE))
+          : 0;
+
+        if (!item) {
+          console.warn("[ADD2E][PROJECTILES][RECOVERY][ITEM_MISSING]", {
             actor: actor.name,
-            item: item.name,
-            recovered
+            itemId: ie.itemId ?? null,
+            itemName: ie.itemName ?? "Projectile",
+            type,
+            spent: spentQty
           });
+        } else if (recovered) {
+          const result = await projectileResourceEngine().recoverResource(
+            projectileResource(actor, item, { recovery: recovered }),
+            {
+              amount: recovered,
+              reason: thrown ? "thrown-weapon-combat-recovery" : "projectile-combat-recovery",
+              consumer: "22a-vendor-core"
+            }
+          );
+          if (!result.ok) {
+            console.warn("[ADD2E][PROJECTILES][RECOVERY][RESOURCE_FAILED]", {
+              actor: actor.name,
+              item: item.name,
+              recovered
+            });
+          }
         }
-      }
 
-      const row = {
-        actor: actor.name,
-        actorId: actor.id,
-        item: ie.itemName,
-        type,
-        typeLabel: thrown ? "Arme lancée" : "Munition",
-        spent: spentQty,
-        recovered
-      };
-      rows.push(row);
+        const row = {
+          actor: actor.name,
+          actorId: actor.id,
+          item: ie.itemName,
+          type,
+          typeLabel: thrown ? "Arme lancée" : "Munition",
+          spent: spentQty,
+          recovered
+        };
+        rows.push(row);
 
-      for (const user of game.users ?? []) {
-        if (!user.isGM && user.active && actor.testUserPermission?.(user, "OWNER")) {
-          byUser[user.id] = byUser[user.id] ?? [];
-          byUser[user.id].push(row);
+        for (const user of game.users ?? []) {
+          if (!user.isGM && user.active && actor.testUserPermission?.(user, "OWNER")) {
+            byUser[user.id] = byUser[user.id] ?? [];
+            byUser[user.id].push(row);
+          }
         }
       }
     }
-  }
 
-  if (!rows.length) return false;
-  recoveredCombats.add(recoveryKey);
+    recoveredCombats.add(recoveryKey);
+    if (!rows.length) return false;
 
-  for (const [userId, userRows] of Object.entries(byUser)) {
-    game.socket?.emit?.("system.add2e", { type: SOCKET_RECOVERY, userId, rows: userRows });
-  }
+    for (const [userId, userRows] of Object.entries(byUser)) {
+      game.socket?.emit?.("system.add2e", { type: SOCKET_RECOVERY, userId, rows: userRows });
+    }
 
-  await showRecovery(rows);
-  return true;
+    await showRecovery(rows);
+    return true;
+  })().finally(() => {
+    PROJECTILE_RECOVERY_IN_FLIGHT.delete(recoveryKey);
+  });
+
+  PROJECTILE_RECOVERY_IN_FLIGHT.set(recoveryKey, recoveryPromise);
+  return recoveryPromise;
 }
 
 export function registerSockets() {
