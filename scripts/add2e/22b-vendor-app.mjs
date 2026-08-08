@@ -28,7 +28,7 @@ import {
   slug
 } from "./22a-vendor-core.mjs";
 
-const VERSION = "2026-08-08-merchant-compendium-catalog-v4";
+const VERSION = "2026-08-08-merchant-compendium-catalog-v5";
 const MERCHANT_APPS = new Map();
 const MERCHANT_OPEN_LOCKS = new Map();
 
@@ -404,6 +404,15 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
     this.render({ force: true });
   }
 }
+
+Hooks.on("add2eShopMoneyChanged", data => {
+  if (data?.shopType !== "general") return;
+  for (const app of MERCHANT_APPS.values()) {
+    if (!app?.rendered || app.vendor?.id !== data.shopId) continue;
+    if (data.buyerId && app.buyer?.id !== data.buyerId) continue;
+    app.render({ force: true });
+  }
+});
 
 function openLock(actor) {
   const id = `${game.user?.id}:${actor?.id}`;
