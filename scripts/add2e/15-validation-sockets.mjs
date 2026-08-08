@@ -12,6 +12,16 @@ import {
   recordProjectileSpentOperation,
   handleProjectileRecoveryResult
 } from "./22a-vendor-core.mjs";
+import {
+  SOCKET_COMPONENT_RESULT,
+  GM_OPERATION_COMPONENT_RESERVE,
+  GM_OPERATION_COMPONENT_REFUND,
+  GM_OPERATION_COMPONENT_FINALIZE,
+  handleSpellComponentResult,
+  handleReserveSpellComponentsOperation,
+  handleRefundSpellComponentsOperation,
+  handleFinalizeSpellComponentsOperation
+} from "./22e-consumables-core.mjs";
 
 const ADD2E_SOCKET = "system.add2e";
 const ADD2E_GM_OPERATION = "ADD2E_GM_OPERATION";
@@ -20,7 +30,7 @@ const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
 const FAMILIAR_SCOPE = "add2e";
 const FAMILIAR_FLAG = "familiar";
 const FAMILIAR_RANGE_DEFAULT = 12;
-const VERSION = "2026-08-08-gm-relay-shop-v11";
+const VERSION = "2026-08-08-gm-relay-components-v12";
 const TAG = "[ADD2E][GM-RELAY]";
 
 const FAMILIAR_ASSETS = Object.freeze({
@@ -1223,12 +1233,16 @@ function registerSocketRelays() {
     createActiveEffect,
     vendorRecordProjectileSpent: recordProjectileSpentOperation,
     shopBuy: handleShopBuyOperation,
+    [GM_OPERATION_COMPONENT_RESERVE]: handleReserveSpellComponentsOperation,
+    [GM_OPERATION_COMPONENT_REFUND]: handleRefundSpellComponentsOperation,
+    [GM_OPERATION_COMPONENT_FINALIZE]: handleFinalizeSpellComponentsOperation,
     createFamiliar,
     setFamiliarFollow
   };
   game.socket.on(ADD2E_SOCKET, async data => {
     if (data?.type === SHOP_BUY_RESULT) return handleShopBuyResult(data);
     if (data?.type === SOCKET_RECOVERY) return handleProjectileRecoveryResult(data);
+    if (data?.type === SOCKET_COMPONENT_RESULT) return handleSpellComponentResult(data);
     if (data?.type === ADD2E_ATTACK_PLAYER_LOCAL_CHAT) return createPersistentPlayerAttackChat(data.payload ?? {});
     if (data?.type === ADD2E_ATTACK_GM_DETAIL_CHAT) return;
     if (data?.type === "applyDamageFlag") {
