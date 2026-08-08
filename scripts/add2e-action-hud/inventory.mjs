@@ -55,28 +55,32 @@ function spellComponentBadges(actor, sort) {
   }).join("")}`;
 }
 export function isAmmunitionItem(item) {
-  const system = item?.system ?? {};
-  const name = lower(item?.name);
-  const fields = [system.categorie, system.category, system.sousType, system.sous_type, system.type, system.subtype, system.kind, system.slot].map(lower).filter(Boolean);
-  const tags = itemTags(item);
-  const accepted = new Set(["munition", "munitions", "projectile", "projectiles", "ammo", "ammunition", "trait:munition", "trait:projectile", "categorie:munition", "categorie:projectile", "type:munition", "type:projectile"]);
-  if (/\b(carquois|quiver|etui|etuis|étui|étuis|sac|sacoche|container|contenant|boite|boîte|bourse)\b/.test(name)) return false;
-  if (fields.some(value => ["carquois", "quiver", "contenant", "container", "sac", "sacoche"].includes(value))) return false;
-  if (tags.some(value => ["carquois", "quiver", "contenant", "container", "sac", "sacoche"].includes(value))) return false;
-  return fields.some(value => accepted.has(value)) || tags.some(value => accepted.has(value) || value.startsWith("munition:") || value.startsWith("projectile:")) || /\b(fleche|fleches|flèche|flèches|carreau|carreaux|trait|traits|bille|billes|pierre de fronde|pierres de fronde)\b/.test(name);
+  const api = globalThis.ADD2E_CONSUMABLES ?? game?.add2e?.consumables;
+  if (typeof api?.add2eIsAmmunition !== "function") {
+    throw new Error("Le propriétaire canonique des munitions est indisponible pour le HUD.");
+  }
+  return api.add2eIsAmmunition(item) === true;
+}
+function weaponUsageProfile(item) {
+  if (typeof globalThis.add2eGetWeaponUsageProfile !== "function") {
+    throw new Error("Le propriétaire canonique du profil d’usage des armes est indisponible pour le HUD.");
+  }
+  return globalThis.add2eGetWeaponUsageProfile(item);
 }
 export function isPropelledWeapon(item) {
-  const tags = itemTags(item);
-  const name = norm(item?.name);
-  const system = item?.system ?? {};
-  return system.projectile_propulse === true || system.arme_a_projectile === true || tags.includes("projectile_propulse") || tags.includes("usage_projectile_propulse") || ["arc", "arbalete", "fronde"].some(key => name.includes(key));
+  const profile = weaponUsageProfile(item);
+  return profile?.isProjectilePropulse === true || profile?.requiresEquippedProjectile === true;
 }
-function equippedProjectile(actor, weapon) {
-  if (!usesProjectileInventory(actor) || !isPropelledWeapon(weapon)) return null;
-  if (typeof globalThis.add2eResolveProjectileForAttack !== "function") {
+function propelledProjectileState(actor, weapon) {
+  const profile = weaponUsageProfile(weapon);
+  const required = profile?.requiresEquippedProjectile === true;
+  if (!required) return { ok: true, required: false, ignored: false, projectile: null, current: null };
+  if (!usesProjectileInventory(actor)) return { ok: true, required: true, ignored: true, projectile: null, current: null };
+  const api = globalThis.ADD2E_VENDOR_PROJECTILES ?? game?.add2e?.vendorProjectiles;
+  if (typeof api?.resolveProjectileForAttack !== "function") {
     throw new Error("Le résolveur canonique des projectiles est indisponible pour le HUD.");
   }
-  return globalThis.add2eResolveProjectileForAttack({ actor, arme: weapon })?.projectile ?? null;
+  return api.resolveProjectileForAttack({ actor, arme: weapon });
 }
 function damage(item) { const system = item?.system ?? {}; return system?.dégâts?.contre_moyen ?? system?.degats?.contre_moyen ?? system?.degats_moyen ?? system?.damage ?? system?.degats ?? system?.dmg ?? "—"; }
 function range(item) {
@@ -105,10 +109,7 @@ function equipmentState(item) {
   return `<span class="${itemEquipped(item) ? "equip-ok" : "equip-off"}">${itemEquipped(item) ? "Équipé" : "Rangé"}</span>`;
 }
 function thrownWeaponQuantity(item) {
-  if (typeof globalThis.add2eGetWeaponUsageProfile !== "function") {
-    throw new Error("Le propriétaire canonique du profil d’usage des armes est indisponible pour le HUD.");
-  }
-  if (globalThis.add2eGetWeaponUsageProfile(item)?.isThrown !== true) return null;
+  if (weaponUsageProfile(item)?.isThrown !== true) return null;
   const raw = item?.system?.quantite ?? item?.system?.quantity;
   return raw === undefined || raw === null || raw === "" ? 1 : Math.max(0, Math.floor(num(raw, 0)));
 }
@@ -118,18 +119,38 @@ function thrownWeaponUnavailable(actor, item) {
   return current !== null && current <= 0;
 }
 function weaponRow(actor, item) {
-  const projectile = equippedProjectile(actor, item);
-  const propelled = isPropelledWeapon(item);
+  const profile = weaponUsageProfile(item);
+  const propelled = profile?.isProjectilePropulse === true || profile?.requiresEquippedProjectile === true;
+  const projectileState = propelledProjectileState(actor, item);
+  const projectile = projectileState?.projectile ?? null;
+  const propelledUnavailable = propelled && usesProjectileInventory(actor) && projectileState?.ok !== true;
   const thrownQuantity = thrownWeaponQuantity(item);
-  const unavailable = thrownWeaponUnavailable(actor, item);
+  const thrownUnavailable = thrownWeaponUnavailable(actor, item);
+  const unavailable = thrownUnavailable || propelledUnavailable;
   const dmg = propelled && projectile ? `Dégâts projectile ${damage(projectile)}` : `Dégâts ${damage(item)}`;
-  const ammo = propelled ? (usesProjectileInventory(actor) ? (projectile ? `<span class="ammo"><img src="${esc(projectile.img || "icons/svg/target.svg")}" alt="">${esc(projectile.name)} ×${esc(quantity(projectile))}</span>` : `<span class="ammo-missing">Aucune munition compatible équipée</span>`) : `<span class="ammo-free">Munition PNJ non suivie</span>`) : "";
+  const ammo = propelled
+    ? usesProjectileInventory(actor)
+      ? projectile
+        ? `<span class="${projectileState?.ok === true ? "ammo" : "ammo-missing"}"><img src="${esc(projectile.img || "icons/svg/target.svg")}" alt="">${esc(projectile.name)} ×${esc(quantity(projectile))}</span>`
+        : `<span class="ammo-missing">Aucune munition compatible équipée</span>`
+      : `<span class="ammo-free">Munition PNJ non suivie</span>`
+    : "";
   const thrownQuantityState = thrownQuantity === null ? "" : `<span>Qté ${esc(thrownQuantity)}</span>`;
-  const unavailableState = unavailable ? '<span class="equip-off">À ramasser</span>' : "";
-  const attackTitle = unavailable ? `${item.name} indisponible : à ramasser en fin de combat` : `Attaquer avec ${item.name}`;
-  const resourceState = unavailable ? ' data-add2e-resource-unavailable="thrown-weapon" disabled aria-disabled="true"' : "";
+  const unavailableState = thrownUnavailable
+    ? '<span class="equip-off">À ramasser</span>'
+    : propelledUnavailable
+      ? '<span class="equip-off">Munition indisponible</span>'
+      : "";
+  const attackTitle = thrownUnavailable
+    ? `${item.name} indisponible : à ramasser en fin de combat`
+    : propelledUnavailable
+      ? `${item.name} indisponible : munition compatible équipée requise`
+      : `Attaquer avec ${item.name}`;
+  const resourceKind = thrownUnavailable ? "thrown-weapon" : propelledUnavailable ? "ammunition" : "";
+  const resourceState = unavailable ? ` data-add2e-resource-unavailable="${resourceKind}" disabled aria-disabled="true"` : "";
+  const initiativeTitle = unavailable ? attackTitle : "Choisir cette action pour l’initiative";
   const speed = num(item.system?.facteur_rapidité ?? item.system?.facteur_rapidite, 0);
-  return `<div class="row initiative-row combat-item-row"><button type="button" class="img-act${unavailable ? " a2e-multiple-attack-blocked" : ""}" data-action="attack" data-item-id="${esc(item.id)}" title="${esc(attackTitle)}"${resourceState}><img src="${esc(item.img || "icons/svg/sword.svg")}" alt=""></button><div><div class="title">${esc(item.name)}</div><div class="meta">${equipmentState(item)}${unavailableState}${thrownQuantityState}<span>${esc(dmg)}</span><span>Portée ${esc(range(item))}</span><span>Rapidité ${esc(speed || "—")}</span>${ammo}</div></div><div class="hud-row-actions">${equipmentButton(item)}${declarationButton(actor, item, "weapon")}</div></div>`;
+  return `<div class="row initiative-row combat-item-row"><button type="button" class="img-act${unavailable ? " a2e-multiple-attack-blocked" : ""}" data-action="attack" data-item-id="${esc(item.id)}" title="${esc(attackTitle)}"${resourceState}><img src="${esc(item.img || "icons/svg/sword.svg")}" alt=""></button><div><div class="title">${esc(item.name)}</div><div class="meta">${equipmentState(item)}${unavailableState}${thrownQuantityState}<span>${esc(dmg)}</span><span>Portée ${esc(range(item))}</span><span>Rapidité ${esc(speed || "—")}</span>${ammo}</div></div><div class="hud-row-actions">${equipmentButton(item)}${declarationButton(actor, item, "weapon", { disabled: unavailable, title: initiativeTitle })}</div></div>`;
 }
 function projectileRow(item) {
   const system = item.system ?? {};
