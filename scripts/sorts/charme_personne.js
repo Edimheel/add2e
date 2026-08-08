@@ -1,5 +1,5 @@
 // Charme-personne — ADD2E
-// Version : 2026-07-27-canonical-intelligence-v10
+// Version : 2026-08-08-2z-canonical-resource-relay-v11
 // Compatible Foundry V13/V14/V15.
 
 return await (async () => {
@@ -18,41 +18,22 @@ return await (async () => {
     return false;
   }
 
-  const refund = async reason => {
+  const cancelCast = async reason => {
     if (reason) ui.notifications.warn(reason);
-    try {
-      if (sourceItem.type === "sort") return;
-      const globalCharges = await sourceItem.getFlag?.("add2e", "global_charges");
-      if (globalCharges !== undefined) {
-        await sourceItem.setFlag("add2e", "global_charges", Number(globalCharges) + 1);
-        ui.notifications.info(`Charge restituée à ${sourceItem.name}.`);
-        return;
-      }
-      if (sourceItem.system?.isPower && sourceItem.system?.sourceWeaponId) {
-        const parentItem = caster.items?.get(sourceItem.system.sourceWeaponId);
-        const index = sourceItem.system.powerIndex;
-        const charges = await parentItem?.getFlag?.("add2e", `charges_${index}`);
-        if (parentItem && charges !== undefined) {
-          await parentItem.setFlag("add2e", `charges_${index}`, Number(charges) + 1);
-          ui.notifications.info("Charge restituée.");
-        }
-      }
-    } catch (error) {
-      console.warn(`${TAG}[REFUND_FAILED]`, error);
-    }
+    return false;
   };
 
   const targets = Array.from(game.user.targets ?? []).filter(target => target?.actor);
   if (!targets.length) {
-    await refund("Vous devez cibler une créature.");
+    await cancelCast("Vous devez cibler une créature.");
     return false;
   }
   if (typeof globalThis.add2eRollSavingThrow !== "function") {
-    await refund("Charme-personne : l’exécuteur canonique de sauvegardes est indisponible.");
+    await cancelCast("Charme-personne : l’exécuteur canonique de sauvegardes est indisponible.");
     return false;
   }
   if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
-    await refund("Charme-personne : le constructeur commun des cartes de chat est indisponible.");
+    await cancelCast("Charme-personne : le constructeur commun des cartes de chat est indisponible.");
     return false;
   }
 
@@ -160,16 +141,19 @@ return await (async () => {
     }
     if (game.socket) {
       game.socket.emit("system.add2e", {
-        type: "applyActiveEffect",
-        actorId: targetActor.id,
-        actorUuid: targetActor.uuid,
-        sceneId: canvas.scene?.id,
-        tokenId: targetToken.id,
-        effectData
+        type: "ADD2E_GM_OPERATION",
+        operation: "createActiveEffect",
+        payload: {
+          actorId: targetActor.id,
+          actorUuid: targetActor.uuid,
+          sceneId: canvas.scene?.id,
+          tokenId: targetToken.id,
+          effectData
+        }
       });
       return true;
     }
-    ui.notifications.error("Socket ADD2E indisponible : impossible d'appliquer l'effet Charmé.");
+    ui.notifications.error("Relais MJ ADD2E indisponible : impossible d'appliquer l'effet Charmé.");
     return false;
   };
   const playVfx = async targetToken => {
@@ -316,7 +300,7 @@ return await (async () => {
       showDice: true
     });
     if (!save?.ok) {
-      await refund(`Charme-personne : aucune sauvegarde contre les sortilèges pour ${targetActor.name}.`);
+      await cancelCast(`Charme-personne : aucune sauvegarde contre les sortilèges pour ${targetActor.name}.`);
       return false;
     }
     prepared.push({ targetToken, targetActor, resistance, save });
