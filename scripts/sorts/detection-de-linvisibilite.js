@@ -1,21 +1,22 @@
-// OnUse ADD2E genere automatiquement pour Détection de l'invisibilité
+// ADD2E — compatibilité de chemin : Détection de l'invisibilité.
 // Compatible Foundry V13/V14/V15.
-// Retour attendu: true = sort consomme, false = sort non consomme.
+// La mécanique est exclusivement portée par illusionniste-detection-de-l-invisibilite.js.
 
-try {
-  const sortName = item?.name ?? "Détection de l'invisibilité";
-  const actorName = actor?.name ?? token?.actor?.name ?? "acteur";
-  const message = "<p><strong>" + sortName + "</strong></p><p>" + actorName + " lance le sort. Les effets precis restent a appliquer selon le Manuel des joueurs AD&D 2e.</p>";
-  if (globalThis.ChatMessage?.create) {
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker ? ChatMessage.getSpeaker({ actor }) : undefined,
-      content: message
-    });
-  }
-  globalThis.ui?.notifications?.info?.(sortName + " lance.");
-  return true;
-} catch (error) {
-  console.error("[ADD2E][SORT][ONUSE_AUTO]", error);
-  globalThis.ui?.notifications?.error?.("Erreur lors de l'execution du sort.");
-  return false;
+const response = await fetch("systems/add2e/scripts/sorts/illusionniste-detection-de-l-invisibilite.js", { cache: "no-store" });
+if (!response.ok) {
+  throw new Error(`Détection de l'invisibilité : onUse principal introuvable (${response.status}).`);
 }
+
+const code = await response.text();
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+const execute = new AsyncFunction("actor", "item", "sort", "token", "args", "sourceItem", code);
+
+return execute.call(
+  this,
+  typeof actor !== "undefined" ? actor : null,
+  typeof item !== "undefined" ? item : null,
+  typeof sort !== "undefined" ? sort : null,
+  typeof token !== "undefined" ? token : null,
+  typeof args !== "undefined" && Array.isArray(args) ? args : [],
+  typeof sourceItem !== "undefined" ? sourceItem : null
+);
