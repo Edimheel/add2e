@@ -23,7 +23,7 @@ import {
   tokenFor
 } from "./shared.mjs";
 import { equipmentRows, featureRows, features, spellRows, weaponRows } from "./inventory.mjs";
-import { abilityRows, armorClass, effectDisplayName, effectRows, effects, hp, hpMax, saveRows, thaco } from "./effects.mjs";
+import { abilityRows, armorClass, hp, hpMax, saveRows, thaco } from "./effects.mjs";
 import { injectStyle } from "./styles.mjs";
 import { installActionHudRuntime } from "./runtime.mjs";
 
@@ -185,7 +185,7 @@ function objectMagicPowerRows(actor) {
         : "Choisir cette action pour départager les égalités d’initiative";
     return `<div class="row initiative-row"><button type="button" class="img-act" data-action="use-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}" title="${esc(useTitle)}"${enabled ? "" : " disabled"}><img src="${esc(virtualSpell.img || sourceItem.img || "icons/svg/aura.svg")}" alt=""></button><div><div class="title">${esc(virtualSpell.name)}</div><div class="meta"><span>Source : ${esc(resource?.source?.name ?? sourceItem.name)}</span><span>Activation ${esc(activation)}</span><span>${esc(resourceText)}</span>${usable ? "" : '<span class="equip-off">Objet non équipé</span>'}</div></div><button type="button" class="hud-icon-action initiative-declare${active ? " declared" : ""}" data-action="declare-initiative-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}" title="${esc(initiativeTitle)}" aria-label="${esc(initiativeTitle)}"${enabled ? "" : " disabled"}><i class="fas fa-hourglass-start" aria-hidden="true"></i></button></div>`;
   }).join("");
-  return `<div class="spell-layout object-magic-power-layout"><div class="spell-list"><div class="spell-list-title">Pouvoirs d’objets magiques</div>${rows}</div></div>`;
+  return `<div class="spell-layout object-magic-power-layout"><div class="spell-list"><div class="spell-list-title">Effets activables</div>${rows}</div></div>`;
 }
 
 function racialEngine() {
@@ -286,11 +286,10 @@ function hudHtml(actor, token = null) {
   const spellContent = spellRows(actor, selectedSpellGroup);
   selectedSpellGroup = spellContent.selectedGroup;
   const objectPowerContent = objectMagicPowerRows(actor);
-  const spellHtml = objectPowerContent && spellContent.selectedGroup === null ? "" : spellContent.html;
-  const spellsAndPowers = `${spellHtml}${objectPowerContent}`;
+  const activableEffectsContent = objectPowerContent || '<div class="empty">Aucun effet activable.</div>';
   const tab = (key, icon, label) => `<button type="button" class="a2e-hud-tab ${activeTab === key ? "active" : ""}" data-tab="${key}"><i class="${icon}"></i> ${label}</button>`;
   const section = (key, html) => `<section class="${activeTab === key ? "active" : ""}" data-section="${key}">${html}</section>`;
-  return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor, selectedCombatGroup))}${section("sorts", spellsAndPowers)}${section("capacites", capabilityRows(actor))}${section("equipement", equipmentRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Combat")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("equipement", "fas fa-box-open", "Équipement")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
+  return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor, selectedCombatGroup))}${section("sorts", spellContent.html)}${section("capacites", capabilityRows(actor))}${section("equipement", equipmentRows(actor))}${section("effets", activableEffectsContent)}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Combat")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("equipement", "fas fa-box-open", "Équipement")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
 }
 export function renderHud(actor = null, token = null, { reason = "render" } = {}) {
   if (dragging || resizing) return false;
@@ -423,7 +422,6 @@ async function handleAction(event, actor, button) {
     if (action === "use-object-power") return useObjectMagicPower(actor, button.dataset.itemId, button.dataset.powerIndex);
     if (action === "use-feature") return sheetUseFeature(actor, Number(button.dataset.featureIndex));
     if (action === "toggle-equipment") return toggleEquipment(actor, button.dataset.itemId);
-    if (action === "remove-effect") return removeEffect(actor, button.dataset.effectId);
     if (action === "roll-save") return sheetRollSave(actor, Number(button.dataset.saveIndex));
     if (action === "roll-ability") return sheetRollAbility(actor, button.dataset.ability);
   } catch (error) {
@@ -463,25 +461,6 @@ async function toggleEquipment(actor, itemId) {
   if (typeof globalThis.handleItemAction !== "function") return ui.notifications.error("Mécanique d'équipement de la feuille indisponible.");
   await globalThis.handleItemAction({ actor, action: "equip", itemId: item.id, itemType: item.type, sheet: null });
   return renderHud(actor, hudToken, { reason: "toggle-equipment" });
-}
-async function removeEffect(actor, effectId) {
-  const effect = actor?.effects?.get?.(effectId) ?? effects(actor).find(entry => String(entry.id ?? entry._id ?? "") === String(effectId));
-  if (!effect) return ui.notifications.warn("Effet introuvable.");
-  if (typeof globalThis.add2eDialogConfirm !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
-  const confirmed = await globalThis.add2eDialogConfirm({
-    add2eTheme: "danger",
-    add2ePrimaryAction: "yes",
-    add2eClasses: ["add2e-hud-remove-effect-dialog"],
-    window: { title: "Supprimer l'effet" },
-    content: `<p>Supprimer <strong>${esc(effectDisplayName(effect))}</strong> ?</p>`,
-    yes: { label: "Supprimer", icon: "<i class='fas fa-trash'></i>" },
-    no: { label: "Annuler", icon: "<i class='fas fa-times'></i>" },
-    modal: true
-  });
-  if (!confirmed) return false;
-  if (actor?.effects?.get?.(effect.id)) await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
-  else if (typeof effect.delete === "function") await effect.delete();
-  return renderHud(actor, hudToken, { reason: "remove-effect" });
 }
 function primary(event) { return event.button === undefined || event.button === 0; }
 function pointerClient(event) { const touch = event.touches?.[0] ?? event.changedTouches?.[0] ?? null; return { x: touch?.clientX ?? event.clientX ?? 0, y: touch?.clientY ?? event.clientY ?? 0 }; }
@@ -535,4 +514,4 @@ export function getRuntimeState() { return { actor: hudActor ?? currentActor(), 
 installActionHudRuntime({ renderHud, refreshHud, closeHud, resetHudPosition, applyGeometry, pointerDown, bindCanvasControlledTokenClick, setManualIntent, followCombat, getRuntimeState });
 
 export { renderHud as add2eRenderActionHud, refreshHud as add2eRefreshActionHud, closeHud as add2eCloseActionHud };
-export { ADD2E_ACTION_HUD_VERSION };
+export { ADD2E_ACTION_HUD_VERSION }
