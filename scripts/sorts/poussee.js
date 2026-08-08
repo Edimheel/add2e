@@ -3,7 +3,7 @@
  * Sauvegarde, carte de chat et compatibilité Foundry V13/V14/V15.
  */
 
-const ADD2E_PUSH_VERSION = "2026-08-08-2z-canonical-resource-relay-v5";
+const ADD2E_PUSH_VERSION = "2026-08-08-2z-single-dice-v6";
 console.log("[ADD2E][POUSSÉE][VERSION]", ADD2E_PUSH_VERSION);
 
 return await (async () => {
@@ -60,7 +60,7 @@ return await (async () => {
       frontale: true,
       targetToken,
       createChat: false,
-      showDice: true
+      showDice: false
     });
     if (!save?.ok) {
       await cancelCast(`Poussée : aucune sauvegarde contre les sortilèges pour ${targetToken.actor.name}.`);
