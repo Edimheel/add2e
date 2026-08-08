@@ -14,16 +14,19 @@ import {
   esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-08-07-consumables-core-v17-canonical-resource";
+export const ADD2E_CONSUMABLES_VERSION = "2026-08-08-consumables-core-v18-gm-relay";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
 export const GM_OPERATION_COMPONENT_FINALIZE = "vendorFinalizeSpellComponents";
 
 const HUD_ID = "add2e-action-hud";
+const componentRequests = new Map();
 let hudComponentObserver = null;
 let hudComponentFrame = null;
 let hudComponentPatching = false;
+let zeroQuantityCleanupInstalled = false;
+let hudComponentBadgesInstalled = false;
 
 const asArray = value => Array.isArray(value)
   ? value
@@ -485,8 +488,8 @@ async function cleanupExistingZeroQuantityComponents() {
 }
 
 function installZeroQuantityComponentCleanup() {
-  if (globalThis.__ADD2E_CONSUMABLES_ZERO_CLEANUP_V1) return false;
-  globalThis.__ADD2E_CONSUMABLES_ZERO_CLEANUP_V1 = true;
+  if (zeroQuantityCleanupInstalled) return false;
+  zeroQuantityCleanupInstalled = true;
   Hooks.once("ready", () => window.setTimeout(() => {
     cleanupExistingZeroQuantityComponents().catch(err => console.warn("[ADD2E][CONSUMABLES][ZERO_READY_CLEANUP_FAILED]", err));
   }, 750));
@@ -572,9 +575,7 @@ function componentResourceDescriptor(actor, allocation, mode = "consume") {
     actor,
     item,
     target: String(item.id ?? "component"),
-    get current() {
-      return quantity(item);
-    },
+    get current() { return quantity(item); },
     maximum: refund ? Math.max(0, Number(allocation.before) || 0) : null,
     cost: refund ? 0 : Math.max(0, Number(allocation.quantity) || 0),
     recovery: refund ? Math.max(0, Number(allocation.quantity) || 0) : 0,
@@ -611,9 +612,8 @@ async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
     return { ok: true, blocked: false, actorId: actor?.id, sortId: sort?.id, sortName: sort?.name, consumed: [] };
   }
 
-  const engine = componentResourceEngine();
   const descriptors = plan.allocations.map(allocation => componentResourceDescriptor(actor, allocation, "consume"));
-  const transaction = await engine.consumeResources(descriptors, {
+  const transaction = await componentResourceEngine().consumeResources(descriptors, {
     reason: "spell-component-reserve",
     consumer: "22e-consumables-core"
   });
@@ -674,25 +674,82 @@ async function refundSpellComponentsLocal(reservation) {
   return result.ok === true;
 }
 
+function finishComponentRequest(requestId, result) {
+  const pending = componentRequests.get(requestId);
+  if (!pending) return false;
+  componentRequests.delete(requestId);
+  window.clearTimeout(pending.timeout);
+  pending.resolve(result);
+  return true;
+}
+
 function requestGmComponentOperation(operation, payload) {
   return new Promise(resolve => {
     if (!game.socket) return resolve({ ok: false, blocked: true, message: "Socket Foundry indisponible." });
     const requestId = payload.requestId ?? foundry.utils.randomID();
-    let done = false;
-    const finish = result => {
-      if (done) return;
-      done = true;
-      try { game.socket.off?.("system.add2e", handler); } catch (_e) {}
-      resolve(result);
-    };
-    const handler = data => {
-      if (data?.type !== SOCKET_COMPONENT_RESULT || data.requestId !== requestId || data.userId !== game.user?.id) return;
-      finish(data.result ?? { ok: false, blocked: true, message: "Réponse MJ invalide." });
-    };
-    game.socket.on?.("system.add2e", handler);
-    window.setTimeout(() => finish({ ok: false, blocked: true, message: "Aucune réponse du MJ pour les composants de sort." }), 7000);
-    game.socket.emit("system.add2e", { type: GM_OPERATION_TYPE, operation, payload: { ...payload, requestId, userId: game.user?.id } });
+    const timeout = window.setTimeout(() => {
+      finishComponentRequest(requestId, { ok: false, blocked: true, message: "Aucune réponse du MJ pour les composants de sort." });
+    }, 7000);
+    componentRequests.set(requestId, { resolve, timeout });
+    game.socket.emit("system.add2e", {
+      type: GM_OPERATION_TYPE,
+      operation,
+      payload: { ...payload, requestId, userId: game.user?.id }
+    });
   });
+}
+
+export function handleSpellComponentResult(data = {}) {
+  if (data?.type !== SOCKET_COMPONENT_RESULT || data.userId !== game.user?.id || !data.requestId) return false;
+  return finishComponentRequest(data.requestId, data.result ?? { ok: false, blocked: true, message: "Réponse MJ invalide." });
+}
+
+function emitComponentResult(payload, result) {
+  game.socket?.emit?.("system.add2e", {
+    type: SOCKET_COMPONENT_RESULT,
+    requestId: payload?.requestId,
+    userId: payload?.userId,
+    result
+  });
+}
+
+export async function handleReserveSpellComponentsOperation(payload = {}) {
+  const actor = game.actors?.get(payload.actorId);
+  const sort = actor?.items?.get(payload.sortId) ?? { id: payload.sortId, name: payload.sortName, system: {}, flags: {} };
+  let result = { ok: false, blocked: true, message: "Acteur introuvable pour les composants de sort." };
+  try {
+    if (actor) result = await reserveSpellComponentsLocal(actor, sort, payload.requirements);
+  } catch (error) {
+    console.warn("[ADD2E][CONSUMABLES][COMPONENTS][RESERVE][GM]", error);
+    result = { ok: false, blocked: true, message: error?.message || "Erreur MJ pendant la réservation des composants." };
+  }
+  const serialized = serializableReservation(result);
+  emitComponentResult(payload, serialized);
+  return serialized;
+}
+
+export async function handleRefundSpellComponentsOperation(payload = {}) {
+  let ok = false;
+  try {
+    ok = await refundSpellComponentsLocal(payload.reservation);
+  } catch (error) {
+    console.warn("[ADD2E][CONSUMABLES][COMPONENTS][REFUND][GM]", error);
+  }
+  const result = { ok };
+  emitComponentResult(payload, result);
+  return result;
+}
+
+export async function handleFinalizeSpellComponentsOperation(payload = {}) {
+  let ok = false;
+  try {
+    ok = await finalizeSpellComponentsLocal(payload.reservation);
+  } catch (error) {
+    console.warn("[ADD2E][CONSUMABLES][COMPONENTS][FINALIZE][GM]", error);
+  }
+  const result = { ok };
+  emitComponentResult(payload, result);
+  return result;
 }
 
 export async function add2eReserveSpellComponents(actor, sort) {
@@ -784,8 +841,8 @@ function scheduleHudComponentBadges() {
 }
 
 function installHudComponentBadges() {
-  if (globalThis.__ADD2E_CONSUMABLES_HUD_COMPONENTS_V1) return false;
-  globalThis.__ADD2E_CONSUMABLES_HUD_COMPONENTS_V1 = true;
+  if (hudComponentBadgesInstalled) return false;
+  hudComponentBadgesInstalled = true;
   const observe = () => {
     if (hudComponentObserver || !document.body) return;
     hudComponentObserver = new MutationObserver(() => {
@@ -819,34 +876,4 @@ export function registerGlobals() {
   patchActorSheetConsumablesData();
   installZeroQuantityComponentCleanup();
   installHudComponentBadges();
-}
-
-export function registerSockets() {
-  if (globalThis.__ADD2E_CONSUMABLES_SOCKET_V1) return;
-  globalThis.__ADD2E_CONSUMABLES_SOCKET_V1 = true;
-  game.socket?.on?.("system.add2e", async data => {
-    if (!game.user?.isGM || data?.type !== GM_OPERATION_TYPE) return;
-    if (![GM_OPERATION_COMPONENT_RESERVE, GM_OPERATION_COMPONENT_REFUND, GM_OPERATION_COMPONENT_FINALIZE].includes(data.operation)) return;
-    const payload = data.payload ?? {};
-    if (data.operation === GM_OPERATION_COMPONENT_RESERVE) {
-      const actor = game.actors?.get(payload.actorId);
-      const sort = actor?.items?.get(payload.sortId) ?? { id: payload.sortId, name: payload.sortName, system: {}, flags: {} };
-      let result = { ok: false, blocked: true, message: "Acteur introuvable pour les composants de sort." };
-      try {
-        if (actor) result = await reserveSpellComponentsLocal(actor, sort, payload.requirements);
-      } catch (err) {
-        console.warn("[ADD2E][CONSUMABLES][COMPONENTS][RESERVE][GM]", err);
-        result = { ok: false, blocked: true, message: err?.message || "Erreur MJ pendant la réservation des composants." };
-      }
-      game.socket.emit("system.add2e", { type: SOCKET_COMPONENT_RESULT, requestId: payload.requestId, userId: payload.userId, result: serializableReservation(result) });
-      return;
-    }
-    let ok = false;
-    try {
-      ok = data.operation === GM_OPERATION_COMPONENT_REFUND ? await refundSpellComponentsLocal(payload.reservation) : await finalizeSpellComponentsLocal(payload.reservation);
-    } catch (err) {
-      console.warn("[ADD2E][CONSUMABLES][COMPONENTS][TRANSACTION]", { operation: data.operation, err });
-    }
-    game.socket.emit("system.add2e", { type: SOCKET_COMPONENT_RESULT, requestId: payload.request_id ?? payload.requestId, userId: payload.userId, result: { ok } });
-  });
 }
