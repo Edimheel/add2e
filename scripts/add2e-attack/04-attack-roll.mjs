@@ -45,7 +45,7 @@ import {
   add2eCreateAttackChatCards
 } from "./04i-attack-roll-chat-card.mjs";
 
-const ADD2E_ATTACK_VERSION = "2026-08-07-automatic-hybrid-weapon-resolution-v8";
+const ADD2E_ATTACK_VERSION = "2026-08-08-canonical-ammunition-consumption-v9";
 const ADD2E_ATTACK_SNAPSHOT_VERSION = "2026-07-24-attack-resolution-snapshot-v1";
 const ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS = 1500;
 
@@ -218,23 +218,35 @@ function add2eAttackResolveWeaponUsage({ actor, weapon, srcToken, cibleToken, au
   };
 }
 
-async function add2eAttackValidateThrownAvailability({ actor, sourceWeapon, mode }) {
-  if (mode !== "throw") return true;
+async function add2eAttackValidateWeaponResourceAvailability({ actor, sourceWeapon, mode }) {
+  if (!["throw", "projectile"].includes(mode)) return true;
   const validator = globalThis.add2eValidateWeaponAttackAvailability;
   if (typeof validator !== "function") {
-    throw new Error("Le validateur canonique ADD2E des armes lancées est indisponible.");
+    throw new Error("Le validateur canonique ADD2E des ressources d’attaque est indisponible.");
   }
-  return validator({ actor, weapon: sourceWeapon, mode: "throw", notify: true });
+  return validator({ actor, weapon: sourceWeapon, mode, notify: true });
 }
 
-async function add2eAttackConsumeThrownWeapon({ actor, sourceWeapon, mode }) {
-  if (mode !== "throw") return { ok: true, spent: 0 };
-  const api = globalThis.ADD2E_CONSUMABLES ?? game?.add2e?.consumables;
-  if (typeof api?.add2eConsumeThrownWeapon !== "function") {
-    console.error("[ADD2E][ATTAQUE][THROWN_CONSUME][API_MISSING]", { actor: actor?.name, weapon: sourceWeapon?.name });
-    return { ok: false, reason: "consumable-api-unavailable" };
+async function add2eAttackConsumeWeaponResource({ actor, sourceWeapon, mode }) {
+  if (mode === "throw") {
+    const api = globalThis.ADD2E_CONSUMABLES ?? game?.add2e?.consumables;
+    if (typeof api?.add2eConsumeThrownWeapon !== "function") {
+      console.error("[ADD2E][ATTAQUE][THROWN_CONSUME][API_MISSING]", { actor: actor?.name, weapon: sourceWeapon?.name });
+      return { ok: false, reason: "consumable-api-unavailable" };
+    }
+    return api.add2eConsumeThrownWeapon(actor, sourceWeapon, 1);
   }
-  return api.add2eConsumeThrownWeapon(actor, sourceWeapon, 1);
+
+  if (mode === "projectile") {
+    const api = globalThis.ADD2E_VENDOR_PROJECTILES ?? game?.add2e?.vendorProjectiles;
+    if (typeof api?.spendProjectileForAttack !== "function") {
+      console.error("[ADD2E][ATTAQUE][PROJECTILE_CONSUME][API_MISSING]", { actor: actor?.name, weapon: sourceWeapon?.name });
+      return { ok: false, reason: "projectile-resource-api-unavailable" };
+    }
+    return api.spendProjectileForAttack({ actor, arme: sourceWeapon });
+  }
+
+  return { ok: true, spent: 0 };
 }
 
 async function add2eAttackRunActionGateOnUse({ gateResults = [], actor, cible, sourceToken, targetToken, weapon, contact = false, actionTags = [] } = {}) {
@@ -762,7 +774,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   });
   if (weaponUsage.ok === false) return false;
 
-  const available = await add2eAttackValidateThrownAvailability({
+  const available = await add2eAttackValidateWeaponResourceAvailability({
     actor,
     sourceWeapon,
     mode: weaponUsage.mode
@@ -1041,12 +1053,12 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
       });
 
       await add2eConsumeOneUseWeaponAfterAttack(actor, sourceWeapon);
-      const consumedThrown = await add2eAttackConsumeThrownWeapon({
+      const consumedResource = await add2eAttackConsumeWeaponResource({
         actor,
         sourceWeapon,
         mode: weaponUsage.mode
       });
-      if (consumedThrown?.ok === false) return false;
+      if (consumedResource?.ok === false) return false;
       return true;
     }
   });
