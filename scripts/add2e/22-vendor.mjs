@@ -43,11 +43,10 @@ import {
 
 import {
   ADD2E_CONSUMABLES_VERSION,
-  registerGlobals as registerConsumablesGlobals,
-  registerSockets as registerConsumablesSockets
+  registerGlobals as registerConsumablesGlobals
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-08-08-shop-compendium-catalog-v5";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-08-08-shop-compendium-catalog-v6";
 const ADD2E_SHOP_HP_VERSION = "2026-06-15-shop-hp-one-multiclass-v1";
 const ADD2E_SHOP_HP = 1;
 const SPELL_COMPONENTS_SETTING = "gestionComposantsSorts";
@@ -373,7 +372,6 @@ Hooks.once("ready", async () => {
   registerUiGlobals();
   registerArmorerGlobals();
   registerArmorerUiGlobals();
-  registerConsumablesSockets();
 
   await enforceShopActors().catch(error => console.warn("[ADD2E][SHOP][ENSURE_ACTORS]", error));
   await enforceShopHitPoints().catch(error => console.warn("[ADD2E][SHOP][HIT_POINTS]", error));
