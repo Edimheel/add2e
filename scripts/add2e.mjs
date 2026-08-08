@@ -5,7 +5,6 @@
  */
 import "./add2e-initiative.mjs";
 import "./add2e/00-legacy-global-helpers.mjs";
-import "./add2e/spell-dialog-ui.mjs";
 import "./add2e/item-sheet-registration.mjs";
 import "./add2e/handlebars-helpers.mjs";
 import "./add2e/character-sheet-templates.mjs";
