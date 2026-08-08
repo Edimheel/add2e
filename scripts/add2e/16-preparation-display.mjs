@@ -1,11 +1,11 @@
 // ============================================================
 // ADD2E — Contrôles de mémorisation des sorts
-// Version : 2026-07-26-canonical-preparation-consumer-v1
+// Version : 2026-08-08-canonical-preparation-consumer-v2
 // Source exclusive des quotas et compteurs : 07-spellcasting-rules.mjs.
 // Compatible Foundry V13/V14/V15 et ApplicationV2.
 // ============================================================
 
-const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-07-26-canonical-preparation-consumer-v1";
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-08-08-canonical-preparation-consumer-v2";
 globalThis.ADD2E_SPELL_PREP_SCROLL_VERSION = ADD2E_SPELL_PREP_SCROLL_VERSION;
 
 function add2eSpellPrepDebug(stage, payload = {}) {
@@ -13,11 +13,41 @@ function add2eSpellPrepDebug(stage, payload = {}) {
   console.info(`[ADD2E][SPELL_PREP][${stage}]`, payload);
 }
 
+function add2eSpellPrepEscapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function add2eSpellPrepShowLimitDialog(entry, spellLevel, total, limit) {
+  if (typeof globalThis.add2eDialogAlert !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
+  const label = entry?.label || globalThis.add2eSpellLabel?.(entry?.key) || "Sorts";
+  return globalThis.add2eDialogAlert({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "ok",
+    add2eClasses: ["add2e-spell-preparation-limit-dialog"],
+    window: { title: "Mémorisation des sorts" },
+    content: `
+      <div class="add2e-spell-preparation-limit">
+        <p><strong>${add2eSpellPrepEscapeHtml(label)} — niveau ${Number(spellLevel) || 1}</strong></p>
+        <p>Le nombre maximal de sorts mémorisables pour ce niveau est atteint.</p>
+        <p>Emplacements utilisés : <strong>${Math.max(0, Number(total) || 0)} / ${Math.max(0, Number(limit) || 0)}</strong>.</p>
+      </div>
+    `
+  });
+}
+
 function add2eSpellPrepNormalizeText(value) {
   return String(value ?? "")
     .trim()
     .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, "")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
@@ -374,7 +404,10 @@ async function add2eHandleSpellPreparationButton(button, event = null, actorOver
     if (!isPlus && !isMinus) return;
 
     const totalBefore = isPlus && visibleRatio && visibleRatio.count < centralTotal ? visibleRatio.count : centralTotal;
-    if (isPlus && totalBefore >= limit) return ui.notifications.warn(`Limite atteinte : ${entry.label} niveau ${spellLevel} (${totalBefore}/${limit}).`);
+    if (isPlus && totalBefore >= limit) {
+      await add2eSpellPrepShowLimitDialog(entry, spellLevel, totalBefore, limit);
+      return;
+    }
     if (isMinus && current <= 0) return ui.notifications.warn(`Aucun sort ${entry.label} à retirer.`);
 
     const next = isPlus ? current + 1 : current - 1;
