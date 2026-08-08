@@ -6,6 +6,7 @@ import {
   ADD2E_VENDOR_VERSION,
   VENDOR_SETTING,
   getShopType,
+  getShopDefinition,
   registerRecoveryHooks,
   patchActorSheetMoney,
   registerGlobals,
@@ -40,17 +41,15 @@ import {
   registerGlobals as registerConsumablesGlobals
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-08-08-shop-single-ui-v7";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-08-08-shop-single-ui-v8";
 const ADD2E_SHOP_HP_VERSION = "2026-06-15-shop-hp-one-multiclass-v1";
 const ADD2E_SHOP_HP = 1;
 const SPELL_COMPONENTS_SETTING = "gestionComposantsSorts";
-const ADD2E_SHOP_TILE_VERSION = "2026-08-08-shop-tiles-v5";
+const ADD2E_SHOP_TILE_VERSION = "2026-08-08-shop-tiles-v6";
 const ADD2E_SHOP_TILE_FLAG_SCOPE = "add2e";
 const ADD2E_SHOP_TILE_FLAG_KEY = "shopType";
-const ADD2E_SHOP_TILE_TYPES = new Set(["vendor", "general", "armorer"]);
 const ADD2E_SHOP_TILE_CLICK_DISTANCE = 8;
 const ADD2E_SHOP_TILE_CLICK_DURATION = 1200;
-const SHOP_TILE_OPEN_LOCKS = new Map();
 const SHOP_TILE_CANVAS_STATE = { stage: null, down: null, onDown: null, onUp: null, onCancel: null };
 let shopActorsHiddenHookRegistered = false;
 let shopTileHooksRegistered = false;
@@ -170,29 +169,17 @@ function tileDocument(tile) {
 function shopTileType(tile) {
   const document = tileDocument(tile);
   const raw = document?.getFlag?.(ADD2E_SHOP_TILE_FLAG_SCOPE, ADD2E_SHOP_TILE_FLAG_KEY) ?? document?.flags?.[ADD2E_SHOP_TILE_FLAG_SCOPE]?.[ADD2E_SHOP_TILE_FLAG_KEY] ?? "";
-  const type = String(raw ?? "").trim().toLowerCase();
-  return ADD2E_SHOP_TILE_TYPES.has(type) ? type : "";
-}
-
-function shopTileKey(tile) {
-  const document = tileDocument(tile);
-  return document?.uuid ?? document?.id ?? tile?.id ?? null;
-}
-
-function shopTileOpenLock(tile) {
-  const key = `${game.user?.id ?? "unknown"}:${shopTileKey(tile) ?? "unknown"}`;
-  const now = Date.now();
-  if (SHOP_TILE_OPEN_LOCKS.has(key) && now - SHOP_TILE_OPEN_LOCKS.get(key) < 750) return false;
-  SHOP_TILE_OPEN_LOCKS.set(key, now);
-  return true;
+  const requested = String(raw ?? "").trim().toLowerCase();
+  const type = requested === "vendor" ? "general" : requested;
+  return type && getShopDefinition(type) ? type : "";
 }
 
 async function openShopFromTile(tile) {
   const type = shopTileType(tile);
-  if (!type || game.user?.isGM || !shopTileOpenLock(tile)) return false;
-  const openShop = type === "armorer" ? game.add2e?.openArmorer : game.add2e?.openVendor;
+  if (!type || game.user?.isGM) return false;
+  const openShop = game.add2e?.openShop;
   if (typeof openShop !== "function") return false;
-  await openShop();
+  await openShop({ type });
   return true;
 }
 
@@ -312,7 +299,7 @@ function injectShopTileConfigField(app, html) {
     <div class="form-fields">
       <select id="add2e-shop-tile-type" name="flags.add2e.shopType">
         <option value="" ${type === "" ? "selected" : ""}>Aucune</option>
-        <option value="general" ${type === "vendor" || type === "general" ? "selected" : ""}>Marchand général</option>
+        <option value="general" ${type === "general" ? "selected" : ""}>Marchand général</option>
         <option value="armorer" ${type === "armorer" ? "selected" : ""}>Armurier</option>
       </select>
     </div>
