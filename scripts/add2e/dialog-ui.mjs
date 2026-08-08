@@ -1,7 +1,7 @@
 // ADD2E — API commune des fenêtres DialogV2.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 uniquement.
 
-const ADD2E_DIALOG_UI_VERSION = "2026-08-08-dialog-ui-v3";
+const ADD2E_DIALOG_UI_VERSION = "2026-08-08-dialog-ui-v4";
 globalThis.ADD2E_DIALOG_UI_VERSION = ADD2E_DIALOG_UI_VERSION;
 
 const ADD2E_DIALOG_THEMES = Object.freeze({
@@ -313,6 +313,199 @@ function ensureStyles() {
   outline-offset: 2px !important;
 }
 
+/* Boutique générique : contenu métier commun à tous les marchands. */
+.application.add2e-dialog-window.add2e-shop-window,
+.window-app.add2e-dialog-window.add2e-shop-window {
+  width: min(1040px, calc(100vw - 24px)) !important;
+  max-width: min(1040px, calc(100vw - 24px)) !important;
+}
+
+.add2e-shop-content {
+  display: grid !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+}
+
+.add2e-shop-summary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 8px 10px !important;
+  border: 1px solid var(--a2e-dialog-border) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(180deg, var(--a2e-dialog-paper-light), var(--a2e-dialog-paper-dark)) !important;
+}
+
+.add2e-shop-summary .add2e-shop-money {
+  color: var(--a2e-dialog-dark) !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+}
+
+.add2e-shop-toolbar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.add2e-shop-tabs {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-wrap: wrap !important;
+  gap: 5px !important;
+}
+
+.add2e-shop-tabs button,
+.add2e-shop-toolbar button,
+.add2e-shop-action {
+  min-height: 28px !important;
+  margin: 0 !important;
+  padding: 4px 9px !important;
+  border: 1px solid var(--a2e-dialog-border) !important;
+  border-radius: 6px !important;
+  background: linear-gradient(180deg, var(--a2e-dialog-paper-light), var(--a2e-dialog-paper-dark)) !important;
+  color: var(--a2e-dialog-text) !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+}
+
+.add2e-shop-tabs button.active {
+  border-color: var(--a2e-dialog-dark) !important;
+  background: linear-gradient(180deg, var(--a2e-dialog-light), var(--a2e-dialog-dark)) !important;
+  color: #fff !important;
+}
+
+.add2e-shop-action.icon-only {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 30px !important;
+  padding: 4px 7px !important;
+}
+
+.add2e-shop-action:disabled,
+.add2e-shop-action[aria-disabled="true"] {
+  opacity: .35 !important;
+  cursor: not-allowed !important;
+}
+
+.add2e-shop-search {
+  width: 100% !important;
+  min-height: 34px !important;
+  padding: 5px 8px !important;
+}
+
+.add2e-shop-scroll {
+  max-height: 430px !important;
+  overflow: auto !important;
+  border: 1px solid var(--a2e-dialog-border) !important;
+  border-radius: 8px !important;
+  background: var(--a2e-dialog-paper-light) !important;
+}
+
+.add2e-shop-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  background: var(--a2e-dialog-paper-light) !important;
+}
+
+.add2e-shop-table th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1 !important;
+  padding: 6px 7px !important;
+  background: var(--a2e-dialog-dark) !important;
+  color: #fff !important;
+  font-size: .75rem !important;
+  text-transform: uppercase !important;
+}
+
+.add2e-shop-table td {
+  padding: 5px 7px !important;
+  border-bottom: 1px solid rgba(90,58,18,.18) !important;
+  vertical-align: middle !important;
+}
+
+.add2e-shop-table tbody tr:nth-child(even) {
+  background: rgba(234,217,157,.25) !important;
+}
+
+.add2e-shop-table tbody tr:hover {
+  background: rgba(201,167,86,.22) !important;
+}
+
+.add2e-shop-col-article { width: 25% !important; font-weight: 900 !important; }
+.add2e-shop-col-type { width: 12% !important; }
+.add2e-shop-col-detail { width: 27% !important; }
+.add2e-shop-col-price { width: 10% !important; font-weight: 900 !important; }
+.add2e-shop-col-stock { width: 7% !important; text-align: center !important; }
+.add2e-shop-col-qty { width: 7% !important; text-align: center !important; }
+.add2e-shop-col-action { width: 6% !important; text-align: center !important; }
+.add2e-shop-col-gm { width: 16% !important; text-align: right !important; }
+
+.add2e-shop-type-pill,
+.add2e-shop-status-pill {
+  display: inline-flex !important;
+  max-width: 100% !important;
+  padding: 1px 7px !important;
+  border: 1px solid rgba(90,58,18,.24) !important;
+  border-radius: 999px !important;
+  background: var(--a2e-dialog-paper-dark) !important;
+  color: var(--a2e-dialog-dark) !important;
+  font-size: .82rem !important;
+  font-weight: 900 !important;
+}
+
+.add2e-shop-status-pill.unusable {
+  border-color: #9f2f27 !important;
+  background: #f5d2c9 !important;
+  color: #6f1712 !important;
+}
+
+.add2e-shop-table input[type="number"] {
+  width: 50px !important;
+  min-height: 26px !important;
+  text-align: center !important;
+}
+
+.add2e-shop-gm-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 5px !important;
+}
+
+.add2e-shop-section {
+  display: block !important;
+  margin: 0 0 7px !important;
+  border: 1px solid var(--a2e-dialog-border) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  background: var(--a2e-dialog-paper-light) !important;
+}
+
+.add2e-shop-section > summary {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 7px 10px !important;
+  background: var(--a2e-dialog-dark) !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+}
+
+.add2e-shop-empty {
+  margin: 0 !important;
+  padding: 12px !important;
+  text-align: center !important;
+  opacity: .75 !important;
+}
+
 /* Fenêtre de moral : contenu métier commun. */
 .application.add2e-dialog-window.add2e-monster-morale-window,
 .window-app.add2e-dialog-window.add2e-monster-morale-window {
@@ -447,6 +640,11 @@ function ensureStyles() {
   .add2e-monster-morale-form .add2e-monster-morale-grid,
   .add2e-monster-morale-form .add2e-monster-morale-columns {
     grid-template-columns: 1fr !important;
+  }
+
+  .add2e-shop-col-detail,
+  .add2e-shop-col-type {
+    display: none !important;
   }
 }
 `;
