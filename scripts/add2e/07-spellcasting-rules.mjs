@@ -1,12 +1,12 @@
 // ============================================================
 // ADD2E — Spellcasting par Items classe
-// Version : 2026-08-07-canonical-resource-memorization-v4
+// Version : 2026-08-08-canonical-resource-memorization-v5
 // Les Items classe sont l’unique source de niveau et de listes de sorts.
 // Les profils dérivés canoniques sont l’unique source Intelligence/Sagesse.
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-07-canonical-resource-memorization-v4";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-08-canonical-resource-memorization-v5";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -741,14 +741,9 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
         }
       }
       const nextByList = add2eGetMemorizedByList(sort);
-      if (next > 0) nextByList[key] = next;
-      else delete nextByList[key];
-      for (const listKey of Object.keys(nextByList)) {
-        if ((Number(nextByList[listKey]) || 0) <= 0) delete nextByList[listKey];
-      }
+      nextByList[key] = next;
       await sort.update({
-        "flags.add2e.memorizedByList": nextByList,
-        "flags.add2e.-=memorizedCount": null
+        "flags.add2e.memorizedByList": nextByList
       }, {
         render: false,
         diff: false,
