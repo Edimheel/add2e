@@ -1,4 +1,5 @@
-// ADD2E — Armurier ApplicationV2 : boutique d’armes, armures et projectiles.
+// ADD2E — Armurier ApplicationV2 sur catalogue compendium virtuel.
+// Compatible Foundry V13/V14/V15.
 
 import {
   isArmorerActor,
@@ -14,14 +15,16 @@ import {
   buy,
   restockAll,
   getArmorerDisplayItems,
+  ownedShopQuantity,
   alertBox,
   esc,
-  lower,
-  itemKey
+  lower
 } from "./22c-armorer-core.mjs";
-import { normalizeShopCurrency, ADD2E_ARMORER_PLAYER_BUY } from "./22x-vendor-socket-bootstrap.mjs";
+import { getShopType, requestShopBuy } from "./22a-vendor-core.mjs";
 
-const VERSION = "2026-07-01-armorer-app-v3-merchant-layout";
+const VERSION = "2026-08-08-armorer-app-compendium-catalog-v4";
+const ARMORER_APPS = new Map();
+const ARMORER_OPEN_LOCKS = new Map();
 const STYLE = `
   .add2e-armorer-app{background:#e7d29a;color:#2b2113}
   .add2e-armorer-app section{background:linear-gradient(180deg,#f0dfab 0%,#e4c985 100%);padding:0 .65rem .65rem}
@@ -43,15 +46,11 @@ const STYLE = `
   .add2e-armorer-app .add2e-armorer-action:disabled{opacity:.28;cursor:not-allowed}
 `;
 
-function isOtherShop(actor) {
-  return actor?.getFlag?.("add2e", "isVendor") === true || /marchand de composants/i.test(String(actor?.name ?? ""));
-}
-
 function buyerOptions(selected = "") {
   const actors = new Map();
   for (const token of canvas?.tokens?.placeables ?? []) {
     const actor = token?.actor;
-    if (actor?.id && !isArmorerActor(actor) && !isOtherShop(actor)) actors.set(actor.id, actor);
+    if (actor?.id && !getShopType(actor)) actors.set(actor.id, actor);
   }
   return [...actors.values()]
     .sort((left, right) => String(left.name).localeCompare(String(right.name), "fr"))
@@ -61,17 +60,13 @@ function buyerOptions(selected = "") {
 
 function tabFor(item) {
   if (isArmorerAmmunition(item)) return "projectiles";
-  if (item?.type === "arme") return "weapons";
-  if (item?.type === "armure") return "armors";
+  if (item?._shop?.kind === "weapon" || item?.type === "arme") return "weapons";
+  if (item?._shop?.kind === "armor" || item?.type === "armure") return "armors";
   return "all";
 }
 
 function ownedQuantity(actor, item) {
-  if (!actor || !item) return 0;
-  const key = itemKey(item);
-  return Array.from(actor.items ?? [])
-    .filter(candidate => itemKey(candidate) === key)
-    .reduce((total, candidate) => total + Math.max(1, quantity(candidate)), 0);
+  return actor && item ? ownedShopQuantity(actor, item) : 0;
 }
 
 function rowHtml(item, buyer) {
@@ -83,9 +78,11 @@ function rowHtml(item, buyer) {
 }
 
 async function confirmPlayerBuy(item, qty) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.confirm) return false;
-  return DialogV2.confirm({
+  if (typeof globalThis.add2eDialogConfirm !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  return globalThis.add2eDialogConfirm({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "yes",
+    add2eClasses: ["add2e-armorer-buy-confirm"],
     window: { title: "Confirmer l’achat" },
     content: `<p>Acheter <b>${qty} × ${esc(item.name)}</b> pour <b>${formatMoney(priceCopper(item) * qty)}</b> ?</p>`,
     yes: { label: "Acheter" },
@@ -109,17 +106,16 @@ class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
     this.buyer = buyer ?? getBuyer();
     this.tab = "all";
     this.search = "";
+    this.itemsById = new Map();
   }
 
   get title() { return `${this.armorer?.name ?? "Armurier"}${this.buyer ? ` — ${this.buyer.name}` : ""}`; }
 
   async _prepareContext() {
-    normalizeShopCurrency();
-    const items = await getArmorerDisplayItems(this.armorer);
-    return {
-      isGM: game.user?.isGM === true,
-      items: items.sort((left, right) => String(armorerKind(left)).localeCompare(String(armorerKind(right)), "fr") || String(left.name).localeCompare(String(right.name), "fr"))
-    };
+    const items = (await getArmorerDisplayItems(this.armorer))
+      .sort((left, right) => String(armorerKind(left)).localeCompare(String(armorerKind(right)), "fr") || String(left.name).localeCompare(String(right.name), "fr"));
+    this.itemsById = new Map(items.map(item => [String(item.id), item]));
+    return { isGM: game.user?.isGM === true, items };
   }
 
   async _renderHTML(context) {
@@ -162,49 +158,33 @@ class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
     root.querySelectorAll("button[data-action='buy']").forEach(button => button.addEventListener("click", event => this.buyFromRow(event)));
   }
 
-  async itemFromRow(row) {
-    const id = row?.dataset?.id;
-    if (!id) return null;
-    return this.armorer?.items?.get(id)
-      ?? (await getArmorerDisplayItems(this.armorer)).find(item => String(item.id) === String(id))
-      ?? null;
+  itemFromRow(row) {
+    const id = String(row?.dataset?.id ?? "");
+    return id ? this.itemsById.get(id) ?? null : null;
   }
 
   async buyFromRow(event) {
     const row = event.currentTarget.closest("tr[data-id]");
-    const item = await this.itemFromRow(row);
+    const item = this.itemFromRow(row);
     const qty = Math.max(1, Math.floor(Number(row?.querySelector(".q")?.value) || 1));
     if (!item || !this.armorer || !this.buyer || quantity(item) < qty) return;
 
     if (game.user?.isGM) {
-      normalizeShopCurrency();
       if (await buy({ armorer: this.armorer, buyer: this.buyer, item, quantity: qty })) this.render({ force: true });
       return;
     }
 
     if (!await confirmPlayerBuy(item, qty)) return;
-    game.socket?.emit?.("system.add2e", {
-      type: ADD2E_ARMORER_PLAYER_BUY,
-      requestId: foundry.utils.randomID(),
-      userId: game.user.id,
-      armorerId: this.armorer.id,
-      buyerId: this.buyer.id,
-      buyerUuid: this.buyer.uuid,
-      itemId: item.id?.startsWith?.("catalog:") ? null : item.id,
-      itemKey: itemKey(item),
-      quantity: qty
-    });
+    requestShopBuy({ shop: this.armorer, buyer: this.buyer, item, quantity: qty });
     window.setTimeout(() => this.render({ force: true }), 800);
   }
 }
 
-const apps = () => globalThis.__ADD2E_ARMORER_APPS ??= {};
 function locked(actor) {
   const key = `${game.user?.id}:${actor?.id}`;
   const now = Date.now();
-  const locks = globalThis.__ADD2E_ARMORER_OPEN_LOCK ??= {};
-  if (locks[key] && now - locks[key] < 750) return true;
-  locks[key] = now;
+  if (ARMORER_OPEN_LOCKS.has(key) && now - ARMORER_OPEN_LOCKS.get(key) < 750) return true;
+  ARMORER_OPEN_LOCKS.set(key, now);
   return false;
 }
 
@@ -222,7 +202,7 @@ export async function openArmorer({ armorer = null, buyer = null } = {}) {
   if (!buyer && !game.user?.isGM) return alertBox("Aucun acheteur", "Aucun personnage assigné ou sélectionné.");
 
   const key = `${game.user?.id}:${armorer.id}`;
-  const current = apps()[key];
+  const current = ARMORER_APPS.get(key);
   if (current?.rendered) {
     current.armorer = armorer;
     current.buyer = buyer;
@@ -232,7 +212,7 @@ export async function openArmorer({ armorer = null, buyer = null } = {}) {
   }
 
   const app = new Add2eArmorerApp({ armorer, buyer });
-  apps()[key] = app;
+  ARMORER_APPS.set(key, app);
   app.render({ force: true });
   return app;
 }
