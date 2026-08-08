@@ -21,10 +21,14 @@ function potionContextItem(context = {}) {
   return context.sourceItem ?? context.item ?? context.args?.[0]?.sourceItem ?? context.args?.[0]?.item ?? null;
 }
 
-async function potionRoll(formula, actor, flavor) {
-  const roll = await new Roll(String(formula || "0")).evaluate();
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }), flavor });
-  return Number(roll.total) || 0;
+async function potionRoll(formula) {
+  const roll = new Roll(String(formula || "0"));
+  await roll.evaluate();
+  return roll;
+}
+
+function potionRollTotal(roll) {
+  return Number(roll?.total) || 0;
 }
 
 function potionTargets(actor, selfOnly = false) {
@@ -43,12 +47,18 @@ function potionHpDescriptor(actor) {
   ].find(row => Number.isFinite(Number(row.value))) ?? null;
 }
 
-async function potionDuration(actor, config = {}) {
+async function potionDuration(config = {}) {
   if (config.durationFormula) {
-    const total = await potionRoll(config.durationFormula, actor, `${config.name} — durée`);
-    return Math.max(0, total * (Number(config.durationMultiplier) || 1));
+    const roll = await potionRoll(config.durationFormula);
+    return {
+      rounds: Math.max(0, potionRollTotal(roll) * (Number(config.durationMultiplier) || 1)),
+      rolls: [roll]
+    };
   }
-  return Math.max(0, Number(config.durationRounds) || 0);
+  return {
+    rounds: Math.max(0, Number(config.durationRounds) || 0),
+    rolls: []
+  };
 }
 
 export function installEnginePrimitives(Engine) {
@@ -157,13 +167,14 @@ export function installEnginePrimitives(Engine) {
       });
     },
 
-    async postGenericEffectChat(actor, title, html, item = null) {
+    async postGenericEffectChat(actor, title, html, item = null, rolls = []) {
       if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
         throw new Error("Les constructeurs de carte de chat ADD2E ne sont pas disponibles.");
       }
       const container = document.createElement("div");
       container.innerHTML = String(html ?? "");
       const message = String(container.textContent ?? "").replace(/\s+/g, " ").trim();
+      const chatRolls = rawList(rolls).filter(Boolean);
       const options = {
         actor,
         title,
@@ -174,7 +185,11 @@ export function installEnginePrimitives(Engine) {
           img: item?.img ?? actor?.img ?? "icons/svg/aura.svg",
           type: item ? "Objet" : "Acteur"
         },
-        message
+        message,
+        chatData: {
+          speaker: ChatMessage.getSpeaker({ actor }),
+          rolls: chatRolls
+        }
       };
       globalThis.add2eBuildChatCard(options);
       return globalThis.add2eCreateChatCard(options);
@@ -186,22 +201,24 @@ export function installEnginePrimitives(Engine) {
       if (!actor) return false;
 
       if (config.kind === "healing") {
-        const total = await potionRoll(config.formula, actor, config.name);
+        const roll = await potionRoll(config.formula);
+        const total = potionRollTotal(roll);
         const hp = potionHpDescriptor(actor);
         if (!hp) {
-          await this.postGenericEffectChat(actor, config.name, `<p>Soins obtenus : <b>${total}</b>. Aucun champ de points de vie compatible n’a été trouvé.</p>`, item);
+          await this.postGenericEffectChat(actor, config.name, `<p>Soins obtenus : <b>${total}</b>. Aucun champ de points de vie compatible n’a été trouvé.</p>`, item, [roll]);
           return true;
         }
         const before = Number(hp.value) || 0;
         const maximum = Number.isFinite(Number(hp.max)) ? Number(hp.max) : before + total;
         const after = Math.min(maximum, before + total);
         await actor.update({ [hp.path]: after }, { add2eInternal: true, add2eReason: "potion-healing" });
-        await this.postGenericEffectChat(actor, config.name, `<p>Points de vie : <b>${before} → ${after}</b>.</p><p>Soins effectifs : <b>${after - before}</b>.</p>`, item);
+        await this.postGenericEffectChat(actor, config.name, `<p>Points de vie : <b>${before} → ${after}</b>.</p><p>Soins effectifs : <b>${after - before}</b>.</p>`, item, [roll]);
         return true;
       }
 
       if (config.kind === "age") {
-        const total = await potionRoll(config.formula, actor, config.name);
+        const roll = await potionRoll(config.formula);
+        const total = potionRollTotal(roll);
         const system = actor.system ?? {};
         const target = [
           ["system.age", system.age],
@@ -212,9 +229,9 @@ export function installEnginePrimitives(Engine) {
           const [path, before] = target;
           const after = Math.max(0, Number(before) - total);
           await actor.update({ [path]: after }, { add2eInternal: true, add2eReason: "potion-age" });
-          await this.postGenericEffectChat(actor, config.name, `<p>Âge : <b>${before} → ${after}</b>.</p>`, item);
+          await this.postGenericEffectChat(actor, config.name, `<p>Âge : <b>${before} → ${after}</b>.</p>`, item, [roll]);
         } else {
-          await this.postGenericEffectChat(actor, config.name, `<p>Réduction d’âge à appliquer : <b>${total}</b> an(s).</p>`, item);
+          await this.postGenericEffectChat(actor, config.name, `<p>Réduction d’âge à appliquer : <b>${total}</b> an(s).</p>`, item, [roll]);
         }
         return true;
       }
@@ -242,14 +259,15 @@ export function installEnginePrimitives(Engine) {
         }
         const row = (config.levelTable ?? []).find(entry => level >= Number(entry.min) && level <= Number(entry.max));
         if (!row) return false;
-        const temporaryHp = await potionRoll(row.hpDice, actor, `${config.name} — points de vie temporaires`);
-        const rounds = await potionDuration(actor, config);
+        const temporaryHpRoll = await potionRoll(row.hpDice);
+        const temporaryHp = potionRollTotal(temporaryHpRoll);
+        const duration = await potionDuration(config);
         await this.createTimedEffect({
           actor,
           name: config.name,
           img: item?.img || "icons/svg/aura.svg",
           sourceItem: item,
-          rounds,
+          rounds: duration.rounds,
           description: config.description || "",
           tags: ["objet_magique", "potion", `potion:${config.slug}`, ...(config.tags ?? [])],
           rules: [
@@ -259,11 +277,17 @@ export function installEnginePrimitives(Engine) {
           endMessage: `L’effet ${config.name} prend fin sur {actor}.`,
           extraFlags: { potion: true, potionSlug: config.slug, temporaryLevels: Number(row.bonus) || 0, temporaryHp }
         });
-        await this.postGenericEffectChat(actor, config.name, `<p>Niveaux temporaires : <b>+${Number(row.bonus) || 0}</b>.</p><p>Points de vie temporaires : <b>${temporaryHp}</b>.</p>${rounds ? `<p>Durée : <b>${rounds} round(s).</b></p>` : ""}`, item);
+        await this.postGenericEffectChat(
+          actor,
+          config.name,
+          `<p>Niveaux temporaires : <b>+${Number(row.bonus) || 0}</b>.</p><p>Points de vie temporaires : <b>${temporaryHp}</b>.</p>${duration.rounds ? `<p>Durée : <b>${duration.rounds} round(s).</b></p>` : ""}`,
+          item,
+          [temporaryHpRoll, ...duration.rolls]
+        );
         return true;
       }
 
-      const rounds = await potionDuration(actor, config);
+      const duration = await potionDuration(config);
       const targets = potionTargets(actor, config.selfOnly === true);
       if (!targets.length) return false;
       if (config.confirm === true) {
@@ -277,8 +301,8 @@ export function installEnginePrimitives(Engine) {
           window: { title: config.name || "Effet" },
           modal: true,
           content: `<div class="add2e-dialog"><p><b>${escapeHtml(config.name || "Effet")}</b></p><p>Cible(s) : <b>${escapeHtml(targets.map(target => target.name).join(", "))}</b></p>${config.saveNote ? `<p>${escapeHtml(config.saveNote)}</p>` : ""}<p>Appliquer l’effet ?</p></div>`,
-          yes: { label: "Appliquer", icon: "fa-solid fa-check" },
-          no: { label: "Annuler", icon: "fa-solid fa-xmark" }
+          yes: { label: "Appliquer", icon: "<i class='fas fa-check'></i>" },
+          no: { label: "Annuler", icon: "<i class='fas fa-times'></i>" }
         });
         if (!accepted) return false;
       }
@@ -288,7 +312,7 @@ export function installEnginePrimitives(Engine) {
           name: config.name,
           img: item?.img || "icons/svg/aura.svg",
           sourceItem: item,
-          rounds,
+          rounds: duration.rounds,
           description: config.description || config.rule || "",
           tags: ["objet_magique", "potion", `potion:${config.slug}`, ...(config.tags ?? [])],
           rules: config.rules ?? [],
@@ -297,7 +321,13 @@ export function installEnginePrimitives(Engine) {
           extraFlags: { potion: true, potionSlug: config.slug, ...(config.extraFlags ?? {}) }
         });
       }
-      await this.postGenericEffectChat(actor, config.name, `<p>Effet appliqué à : <b>${escapeHtml(targets.map(target => target.name).join(", "))}</b>.</p>${rounds ? `<p>Durée : <b>${rounds} round(s).</b></p>` : ""}${config.rule ? `<p>${escapeHtml(config.rule)}</p>` : ""}`, item);
+      await this.postGenericEffectChat(
+        actor,
+        config.name,
+        `<p>Effet appliqué à : <b>${escapeHtml(targets.map(target => target.name).join(", "))}</b>.</p>${duration.rounds ? `<p>Durée : <b>${duration.rounds} round(s).</b></p>` : ""}${config.rule ? `<p>${escapeHtml(config.rule)}</p>` : ""}`,
+        item,
+        duration.rolls
+      );
       return true;
     }
   });
