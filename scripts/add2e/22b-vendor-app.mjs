@@ -1,4 +1,5 @@
-// ADD2E — Marchand général ApplicationV2 sur catalogue compendium virtuel.
+// ADD2E — ApplicationV2 générique de boutique sur catalogue compendium virtuel.
+// Une seule UI pour le marchand général, l’armurier et les futurs types de boutique.
 // Compatible Foundry V13/V14/V15.
 
 import {
@@ -6,7 +7,8 @@ import {
   createVendor,
   getBuyer,
   getShopType,
-  isVendorActor,
+  getShopDefinition,
+  getShopDisplayItems,
   vendorKind,
   isStockItem,
   isAmmunition,
@@ -15,11 +17,10 @@ import {
   priceCopper,
   formatMoney,
   getMoney,
-  buy,
-  restockAll,
-  setStock,
-  assignItemToToken,
-  getVendorDisplayItems,
+  shopBuyLocal,
+  restockShop,
+  setShopStock,
+  assignShopItem,
   requestShopBuy,
   ownedShopQuantity,
   alertBox,
@@ -27,10 +28,19 @@ import {
   lower,
   slug
 } from "./22a-vendor-core.mjs";
+import {
+  findArmorer,
+  createArmorer,
+  armorerKind,
+  usabilityForActor
+} from "./22c-armorer-core.mjs";
 
-const VERSION = "2026-08-08-merchant-compendium-catalog-v5";
-const MERCHANT_APPS = new Map();
-const MERCHANT_OPEN_LOCKS = new Map();
+export const ADD2E_SHOP_APP_VERSION = "2026-08-08-generic-shop-app-v1";
+
+const SHOP_APPS = new Map();
+const SHOP_TOKEN_BINDINGS = new WeakSet();
+let shopTokenHooksRegistered = false;
+let shopDirectoryHookRegistered = false;
 
 const arr = value => Array.isArray(value)
   ? value.flatMap(arr)
@@ -72,19 +82,46 @@ function canonicalName(name) {
   return COMPONENT_NAME_ALIASES.get(slug(raw)) ?? raw;
 }
 
-function canonicalItemName(item) {
-  return vendorKind(item) === "Composant" ? canonicalName(item?.name) : String(item?.name ?? "");
+function shopType(value) {
+  const type = getShopType(value);
+  return type === "vendor" ? "general" : type;
 }
 
-function isShopActor(actor) {
-  return !!getShopType(actor);
+function shopKindKey(item) {
+  const raw = String(item?._shop?.kind ?? "").trim();
+  if (raw) return slug(raw);
+  if (isComponent(item)) return "component";
+  if (isAmmunition(item)) return "projectile";
+  return slug(item?.type ?? "item") || "item";
+}
+
+function shopKindLabel(item, type) {
+  if (type === "general") return vendorKind(item);
+  if (type === "armorer") return armorerKind(item);
+  const key = shopKindKey(item);
+  const labels = {
+    weapon: "Arme",
+    arme: "Arme",
+    armor: "Armure",
+    armure: "Armure",
+    projectile: "Projectile",
+    ammunition: "Projectile",
+    component: "Composant",
+    equipment: "Équipement",
+    item: "Article"
+  };
+  return labels[key] ?? key.replaceAll("_", " ").replace(/^./, char => char.toUpperCase());
+}
+
+function canonicalItemName(item, type) {
+  return type === "general" && vendorKind(item) === "Composant" ? canonicalName(item?.name) : String(item?.name ?? "");
 }
 
 function sceneActors() {
   const actors = new Map();
   for (const token of canvas?.tokens?.placeables ?? []) {
     const actor = token?.actor;
-    if (actor?.id && !isShopActor(actor)) actors.set(actor.id, actor);
+    if (actor?.id && !getShopDefinition(actor)) actors.set(actor.id, actor);
   }
   return [...actors.values()].sort((left, right) => String(left.name).localeCompare(String(right.name), "fr"));
 }
@@ -115,16 +152,25 @@ function declaredSpellNames(item) {
 }
 
 function linked(item) {
-  return uniq([...declaredSpellNames(item), item?.name, canonicalItemName(item)].map(value => String(value ?? "").trim()).filter(Boolean));
+  return uniq([...declaredSpellNames(item), item?.name, canonicalName(item?.name)].map(value => String(value ?? "").trim()).filter(Boolean));
 }
 
 function materialNames(value, names = []) {
   for (const entry of arr(value)) {
-    if (Array.isArray(entry)) { materialNames(entry, names); continue; }
+    if (Array.isArray(entry)) {
+      materialNames(entry, names);
+      continue;
+    }
     if (!entry) continue;
-    if (typeof entry === "string") { names.push(entry); continue; }
+    if (typeof entry === "string") {
+      names.push(entry);
+      continue;
+    }
     if (typeof entry === "object") {
-      if (Array.isArray(entry.alternatives)) { materialNames(entry.alternatives, names); continue; }
+      if (Array.isArray(entry.alternatives)) {
+        materialNames(entry.alternatives, names);
+        continue;
+      }
       const name = entry.nom ?? entry.name ?? entry.label ?? entry.item ?? entry.itemName ?? entry.component ?? entry.composant ?? entry.slug;
       if (name) names.push(name);
     }
@@ -159,7 +205,7 @@ function spells(actor) {
     .sort((left, right) => String(left.name).localeCompare(String(right.name), "fr"));
 }
 
-function usage(actor, item) {
+function componentUsage(actor, item) {
   if (vendorKind(item) !== "Composant") return { known: 0, prep: 0, names: [] };
   const aliases = linked(item).map(value => slug(canonicalName(value)));
   if (!aliases.length) return { known: 0, prep: 0, names: [] };
@@ -182,11 +228,11 @@ function displaySpellNames(item, use) {
 }
 
 function ownedQuantity(actor, item) {
-  return actor ? ownedShopQuantity(actor, item) : 0;
+  return actor && item ? ownedShopQuantity(actor, item) : 0;
 }
 
 function articleLabel(context, item) {
-  const name = canonicalItemName(item);
+  const name = canonicalItemName(item, context.shopType);
   return context.buyer ? `${name} (${ownedQuantity(context.buyer, item)})` : name;
 }
 
@@ -194,10 +240,6 @@ function itemTags(item) {
   const system = item?.system ?? {};
   const flags = item?.flags?.add2e ?? {};
   return [system.tags, system.effectTags, system.effecttags, flags.tags, flags.effectTags, flags.effecttags].flatMap(arr).map(value => lower(value)).filter(Boolean);
-}
-
-function isBazaarItem(item) {
-  return isStockItem(item) && !isComponent(item) && !isAmmunition(item) && vendorKind(item) !== "Composant" && vendorKind(item) !== "Projectile";
 }
 
 function normalizeSectionLabel(raw = "") {
@@ -217,7 +259,9 @@ function normalizeSectionLabel(raw = "") {
 
 function bazaarSection(item) {
   const system = item?.system ?? {};
-  const values = [system.categorie, system.category, system.sousType, system.sous_type, system.subtype, system.kind, system.slot, ...itemTags(item)].map(value => String(value ?? "").trim()).filter(Boolean);
+  const values = [system.categorie, system.category, system.sousType, system.sous_type, system.subtype, system.kind, system.slot, ...itemTags(item)]
+    .map(value => String(value ?? "").trim())
+    .filter(Boolean);
   return normalizeSectionLabel(values.join(" "));
 }
 
@@ -227,277 +271,389 @@ function sectionRank(name) {
   return index >= 0 ? index : 500;
 }
 
-function rowTabs(item, use) {
-  const kind = vendorKind(item);
-  const tabs = [kind === "Composant" ? "components" : kind === "Projectile" ? "projectiles" : "bazaar"];
-  if (use.prep > 0) tabs.push("prepared");
-  if (use.known > 0) tabs.push("known");
+function itemTabs(item, context, use) {
+  if (context.shopType === "general") {
+    const kind = vendorKind(item);
+    const tabs = [kind === "Composant" ? "components" : kind === "Projectile" ? "projectiles" : "bazaar"];
+    if (use.prep > 0) tabs.push("prepared");
+    if (use.known > 0) tabs.push("known");
+    return tabs;
+  }
+  if (context.shopType === "armorer") {
+    const kind = shopKindKey(item);
+    if (kind === "projectile" || kind === "ammunition") return ["projectiles"];
+    if (kind === "weapon" || kind === "arme") return ["weapons"];
+    if (kind === "armor" || kind === "armure") return ["armors"];
+    return ["other"];
+  }
+  return [`kind-${shopKindKey(item)}`];
+}
+
+function tabLabel(key) {
+  const labels = {
+    components: "Composants",
+    projectiles: "Projectiles",
+    bazaar: "Bazar",
+    weapons: "Armes",
+    armors: "Armures",
+    other: "Autres"
+  };
+  return labels[key] ?? key.replace(/^kind-/, "").replaceAll("_", " ").replace(/^./, char => char.toUpperCase());
+}
+
+function contextTabs(context, computed) {
+  const tabs = [["all", "Tous"]];
+  if (context.shopType === "general") {
+    const prepCount = computed.filter(entry => entry.use.prep > 0).length;
+    const knownCount = computed.filter(entry => entry.use.known > 0).length;
+    tabs.push(["prepared", `Mémorisés (${prepCount})`], ["known", `Connus (${knownCount})`]);
+  }
+  const keys = new Set();
+  for (const entry of computed) for (const key of itemTabs(entry.item, context, entry.use)) {
+    if (key !== "prepared" && key !== "known") keys.add(key);
+  }
+  const order = ["weapons", "armors", "components", "projectiles", "bazaar", "other"];
+  const sorted = [...keys].sort((left, right) => {
+    const li = order.indexOf(left);
+    const ri = order.indexOf(right);
+    return (li < 0 ? 100 : li) - (ri < 0 ? 100 : ri) || tabLabel(left).localeCompare(tabLabel(right), "fr");
+  });
+  tabs.push(...sorted.map(key => [key, tabLabel(key)]));
   return tabs;
 }
 
-function actionIcon(action, icon, title, disabled = false, extraClass = "") {
-  const attrs = disabled ? 'aria-disabled="true" data-disabled="1"' : `data-action="${action}" role="button" tabindex="0"`;
-  return `<i class="fas ${icon} add2e-vendor-action-icon ${extraClass} ${disabled ? "disabled" : ""}" title="${esc(title)}" aria-label="${esc(title)}" ${attrs}></i>`;
+function itemDetail(context, item, use) {
+  if (context.shopType === "general" && vendorKind(item) === "Composant") {
+    const names = displaySpellNames(item, use);
+    return names.length ? names.join(", ") : "—";
+  }
+  if (context.shopType === "armorer") {
+    const state = usabilityForActor(context.buyer, item);
+    return state?.reason ? `${state.label} — ${state.reason}` : state?.label ?? "—";
+  }
+  return String(item?._shop?.sourceId ?? "—");
 }
 
-function rowHtml(item, context, use, visible = true) {
-  const kind = vendorKind(item);
+function itemMatchesContext(item, context, use) {
+  const tabs = itemTabs(item, context, use);
+  if (context.tab !== "all" && !tabs.includes(context.tab)) return false;
+  const detail = itemDetail(context, item, use);
+  const haystack = lower(`${item.name} ${canonicalItemName(item, context.shopType)} ${shopKindLabel(item, context.shopType)} ${detail} ${bazaarSection(item)}`);
+  return !context.search || haystack.includes(lower(context.search));
+}
+
+function actionButton(action, icon, title, disabled = false) {
+  return `<button type="button" class="add2e-shop-action icon-only" data-action="${action}" title="${esc(title)}" aria-label="${esc(title)}" ${disabled ? 'disabled aria-disabled="true"' : ""}><i class="fas ${icon}"></i></button>`;
+}
+
+function rowHtml(item, context, use) {
   const itemQty = quantity(item);
   const disabled = !context.buyer || itemQty <= 0;
-  const names = displaySpellNames(item, use);
-  const spellLabel = names.length ? names.join(", ") : "—";
-  const gm = context.isGM ? `<td class="col-mj add2e-vendor-gm-actions"><input class="s stock-input" type="number" min="0" value="${itemQty}" title="Stock"><span class="vendor-icon-group">${actionIcon("stock", "fa-boxes-stacked", "Définir le stock", false, "stock")} ${actionIcon("assign", "fa-hand-holding", "Donner à l’acheteur", disabled, "assign")}</span></td>` : "";
-  return `<tr data-id="${esc(item.id)}" style="${visible ? "" : "display:none"}"><td class="col-article">${esc(articleLabel(context, item))}</td><td class="col-type" title="${esc(kind)}"><span class="type-pill">${esc(kind)}</span></td><td class="col-sorts" title="${esc(spellLabel)}">${esc(spellLabel)}</td><td class="col-prix">${esc(priceLabel(item))}</td><td class="col-stock">${itemQty}</td><td class="col-qty"><input class="q" type="number" min="1" value="1" title="Quantité"></td><td class="col-action">${actionIcon("buy", "fa-cart-shopping", "Acheter", disabled, "buy")}</td>${gm}</tr>`;
-}
-
-function itemVisibleForContext(item, context, use) {
-  const tabs = rowTabs(item, use);
-  const spellNames = displaySpellNames(item, use);
-  const haystack = lower(`${item.name} ${canonicalItemName(item)} ${articleLabel(context, item)} ${vendorKind(item)} ${bazaarSection(item)} ${spellNames.join(" ")}`);
-  return (context.tab === "all" || tabs.includes(context.tab)) && (!context.search || haystack.includes(lower(context.search)));
+  const typeLabel = shopKindLabel(item, context.shopType);
+  const detail = itemDetail(context, item, use);
+  const usability = context.shopType === "armorer" ? usabilityForActor(context.buyer, item) : null;
+  const detailHtml = usability
+    ? `<span class="add2e-shop-status-pill ${usability.usable === false ? "unusable" : ""}" title="${esc(usability.reason ?? "")}">${esc(usability.label ?? detail)}</span>`
+    : esc(detail);
+  const gm = context.isGM
+    ? `<td class="add2e-shop-col-gm"><span class="add2e-shop-gm-actions"><input class="shop-stock" type="number" min="0" value="${itemQty}" title="Stock">${actionButton("stock", "fa-boxes-stacked", "Définir le stock")}${actionButton("assign", "fa-hand-holding", "Donner à l’acheteur", disabled)}</span></td>`
+    : "";
+  return `<tr data-id="${esc(item.id)}"><td class="add2e-shop-col-article">${esc(articleLabel(context, item))}</td><td class="add2e-shop-col-type"><span class="add2e-shop-type-pill">${esc(typeLabel)}</span></td><td class="add2e-shop-col-detail" title="${esc(detail)}">${detailHtml}</td><td class="add2e-shop-col-price">${esc(priceLabel(item))}</td><td class="add2e-shop-col-stock">${itemQty}</td><td class="add2e-shop-col-qty"><input class="shop-qty" type="number" min="1" value="1" title="Quantité"></td><td class="add2e-shop-col-action">${actionButton("buy", "fa-cart-shopping", "Acheter", disabled)}</td>${gm}</tr>`;
 }
 
 function tableHeader(context) {
-  return `<thead><tr><th class="col-article">Article</th><th class="col-type">Type</th><th class="col-sorts">Sorts</th><th class="col-prix">Prix</th><th class="col-stock">Stock</th><th class="col-qty">Qté</th><th class="col-action"></th>${context.isGM ? '<th class="col-mj">MJ</th>' : ""}</tr></thead>`;
+  return `<thead><tr><th class="add2e-shop-col-article">Article</th><th class="add2e-shop-col-type">Type</th><th class="add2e-shop-col-detail">Détails</th><th class="add2e-shop-col-price">Prix</th><th class="add2e-shop-col-stock">Stock</th><th class="add2e-shop-col-qty">Qté</th><th class="add2e-shop-col-action"></th>${context.isGM ? '<th class="add2e-shop-col-gm">MJ</th>' : ""}</tr></thead>`;
 }
 
 function renderFlatTable(context, rows) {
-  return `<div class="add2e-vendor-scroll"><table class="add2e-vendor-table">${tableHeader(context)}<tbody>${rows}</tbody></table></div>`;
+  return `<div class="add2e-shop-scroll"><table class="add2e-shop-table">${tableHeader(context)}<tbody>${rows || `<tr><td colspan="${context.isGM ? 8 : 7}" class="add2e-shop-empty">Aucun article.</td></tr>`}</tbody></table></div>`;
 }
 
-function renderBazaarAccordion(context) {
+function renderGeneralBazaar(context, computed) {
   const groups = new Map();
-  for (const item of context.items) {
-    if (!isBazaarItem(item)) continue;
-    const use = usage(context.buyer, item);
-    if (!itemVisibleForContext(item, context, use)) continue;
-    const section = bazaarSection(item);
+  for (const entry of computed) {
+    if (!isStockItem(entry.item) || !itemMatchesContext(entry.item, context, entry.use)) continue;
+    const section = bazaarSection(entry.item);
     if (!groups.has(section)) groups.set(section, []);
-    groups.get(section).push({ item, use });
+    groups.get(section).push(entry);
   }
   const sections = [...groups.entries()].sort(([left], [right]) => sectionRank(left) - sectionRank(right) || left.localeCompare(right, "fr"));
-  if (!sections.length) return '<div class="add2e-vendor-scroll"><p class="a2e-muted">Aucun article dans le bazard.</p></div>';
-  return `<div class="add2e-vendor-scroll add2e-vendor-bazaar-list">${sections.map(([section, entries]) => {
-    entries.sort((left, right) => String(canonicalItemName(left.item)).localeCompare(String(canonicalItemName(right.item)), "fr"));
-    const rows = entries.map(entry => rowHtml(entry.item, context, entry.use, true)).join("");
-    return `<details class="add2e-vendor-bazaar-section"><summary><span>${esc(section)}</span><strong>${entries.length}</strong></summary><table class="add2e-vendor-table">${tableHeader(context)}<tbody>${rows}</tbody></table></details>`;
+  if (!sections.length) return '<div class="add2e-shop-scroll"><p class="add2e-shop-empty">Aucun article dans le bazar.</p></div>';
+  return `<div class="add2e-shop-scroll">${sections.map(([section, entries]) => {
+    entries.sort((left, right) => canonicalItemName(left.item, context.shopType).localeCompare(canonicalItemName(right.item, context.shopType), "fr"));
+    return `<details class="add2e-shop-section"><summary><span>${esc(section)}</span><strong>${entries.length}</strong></summary><table class="add2e-shop-table">${tableHeader(context)}<tbody>${entries.map(entry => rowHtml(entry.item, context, entry.use)).join("")}</tbody></table></details>`;
   }).join("")}</div>`;
 }
 
-function vendorStyle() {
-  return `<style>.add2e-merchant-app{background:#e7d29a;color:#2b2113}.add2e-merchant-app section{background:linear-gradient(180deg,#f0dfab 0%,#e4c985 100%);padding:0 .65rem .65rem}.add2e-merchant-app p{margin:.45rem 0 .5rem;padding:.42rem .6rem;border:1px solid rgba(110,76,23,.22);border-radius:8px;background:rgba(255,250,236,.76)}.add2e-merchant-app select.buyer,.add2e-merchant-app input.search{border:1px solid rgba(88,56,13,.45);border-radius:7px;background:#fffbf0;color:#2d210f;font-weight:800}.add2e-merchant-app input.search{width:100%;box-sizing:border-box;margin:.35rem 0 .6rem;padding:.4rem .6rem}.add2e-merchant-app button[data-tab]{height:28px;margin:0 .22rem .38rem 0;padding:0 .7rem;border:1px solid rgba(81,52,16,.42);border-radius:7px;background:linear-gradient(180deg,#6a4518,#49300f);color:#f8e7b4;font-weight:900}.add2e-merchant-app button[data-tab][style*="outline"]{background:linear-gradient(180deg,#d8ad56,#9a6d23)!important;color:#201506;outline:2px solid rgba(255,255,255,.9)!important}.add2e-merchant-app .add2e-vendor-toolbar-icon{display:inline-flex;margin:0 0 .38rem .28rem;color:#4b3210;font-size:1.05rem;cursor:pointer}.add2e-merchant-app .add2e-vendor-scroll{max-height:420px;overflow-y:auto;padding-right:6px;margin-top:6px}.add2e-merchant-app .add2e-vendor-bazaar-section{display:block;margin:0 0 8px;border:1px solid rgba(76,51,16,.32);border-radius:9px;background:rgba(255,248,226,.56);overflow:hidden}.add2e-merchant-app .add2e-vendor-bazaar-section>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 11px;background:linear-gradient(180deg,#4a3418,#33240f);color:#f4dc9d;font-weight:900}.add2e-merchant-app .add2e-vendor-bazaar-section:not([open]) table{display:none}.add2e-merchant-app .add2e-vendor-table{width:100%;table-layout:fixed;border-collapse:collapse;background:#fff7df}.add2e-merchant-app th{position:sticky;top:0;background:#5a3a12;color:#f5e1a9;text-transform:uppercase;font-size:.74em;padding:.34rem .42rem}.add2e-merchant-app td{padding:.24rem .42rem;border-bottom:1px solid rgba(99,70,24,.16);overflow:hidden;text-overflow:ellipsis}.add2e-merchant-app tr:nth-child(odd){background:#fffaf0}.add2e-merchant-app tr:nth-child(even){background:#f6edcf}.add2e-merchant-app tr:hover{background:#f3dda2}.add2e-merchant-app .col-article{width:24%;font-weight:900;white-space:nowrap}.add2e-merchant-app .col-type{width:9%;white-space:nowrap}.add2e-merchant-app .col-sorts{width:27%;white-space:normal;line-height:1.25;color:#5c492a;font-size:.86em}.add2e-merchant-app .col-prix{width:8%;white-space:nowrap;font-weight:900;color:#4d3107}.add2e-merchant-app .col-stock{width:6%;white-space:nowrap;text-align:center;font-weight:900}.add2e-merchant-app .col-qty{width:6%;white-space:nowrap;text-align:center}.add2e-merchant-app .col-action{width:5%;white-space:nowrap;text-align:center}.add2e-merchant-app .col-mj{width:15%;white-space:nowrap;text-align:right}.add2e-merchant-app .type-pill{display:inline-flex;max-width:100%;padding:1px 7px;border-radius:999px;background:#ead79b;color:#352408;font-size:.82em;font-weight:900}.add2e-merchant-app .q,.add2e-merchant-app .s{height:23px;min-height:23px;text-align:center;border:1px solid rgba(120,82,28,.42);border-radius:6px;background:#fffdf2;color:#2d210f;font-weight:900}.add2e-merchant-app .q{width:42px}.add2e-merchant-app .stock-input{width:48px;margin-right:5px}.add2e-merchant-app .vendor-icon-group{display:inline-flex;gap:8px}.add2e-merchant-app .add2e-vendor-action-icon{display:inline-flex;align-items:center;justify-content:center;min-width:16px;padding:0;border:0;background:transparent;font-size:1.02rem;color:#4b3210;cursor:pointer}.add2e-merchant-app .add2e-vendor-action-icon.buy{color:#1f6b37}.add2e-merchant-app .add2e-vendor-action-icon.assign{color:#235a8d}.add2e-merchant-app .add2e-vendor-action-icon.disabled{opacity:.28;cursor:not-allowed}</style>`;
-}
-
-async function confirmPlayerBuy(item, qty) {
+async function confirmPlayerBuy(item, context, requested) {
   if (typeof globalThis.add2eDialogConfirm !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
-  const total = formatMoney(priceCopper(item) * qty);
   return globalThis.add2eDialogConfirm({
     add2eTheme: "parchment",
     add2ePrimaryAction: "yes",
-    add2eClasses: ["add2e-vendor-buy-confirm"],
+    add2eClasses: ["add2e-shop-buy-confirm"],
     window: { title: "Confirmer l’achat" },
-    content: `<p>Acheter <b>${qty} × ${esc(canonicalItemName(item))}</b> pour <b>${total}</b> ?</p>`,
+    content: `<p>Acheter <b>${requested} × ${esc(canonicalItemName(item, context.shopType))}</b> pour <b>${formatMoney(priceCopper(item) * requested)}</b> ?</p>`,
     yes: { label: "Acheter" },
     no: { label: "Annuler" },
     modal: true
   });
 }
 
-class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
-  static DEFAULT_OPTIONS = { id: "add2e-merchant-{id}", classes: ["add2e", "add2e-merchant-app"], tag: "section", window: { title: "Marchand ADD2E", resizable: true }, position: { width: 980, height: 620 } };
+class Add2eShopApp extends foundry.applications.api.ApplicationV2 {
+  static DEFAULT_OPTIONS = {
+    id: "add2e-shop-{id}",
+    classes: ["add2e", "add2e-shop-app"],
+    tag: "section",
+    window: { title: "Boutique ADD2E", resizable: true },
+    position: { width: 1040, height: 650 }
+  };
 
-  constructor({ vendor, buyer } = {}, options = {}) {
+  constructor({ shop, buyer } = {}, options = {}) {
     super(options);
-    this.vendor = vendor;
+    this.shop = shop;
     this.buyer = buyer ?? getBuyer();
     this.tab = "all";
     this.search = "";
     this.itemsById = new Map();
   }
 
-  get title() { return `${this.vendor?.name ?? "Marchand"}${this.buyer ? ` — ${this.buyer.name}` : ""}`; }
+  get title() {
+    const definition = getShopDefinition(this.shop);
+    const label = this.shop?.name ?? definition?.label ?? "Boutique";
+    return `${label}${this.buyer ? ` — ${this.buyer.name}` : ""}`;
+  }
 
   async _prepareContext() {
-    const items = await getVendorDisplayItems(this.vendor);
+    const definition = getShopDefinition(this.shop);
+    if (!definition) throw new Error(`Type de boutique ADD2E inconnu pour ${this.shop?.name ?? "cet acteur"}.`);
+    const items = await getShopDisplayItems(this.shop);
     this.itemsById = new Map(items.map(item => [String(item.id), item]));
-    return { vendor: this.vendor, buyer: this.buyer, items, isGM: game.user?.isGM === true, tab: this.tab, search: this.search };
+    return {
+      shop: this.shop,
+      shopType: definition.id,
+      definition,
+      buyer: this.buyer,
+      items,
+      isGM: game.user?.isGM === true,
+      tab: this.tab,
+      search: this.search
+    };
   }
 
   async _renderHTML(context) {
-    if (context.tab === "equipment") context.tab = "bazaar";
-    let prepCount = 0;
-    let knownCount = 0;
-    const computed = context.items.map(item => ({ item, use: usage(context.buyer, item) }));
-    for (const entry of computed) {
-      if (entry.use.prep > 0) prepCount += 1;
-      if (entry.use.known > 0) knownCount += 1;
-    }
-    const nav = [["all", "Tous"], ["prepared", `Mémorisés (${prepCount})`], ["known", `Connus (${knownCount})`], ["components", "Composants"], ["projectiles", "Projectiles"], ["bazaar", "Bazard"]]
-      .map(([id, label]) => `<button data-tab="${id}" ${context.tab === id ? "style='outline:2px solid #fff'" : ""}>${label}</button>`).join("");
-    const visibleRows = computed
-      .filter(({ item, use }) => context.tab !== "bazaar" && itemVisibleForContext(item, context, use))
-      .map(({ item, use }) => rowHtml(item, context, use, true)).join("");
-    const list = context.tab === "bazaar"
-      ? renderBazaarAccordion(context)
-      : renderFlatTable(context, visibleRows || `<tr><td colspan="${context.isGM ? 8 : 7}" class="a2e-muted">Aucun article.</td></tr>`);
-    const buyer = context.isGM ? `<select class="buyer">${buyerOptions(context.buyer?.id)}</select>` : `<b>${esc(context.buyer?.name ?? "aucun")}</b>`;
-    const restock = context.isGM ? '<i class="fas fa-rotate add2e-vendor-toolbar-icon" data-action="restock" role="button" tabindex="0" title="Restock global" aria-label="Restock global"></i>' : "";
-    const div = document.createElement("section");
-    div.innerHTML = `${vendorStyle()}<p><span>Acheteur :</span> ${buyer} <strong>${context.buyer ? esc(formatMoney(getMoney(context.buyer))) : ""}</strong></p><div>${nav}${restock}</div><input class="search" value="${esc(context.search)}" placeholder="Recherche">${list}`;
-    return div;
+    const computed = context.items.map(item => ({ item, use: context.shopType === "general" ? componentUsage(context.buyer, item) : { known: 0, prep: 0, names: [] } }));
+    const tabs = contextTabs(context, computed);
+    if (!tabs.some(([key]) => key === this.tab)) this.tab = "all";
+    context.tab = this.tab;
+    const visible = computed.filter(entry => itemMatchesContext(entry.item, context, entry.use));
+    const table = context.shopType === "general" && context.tab === "bazaar"
+      ? renderGeneralBazaar(context, visible)
+      : renderFlatTable(context, visible.map(entry => rowHtml(entry.item, context, entry.use)).join(""));
+    const buyer = context.isGM
+      ? `<select class="add2e-shop-buyer"><option value="">Gestion MJ</option>${buyerOptions(context.buyer?.id)}</select>`
+      : `<b>${esc(context.buyer?.name ?? "aucun")}</b>`;
+    const restock = context.isGM ? actionButton("restock", "fa-rotate", "Restock global") : "";
+    const root = document.createElement("div");
+    root.className = "add2e-dialog-shell add2e-shop-content";
+    root.dataset.add2eDialogUi = ADD2E_SHOP_APP_VERSION;
+    root.dataset.add2eDialogTheme = "parchment";
+    root.dataset.add2eWindowClass = "add2e-shop-window";
+    root.dataset.add2ePrimaryAction = "";
+    root.innerHTML = `<div class="add2e-shop-summary"><span>Acheteur : ${buyer}</span><strong class="add2e-shop-money">${context.buyer ? esc(formatMoney(getMoney(context.buyer))) : ""}</strong></div><div class="add2e-shop-toolbar"><div class="add2e-shop-tabs">${tabs.map(([key, label]) => `<button type="button" data-tab="${esc(key)}" class="${context.tab === key ? "active" : ""}">${esc(label)}</button>`).join("")}</div>${restock}</div><input class="add2e-shop-search" value="${esc(context.search)}" placeholder="Recherche">${table}`;
+    return root;
   }
 
-  _replaceHTML(result, content) { content.replaceChildren(result); }
+  _replaceHTML(result, content) {
+    content.replaceChildren(result);
+  }
 
-  async _onRender(context, options) {
+  async _onRender(context, options = {}) {
     await super._onRender?.(context, options);
     const root = this.element;
     if (!root?.querySelector) return;
-    root.querySelector(".buyer")?.addEventListener("change", event => { this.buyer = game.actors.get(event.currentTarget.value) ?? this.buyer; this.render({ force: true }); });
-    root.querySelector(".search")?.addEventListener("input", event => { this.search = event.currentTarget.value ?? ""; this.render({ force: true }); });
-    root.querySelectorAll("button[data-tab]").forEach(button => button.addEventListener("click", event => { this.tab = event.currentTarget.dataset.tab; this.render({ force: true }); }));
-    root.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", event => this.click(event)));
+    root.querySelector(".add2e-shop-buyer")?.addEventListener("change", event => {
+      this.buyer = game.actors?.get?.(event.currentTarget.value) ?? null;
+      this.render({ force: true });
+    });
+    root.querySelector(".add2e-shop-search")?.addEventListener("input", event => {
+      this.search = event.currentTarget.value ?? "";
+      this.render({ force: true });
+    });
+    root.querySelectorAll("button[data-tab]").forEach(button => button.addEventListener("click", event => {
+      this.tab = event.currentTarget.dataset.tab ?? "all";
+      this.render({ force: true });
+    }));
+    root.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", event => this.handleAction(event)));
   }
 
-  async playerBuy(item, qty) {
-    qty = Math.max(1, Math.floor(Number(qty) || 1));
-    if (!this.vendor || !this.buyer || !item) return false;
-    if (quantity(item) < qty) return alertBox("Stock insuffisant", `${canonicalItemName(item)} : stock disponible ${quantity(item)}.`).then(() => false);
-    if (!await confirmPlayerBuy(item, qty)) return false;
-    return requestShopBuy({ shop: this.vendor, buyer: this.buyer, item, quantity: qty });
+  rowItem(target) {
+    const row = target?.closest?.("tr[data-id]");
+    if (!row) return { row: null, item: null };
+    return { row, item: this.itemsById.get(String(row.dataset.id ?? "")) ?? null };
   }
 
-  async click(event) {
-    const target = event.currentTarget;
-    if (target?.dataset?.disabled === "1") return;
-    const action = target?.dataset?.action;
+  async handleAction(event) {
+    const action = event.currentTarget?.dataset?.action;
     if (!action) return;
     if (action === "restock") {
-      await restockAll(this.vendor);
+      if (game.user?.isGM) await restockShop(this.shop);
       return this.render({ force: true });
     }
 
-    const row = target.closest("tr[data-id]");
-    const item = row ? this.itemsById.get(String(row.dataset.id ?? "")) ?? null : null;
+    const { row, item } = this.rowItem(event.currentTarget);
     if (!row || !item) return;
-
     if (action === "stock") {
-      const stockInput = row.querySelector(".s");
-      if (!stockInput) return;
-      await setStock(this.vendor, item, stockInput.value);
+      if (!game.user?.isGM) return;
+      await setShopStock(this.shop, item, row.querySelector(".shop-stock")?.value);
       return this.render({ force: true });
     }
     if (action === "assign") return this.assign(item);
     if (action !== "buy") return;
 
-    const requestedQuantity = row.querySelector(".q")?.value;
-    if (!game.user?.isGM) return this.playerBuy(item, requestedQuantity);
-    const ok = await buy({ vendor: this.vendor, buyer: this.buyer, item, quantity: requestedQuantity });
-    if (ok) this.render({ force: true });
+    const requested = Math.max(1, Math.floor(Number(row.querySelector(".shop-qty")?.value) || 1));
+    if (!this.buyer) return alertBox("Aucun acheteur", "Choisis d’abord un acteur acheteur présent sur la scène.");
+    if (quantity(item) < requested) return alertBox("Stock insuffisant", `${canonicalItemName(item, shopType(this.shop))} : stock disponible ${quantity(item)}.`);
+
+    if (game.user?.isGM) {
+      const result = await shopBuyLocal({ shop: this.shop, buyer: this.buyer, item, quantity: requested }, { confirm: true });
+      if (!result.ok && !result.cancelled) await alertBox("Achat impossible", result.message);
+      if (result.ok) ui.notifications?.info?.(result.message);
+      if (result.ok) this.render({ force: true });
+      return result.ok;
+    }
+
+    const context = { shopType: shopType(this.shop) };
+    if (!await confirmPlayerBuy(item, context, requested)) return false;
+    return requestShopBuy({ shop: this.shop, buyer: this.buyer, item, quantity: requested });
   }
 
   async assign(item) {
-    if (!item) return;
+    if (!game.user?.isGM) return false;
     if (!this.buyer) return alertBox("Aucun acteur", "Choisis d’abord un acteur acheteur présent sur la scène.");
-    const result = await assignItemToToken({ vendor: this.vendor, item, token: { actor: this.buyer, name: this.buyer.name }, quantity: 1 });
-    result.ok ? ui.notifications.info(result.message) : ui.notifications.warn(result.message);
+    const result = await assignShopItem({ shop: this.shop, buyer: this.buyer, item, quantity: 1 });
+    result.ok ? ui.notifications?.info?.(result.message) : ui.notifications?.warn?.(result.message);
     this.render({ force: true });
+    return result.ok;
   }
 }
 
 Hooks.on("add2eShopMoneyChanged", data => {
-  if (data?.shopType !== "general") return;
-  for (const app of MERCHANT_APPS.values()) {
-    if (!app?.rendered || app.vendor?.id !== data.shopId) continue;
-    if (data.buyerId && app.buyer?.id !== data.buyerId) continue;
+  for (const app of SHOP_APPS.values()) {
+    if (!app?.rendered || app.shop?.id !== data?.shopId) continue;
+    if (data?.buyerId && app.buyer?.id !== data.buyerId) continue;
     app.render({ force: true });
   }
 });
 
-function openLock(actor) {
-  const id = `${game.user?.id}:${actor?.id}`;
-  const now = Date.now();
-  if (MERCHANT_OPEN_LOCKS.has(id) && now - MERCHANT_OPEN_LOCKS.get(id) < 750) return false;
-  MERCHANT_OPEN_LOCKS.set(id, now);
-  return true;
+async function resolveShop(type, shop = null) {
+  if (shop && getShopDefinition(shop)) return shop;
+  if (type === "general") {
+    let actor = await findVendor();
+    if (!actor && game.user?.isGM) actor = await createVendor();
+    return actor;
+  }
+  if (type === "armorer") {
+    let actor = findArmorer();
+    if (!actor && game.user?.isGM) actor = await createArmorer();
+    return actor;
+  }
+  return null;
 }
 
-async function openFromToken(token) {
-  if (!isVendorActor(token?.actor) || !openLock(token.actor)) return false;
-  await openVendor({ vendor: token.actor, buyer: getBuyer() });
-  return true;
-}
-
-export async function openVendor({ vendor = null, buyer = null } = {}) {
-  vendor = vendor ?? await findVendor();
-  if (!vendor && game.user?.isGM) vendor = await createVendor();
-  if (!vendor) return alertBox("Marchand introuvable", "Le marchand doit être créé côté MJ.");
+export async function openShop({ shop = null, type = null, buyer = null } = {}) {
+  const resolvedType = shopType(shop ?? type);
+  shop = await resolveShop(resolvedType, shop);
+  if (!shop) return alertBox("Boutique introuvable", "Le MJ doit créer cette boutique avant son utilisation.");
+  const definition = getShopDefinition(shop);
+  if (!definition) return alertBox("Boutique invalide", "Cet acteur ne possède pas de définition de boutique ADD2E.");
   buyer = buyer ?? getBuyer();
   if (!buyer && !game.user?.isGM) return alertBox("Aucun acheteur", "Aucun personnage assigné ou sélectionné.");
-  const id = `${game.user?.id}:${vendor.id}`;
-  const old = MERCHANT_APPS.get(id);
-  if (old?.rendered) {
-    old.vendor = vendor;
-    old.buyer = buyer;
-    old.render({ force: true });
-    old.bringToFront?.();
-    return old;
+
+  const key = `${game.user?.id}:${shop.id}`;
+  const current = SHOP_APPS.get(key);
+  if (current?.rendered) {
+    current.shop = shop;
+    current.buyer = buyer;
+    current.render({ force: true });
+    current.bringToFront?.();
+    return current;
   }
-  const app = new Add2eMerchantApp({ vendor, buyer });
-  MERCHANT_APPS.set(id, app);
+  const app = new Add2eShopApp({ shop, buyer });
+  SHOP_APPS.set(key, app);
   app.render({ force: true });
   return app;
 }
 
-export function bindAllVendorTokens() {
+export function openVendor({ vendor = null, buyer = null } = {}) {
+  return openShop({ shop: vendor, type: "general", buyer });
+}
+
+export function openArmorer({ armorer = null, buyer = null } = {}) {
+  return openShop({ shop: armorer, type: "armorer", buyer });
+}
+
+async function openShopFromToken(token) {
+  if (!getShopDefinition(token?.actor)) return false;
+  await openShop({ shop: token.actor, buyer: getBuyer() });
+  return true;
+}
+
+export function bindAllShopTokens() {
   for (const token of canvas?.tokens?.placeables ?? []) {
-    if (!isVendorActor(token?.actor) || token.__add2eMerchantTapV4) continue;
-    token.__add2eMerchantTapV4 = true;
+    if (!getShopDefinition(token?.actor) || SHOP_TOKEN_BINDINGS.has(token)) continue;
+    SHOP_TOKEN_BINDINGS.add(token);
     try {
       token.cursor = "pointer";
       token.eventMode = "static";
       token.interactive = true;
-      token.on?.("pointertap", event => { event?.stopPropagation?.(); openFromToken(token); });
-      token.on?.("pointerup", event => { event?.stopPropagation?.(); openFromToken(token); });
-    } catch (_) {}
+      token.on?.("pointertap", event => {
+        event?.stopPropagation?.();
+        void openShopFromToken(token);
+      });
+    } catch (error) {
+      console.warn("[ADD2E][SHOP][TOKEN_BIND]", token?.name ?? token?.id, error);
+    }
   }
 }
 
-export function patchVendorTokenClick() {
-  if (globalThis.__ADD2E_MERCHANT_UNIT_CLICK_V4) return;
-  globalThis.__ADD2E_MERCHANT_UNIT_CLICK_V4 = true;
-  const TokenClass = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? globalThis.Token;
-  const prototype = TokenClass?.prototype;
-  if (prototype && typeof prototype._onClickLeft === "function") {
-    const original = prototype._onClickLeft;
-    prototype._onClickLeft = function(event) {
-      const result = original.call(this, event);
-      if (isVendorActor(this.actor)) setTimeout(() => openFromToken(this), 0);
-      return result;
-    };
-  }
-  Hooks.on("canvasReady", bindAllVendorTokens);
-  Hooks.on("createToken", () => setTimeout(bindAllVendorTokens, 100));
-  Hooks.on("updateToken", () => setTimeout(bindAllVendorTokens, 100));
-  setTimeout(bindAllVendorTokens, 500);
+export function registerShopTokenHooks() {
+  if (shopTokenHooksRegistered) return;
+  shopTokenHooksRegistered = true;
+  Hooks.on("canvasReady", bindAllShopTokens);
+  Hooks.on("createToken", () => window.setTimeout(bindAllShopTokens, 50));
+  Hooks.on("updateToken", () => window.setTimeout(bindAllShopTokens, 50));
+  window.setTimeout(bindAllShopTokens, 250);
 }
 
-export function registerVendorDirectoryButton() {
+function directoryButton(root, className, label, callback) {
+  if (root.querySelector(`.${className}`)) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = className;
+  button.textContent = label;
+  button.addEventListener("click", callback);
+  root.querySelector(".directory-footer")?.prepend(button);
+}
+
+export function registerShopDirectoryButtons() {
+  if (shopDirectoryHookRegistered) return;
+  shopDirectoryHookRegistered = true;
   Hooks.on("renderActorDirectory", (_app, html) => {
     if (!game.user?.isGM) return;
     const root = html?.jquery ? html[0] : html;
-    if (!root?.querySelector || root.querySelector(".add2e-open-default-vendor")) return;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "add2e-open-default-vendor";
-    button.textContent = "Marchand";
-    button.addEventListener("click", () => openVendor());
-    root.querySelector(".directory-footer")?.prepend(button);
+    if (!root?.querySelector) return;
+    directoryButton(root, "add2e-open-armorer", "Armurier", () => openArmorer());
+    directoryButton(root, "add2e-open-default-vendor", "Marchand", () => openVendor());
   });
 }
 
-export function registerUiGlobals() {
+export function registerShopUiGlobals() {
   game.add2e = game.add2e ?? {};
+  game.add2e.openShop = openShop;
   game.add2e.openVendor = openVendor;
-  game.add2e.vendorAppVersion = VERSION;
+  game.add2e.openArmorer = openArmorer;
+  game.add2e.shopAppVersion = ADD2E_SHOP_APP_VERSION;
+  globalThis.add2eOpenShop = openShop;
+  globalThis.add2eOpenArmorer = openArmorer;
+  globalThis.ADD2E_SHOP_APP_VERSION = ADD2E_SHOP_APP_VERSION;
 }
