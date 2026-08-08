@@ -1,9 +1,9 @@
 // ADD2E — onUse Magicien : Lévitation.
-// Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
+// Compatible Foundry V13/V14/V15 — API commune des fenêtres ADD2E.
 // La mécanique est matérialisée par un ActiveEffect et des modificateurs du moteur canonique.
 
 return await (async () => {
-  const VERSION = "2026-07-30-levitation-canonical-movement-v1";
+  const VERSION = "2026-08-08-levitation-linked-spell-v2";
   const TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][LEVITATION]";
   const SPELL = Object.freeze({
     name: "Lévitation",
@@ -105,7 +105,9 @@ return await (async () => {
   }
 
   function magicPowerContext(actorDocument) {
-    const virtual = castDocument?.system?.isPower === true || String((typeof args !== "undefined" && args?.[0]?.castMode) ?? "") === "power";
+    const virtual = castDocument?.system?.isPower === true
+      || castDocument?.system?.isObjectPower === true
+      || String((typeof args !== "undefined" && args?.[0]?.castMode) ?? "") === "power";
     if (!virtual) return { active: false, item: null, power: null, powerIndex: null, permanent: false };
 
     const sourceId = String(
@@ -118,8 +120,8 @@ return await (async () => {
     const powerIndex = Math.max(0, Math.floor(number(castDocument?.system?.powerIndex ?? castDocument?.flags?.add2e?.powerIndex, 0)));
     const powers = objectItem?.system?.pouvoirs ?? objectItem?.system?.powers ?? [];
     const power = Array.isArray(powers) ? powers[powerIndex] ?? null : null;
-    const chargeMode = norm(power?.chargesMode ?? power?.modeCharges ?? power?.mode_charges);
-    const durationText = norm(power?.duree ?? power?.duration ?? power?.parameters?.duree ?? power?.parameters?.duration);
+    const chargeMode = norm(power?.chargesMode ?? power?.modeCharges ?? power?.mode_charges ?? objectItem?.system?.charges?.mode);
+    const durationText = norm(power?.duree ?? power?.duration ?? power?.parameters?.duree ?? power?.parameters?.duration ?? objectItem?.system?.duree);
     const permanent = chargeMode === "permanent"
       || durationText.includes("tant_que_porte")
       || durationText.includes("permanent")
@@ -127,7 +129,15 @@ return await (async () => {
     return { active: true, item: objectItem, power, powerIndex, permanent };
   }
 
-  function selectedTarget(casterActor, casterToken) {
+  function levitationRules() {
+    const raw = castDocument?.system?.add2eLevitation
+      ?? castDocument?.system?.levitation
+      ?? {};
+    return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  }
+
+  function selectedTarget(casterActor, casterToken, rules) {
+    if (rules.forceSelf === true) return { valid: true, token: casterToken, actor: casterActor };
     const selected = Array.from(game.user?.targets ?? []).filter(target => target?.actor);
     if (selected.length > 1) {
       ui.notifications.warn(`${SPELL.name} : sélectionnez au maximum une cible.`);
@@ -182,21 +192,79 @@ return await (async () => {
     return Math.max(0, number(result?.poidsKg, 0));
   }
 
-  async function askSavingThrow(targetName) {
-    const DialogV2 = foundry?.applications?.api?.DialogV2;
-    if (!DialogV2?.wait) throw new Error(`${SPELL.name} : DialogV2 est indisponible.`);
-    return DialogV2.wait({
-      window: { title: `${SPELL.name} — jet de protection`, icon: "fas fa-arrow-up" },
+  async function chooseSaveMode(targetName) {
+    if (typeof globalThis.add2eDialogWait !== "function") {
+      throw new Error("L’API de fenêtre ADD2E est indisponible.");
+    }
+    return globalThis.add2eDialogWait({
+      add2eTheme: "wizard",
+      add2ePrimaryAction: "roll",
+      add2eClasses: ["add2e-levitation-save-dialog"],
+      window: { title: `${SPELL.name} — jet de protection` },
       modal: true,
-      rejectClose: false,
-      content: `<form class="add2e-dialog-v2"><p><b>${esc(targetName ?? "La cible")}</b> peut annuler l’effet par un jet de protection si elle n’est pas consentante.</p><p>Choisissez le résultat du jet ou appliquez directement l’effet à une cible consentante.</p></form>`,
+      content: `
+        <form class="add2e-levitation-save-form">
+          <p><b>${esc(targetName ?? "La cible")}</b> peut annuler l’effet par un jet de protection contre les sorts si elle n’est pas consentante.</p>
+          <p>Une cible consentante ne fait pas de jet.</p>
+        </form>
+      `,
       buttons: [
-        { action: "failed", label: "Consentante / jet raté", icon: "fas fa-check", default: true, callback: () => "failed" },
-        { action: "saved", label: "Jet réussi", icon: "fas fa-shield-halved", callback: () => "saved" },
-        { action: "cancel", label: "Annuler", icon: "fas fa-times", callback: () => null }
+        {
+          action: "roll",
+          label: "Lancer le jet",
+          icon: "<i class='fas fa-shield-halved'></i>",
+          default: true,
+          callback: () => "roll"
+        },
+        {
+          action: "consent",
+          label: "Cible consentante",
+          icon: "<i class='fas fa-check'></i>",
+          callback: () => "consent"
+        },
+        {
+          action: "cancel",
+          label: "Annuler",
+          icon: "<i class='fas fa-times'></i>",
+          callback: () => null
+        }
       ],
       close: () => null
     });
+  }
+
+  async function rollCanonicalSave(targetActor) {
+    const engine = globalThis.Add2eEffectsEngine;
+    if (typeof engine?.rollActionSave !== "function") {
+      throw new Error("Le résolveur canonique ADD2E des jets de protection est indisponible.");
+    }
+    return engine.rollActionSave(targetActor, "sorts", 0);
+  }
+
+  async function sourceCapacityKg(powerContext, rules, level) {
+    const fixed = number(rules.capacityKg, NaN);
+    if (Number.isFinite(fixed) && fixed > 0) return fixed;
+
+    const formula = String(rules.capacityFormula ?? "").trim();
+    if (formula) {
+      const sourceItem = powerContext?.item ?? null;
+      const stored = number(sourceItem?.flags?.add2e?.levitationCapacityKg, NaN);
+      if (Number.isFinite(stored) && stored > 0) return stored;
+
+      const roll = new Roll(formula);
+      await roll.evaluate();
+      const rolled = Math.max(0, number(roll.total, 0));
+      if (rolled <= 0) throw new Error(`${SPELL.name} : la formule de capacité n’a produit aucune valeur valide.`);
+      if (sourceItem?.update) {
+        await sourceItem.update({ "flags.add2e.levitationCapacityKg": rolled }, {
+          add2eMagicPowerExecution: true,
+          render: false
+        });
+      }
+      return rolled;
+    }
+
+    return SPELL.capacityKgPerLevel * level;
   }
 
   function sourceIdentity(powerContext) {
@@ -372,8 +440,10 @@ return await (async () => {
     return false;
   }
 
+  const powerContext = magicPowerContext(caster);
+  const rules = levitationRules();
   const casterToken = casterTokenFor(caster);
-  const target = selectedTarget(caster, casterToken);
+  const target = selectedTarget(caster, casterToken, rules);
   if (!target.valid || !target.actor) return false;
 
   const targetActor = target.actor;
@@ -394,7 +464,6 @@ return await (async () => {
     }
   }
 
-  const powerContext = magicPowerContext(caster);
   const source = sourceIdentity(powerContext);
   const sourceEffects = matchingEffects(targetActor, source);
   if (powerContext.permanent && sourceEffects.length) {
@@ -413,24 +482,28 @@ return await (async () => {
   }
 
   if (!selfCast) {
-    const saveResult = await askSavingThrow(targetActor.name);
-    if (!saveResult) return false;
-    if (saveResult === "saved") {
-      await createCard({
-        casterActor: caster,
-        targetActor,
-        source,
-        outcome: "Jet de protection réussi",
-        variant: "failure",
-        rows: [{ label: "Effet", value: "Aucune lévitation n’est appliquée." }],
-        message: `${targetActor.name} résiste à la lévitation.`
-      });
-      console.log(`${TAG}[SAVED]`, { caster: caster.name, target: targetActor.name });
-      return true;
+    const saveMode = await chooseSaveMode(targetActor.name);
+    if (!saveMode) return false;
+    if (saveMode === "roll") {
+      const saveResult = await rollCanonicalSave(targetActor);
+      if (!saveResult) return false;
+      if (saveResult.success === true || saveResult.reussi === true || saveResult.saved === true) {
+        await createCard({
+          casterActor: caster,
+          targetActor,
+          source,
+          outcome: "Jet de protection réussi",
+          variant: "failure",
+          rows: [{ label: "Effet", value: "Aucune lévitation n’est appliquée." }],
+          message: `${targetActor.name} résiste à la lévitation.`
+        });
+        console.log(`${TAG}[SAVED]`, { caster: caster.name, target: targetActor.name, saveResult });
+        return true;
+      }
     }
   }
 
-  const capacityKg = SPELL.capacityKgPerLevel * level;
+  const capacityKg = await sourceCapacityKg(powerContext, rules, level);
   const bodyKg = bodyWeightKg(targetActor);
   const carriedKg = carriedWeightKg(targetActor, targetToken);
   const weightKnown = Number.isFinite(bodyKg);
@@ -448,14 +521,22 @@ return await (async () => {
         { label: "Capacité", value: `${capacityKg} kg` },
         { label: "Effet", value: "Aucune lévitation n’est appliquée." }
       ],
-      message: `${targetActor.name} dépasse la masse maximale que le sort peut soulever.`
+      message: `${targetActor.name} dépasse la masse maximale que l’effet peut soulever.`
     });
     console.log(`${TAG}[OVERWEIGHT]`, { caster: caster.name, target: targetActor.name, capacityKg, totalWeightKg });
     return true;
   }
 
-  const verticalSpeed = selfCast ? SPELL.selfVerticalSpeed : SPELL.otherVerticalSpeed;
-  const durationRounds = SPELL.durationRoundsPerLevel * level;
+  const configuredSelfSpeed = number(rules.selfVerticalSpeed, NaN);
+  const configuredOtherSpeed = number(rules.otherVerticalSpeed, NaN);
+  const verticalSpeed = selfCast
+    ? (Number.isFinite(configuredSelfSpeed) && configuredSelfSpeed >= 0 ? configuredSelfSpeed : SPELL.selfVerticalSpeed)
+    : (Number.isFinite(configuredOtherSpeed) && configuredOtherSpeed >= 0 ? configuredOtherSpeed : SPELL.otherVerticalSpeed);
+  const configuredDuration = number(rules.durationRounds, NaN);
+  const durationRounds = Number.isFinite(configuredDuration) && configuredDuration > 0
+    ? Math.floor(configuredDuration)
+    : SPELL.durationRoundsPerLevel * level;
+
   await createEffect({
     targetActor,
     casterActor: caster,
@@ -479,7 +560,7 @@ return await (async () => {
     rows: [
       { label: "Déplacement", value: `vertical uniquement — ${verticalSpeed} m/round` },
       { label: "Horizontal", value: "0 m, sauf appui sur une surface" },
-      { label: "Durée", value: powerContext.permanent ? "Tant que l’effet reste actif" : `${durationRounds} rounds (${level} tour${level > 1 ? "s" : ""})` },
+      { label: "Durée", value: powerContext.permanent ? "Tant que l’effet reste actif" : `${durationRounds} rounds` },
       { label: "Capacité", value: `${capacityKg} kg` },
       { label: "Poids", value: weightKnown ? `${totalWeightKg.toFixed(1)} kg, équipement compris` : `poids corporel non renseigné ; ${carriedKg.toFixed(1)} kg d’équipement comptabilisé` }
     ],
@@ -494,6 +575,7 @@ return await (async () => {
     target: targetActor.name,
     level,
     verticalSpeed,
+    capacityKg,
     permanent: powerContext.permanent,
     weightKnown
   });
