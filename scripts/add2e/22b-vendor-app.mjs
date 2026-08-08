@@ -1,10 +1,11 @@
-// ADD2E — Marchand V2 compact.
-// Version : 2026-07-01-merchant-safe-actions-v3
+// ADD2E — Marchand général ApplicationV2 sur catalogue compendium virtuel.
+// Compatible Foundry V13/V14/V15.
 
 import {
   findVendor,
   createVendor,
   getBuyer,
+  getShopType,
   isVendorActor,
   vendorKind,
   isStockItem,
@@ -18,14 +19,18 @@ import {
   restockAll,
   setStock,
   assignItemToToken,
+  getVendorDisplayItems,
+  requestShopBuy,
+  ownedShopQuantity,
   alertBox,
   esc,
   lower,
   slug
 } from "./22a-vendor-core.mjs";
-import { normalizeShopCurrency, ADD2E_VENDOR_PLAYER_BUY } from "./22x-vendor-socket-bootstrap.mjs";
 
-const VERSION = "2026-07-01-merchant-safe-actions-v3";
+const VERSION = "2026-08-08-merchant-compendium-catalog-v4";
+const MERCHANT_APPS = new Map();
+const MERCHANT_OPEN_LOCKS = new Map();
 
 const arr = value => Array.isArray(value)
   ? value.flatMap(arr)
@@ -71,36 +76,8 @@ function canonicalItemName(item) {
   return vendorKind(item) === "Composant" ? canonicalName(item?.name) : String(item?.name ?? "");
 }
 
-function canonicalStockKey(item) {
-  return vendorKind(item) === "Composant"
-    ? `component:${slug(canonicalItemName(item))}`
-    : `item:${item?.id ?? foundry.utils.randomID()}`;
-}
-
-function preferVisibleStockItem(left, right) {
-  const leftQty = quantity(left);
-  const rightQty = quantity(right);
-  if (leftQty !== rightQty) return leftQty > rightQty ? left : right;
-  const leftPrice = priceCopper(left);
-  const rightPrice = priceCopper(right);
-  if (leftPrice !== rightPrice) return leftPrice <= rightPrice ? left : right;
-  return String(canonicalItemName(left)).localeCompare(String(canonicalItemName(right)), "fr") <= 0 ? left : right;
-}
-
-function collapseCanonicalStock(items = []) {
-  const groups = new Map();
-  for (const item of items) {
-    const key = canonicalStockKey(item);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(item);
-  }
-  return [...groups.values()]
-    .map(group => group.length === 1 ? group[0] : group.reduce(preferVisibleStockItem, group[0]))
-    .sort((left, right) => String(canonicalItemName(left)).localeCompare(String(canonicalItemName(right)), "fr"));
-}
-
 function isShopActor(actor) {
-  return isVendorActor(actor) || actor?.getFlag?.("add2e", "isArmorer") === true || /armurier/i.test(String(actor?.name ?? ""));
+  return !!getShopType(actor);
 }
 
 function sceneActors() {
@@ -138,11 +115,7 @@ function declaredSpellNames(item) {
 }
 
 function linked(item) {
-  return uniq([
-    ...declaredSpellNames(item),
-    item?.name,
-    canonicalItemName(item)
-  ].map(value => String(value ?? "").trim()).filter(Boolean));
+  return uniq([...declaredSpellNames(item), item?.name, canonicalItemName(item)].map(value => String(value ?? "").trim()).filter(Boolean));
 }
 
 function materialNames(value, names = []) {
@@ -175,13 +148,9 @@ function spellKeys(spell) {
 }
 
 function memorized(spell) {
-  try {
-    const value = Number(globalThis.add2eGetTotalMemorizedCount?.(spell));
-    if (Number.isFinite(value) && value > 0) return Math.floor(value);
-  } catch (_) {}
-  const raw = spell?.getFlag?.("add2e", "memorizedByList") ?? spell?.flags?.add2e?.memorizedByList ?? {};
-  if (raw && typeof raw === "object" && !Array.isArray(raw)) return Object.values(raw).reduce((sum, value) => sum + (Number(value) || 0), 0);
-  return Number(spell?.getFlag?.("add2e", "memorizedCount") ?? spell?.flags?.add2e?.memorizedCount ?? 0) || 0;
+  if (typeof globalThis.add2eGetTotalMemorizedCount !== "function") throw new Error("Le résolveur canonique de mémorisation ADD2E est indisponible.");
+  const value = Number(globalThis.add2eGetTotalMemorizedCount(spell));
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
 }
 
 function spells(actor) {
@@ -212,25 +181,8 @@ function displaySpellNames(item, use) {
   return declared.length ? declared : use.names;
 }
 
-function actorItemQty(item) {
-  const value = quantity(item);
-  return value > 0 ? value : 1;
-}
-
-function sameOwnedItem(vendorItem, actorItem) {
-  if (!vendorItem || !actorItem) return false;
-  const vendorName = slug(canonicalItemName(vendorItem));
-  const actorName = slug(canonicalName(actorItem.name));
-  if (!vendorName || vendorName !== actorName) return false;
-  if (isAmmunition(vendorItem) || isAmmunition(actorItem)) return true;
-  const vendorType = String(vendorItem.type ?? "").toLowerCase();
-  const actorType = String(actorItem.type ?? "").toLowerCase();
-  return !vendorType || !actorType || vendorType === actorType || vendorType === "objet" || actorType === "objet";
-}
-
 function ownedQuantity(actor, item) {
-  if (!actor) return 0;
-  return Array.from(actor.items ?? []).filter(actorItem => sameOwnedItem(item, actorItem)).reduce((sum, actorItem) => sum + actorItemQty(actorItem), 0);
+  return actor ? ownedShopQuantity(actor, item) : 0;
 }
 
 function articleLabel(context, item) {
@@ -337,15 +289,18 @@ function vendorStyle() {
 }
 
 async function confirmPlayerBuy(item, qty) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (typeof globalThis.add2eDialogConfirm !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
   const total = formatMoney(priceCopper(item) * qty);
-  return DialogV2?.confirm?.({
+  return globalThis.add2eDialogConfirm({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "yes",
+    add2eClasses: ["add2e-vendor-buy-confirm"],
     window: { title: "Confirmer l’achat" },
     content: `<p>Acheter <b>${qty} × ${esc(canonicalItemName(item))}</b> pour <b>${total}</b> ?</p>`,
     yes: { label: "Acheter" },
     no: { label: "Annuler" },
     modal: true
-  }) ?? false;
+  });
 }
 
 class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
@@ -357,14 +312,15 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
     this.buyer = buyer ?? getBuyer();
     this.tab = "all";
     this.search = "";
+    this.itemsById = new Map();
   }
 
   get title() { return `${this.vendor?.name ?? "Marchand"}${this.buyer ? ` — ${this.buyer.name}` : ""}`; }
-  stock() { return collapseCanonicalStock(Array.from(this.vendor?.items ?? []).filter(isStockItem)); }
 
   async _prepareContext() {
-    normalizeShopCurrency();
-    return { vendor: this.vendor, buyer: this.buyer, items: this.stock(), isGM: game.user?.isGM === true, tab: this.tab, search: this.search };
+    const items = await getVendorDisplayItems(this.vendor);
+    this.itemsById = new Map(items.map(item => [String(item.id), item]));
+    return { vendor: this.vendor, buyer: this.buyer, items, isGM: game.user?.isGM === true, tab: this.tab, search: this.search };
   }
 
   async _renderHTML(context) {
@@ -408,17 +364,7 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
     if (!this.vendor || !this.buyer || !item) return false;
     if (quantity(item) < qty) return alertBox("Stock insuffisant", `${canonicalItemName(item)} : stock disponible ${quantity(item)}.`).then(() => false);
     if (!await confirmPlayerBuy(item, qty)) return false;
-    game.socket?.emit?.("system.add2e", {
-      type: ADD2E_VENDOR_PLAYER_BUY,
-      requestId: foundry.utils.randomID(),
-      userId: game.user.id,
-      vendorId: this.vendor.id,
-      buyerId: this.buyer.id,
-      buyerUuid: this.buyer.uuid,
-      itemId: item.id,
-      quantity: qty
-    });
-    return true;
+    return requestShopBuy({ shop: this.vendor, buyer: this.buyer, item, quantity: qty });
   }
 
   async click(event) {
@@ -432,22 +378,19 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
     }
 
     const row = target.closest("tr[data-id]");
-    const itemId = row?.dataset?.id;
-    const item = itemId ? this.vendor?.items?.get(itemId) : null;
+    const item = row ? this.itemsById.get(String(row.dataset.id ?? "")) ?? null : null;
     if (!row || !item) return;
 
     if (action === "stock") {
       const stockInput = row.querySelector(".s");
       if (!stockInput) return;
-      await setStock(item, stockInput.value);
+      await setStock(this.vendor, item, stockInput.value);
       return this.render({ force: true });
     }
     if (action === "assign") return this.assign(item);
     if (action !== "buy") return;
 
-    normalizeShopCurrency();
-    const quantityInput = row.querySelector(".q");
-    const requestedQuantity = quantityInput?.value;
+    const requestedQuantity = row.querySelector(".q")?.value;
     if (!game.user?.isGM) return this.playerBuy(item, requestedQuantity);
     const ok = await buy({ vendor: this.vendor, buyer: this.buyer, item, quantity: requestedQuantity });
     if (ok) this.render({ force: true });
@@ -462,14 +405,11 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
   }
 }
 
-const registry = () => globalThis.__ADD2E_MERCHANT_UNIT_APPS ??= new Map();
-
 function openLock(actor) {
   const id = `${game.user?.id}:${actor?.id}`;
   const now = Date.now();
-  const locks = globalThis.__ADD2E_MERCHANT_OPEN_LOCK ??= {};
-  if (locks[id] && now - locks[id] < 750) return false;
-  locks[id] = now;
+  if (MERCHANT_OPEN_LOCKS.has(id) && now - MERCHANT_OPEN_LOCKS.get(id) < 750) return false;
+  MERCHANT_OPEN_LOCKS.set(id, now);
   return true;
 }
 
@@ -480,13 +420,13 @@ async function openFromToken(token) {
 }
 
 export async function openVendor({ vendor = null, buyer = null } = {}) {
-  vendor = vendor ?? findVendor();
+  vendor = vendor ?? await findVendor();
   if (!vendor && game.user?.isGM) vendor = await createVendor();
   if (!vendor) return alertBox("Marchand introuvable", "Le marchand doit être créé côté MJ.");
   buyer = buyer ?? getBuyer();
   if (!buyer && !game.user?.isGM) return alertBox("Aucun acheteur", "Aucun personnage assigné ou sélectionné.");
   const id = `${game.user?.id}:${vendor.id}`;
-  const old = registry().get(id);
+  const old = MERCHANT_APPS.get(id);
   if (old?.rendered) {
     old.vendor = vendor;
     old.buyer = buyer;
@@ -495,7 +435,7 @@ export async function openVendor({ vendor = null, buyer = null } = {}) {
     return old;
   }
   const app = new Add2eMerchantApp({ vendor, buyer });
-  registry().set(id, app);
+  MERCHANT_APPS.set(id, app);
   app.render({ force: true });
   return app;
 }
