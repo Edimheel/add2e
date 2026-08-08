@@ -22,7 +22,7 @@ import {
 } from "./22c-armorer-core.mjs";
 import { getShopType, requestShopBuy } from "./22a-vendor-core.mjs";
 
-const VERSION = "2026-08-08-armorer-app-compendium-catalog-v4";
+const VERSION = "2026-08-08-armorer-app-compendium-catalog-v5";
 const ARMORER_APPS = new Map();
 const ARMORER_OPEN_LOCKS = new Map();
 const STYLE = `
@@ -176,9 +176,17 @@ class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
 
     if (!await confirmPlayerBuy(item, qty)) return;
     requestShopBuy({ shop: this.armorer, buyer: this.buyer, item, quantity: qty });
-    window.setTimeout(() => this.render({ force: true }), 800);
   }
 }
+
+Hooks.on("add2eShopMoneyChanged", data => {
+  if (data?.shopType !== "armorer") return;
+  for (const app of ARMORER_APPS.values()) {
+    if (!app?.rendered || app.armorer?.id !== data.shopId) continue;
+    if (data.buyerId && app.buyer?.id !== data.buyerId) continue;
+    app.render({ force: true });
+  }
+});
 
 function locked(actor) {
   const key = `${game.user?.id}:${actor?.id}`;
