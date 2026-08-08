@@ -17,10 +17,11 @@ import {
 } from "./22a-vendor-core.mjs";
 
 import {
-  bindAllVendorTokens,
-  patchVendorTokenClick,
-  registerUiGlobals,
-  registerVendorDirectoryButton
+  ADD2E_SHOP_APP_VERSION,
+  bindAllShopTokens,
+  registerShopTokenHooks,
+  registerShopUiGlobals,
+  registerShopDirectoryButtons
 } from "./22b-vendor-app.mjs";
 
 import {
@@ -35,18 +36,11 @@ import {
 } from "./22c-armorer-core.mjs";
 
 import {
-  bindAllArmorerTokens,
-  patchArmorerTokenClick,
-  registerArmorerUiGlobals,
-  registerArmorerDirectoryButton
-} from "./22d-armorer-app.mjs";
-
-import {
   ADD2E_CONSUMABLES_VERSION,
   registerGlobals as registerConsumablesGlobals
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-08-08-shop-compendium-catalog-v6";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-08-08-shop-single-ui-v7";
 const ADD2E_SHOP_HP_VERSION = "2026-06-15-shop-hp-one-multiclass-v1";
 const ADD2E_SHOP_HP = 1;
 const SPELL_COMPONENTS_SETTING = "gestionComposantsSorts";
@@ -360,8 +354,7 @@ Hooks.once("init", () => {
     type: Boolean,
     default: true
   });
-  registerVendorDirectoryButton();
-  registerArmorerDirectoryButton();
+  registerShopDirectoryButtons();
   hideShopActorsFromPlayers();
   registerShopTileHooks();
 });
@@ -369,9 +362,8 @@ Hooks.once("init", () => {
 Hooks.once("ready", async () => {
   registerGlobals();
   registerConsumablesGlobals();
-  registerUiGlobals();
+  registerShopUiGlobals();
   registerArmorerGlobals();
-  registerArmorerUiGlobals();
 
   await enforceShopActors().catch(error => console.warn("[ADD2E][SHOP][ENSURE_ACTORS]", error));
   await enforceShopHitPoints().catch(error => console.warn("[ADD2E][SHOP][HIT_POINTS]", error));
@@ -379,12 +371,9 @@ Hooks.once("ready", async () => {
 
   registerRecoveryHooks();
   patchActorSheetMoney();
-  patchVendorTokenClick();
-  patchArmorerTokenClick();
+  registerShopTokenHooks();
   bindShopTileCanvasClick();
-
-  window.setTimeout(bindAllVendorTokens, 500);
-  window.setTimeout(bindAllArmorerTokens, 500);
+  bindAllShopTokens();
 
   game.add2e = game.add2e ?? {};
   game.add2e.shopTileVersion = ADD2E_SHOP_TILE_VERSION;
@@ -393,6 +382,7 @@ Hooks.once("ready", async () => {
     vendor: ADD2E_VENDOR_VERSION,
     armorer: ADD2E_ARMORER_VERSION,
     consumables: ADD2E_CONSUMABLES_VERSION,
+    ui: ADD2E_SHOP_APP_VERSION,
     orchestration: ADD2E_SHOP_ORCHESTRATION_VERSION,
     hp: ADD2E_SHOP_HP_VERSION,
     tiles: ADD2E_SHOP_TILE_VERSION
