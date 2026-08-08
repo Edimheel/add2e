@@ -1,19 +1,26 @@
-// ADD2E — Relais MJ unique : sockets, effets, scène, consommables et familier.
+// ADD2E — Relais MJ unique : sockets, effets, scène, boutiques, consommables et familier.
 // Compatible Foundry V13/V14/V15.
 
 import "./15a-validation-hooks.mjs";
 import "./15c-social-resolution-controller.mjs";
+import "./22c-armorer-core.mjs";
+import {
+  SHOP_BUY_RESULT,
+  SOCKET_RECOVERY,
+  handleShopBuyOperation,
+  handleShopBuyResult,
+  recordProjectileSpentOperation,
+  handleProjectileRecoveryResult
+} from "./22a-vendor-core.mjs";
 
 const ADD2E_SOCKET = "system.add2e";
 const ADD2E_GM_OPERATION = "ADD2E_GM_OPERATION";
 const ADD2E_ATTACK_PLAYER_LOCAL_CHAT = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
 const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
-const VENDOR_SCOPE = "add2e";
-const PROJECTILE_FLAG = "projectilesDepensesCombat";
 const FAMILIAR_SCOPE = "add2e";
 const FAMILIAR_FLAG = "familiar";
 const FAMILIAR_RANGE_DEFAULT = 12;
-const VERSION = "2026-08-07-gm-relay-projectile-type-v10";
+const VERSION = "2026-08-08-gm-relay-shop-v11";
 const TAG = "[ADD2E][GM-RELAY]";
 
 const FAMILIAR_ASSETS = Object.freeze({
@@ -331,34 +338,6 @@ async function updateToken(payload = {}) {
   const token = scene?.tokens?.get?.(payload.tokenId) ?? null;
   if (!scene || !token) return console.warn(`${TAG}[UPDATE_TOKEN] scène/token introuvable`, payload);
   return token.update(payload.updateData ?? {});
-}
-
-function projectileSpendType(value) {
-  const type = String(value ?? "").trim().toLowerCase();
-  return type === "ammunition" || type === "thrown-weapon" ? type : null;
-}
-
-async function vendorRecordProjectileSpent(payload = {}) {
-  const combat = game.combats?.get?.(payload.combatId) ?? game.combat;
-  if (!combat?.getFlag || !combat?.setFlag) return console.warn(`${TAG}[PROJECTILE_SPENT] combat introuvable`, payload);
-  const actorId = payload.actorId ?? null;
-  const itemKey = payload.itemId ?? payload.itemName ?? null;
-  if (!actorId || !itemKey) return console.warn(`${TAG}[PROJECTILE_SPENT] payload incomplet`, payload);
-  const spent = clone(await combat.getFlag(VENDOR_SCOPE, PROJECTILE_FLAG) ?? {});
-  const quantity = Math.max(1, Math.floor(num(payload.quantity, 1)));
-  const type = projectileSpendType(payload.type);
-  spent[actorId] ??= { actorId, actorName: payload.actorName ?? "", items: {} };
-  spent[actorId].actorName = payload.actorName ?? spent[actorId].actorName ?? "";
-  spent[actorId].items ??= {};
-  spent[actorId].items[itemKey] ??= { itemId: payload.itemId ?? null, itemName: payload.itemName ?? "Projectile", img: payload.img ?? null, type, spent: 0 };
-  const item = spent[actorId].items[itemKey];
-  item.spent = Math.max(0, num(item.spent, 0)) + quantity;
-  item.itemId = payload.itemId ?? item.itemId ?? null;
-  item.itemName = payload.itemName ?? item.itemName ?? "Projectile";
-  item.img = payload.img ?? item.img ?? null;
-  item.type = type ?? item.type ?? null;
-  await combat.setFlag(VENDOR_SCOPE, PROJECTILE_FLAG, spent);
-  return true;
 }
 
 function familiarLink(actor) {
@@ -1242,11 +1221,14 @@ function registerSocketRelays() {
     deleteAmbientLight,
     updateToken,
     createActiveEffect,
-    vendorRecordProjectileSpent,
+    vendorRecordProjectileSpent: recordProjectileSpentOperation,
+    shopBuy: handleShopBuyOperation,
     createFamiliar,
     setFamiliarFollow
   };
   game.socket.on(ADD2E_SOCKET, async data => {
+    if (data?.type === SHOP_BUY_RESULT) return handleShopBuyResult(data);
+    if (data?.type === SOCKET_RECOVERY) return handleProjectileRecoveryResult(data);
     if (data?.type === ADD2E_ATTACK_PLAYER_LOCAL_CHAT) return createPersistentPlayerAttackChat(data.payload ?? {});
     if (data?.type === ADD2E_ATTACK_GM_DETAIL_CHAT) return;
     if (data?.type === "applyDamageFlag") {
