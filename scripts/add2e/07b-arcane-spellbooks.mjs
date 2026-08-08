@@ -1,5 +1,5 @@
 // ADD2E — Livres de sorts personnels, copie et apprentissage.
-// Compatible Foundry V13/V14/V15. DialogV2 uniquement.
+// Compatible Foundry V13/V14/V15. Fenêtres via l’API commune ADD2E.
 
 import {
   VERSION,
@@ -27,8 +27,7 @@ import { hydrateScroll } from "./07b-arcane-scrolls.mjs";
 const SYNC_LOCKS = new Set();
 const SYNC_TIMERS = new Map();
 const DETACH_LOCKS = new Set();
-const SPELLBOOK_DIALOGS = new Map();
-const ADD2E_SPELL_LEARNING_VERSION = "2026-07-26-canonical-intelligence-learning-v2";
+const ADD2E_SPELL_LEARNING_VERSION = "2026-08-08-2z-common-dialog-v3";
 
 globalThis.ADD2E_SPELL_LEARNING_VERSION = ADD2E_SPELL_LEARNING_VERSION;
 
@@ -518,8 +517,9 @@ function compatibleCandidates(actor, source, profile) {
 }
 
 async function selectSpellbookCandidates(actor, book, candidates, profile) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) throw new Error("DialogV2 est introuvable.");
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
   const rows = candidates.map((candidate, index) => {
     const enabled = candidate.eligibility.ok;
     const reason = enabled ? "" : candidate.eligibility.message;
@@ -531,7 +531,10 @@ async function selectSpellbookCandidates(actor, book, candidates, profile) {
     </label>`;
   }).join("");
 
-  return DialogV2.wait({
+  return globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "copy",
+    add2eClasses: ["add2e-copy-spellbook-dialog"],
     window: { title: `Copier depuis ${book.name}` },
     modal: true,
     rejectClose: false,
@@ -545,18 +548,23 @@ async function selectSpellbookCandidates(actor, book, candidates, profile) {
       {
         action: "copy",
         label: "Copier les sorts sélectionnés",
-        icon: "fa-solid fa-copy",
+        icon: "<i class='fas fa-copy'></i>",
         default: true,
-        callback: (_event, button, dialog) => {
-          const element = dialog?.element?.jquery ? dialog.element[0] : dialog?.element;
-          const form = button?.form ?? element?.querySelector?.("form.add2e-copy-spellbook");
+        callback: (_event, button) => {
+          const form = button?.form;
           return form
             ? [...form.querySelectorAll('input[type="checkbox"]:checked')].map(input => Number(input.value)).filter(Number.isInteger)
             : null;
         }
       },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-    ]
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
+      }
+    ],
+    close: () => null
   });
 }
 
@@ -695,13 +703,14 @@ function spellbookRows(book, actor = null) {
 
 export async function viewSpellbook(book, actor = null) {
   if (!book || !isSpellbook(book)) return false;
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) throw new Error("DialogV2 est introuvable.");
-  const key = book.uuid ?? book.id;
-  const previous = SPELLBOOK_DIALOGS.get(key);
-  try { previous?.close?.(); } catch (_error) {}
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
 
-  const result = await DialogV2.wait({
+  const result = await globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: actor ? "copy" : "close",
+    add2eClasses: ["add2e-spellbook-view-dialog"],
     window: { title: book.name },
     modal: false,
     rejectClose: false,
@@ -710,11 +719,23 @@ export async function viewSpellbook(book, actor = null) {
       ${spellbookRows(book, actor) || "<p>Aucun sort inscrit.</p>"}
     </div>`,
     buttons: [
-      ...(actor ? [{ action: "copy", label: "Copier un ou plusieurs sorts", icon: "fa-solid fa-copy", callback: () => "copy" }] : []),
-      { action: "close", label: "Fermer", icon: "fa-solid fa-xmark", default: !actor, callback: () => "close" }
-    ]
+      ...(actor ? [{
+        action: "copy",
+        label: "Copier un ou plusieurs sorts",
+        icon: "<i class='fas fa-copy'></i>",
+        default: true,
+        callback: () => "copy"
+      }] : []),
+      {
+        action: "close",
+        label: "Fermer",
+        icon: "<i class='fas fa-times'></i>",
+        default: !actor,
+        callback: () => "close"
+      }
+    ],
+    close: () => "close"
   });
-  SPELLBOOK_DIALOGS.delete(key);
   if (result === "copy" && actor) return copySpellbook(actor, book);
   return true;
 }
