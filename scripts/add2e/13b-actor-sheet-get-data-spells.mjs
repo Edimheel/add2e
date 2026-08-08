@@ -1,7 +1,12 @@
 // ADD2E — Actor sheet getData : préparation des données de sorts.
 
 export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
-  const sorts = items.filter(i => i.type === "sort");
+  const add2eIsObjectPowerRow = (sort) => {
+    const s = sort?.system ?? {};
+    return s.isPower === true || s.isObjectPower === true || s.sourceWeaponId || s.sourceItemId || s.powerIndex !== undefined || String(s.composantes ?? "").toLowerCase().includes("objet");
+  };
+
+  const sorts = items.filter(i => i.type === "sort" && !add2eIsObjectPowerRow(i));
   const sortsParNiveau = {};
   for (const sort of sorts) {
     const niv = Number(sort.system.niveau) || 1;
@@ -90,11 +95,6 @@ export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
   }).filter(row => row.levels.length);
 
   data.add2eSpellLevels = [];
-
-  const add2eIsObjectPowerRow = (sort) => {
-    const s = sort?.system ?? {};
-    return s.isPower === true || s.isObjectPower === true || s.sourceWeaponId || s.sourceItemId || s.powerIndex !== undefined || String(s.composantes ?? "").toLowerCase().includes("objet");
-  };
 
   const add2eIsCapacitySpellRow = (sort) => {
     const s = sort?.system ?? {};
@@ -211,7 +211,6 @@ export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
     });
 
     const matchingLabels = add2eSpellEntriesForHbs.filter(entry => spellLists.includes(add2eEntryKeyForHbs(entry))).map(add2eEntryLabelForHbs);
-    const isObjectPower = add2eIsObjectPowerRow(sort);
     const isCapacity = add2eIsCapacitySpellRow(sort);
     const s = sort.system ?? {};
     const flags = foundry.utils.deepClone(sort.flags ?? {});
@@ -242,10 +241,8 @@ export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
       temps_incantation: s?.temps_incantation || "",
       portee: s?.portee || s?.portée || null,
       duree: s?.duree || s?.durée || null,
-      isObjectPower,
       isCapacity,
-      isRegularSpell: !isObjectPower && !isCapacity,
-      objectPowerCharges: isObjectPower ? (Number(sort.getFlag?.("add2e", "memorizedCount") ?? sort.flags?.add2e?.memorizedCount ?? s?.max ?? 0) || 0) : 0,
+      isRegularSpell: !isCapacity,
       listLabel: matchingLabels.length ? matchingLabels.join(" / ") : (spellLists.map(add2eSpellLabel).join(" / ") || "Non autorisé"),
       entries: allowedEntries.map(entry => {
         const count = add2eGetMemorizedCountForEntry(sort, entry);
@@ -265,11 +262,9 @@ export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
 
     const sortRows = levelSorts.map(sort => add2eBuildSpellRowForHbs(sort, spellLevel));
     const regularRows = sortRows.filter(row => row.isRegularSpell);
-    const objectPowerRows = sortRows.filter(row => row.isObjectPower);
     const capacityRows = sortRows.filter(row => row.isCapacity);
     const groups = [];
 
-    if (objectPowerRows.length) groups.push(add2eMakeSpellGroup({ key: "objet_magique", label: "Effets d'objet magique", title: "Effets d'objet magique", kind: "object-power", counter: { key: "objet_magique", label: "Effets d'objet magique", count: objectPowerRows.length, max: objectPowerRows.length }, sorts: objectPowerRows }));
     if (capacityRows.length) groups.push(add2eMakeSpellGroup({ key: "capacite", label: "Capacités", title: "Capacités", kind: "capacity", counter: { key: "capacite", label: "Capacités", count: capacityRows.length, max: capacityRows.length }, sorts: capacityRows }));
 
     for (const counter of counters) {
