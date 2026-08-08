@@ -1,5 +1,5 @@
 // ADD2E — Objets magiques : éditeur et validation du catalogue de pouvoirs.
-// Compatible Foundry V13/V14/V15 — DialogV2.
+// Compatible Foundry V13/V14/V15 — API commune des fenêtres ADD2E.
 
 import {
   ADD2E_MAGIC_CATALOGUE_POWER_SCHEMA,
@@ -338,10 +338,8 @@ export function add2eMagicCatalogueValidateParameters(power, parameters) {
 }
 
 export async function add2eMagicCatalogueConfigurePower(power, existingParameters = {}) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications.error("DialogV2 est introuvable.");
-    return null;
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
   const parameterEntries = Object.entries(power.parameters ?? {});
   if (!parameterEntries.length) return {};
@@ -349,11 +347,13 @@ export async function add2eMagicCatalogueConfigurePower(power, existingParameter
     add2eMagicCatalogueParameterControl(name, schema, existingParameters?.[name])
   ).join("");
   const summary = String(power.description ?? power.summary ?? power.help ?? "").trim();
-  const result = await DialogV2.wait({
-    window: { title: `Configurer — ${power.label}`, classes: ["add2e-magic-power-configuration-window"] },
+  const result = await globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "save",
+    add2eClasses: ["add2e-magic-power-configuration-window"],
+    window: { title: `Configurer — ${power.label}` },
     modal: true,
-    rejectClose: false,
-    content: `<div class="add2e-dialog add2e-magic-power-parameter-form" style="min-width:620px;max-width:760px;padding:12px;display:grid;gap:10px;">
+    content: `<form class="add2e-magic-power-parameter-form" style="min-width:620px;max-width:760px;padding:12px;display:grid;gap:10px;">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <strong style="font-size:1.06em;">${add2eObjectMagicEscapeHtml(power.label)}</strong>
         <span style="font-size:.8em;padding:2px 7px;border:1px solid currentColor;border-radius:999px;">${add2eObjectMagicEscapeHtml(add2eMagicCatalogueCategoryLabel(power.category))}</span>
@@ -363,15 +363,15 @@ export async function add2eMagicCatalogueConfigurePower(power, existingParameter
       <p style="margin:0;opacity:.78;">Source : ${add2eObjectMagicEscapeHtml(power.source?.section ?? "Guide du Maître")}${power.source?.page ? `, page ${add2eObjectMagicEscapeHtml(power.source.page)}` : ""}</p>
       ${controls}
       <p style="margin:0;font-size:.82em;opacity:.75;">Les champs marqués d’un astérisque sont obligatoires.</p>
-    </div>`,
+    </form>`,
     buttons: [
       {
         action: "save",
         label: "Enregistrer",
-        icon: "fa-solid fa-check",
+        icon: "<i class='fas fa-check'></i>",
         default: true,
-        callback: (_event, button, dialog) => {
-          const root = button?.form ?? dialog?.element;
+        callback: (_event, button) => {
+          const root = button?.form;
           const parameters = {};
           for (const [name, schema] of parameterEntries) {
             const escaped = globalThis.CSS?.escape ? CSS.escape(name) : String(name).replace(/["\\]/g, "\\$&");
@@ -388,8 +388,14 @@ export async function add2eMagicCatalogueConfigurePower(power, existingParameter
           return parameters;
         }
       },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-    ]
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
+      }
+    ],
+    close: () => null
   });
   return result && typeof result === "object" ? result : null;
 }
