@@ -1,168 +1,244 @@
-// ADD2E — onUse Magicien : Fracassement
-// Version : 2026-05-05-magicien-n1-9-v2
-// Retour attendu : true = sort consommé, false = sort non consommé.
+// ADD2E — onUse canonique : Fracassement
+// Sort de magicien niveau 2 — portée 6", un objet, sauvegarde d’objet contre coup critique.
+// Compatible Foundry V13/V14/V15 — DialogV2/Chat communs ADD2E et moteur de sauvegarde des objets.
 
-const ADD2E_SORT_CONFIG = {
-  "name": "Fracassement",
-  "slug": "fracassement",
-  "level": 2,
-  "kind": "damage",
-  "description": "Fracassement produit un effet offensif de magicien. Les dégâts, jets de sauvegarde, résistances, immunités et effets secondaires doivent être appliqués selon la règle du sort et l’arbitrage du MD.",
-  "dice": "1d6",
-  "modes": [
-    {
-      "id": "normal",
-      "label": "Fracassement"
+return await (async () => {
+  const VERSION = "2026-08-08-fracassement-foundry-v1";
+  const RANGE_SPACES = 6;
+  const KG_PER_LEVEL = 5;
+  const ALLOWED_MATERIALS = new Set(["ceramic", "crystal_flask", "glass"]);
+
+  const normalize = value => String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  const escapeHtml = value => {
+    const text = String(value ?? "");
+    try {
+      if (typeof foundry?.utils?.escapeHTML === "function") return foundry.utils.escapeHTML(text);
+    } catch (_error) {}
+    return text
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  };
+
+  const spellItem = (typeof item !== "undefined" && item)
+    || (typeof sort !== "undefined" && sort)
+    || (Array.isArray(typeof args !== "undefined" ? args : null) ? args[0]?.item ?? args[0]?.sort : null)
+    || null;
+  const caster = (typeof actor !== "undefined" && actor)
+    || spellItem?.parent
+    || (Array.isArray(typeof args !== "undefined" ? args : null) ? args[0]?.actor : null)
+    || null;
+  const runtimeArgs = Array.isArray(typeof args !== "undefined" ? args : null) ? args : [];
+
+  const alert = async (title, content, theme = "wizard") => {
+    if (typeof globalThis.add2eDialogAlert !== "function") throw new Error("Fracassement : l’API de fenêtre ADD2E est indisponible.");
+    await globalThis.add2eDialogAlert({ add2eTheme: theme, window: { title }, content });
+  };
+
+  if (!caster || !spellItem) {
+    await alert("Fracassement", "<p>Le lanceur ou le sort est introuvable.</p>", "danger");
+    return false;
+  }
+  if (typeof globalThis.add2eCanonicalClassStates !== "function") throw new Error("Fracassement : le moteur canonique des classes est indisponible.");
+  if (typeof globalThis.add2eDialogWait !== "function") throw new Error("Fracassement : l’API de fenêtre ADD2E est indisponible.");
+  if (typeof globalThis.add2eCreateChatCard !== "function") throw new Error("Fracassement : l’API de carte ADD2E est indisponible.");
+
+  const engine = globalThis.ADD2E_EFFECTS;
+  if (typeof engine?.getObjectSaveMaterial !== "function" || typeof engine?.rollObjectSave !== "function") {
+    throw new Error("Fracassement : le moteur de sauvegarde des objets est indisponible.");
+  }
+
+  const classStates = globalThis.add2eCanonicalClassStates(caster);
+  const magicien = classStates.find(state => normalize(state?.slug ?? state?.name) === "magicien") ?? null;
+  const casterLevel = Math.max(0, Math.floor(Number(magicien?.level) || 0));
+  if (casterLevel < 1) {
+    await alert("Fracassement", "<p>Le niveau de magicien est introuvable.</p>", "danger");
+    return false;
+  }
+
+  const casterToken = (typeof token !== "undefined" && token?.actor?.id === caster?.id ? token : null)
+    || runtimeArgs[0]?.token
+    || canvas?.tokens?.controlled?.find?.(entry => entry?.actor?.id === caster?.id)
+    || caster?.getActiveTokens?.()?.[0]
+    || null;
+  if (!casterToken) {
+    await alert("Fracassement", "<p>Le lanceur doit avoir un token sur la scène.</p>");
+    return false;
+  }
+
+  const targets = Array.from(game.user?.targets ?? []).filter(entry => entry?.actor);
+  if (targets.length !== 1) {
+    await alert("Fracassement", "<p>Sélectionne exactement une cible.</p>");
+    return false;
+  }
+
+  const targetToken = targets[0];
+  const targetActor = targetToken.actor;
+
+  const gridSize = Number(canvas?.grid?.size ?? canvas?.dimensions?.size ?? 100) || 100;
+  const center = tokenObject => {
+    if (tokenObject?.center && Number.isFinite(Number(tokenObject.center.x)) && Number.isFinite(Number(tokenObject.center.y))) {
+      return { x: Number(tokenObject.center.x), y: Number(tokenObject.center.y) };
     }
-  ]
-};
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN]";
-
-function add2eHtmlEscape(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
-}
-
-function add2eCasterLevel(actor) {
-  return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
-}
-
-async function add2eEvalRoll(formula) {
-  return await new Roll(formula).evaluate();
-}
-
-function add2eDamageFormula(raw, level) {
-  const s = String(raw || "1d6");
-  if (s === "leveld3") return `${Math.max(1, level)}d3`;
-  if (s === "leveld4+level") return `${Math.max(1, level)}d4+${level}`;
-  if (s === "leveld6") return `${Math.max(1, Math.min(10, level))}d6`;
-  if (s === "1d8+level") return `1d8+${level}`;
-  if (s === "1d6+level") return `1d6+${level}`;
-  if (s === "special" || s === "variable") return "1d20";
-  return s;
-}
-
-function add2eRoundCount(level) {
-  return Math.max(1, level);
-}
-
-function add2eGetCasterToken() {
-  return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
-}
-
-function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user.targets ?? []);
-  if (targets.length) return targets;
-  const casterToken = add2eGetCasterToken();
-  return (fallbackCaster && casterToken) ? [casterToken] : [];
-}
-
-async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? add2eGetCasterToken();
-  const casterActor = actor ?? casterToken?.actor ?? null;
-  const casterName = casterActor?.name ?? casterToken?.name ?? "Magicien";
-  const spellName = item?.name ?? title ?? "Sort de magicien";
-  const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
-  const targets = Array.from(game.user.targets ?? []);
-  const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
-  const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? "";
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
-    content: `
-      <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-          <img src="${add2eHtmlEscape(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${add2eHtmlEscape(casterName)}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(spellName)}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Sort profane</div>
-          <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
-        </div>
-        <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${add2eHtmlEscape(targetLabel)}</div>
-          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eHtmlEscape(outcome)}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
-          </div>
-          <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Règle appliquée</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule || "Effet du sort appliqué selon sa description et l’arbitrage du MD."}</div>
-          </details>
-        </div>
-      </div>`
-  });
-}
-
-async function add2eApplyEffect(targetActor, name, tags, rounds = 0) {
-  if (!targetActor) return false;
-  await targetActor.createEmbeddedDocuments("ActiveEffect", [{
-    name,
-    img: item?.img || "icons/svg/aura.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes: [],
-    duration: { rounds: rounds || undefined, startRound: game.combat?.round ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
-    description: ADD2E_SORT_CONFIG.description,
-    flags: { add2e: { tags } }
-  }]);
-  return true;
-}
-
-async function add2eAskNote(config) {
-  const needsNote = ["note","summon","summon_note","movement","terrain","utility","detection"].includes(config.kind) || (config.modes?.length > 1);
-  if (!needsNote) return { mode: "normal", note: "" };
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = v => { if (!done) { done = true; resolve(v); } };
-    const buttons = {};
-    for (const m of config.modes ?? [{id:"normal",label:config.name}]) {
-      buttons[m.id] = { label: m.label, callback: html => finish({ mode:m.id, note: html.find("[name='note']").val() ?? "" }) };
+    const document = tokenObject?.document ?? tokenObject;
+    return {
+      x: Number(document?.x ?? 0) + Number(document?.width ?? 1) * gridSize / 2,
+      y: Number(document?.y ?? 0) + Number(document?.height ?? 1) * gridSize / 2
+    };
+  };
+  const distanceSpaces = (fromToken, toToken) => {
+    const from = center(fromToken);
+    const to = center(toToken);
+    if (typeof canvas?.grid?.measurePath === "function") {
+      try {
+        const result = canvas.grid.measurePath([from, to], { gridSpaces: true });
+        const spaces = Number(result?.spaces ?? result?.gridDistance);
+        if (Number.isFinite(spaces)) return spaces;
+        const distance = Number(result?.distance ?? result?.cost ?? result);
+        const unit = Number(canvas?.scene?.grid?.distance ?? canvas?.grid?.distance);
+        if (Number.isFinite(distance) && Number.isFinite(unit) && unit > 0) return distance / unit;
+      } catch (_error) {}
     }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-    new Dialog({
-      title: config.name,
-      content: `<form><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></form>`,
-      buttons,
-      default: Object.keys(buttons)[0],
-      close: () => finish(null)
-    }).render(true);
+    return Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y)) / gridSize;
+  };
+
+  const distance = distanceSpaces(casterToken, targetToken);
+  if (!Number.isFinite(distance) || distance > RANGE_SPACES + 0.01) {
+    await alert("Fracassement", `<p><b>${escapeHtml(targetToken.name ?? targetActor.name)}</b> est hors de portée.</p>`);
+    return false;
+  }
+
+  const maxWeightKg = casterLevel * KG_PER_LEVEL;
+  const itemWeightKg = candidate => {
+    const system = candidate?.system ?? {};
+    const direct = Number(system.poids ?? system.weight);
+    const unit = normalize(system.poids_unite ?? system.weightUnit ?? "kg");
+    if (Number.isFinite(direct) && direct >= 0) {
+      if (!unit || ["kg", "kilogramme", "kilogrammes"].includes(unit)) return direct;
+      if (["g", "gramme", "grammes"].includes(unit)) return direct / 1000;
+    }
+    const encumbrancePo = Number(system.poids_encombrement_po);
+    return Number.isFinite(encumbrancePo) && encumbrancePo >= 0 ? encumbrancePo / 20 : NaN;
+  };
+  const isMagical = candidate => candidate?.system?.magique === true
+    || candidate?.system?.magic === true
+    || candidate?.system?.isMagic === true
+    || candidate?.flags?.add2e?.magicItem === true;
+
+  const eligible = Array.from(targetActor?.items ?? [])
+    .map(candidate => ({
+      item: candidate,
+      material: engine.getObjectSaveMaterial(candidate),
+      weight: itemWeightKg(candidate),
+      quantity: Math.max(0, Math.floor(Number(candidate?.system?.quantite ?? candidate?.system?.quantity ?? 1) || 0))
+    }))
+    .filter(entry => entry.quantity > 0)
+    .filter(entry => !isMagical(entry.item))
+    .filter(entry => ALLOWED_MATERIALS.has(entry.material))
+    .filter(entry => Number.isFinite(entry.weight) && entry.weight <= maxWeightKg + 0.0001)
+    .sort((left, right) => String(left.item.name).localeCompare(String(right.item.name), "fr"));
+
+  if (!eligible.length) {
+    await alert("Fracassement", `<p><b>${escapeHtml(targetActor.name)}</b> ne porte aucun objet compatible avec Fracassement.</p>`);
+    return false;
+  }
+
+  const materialLabel = value => ({ ceramic: "Céramique / porcelaine", crystal_flask: "Cristal", glass: "Verre" }[value] ?? value);
+  const options = eligible.map((entry, index) => `<option value="${index}">${escapeHtml(entry.item.name)} — ${escapeHtml(materialLabel(entry.material))} — ${entry.weight.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} kg</option>`).join("");
+  const selected = await globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "cast",
+    add2eClasses: ["add2e-fracassement"],
+    window: { title: "Fracassement" },
+    content: `<form class="add2e-fracassement-form"><div class="form-group"><label>Objet</label><select name="itemIndex">${options}</select></div></form>`,
+    buttons: [
+      {
+        action: "cast",
+        label: "Fracasser",
+        icon: "<i class='fas fa-burst'></i>",
+        default: true,
+        callback: (_event, button) => Number(button.form?.elements?.itemIndex?.value ?? 0)
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
+      }
+    ],
+    close: () => null
   });
-}
+  if (selected === null || selected === undefined) return false;
 
-const choice = await add2eAskNote(ADD2E_SORT_CONFIG);
-if (!choice) return false;
+  const chosen = eligible[Number(selected)] ?? null;
+  if (!chosen) return false;
 
-const level = add2eCasterLevel(actor);
-const targets = add2eGetTargets({ fallbackCaster: ADD2E_SORT_CONFIG.kind !== "damage" });
-const baseTags = [`sort:${ADD2E_SORT_CONFIG.slug}`, "classe:magicien", "liste:magicien", `niveau:${ADD2E_SORT_CONFIG.level}`, `type:${ADD2E_SORT_CONFIG.kind}`];
+  const save = await engine.rollObjectSave(chosen.item, "critical_hit");
+  if (!save?.canRoll || !save.roll) {
+    await alert("Fracassement", `<p>Impossible de résoudre la résistance de <b>${escapeHtml(chosen.item.name)}</b>.</p>`, "danger");
+    return false;
+  }
 
-console.log(`${ADD2E_ONUSE_TAG}[START]`, { sort: ADD2E_SORT_CONFIG.name, actor: actor?.name, level, targets: targets.map(t => t.name), mode: choice.mode });
+  if (!save.success) {
+    const nextQuantity = Math.max(0, chosen.quantity - 1);
+    const canMutate = game.user?.isGM || chosen.item?.isOwner === true || targetActor?.isOwner === true;
+    if (canMutate) {
+      if (nextQuantity > 0) await chosen.item.update({ "system.quantite": nextQuantity }, { add2eReason: "fracassement" });
+      else await chosen.item.delete({ add2eReason: "fracassement" });
+    } else {
+      game.socket?.emit?.("system.add2e", {
+        type: "ADD2E_GM_OPERATION",
+        operation: "mutateEmbeddedItem",
+        payload: {
+          actorId: targetActor.id,
+          actorUuid: targetActor.uuid,
+          itemId: chosen.item.id,
+          action: nextQuantity > 0 ? "update" : "delete",
+          updateData: nextQuantity > 0 ? { "system.quantite": nextQuantity } : {},
+          reason: "fracassement"
+        }
+      });
+    }
+  }
 
-if (ADD2E_SORT_CONFIG.kind === "damage") {
-  const formula = add2eDamageFormula(ADD2E_SORT_CONFIG.dice, level);
-  const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }), flavor: ADD2E_SORT_CONFIG.name });
-  await add2eChat(ADD2E_SORT_CONFIG.name, `
-    <p>Jet indicatif : <b>${roll.total}</b> (${formula})</p>
-    ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `, null, { outcome: "EFFET OFFENSIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
+  await globalThis.add2eCreateChatCard({
+    actor: caster,
+    title: "Fracassement",
+    icon: "fas fa-burst",
+    variant: save.success ? "success" : "damage",
+    target: {
+      name: targetActor.name,
+      img: targetToken?.document?.texture?.src ?? targetActor.img
+    },
+    rows: [
+      { label: "Objet", value: chosen.item.name },
+      { label: "Jet", value: `${save.die}${save.modifier ? ` ${save.modifier >= 0 ? "+" : "−"} ${Math.abs(save.modifier)}` : ""} / ${save.threshold}` },
+      { label: "Résultat", value: save.success ? "L’objet résiste" : "Objet détruit" }
+    ],
+    chatData: {
+      rolls: [save.roll],
+      flags: {
+        add2e: {
+          spell: "fracassement",
+          version: VERSION,
+          targetActorId: targetActor.id,
+          itemId: chosen.item.id,
+          objectSave: { material: save.material, attack: save.attack, threshold: save.threshold, success: save.success }
+        }
+      }
+    }
+  });
+
   return true;
-}
-
-if (["condition","protection"].includes(ADD2E_SORT_CONFIG.kind)) {
-  for (const t of targets) await add2eApplyEffect(t.actor, ADD2E_SORT_CONFIG.name, baseTags, add2eRoundCount(level));
-  await add2eChat(ADD2E_SORT_CONFIG.name, `<p>Effet actif appliqué à : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>`, null, { outcome: "EFFET ACTIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
-}
-
-await add2eChat(ADD2E_SORT_CONFIG.name, `
-  <p>${add2eHtmlEscape(ADD2E_SORT_CONFIG.description)}</p>
-  ${choice.note ? `<p>Note : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-`, null, { outcome: ADD2E_SORT_CONFIG.name.toUpperCase(), rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-return true;
+})();
