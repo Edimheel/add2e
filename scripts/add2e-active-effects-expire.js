@@ -1172,12 +1172,6 @@ Hooks.once("ready", add2eVitalRegisterStatusEffects);
 Hooks.once("ready", add2eRegisterWorldTimeEngine);
 Hooks.once("ready", add2eRegisterRoundEngineHooks);
 
-Hooks.on("updateActor", async (actor, changed, options) => {
-  if (!game.user?.isGM || options?.add2eVitalStatusSync) return;
-  const hpChanged = foundry.utils.hasProperty(changed, "system.pdv") || foundry.utils.hasProperty(changed, "system.pv") || foundry.utils.hasProperty(changed, "system.hp") || foundry.utils.hasProperty(changed, "system.points_de_coup");
-  if (hpChanged) window.setTimeout(() => add2eSyncActorVitalStatus(actor, { reason: "updateActor:hp" }), 30);
-});
-
 Hooks.on("preDeleteActiveEffect", (effect, options = {}) => {
   const transform = add2eDocumentTransformData(effect) ?? add2eTokenTransformData(effect);
   if (!transform || options?.add2eDocumentTransform || options?.add2eTokenTransform) return;
