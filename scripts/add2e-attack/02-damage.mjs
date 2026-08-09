@@ -4,7 +4,7 @@
 
 import { add2eGetCombatStatProfile } from "./03-attack-rules.mjs";
 
-export const ADD2E_DAMAGE_VERSION = "2026-07-24-common-defense-chat-card-v3";
+export const ADD2E_DAMAGE_VERSION = "2026-08-09-canonical-hit-point-mutation-v4";
 
 function add2eDamageTokenClass() {
   return foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? null;
@@ -406,20 +406,13 @@ export async function add2eApplyDamage({
     return { ...resolution, amount: damage, original: originalDamage, applied: true, delegated: true, genericResolution };
   }
 
-  const maxHP = Number(actor.system?.points_de_coup) || 0;
-  let currentHP = actor.system?.pdv;
-  if (currentHP === undefined || currentHP === null || currentHP === "" || Number.isNaN(Number(currentHP))) {
-    currentHP = maxHP;
-  } else {
-    currentHP = Number(currentHP) || 0;
+  const engine = globalThis.Add2eEffectsEngine;
+  if (typeof engine?.applyHitPointDamage !== "function") {
+    throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible pour appliquer les dégâts.");
   }
-
-  const newHP = currentHP - damage;
-  await actor.update({ "system.pdv": newHP });
-
-  if (typeof globalThis.add2eSyncActorVitalStatus === "function") {
-    await globalThis.add2eSyncActorVitalStatus(actor, { reason: "damage" });
-  }
+  const hitPoints = await engine.applyHitPointDamage(actor, damage, {
+    reason: "attack-damage"
+  });
 
   await add2eRunDamageResolutionOnUse({
     actor,
@@ -431,7 +424,7 @@ export async function add2eApplyDamage({
   });
 
   ui.notifications.info(`${actor.name} prend ${damage} dégât(s).`);
-  return { ...resolution, amount: damage, original: originalDamage, genericResolution };
+  return { ...resolution, amount: damage, original: originalDamage, genericResolution, hitPoints };
 }
 
 globalThis.add2eApplyDamage = add2eApplyDamage;
