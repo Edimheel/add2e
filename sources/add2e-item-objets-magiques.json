@@ -1329,16 +1329,63 @@
               ],
               "spellOnUse": "systems/add2e/scripts/sorts/magicien-levitation.js"
             },
-            "effects": [],
-            "compatibility": {},
+            "effects": [
+              {
+                "type": "linked_spell",
+                "spellName": "Lévitation",
+                "spellLevel": 2,
+                "spellLists": [
+                  "magicien"
+                ],
+                "chargeCost": 0,
+                "overrides": {
+                  "system": {
+                    "add2eLevitation": {
+                      "forceSelf": true,
+                      "capacityFormula": "140 + 7 * 1d20",
+                      "selfVerticalSpeed": 6
+                    }
+                  }
+                }
+              }
+            ],
+            "compatibility": {
+              "itemTypes": [
+                "objet"
+              ]
+            },
             "validation": {},
             "id": "bottes_de_levitation_1",
             "description": "Permettent au porteur de léviter verticalement.",
-            "onUse": "systems/add2e/scripts/objets_magiques/bottes_de_levitation.js",
+            "onUse": "add2e://magic-catalogue",
             "source": {
-              "section": "liste_sorts_full.json"
+              "section": "Guide du Maître — objets magiques"
             },
-            "img": "icons/equipment/feet/boots-leather-brown.webp"
+            "img": "icons/equipment/feet/boots-leather-brown.webp",
+            "catalogueId": "linked_spell",
+            "category": "spell",
+            "effectTemplates": [
+              {
+                "type": "linked_spell",
+                "spellName": "Lévitation",
+                "spellLevel": 2,
+                "spellLists": [
+                  "magicien"
+                ],
+                "chargeCost": 0,
+                "overrides": {
+                  "system": {
+                    "add2eLevitation": {
+                      "forceSelf": true,
+                      "capacityFormula": "140 + 7 * 1d20",
+                      "selfVerticalSpeed": 6
+                    }
+                  }
+                }
+              }
+            ],
+            "onuse": "add2e://magic-catalogue",
+            "on_use": "add2e://magic-catalogue"
           }
         ],
         "effet": "Permettent au porteur de léviter verticalement.",
@@ -5770,16 +5817,59 @@
               ],
               "spellOnUse": "systems/add2e/scripts/sorts/magicien-levitation.js"
             },
-            "effects": [],
-            "compatibility": {},
+            "effects": [
+              {
+                "type": "linked_spell",
+                "spellName": "Lévitation",
+                "spellLevel": 2,
+                "spellLists": [
+                  "magicien"
+                ],
+                "chargeCost": 1,
+                "overrides": {
+                  "system": {
+                    "add2eLevitation": {
+                      "forceSelf": true
+                    }
+                  }
+                }
+              }
+            ],
+            "compatibility": {
+              "itemTypes": [
+                "objet"
+              ]
+            },
             "validation": {},
             "id": "potion_de_levitation_1",
             "description": "Permet de monter ou descendre verticalement par volonté.",
-            "onUse": "systems/add2e/scripts/objets_magiques/potion_de_levitation.js",
+            "onUse": "add2e://magic-catalogue",
             "source": {
-              "section": "liste_sorts_full.json"
+              "section": "Guide du Maître — objets magiques"
             },
-            "img": "icons/consumables/potions/potion-bottle-corked-blue.webp"
+            "img": "icons/consumables/potions/potion-bottle-corked-blue.webp",
+            "catalogueId": "linked_spell",
+            "category": "spell",
+            "effectTemplates": [
+              {
+                "type": "linked_spell",
+                "spellName": "Lévitation",
+                "spellLevel": 2,
+                "spellLists": [
+                  "magicien"
+                ],
+                "chargeCost": 1,
+                "overrides": {
+                  "system": {
+                    "add2eLevitation": {
+                      "forceSelf": true
+                    }
+                  }
+                }
+              }
+            ],
+            "onuse": "add2e://magic-catalogue",
+            "on_use": "add2e://magic-catalogue"
           }
         ],
         "effet": "Permet de monter ou descendre verticalement par volonté.",
@@ -8863,7 +8953,8 @@
             "bonusCA": 0,
             "caFixe": null
           }
-        }
+        },
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -10403,7 +10494,8 @@
             "bonusCA": 0,
             "caFixe": null
           }
-        }
+        },
+        "materiau": "tissu"
       },
       "effects": [],
       "flags": {
@@ -21327,7 +21419,8 @@
             "bonusCA": 0,
             "caFixe": null
           }
-        }
+        },
+        "materiau": "crystal_flask"
       },
       "effects": [],
       "flags": {
@@ -31704,7 +31797,8 @@
             "bonusCA": 0,
             "caFixe": null
           }
-        }
+        },
+        "materiau": "metal_tendre"
       },
       "effects": [],
       "flags": {
@@ -36168,7 +36262,8 @@
             "bonusCA": 0,
             "caFixe": null
           }
-        }
+        },
+        "materiau": "tissu"
       },
       "effects": [],
       "flags": {
@@ -38219,7 +38314,8 @@
             "bonusCA": 0,
             "caFixe": null
           }
-        }
+        },
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -42185,7 +42281,8 @@
             "bonusCA": 0,
             "caFixe": null
           }
-        }
+        },
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -44998,7 +45095,8 @@
             "bonusCA": 0,
             "caFixe": null
           }
-        }
+        },
+        "materiau": "cristal"
       },
       "effects": [],
       "flags": {
@@ -45142,7 +45240,8 @@
             "bonusCA": 0,
             "caFixe": null
           }
-        }
+        },
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {

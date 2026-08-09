@@ -3780,7 +3780,8 @@
           "Requise pour dissipation du bien ; alternative à l’eau bénite.",
           "Requise pour flétrissement ; alternative à l’eau bénite.",
           "Sort inversé : malédiction."
-        ]
+        ],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -6184,7 +6185,7 @@
           "sous_type_miroir",
           "objet_miroir_en_argent_petit"
         ],
-        "materiau": "miroir"
+        "materiau": "metal_tendre"
       },
       "effects": [],
       "flags": {
@@ -8252,7 +8253,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -8825,7 +8827,8 @@
           "Requise pour régénération ; alternative à l’eau maudite.",
           "Requise pour résurrection ; alternative à l’eau maudite.",
           "Sort normal."
-        ]
+        ],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -9334,7 +9337,8 @@
         ],
         "conditions_associees": [
           "Requise pour la création d’eau."
-        ]
+        ],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -11452,8 +11456,7 @@
           "categorie_equipement",
           "sous_type_miroir",
           "objet_miroir_en_metal_grand"
-        ],
-        "materiau": "miroir"
+        ]
       },
       "effects": [],
       "flags": {
@@ -14353,7 +14356,7 @@
           "non_consomme"
         ],
         "conditions_associees": [],
-        "materiau": "miroir"
+        "materiau": "metal_tendre"
       },
       "effects": [],
       "flags": {
@@ -14860,7 +14863,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -18453,7 +18457,8 @@
           "categorie_religieux",
           "sous_type_religieux",
           "objet_symbole_beni_argent"
-        ]
+        ],
+        "materiau": "metal_tendre"
       },
       "effects": [],
       "flags": {
@@ -19115,7 +19120,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -19413,7 +19419,8 @@
         ],
         "conditions_associees": [
           "Dons requis si une divination puissante est tentée."
-        ]
+        ],
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -19677,7 +19684,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -20515,7 +20523,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -21919,7 +21928,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -22228,7 +22238,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -26493,7 +26504,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -27215,7 +27227,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -27513,7 +27526,8 @@
         ],
         "conditions_associees": [
           "Alternative du sort inverse : sang ou vapeurs de fumier."
-        ]
+        ],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -28192,7 +28206,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -28290,7 +28305,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -32831,7 +32847,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "liquide"
       },
       "effects": [],
       "flags": {
@@ -34020,7 +34037,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {
@@ -34185,7 +34203,8 @@
         "consommations_associees": [
           "consomme"
         ],
-        "conditions_associees": []
+        "conditions_associees": [],
+        "materiau": "petite_pierre"
       },
       "effects": [],
       "flags": {

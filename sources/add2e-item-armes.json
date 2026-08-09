@@ -3350,7 +3350,8 @@
         "description": "",
         "ajustement_ca_reference": "cimeterre",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -3613,7 +3614,8 @@
         "description": "",
         "ajustement_ca_reference": "epee courte",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -6845,7 +6847,8 @@
         "description": "",
         "ajustement_ca_reference": "cimeterre",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -9846,7 +9849,8 @@
         "description": "",
         "ajustement_ca_reference": "cimeterre",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "epee"
+        "type_arme": "epee",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
@@ -10084,7 +10088,8 @@
         "description": "",
         "ajustement_ca_reference": "fleau fantassin",
         "ajustement_ca_source": "equivalence",
-        "type_arme": "massue"
+        "type_arme": "massue",
+        "materiau": "metal_dur"
       },
       "effects": [],
       "flags": {
