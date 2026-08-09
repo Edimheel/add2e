@@ -173,8 +173,22 @@ function readMagicEnhancement(item) {
     const match = String(value ?? "").match(/[+-]?\d+/);
     if (match) return Math.max(0, Number(match[0]) || 0);
   }
-  const nameMatch = String(item?.name ?? "").match(/\+(\d+)/);
-  return nameMatch ? Math.max(0, Number(nameMatch[1]) || 0) : 0;
+  return 0;
+}
+
+function damageSaveContext(element, context = {}) {
+  const normalized = localNormalize(element);
+  return {
+    ...context,
+    category: context.category ?? normalized,
+    effectType: context.effectType ?? normalized,
+    saveContext: context.saveContext ?? normalized,
+    tags: [
+      ...(Array.isArray(context.tags) ? context.tags : context.tags ? [context.tags] : []),
+      ...(normalized ? [normalized, `damage:${normalized}`] : [])
+    ],
+    source: context.source ?? "damage-resistance-save"
+  };
 }
 
 export function installEffectsEngineDamage(Engine) {
@@ -310,62 +324,69 @@ export function installEffectsEngineDamage(Engine) {
       const succeededTag = tags.find(tag => tag.startsWith(`reduction_degats:${element}:reussite:`))
         ?? tags.find(tag => tag.startsWith(`degats_${element}_si_save_reussi:`))
         ?? "";
+      const saveContext = damageSaveContext(element, { source: "damage-resistance-rule" });
+      const bonus = typeof this.getSaveBonus === "function"
+        ? Number(this.getSaveBonus(actor, "sorts", saveContext)) || 0
+        : 0;
 
       return {
         found: true,
         tags,
         element,
-        bonus: this.getSaveBonusVs(actor, element),
+        bonus,
+        saveContext,
         failedMultiplier: this.getDamageReductionFactor(failedTag.split(":").at(-1), 0.5),
         succeededMultiplier: this.getDamageReductionFactor(succeededTag.split(":").at(-1), 0.25)
       };
     },
 
-    getDamageSaveThreshold(actor) {
-      const system = actor?.system ?? {};
-      if (Array.isArray(system.sauvegardes)) {
-        const value = this.readNumber(system.sauvegardes[4]);
-        if (Number.isFinite(value) && value > 0) return value;
+    getDamageSaveThreshold(actor, context = {}) {
+      if (typeof this.getSaveTarget !== "function") {
+        throw new Error("Le propriétaire canonique ADD2E des jets de sauvegarde n’est pas disponible.");
       }
-      return this.readNumber(
-        system.sauvegarde_sortileges,
-        system.sauvegarde_sorts,
-        system.sauvegardes?.sortileges,
-        system.sauvegardes?.sorts,
-        system.saves?.sorts,
-        system.calculatedSaves?.sorts,
-        system.jp_sort,
-        system.jp_sorts,
-        system.jp?.sorts,
-        system.jp?.sortileges
-      );
+      const threshold = Number(this.getSaveTarget(actor, "sorts", {
+        ...context,
+        source: context.source ?? "damage-save-threshold"
+      }));
+      return Number.isFinite(threshold) && threshold > 0 ? threshold : null;
     },
 
-    async rollDamageSave(actor, bonus = 0) {
-      const threshold = this.getDamageSaveThreshold(actor);
-      if (!Number.isFinite(threshold) || threshold <= 0) {
-        return {
-          canRoll: false,
-          threshold: NaN,
-          total: 0,
-          success: false,
-          bonus: Number(bonus) || 0
-        };
+    async rollDamageSave(actor, bonus = 0, context = {}) {
+      if (typeof this.rollSavingThrow !== "function") {
+        throw new Error("L’exécuteur canonique ADD2E des jets de sauvegarde n’est pas disponible.");
       }
-
-      const value = Number(bonus) || 0;
-      const formula = value ? `1d20${value >= 0 ? "+" : ""}${value}` : "1d20";
-      const roll = await new Roll(formula).evaluate();
-
-      if (game.dice3d) await game.dice3d.showForRoll(roll);
-      const total = Number(roll.total) || 0;
+      const numericBonus = Number(bonus) || 0;
+      const inheritedModifiers = Array.isArray(context.saveModifiers)
+        ? context.saveModifiers
+        : context.saveModifiers === undefined || context.saveModifiers === null
+          ? []
+          : [context.saveModifiers];
+      const saveModifiers = [
+        ...inheritedModifiers,
+        ...(numericBonus ? [{
+          id: `${context.source ?? "damage-save"}:explicit-bonus`,
+          target: "sorts",
+          value: numericBonus,
+          label: context.bonusLabel ?? "Bonus explicite de sauvegarde aux dégâts",
+          source: {
+            kind: "damage",
+            id: context.source ?? "damage-save",
+            name: context.bonusLabel ?? "Résistance aux dégâts"
+          }
+        }] : [])
+      ];
+      const result = await this.rollSavingThrow(actor, "sorts", {
+        ...context,
+        saveModifiers,
+        source: context.source ?? "damage-save",
+        createChat: false,
+        showDice: context.showDice !== false
+      });
       return {
-        canRoll: true,
-        threshold,
-        total,
-        success: total >= threshold,
-        bonus: value,
-        roll
+        ...result,
+        canRoll: result?.ok === true,
+        threshold: Number(result?.target),
+        bonus: Number(result?.bonus) || 0
       };
     },
 
@@ -400,7 +421,10 @@ export function installEffectsEngineDamage(Engine) {
       const rule = this.getDamageResistanceRule(actor, context.element);
       if (!rule.found) return { amount: original, applied: false, original, context };
 
-      const save = await this.rollDamageSave(actor, rule.bonus);
+      const save = await this.rollDamageSave(actor, 0, damageSaveContext(context.element, {
+        ...rule.saveContext,
+        source: "damage-resistance-save"
+      }));
       const multiplier = save.canRoll && save.success ? rule.succeededMultiplier : rule.failedMultiplier;
       const reduced = Math.max(1, Math.floor(original * multiplier));
 
