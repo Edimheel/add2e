@@ -2,7 +2,7 @@
 //  HOOK UNIQUE updateActor
 // =======================
 
-const ADD2E_CHARACTER_DATA_PREP_VERSION = "2026-08-09-canonical-vital-status-consumer-v5";
+const ADD2E_CHARACTER_DATA_PREP_VERSION = "2026-08-09-canonical-vital-status-consumer-v6";
 globalThis.ADD2E_CHARACTER_DATA_PREP_VERSION = ADD2E_CHARACTER_DATA_PREP_VERSION;
 
 const ADD2E_CARAC_CHANGE_KEYS = Object.freeze([
@@ -48,7 +48,7 @@ function add2eActorUpdateChangesHitPoints(changes = {}) {
     || foundry.utils.hasProperty(changes ?? {}, "system.pdv");
 }
 
-Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
+Hooks.on("updateActor", async (actor, changes = {}, options = {}, userId) => {
   if (options?._fromSync) return;
 
   const changeKeys = Object.keys(changes ?? {});
@@ -101,19 +101,24 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   } catch (_e) {}
 
   // =====================================================
-  // 2) Synchronisation des états vitaux après édition manuelle des PV
-  //    Les mutations canoniques synchronisent déjà l'état via setHitPoints().
+  // 2) Synchronisation des états vitaux après modification des PV.
+  //    Une mutation canonique initiée par ce MJ est déjà synchronisée par setHitPoints().
+  //    Une mutation reçue d'un joueur doit en revanche être projetée par le MJ actif.
   // =====================================================
   try {
     const responsibleGM = game.user?.isGM && (!game.users?.activeGM || game.user.id === game.users.activeGM.id);
-    const manualHitPointChange = add2eActorUpdateChangesHitPoints(changes)
-      && options?.add2eHitPointMutation !== true;
-    if (responsibleGM && manualHitPointChange) {
+    const canonicalMutationFromThisGM = options?.add2eHitPointMutation === true
+      && String(userId ?? "") === String(game.user?.id ?? "");
+    const hitPointChangeRequiresVitalSync = add2eActorUpdateChangesHitPoints(changes)
+      && !canonicalMutationFromThisGM;
+    if (responsibleGM && hitPointChangeRequiresVitalSync) {
       if (typeof globalThis.add2eSyncActorVitalStatus !== "function") {
         throw new Error("Le synchroniseur canonique des états vitaux ADD2E est indisponible.");
       }
       await globalThis.add2eSyncActorVitalStatus(actor, {
-        reason: "11-character-data-prep:manual-hit-point-change"
+        reason: options?.add2eHitPointMutation === true
+          ? "11-character-data-prep:remote-canonical-hit-point-change"
+          : "11-character-data-prep:manual-hit-point-change"
       });
     }
   } catch (error) {
