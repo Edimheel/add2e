@@ -183,7 +183,6 @@ export async function add2eRollSaveCard(actor, saveType, context = {}) {
   const engine = add2eRequireCanonicalRollContracts(add2eSheetRollEffectsEngine());
   const result = await engine.rollSavingThrow(actor, saveType, {
     ...context,
-    frontale: context.frontale !== false,
     source: context.source ?? "actor-sheet-save-roll",
     consumer: context.consumer ?? "actor-sheet-roll-presentation",
     createChat: false,
