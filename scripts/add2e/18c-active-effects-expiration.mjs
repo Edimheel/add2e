@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Expiration des effets temporaires.
-// Version : 2026-08-02-active-effect-transformation-expiration-v5
+// Version : 2026-08-09-active-effect-expiration-chat-card-v6
 // ============================================================================
 
 import { add2eVitalEffectKind } from "./18a-vital-status-core.mjs";
@@ -11,7 +11,7 @@ import {
   add2eTimeRemainingRounds
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-08-02-active-effect-transformation-expiration-v5";
+export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-08-09-active-effect-expiration-chat-card-v6";
 
 const LINKED_EFFECT_GROUP_FLAG = "linkedEffectGroup";
 const LINKED_EFFECT_GROUP_HOOKS_FLAG = "ADD2E_LINKED_EFFECT_GROUP_HOOKS_REGISTERED";
@@ -21,20 +21,6 @@ const VADE_REPULSED_REPLACE_QUEUES = new Map();
 function numeric(value, fallback = NaN) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
-}
-
-function htmlEscape(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function chatStyleData() {
-  if (CONST.CHAT_MESSAGE_STYLES) return { style: CONST.CHAT_MESSAGE_STYLES.OTHER };
-  return { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 }
 
 function gmIds() {
@@ -203,43 +189,48 @@ async function notifyExpiredEffect(actor, effectSnapshot, currentRound) {
   const message = expiryDescription(effectSnapshot, actor, currentRound);
 
   try {
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor }),
-      whisper,
-      content: `
-        <div class="add2e-chat-card add2e-effect-expired"
-             style="border:1px solid #8d6e63;border-radius:8px;overflow:hidden;background:#fffaf4;color:#3b2a22;font-family:var(--font-primary);">
-          <div style="display:flex;align-items:center;gap:8px;background:#6d4c41;color:#fff;padding:7px 9px;">
-            <img src="${htmlEscape(img)}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #d7ccc8;background:#fff;" />
-            <div style="flex:1;line-height:1.15;">
-              <div style="font-weight:900;font-size:13px;">Effet expiré</div>
-              <div style="font-size:12px;opacity:.95;">${htmlEscape(effectName)}</div>
-            </div>
-          </div>
-          <div style="padding:8px 10px;background:#fffaf4;">
-            <div style="border:1px solid #bcaaa4;border-radius:6px;background:#fff;padding:8px;text-align:center;font-size:13px;line-height:1.35;">
-              ${htmlEscape(message)}
-            </div>
-            <div style="margin-top:6px;font-size:11px;color:#6d4c41;text-align:center;">
-              Acteur : <b>${htmlEscape(actorName)}</b>
-            </div>
-          </div>
-        </div>`,
-      flags: {
-        add2e: {
-          effectExpirationMessage: true,
-          effectId: effectSnapshot.id ?? null,
-          effectName,
-          actorId: actor.id ?? null,
-          actorUuid: actor.uuid ?? null,
-          round: currentRound ?? null,
-          tick: add2eTimeCurrentTick(),
-          expirationVersion: ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION,
-          timeEngineVersion: ADD2E_TIME_ENGINE_VERSION
-        }
+    if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+      throw new Error("Le constructeur commun des cartes de chat ADD2E n’est pas disponible.");
+    }
+
+    const card = {
+      actor,
+      title: "Effet expiré",
+      icon: "fas fa-hourglass-end",
+      variant: "time",
+      source: {
+        name: effectName,
+        img,
+        type: "Effet temporaire",
+        meta: actorName
       },
-      ...chatStyleData()
-    });
+      rows: [
+        { label: "Acteur", value: actorName },
+        { label: "Effet", value: effectName }
+      ],
+      message,
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor }),
+        whisper,
+        flags: {
+          add2e: {
+            effectExpirationMessage: true,
+            effectId: effectSnapshot.id ?? null,
+            effectName,
+            actorId: actor.id ?? null,
+            actorUuid: actor.uuid ?? null,
+            round: currentRound ?? null,
+            tick: add2eTimeCurrentTick(),
+            expirationVersion: ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION,
+            timeEngineVersion: ADD2E_TIME_ENGINE_VERSION
+          }
+        }
+      }
+    };
+
+    const preview = globalThis.add2eBuildChatCard(card);
+    if (!String(preview ?? "").trim()) throw new Error("La carte d’expiration ADD2E n’a pas pu être construite.");
+    await globalThis.add2eCreateChatCard(card);
     return true;
   } catch (err) {
     console.warn("[ADD2E][AUTO-REMOVE][EXPIRE_MESSAGE_FAILED] Message d'expiration impossible", { actor: actor.name, effectId: effectSnapshot.id, effectName, err });
