@@ -7,6 +7,13 @@ import {
   add2eObjectMagicToArray
 } from "./core.mjs";
 
+const ADD2E_PASSIVE_MAGIC_EFFECT_TYPES = new Set([
+  "attack_bonus",
+  "damage_bonus",
+  "armor_class_bonus",
+  "fixed_armor_class"
+]);
+
 export function add2eObjectPowerOnUsePath(power) {
   return String(
     power?.onUse
@@ -22,6 +29,41 @@ export function add2eObjectPowerOnUsePath(power) {
     ?? power?.linkedSpell?.on_use
     ?? ""
   ).trim();
+}
+
+function add2eObjectPowerEffectTypes(power) {
+  const rawEffects = Array.isArray(power?.effects)
+    ? power.effects
+    : power?.effects && typeof power.effects === "object"
+      ? Object.values(power.effects)
+      : [];
+  const rawTemplates = Array.isArray(power?.effectTemplates)
+    ? power.effectTemplates
+    : power?.effectTemplates && typeof power.effectTemplates === "object"
+      ? Object.values(power.effectTemplates)
+      : [];
+  const types = [...rawEffects, ...rawTemplates]
+    .filter(effect => effect && typeof effect === "object")
+    .map(effect => add2eObjectMagicNormalizeTag(effect?.type ?? effect?.kind ?? ""))
+    .filter(Boolean);
+  return [...new Set(types)];
+}
+
+export function add2eObjectPowerIsActivatable(power) {
+  if (!power || typeof power !== "object") return false;
+
+  const activationType = add2eObjectMagicNormalizeTag(power?.activation?.type);
+  if (activationType === "passive") return false;
+  if (activationType) return true;
+
+  const kind = add2eObjectMagicNormalizeTag(power?.kind);
+  const effectTypes = add2eObjectPowerEffectTypes(power);
+
+  if (kind === "generated") return false;
+  if (effectTypes.length && effectTypes.every(type => ADD2E_PASSIVE_MAGIC_EFFECT_TYPES.has(type))) return false;
+
+  if (kind === "catalogue" && effectTypes.length) return true;
+  return Boolean(add2eObjectPowerOnUsePath(power));
 }
 
 export function add2eObjectPowerCost(power) {
@@ -408,7 +450,7 @@ export function add2eMagicObjectPowerArray(item) {
 export function add2eMagicObjectActivePowerEntries(item) {
   return add2eMagicObjectPowerArray(item)
     .map((power, index) => ({ power, index }))
-    .filter(entry => add2eObjectPowerOnUsePath(entry.power));
+    .filter(entry => add2eObjectPowerIsActivatable(entry.power));
 }
 
 export function add2eMagicObjectChargeInfo(item, _powers = null) {
