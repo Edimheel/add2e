@@ -37,16 +37,6 @@ function potionTargets(actor, selfOnly = false) {
   return targets.length ? targets : (actor ? [actor] : []);
 }
 
-function potionHpDescriptor(actor) {
-  const system = actor?.system ?? {};
-  return [
-    { path: "system.pdv", value: system.pdv, max: system.points_de_coup },
-    { path: "system.pv.value", value: system.pv?.value, max: system.pv?.max },
-    { path: "system.hp.value", value: system.hp?.value, max: system.hp?.max },
-    { path: "system.points_de_vie.value", value: system.points_de_vie?.value, max: system.points_de_vie?.max }
-  ].find(row => Number.isFinite(Number(row.value))) ?? null;
-}
-
 async function potionDuration(config = {}) {
   if (config.durationFormula) {
     const roll = await potionRoll(config.durationFormula);
@@ -203,16 +193,19 @@ export function installEnginePrimitives(Engine) {
       if (config.kind === "healing") {
         const roll = await potionRoll(config.formula);
         const total = potionRollTotal(roll);
-        const hp = potionHpDescriptor(actor);
-        if (!hp) {
-          await this.postGenericEffectChat(actor, config.name, `<p>Soins obtenus : <b>${total}</b>. Aucun champ de points de vie compatible n’a été trouvé.</p>`, item, [roll]);
-          return true;
+        if (typeof this.applyHitPointHealing !== "function") {
+          throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible pour les soins configurés.");
         }
-        const before = Number(hp.value) || 0;
-        const maximum = Number.isFinite(Number(hp.max)) ? Number(hp.max) : before + total;
-        const after = Math.min(maximum, before + total);
-        await actor.update({ [hp.path]: after }, { add2eInternal: true, add2eReason: "potion-healing" });
-        await this.postGenericEffectChat(actor, config.name, `<p>Points de vie : <b>${before} → ${after}</b>.</p><p>Soins effectifs : <b>${after - before}</b>.</p>`, item, [roll]);
+        const healing = await this.applyHitPointHealing(actor, total, {
+          reason: "potion-healing"
+        });
+        await this.postGenericEffectChat(
+          actor,
+          config.name,
+          `<p>Points de vie : <b>${healing.before} → ${healing.after}</b>.</p><p>Soins effectifs : <b>${healing.effective}</b>.</p>`,
+          item,
+          [roll]
+        );
         return true;
       }
 
