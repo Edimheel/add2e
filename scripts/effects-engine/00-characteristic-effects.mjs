@@ -1,4 +1,4 @@
-// ADD2E — Effects Engine / canonicalisation des effets de caractéristiques.
+// ADD2E — Effects Engine / domaine canonique des caractéristiques.
 // Compatible Foundry V13/V14/V15.
 
 import {
@@ -13,6 +13,77 @@ import {
   rawList,
   sourceStableKey
 } from "./00-core-shared.mjs";
+
+export const ADD2E_ABILITY_CHECK_VERSION = "2026-08-09-canonical-ability-check-v2";
+
+const ADD2E_ABILITY_CHECK_DEFINITIONS = Object.freeze({
+  force: Object.freeze({ key: "force", label: "Force", icon: "fas fa-dumbbell" }),
+  dexterite: Object.freeze({ key: "dexterite", label: "Dextérité", icon: "fas fa-running" }),
+  constitution: Object.freeze({ key: "constitution", label: "Constitution", icon: "fas fa-heartbeat" }),
+  intelligence: Object.freeze({ key: "intelligence", label: "Intelligence", icon: "fas fa-brain" }),
+  sagesse: Object.freeze({ key: "sagesse", label: "Sagesse", icon: "fas fa-eye" }),
+  charisme: Object.freeze({ key: "charisme", label: "Charisme", icon: "fas fa-theater-masks" })
+});
+
+function installAbilityCheckResolver(Engine) {
+  Object.defineProperties(Engine, {
+    resolveAbilityCheck: {
+      configurable: true,
+      writable: true,
+      value(actor, ability, context = {}) {
+        if (!actor) throw new Error("Aucun acteur pour ce test de caractéristique.");
+        const target = abilityKey(ability);
+        if (!ADD2E_ABILITIES.has(target)) {
+          throw new Error(`Caractéristique inconnue : ${String(ability ?? "") || "vide"}`);
+        }
+        if (typeof this.resolveAbility !== "function") {
+          throw new Error("Le résolveur canonique ADD2E de caractéristiques n’est pas disponible.");
+        }
+        const definition = ADD2E_ABILITY_CHECK_DEFINITIONS[target];
+        const resolution = this.resolveAbility(actor, target, {
+          ...context,
+          type: context.type ?? "ability-check",
+          source: context.source ?? "ability-check"
+        });
+        return {
+          version: ADD2E_ABILITY_CHECK_VERSION,
+          actor,
+          definition,
+          key: target,
+          label: definition.label,
+          icon: definition.icon,
+          base: Number(resolution?.base) || 0,
+          target: Number(resolution?.total) || 0,
+          resolution,
+          context: { ...context }
+        };
+      }
+    },
+
+    rollAbilityCheck: {
+      configurable: true,
+      writable: true,
+      async value(actor, ability, options = {}) {
+        const resolved = this.resolveAbilityCheck(actor, ability, options);
+        const roll = new Roll("1d20");
+        await roll.evaluate();
+        const d20 = Number(roll.total) || 0;
+        const success = d20 <= resolved.target;
+        return {
+          ...resolved,
+          ok: true,
+          roll,
+          d20,
+          total: d20,
+          success
+        };
+      }
+    }
+  });
+
+  Engine.__add2eAbilityCheckVersion = ADD2E_ABILITY_CHECK_VERSION;
+  globalThis.ADD2E_ABILITY_CHECK_VERSION = ADD2E_ABILITY_CHECK_VERSION;
+}
 
 function characteristicRuleModifier(Engine, rule, defaults = {}, index = 0) {
   const kind = canonicalKey(rule?.kind ?? rule?.type);
@@ -185,6 +256,8 @@ function canonicalizeCharacteristicEffectData(Engine, rawData, effect = null) {
 }
 
 export function installCharacteristicEffectCanonicalization(Engine) {
+  installAbilityCheckResolver(Engine);
+
   if (globalThis.__ADD2E_CHARACTERISTIC_EFFECT_CANONICALIZATION__ === ADD2E_MODIFIER_RESOLVER_VERSION) return;
   globalThis.__ADD2E_CHARACTERISTIC_EFFECT_CANONICALIZATION__ = ADD2E_MODIFIER_RESOLVER_VERSION;
 
