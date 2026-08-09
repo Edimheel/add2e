@@ -1,9 +1,9 @@
 // ============================================================================
 // ADD2E — États vitaux : constantes, lecture PV et règles métier.
-// Version : 2026-07-26-vital-status-resurrection-regeneration-v3
+// Version : 2026-08-09-vital-status-canonical-hit-points-v4
 // ============================================================================
 
-export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-07-26-vital-status-resurrection-regeneration-v3";
+export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-08-09-vital-status-canonical-hit-points-v4";
 export const ADD2E_RESURRECTION_RULES_VERSION = "2026-07-26-resurrection-constitution-v1";
 export const ADD2E_NATURAL_REGENERATION_VERSION = "2026-07-26-natural-regeneration-v1";
 
@@ -83,27 +83,29 @@ export function add2eVitalIsMonster(actor) {
   return values.some(v => ["monster", "monstre", "monsters", "monstres", "creature", "creature_monstre", "npc_monster"].includes(v));
 }
 
+function add2eVitalHitPointEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (
+    !engine
+    || typeof engine.readHitPoints !== "function"
+    || typeof engine.readMaximumHitPoints !== "function"
+    || typeof engine.setHitPoints !== "function"
+    || typeof engine.applyHitPointHealing !== "function"
+  ) {
+    throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible.");
+  }
+  return engine;
+}
+
 export function add2eVitalReadHP(actor) {
-  const sys = actor?.system ?? {};
-  const raw = sys.pdv ?? sys.pv?.value ?? sys.hp?.value ?? sys.hp;
-  const fallback = sys.points_de_coup ?? sys.pv?.max ?? sys.hp?.max ?? 0;
-  return add2eVitalNumber(raw, add2eVitalNumber(fallback, 0));
+  return add2eVitalHitPointEngine().readHitPoints(actor);
 }
 
 export function add2eVitalReadMaximumHP(actor) {
-  const sys = actor?.system ?? {};
-  return add2eVitalNumber(
-    sys.points_de_coup ?? sys.pv?.max ?? sys.hp?.max ?? sys.points_de_vie?.max,
-    0
-  );
+  return add2eVitalHitPointEngine().readMaximumHitPoints(actor) ?? 0;
 }
 
-export function add2eVitalHpUpdatePath(actor) {
-  const sys = actor?.system ?? {};
-  if (sys.pdv !== undefined) return "system.pdv";
-  if (sys.pv?.value !== undefined) return "system.pv.value";
-  if (sys.hp?.value !== undefined) return "system.hp.value";
-  if (sys.hp !== undefined && typeof sys.hp !== "object") return "system.hp";
+export function add2eVitalHpUpdatePath() {
   return "system.pdv";
 }
 
@@ -218,12 +220,6 @@ async function add2eVitalCreateCard(card) {
   return globalThis.add2eCreateChatCard(card);
 }
 
-async function add2eVitalSync(actor, reason) {
-  if (typeof globalThis.add2eSyncActorVitalStatus === "function") {
-    await globalThis.add2eSyncActorVitalStatus(actor, { reason });
-  }
-}
-
 export async function add2eAttemptResurrection({
   targetActor,
   casterActor = null,
@@ -278,15 +274,12 @@ export async function add2eAttemptResurrection({
       lastAttemptSource: sourceItem?.uuid ?? source,
       lastAttemptResult: "failure"
     };
-    await targetActor.update({
-      "flags.add2e.resurrection": nextState,
-      [add2eVitalHpUpdatePath(targetActor)]: deadHp
-    }, {
-      add2eInternal: true,
-      add2eReason: "resurrection-survival-failure",
-      add2eResurrection: true
+    await engine.setHitPoints(targetActor, {
+      current: deadHp,
+      reason: "resurrection-survival-failure",
+      updates: { "flags.add2e.resurrection": nextState },
+      updateOptions: { add2eResurrection: true }
     });
-    await add2eVitalSync(targetActor, "resurrection-survival-failure");
     await add2eVitalCreateCard({
       actor: targetActor,
       title: `${spellName} — mort définitive`,
@@ -349,12 +342,11 @@ export async function add2eAttemptResurrection({
   if (typeof targetActor.sheet?.autoSetCaracAjustements === "function") {
     await targetActor.sheet.autoSetCaracAjustements();
   }
-  await targetActor.update({ [add2eVitalHpUpdatePath(targetActor)]: 1 }, {
-    add2eInternal: true,
-    add2eReason: "resurrection-restore-life",
-    add2eResurrection: true
+  await engine.setHitPoints(targetActor, {
+    current: 1,
+    reason: "resurrection-restore-life",
+    updateOptions: { add2eResurrection: true }
   });
-  await add2eVitalSync(targetActor, "resurrection-success");
 
   const afterConstitution = engine.resolveAbilityDerived(targetActor, "constitution", {
     source: `${source}:result`,
@@ -549,19 +541,19 @@ export async function add2eApplyNaturalRegeneration(actor, {
   }
 
   const missing = Math.max(0, maximum - current);
-  const healed = Math.min(missing, intervals);
-  const nextCurrent = Math.min(maximum, current + healed);
-  const reachedMaximum = nextCurrent >= maximum;
+  const requestedHealing = Math.min(missing, intervals);
+  const predictedCurrent = Math.min(maximum, current + requestedHealing);
+  const reachedMaximum = predictedCurrent >= maximum;
   const nextLastTick = reachedMaximum ? after : lastTick + (intervals * intervalRounds);
-  await actor.update({
-    [add2eVitalHpUpdatePath(actor)]: nextCurrent,
-    "flags.add2e.naturalRegeneration": { ...nextStateBase, lastTick: nextLastTick }
-  }, {
-    add2eInternal: true,
-    add2eReason: "natural-regeneration-heal",
-    add2eNaturalRegeneration: true
+  const mutation = await engine.applyHitPointHealing(actor, requestedHealing, {
+    reason: "natural-regeneration-heal",
+    updates: {
+      "flags.add2e.naturalRegeneration": { ...nextStateBase, lastTick: nextLastTick }
+    },
+    updateOptions: { add2eNaturalRegeneration: true }
   });
-  await add2eVitalSync(actor, "natural-regeneration-heal");
+  const healed = Number(mutation.effective) || 0;
+  const nextCurrent = Number(mutation.after);
   if (healed > 0) await add2eNaturalRegenerationCard(actor, healed, nextCurrent, maximum, intervalRounds, reason);
 
   return {
