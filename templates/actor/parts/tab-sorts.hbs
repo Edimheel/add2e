@@ -106,7 +106,7 @@
                   </div>
                   {{#each add2eObjectMagicItems as |item|}}
                     <div class="add2e-object-magic-item" data-add2e-recharge-item data-item-id="{{item.id}}" style="margin:0;border-bottom:1px solid #e4d49c;padding:0;{{#unless @first}}border-top:2px solid #c8aa5a;{{/unless}}">
-                      <div style="display:grid;grid-template-columns:minmax(0,1fr) 118px 32px;gap:6px;align-items:center;min-height:30px;padding:2px 4px;background:rgba(240,224,169,.34);">
+                      <div style="display:grid;grid-template-columns:minmax(0,1fr) 118px 32px;gap:6px;align-items:center;min-height:30px;padding:2px 4px;background:#ead99d;">
                         <div style="min-width:0;display:flex;align-items:center;gap:5px;line-height:1.05;">
                           <img src="{{item.img}}" alt="{{item.name}}" style="width:24px;height:24px;min-width:24px;border-radius:3px;object-fit:cover;border:0;">
                           {{#if item.description}}
@@ -132,9 +132,9 @@
                       <table class="sort-table add2e-object-magic-table" style="margin:0;border:0;">
                         <thead>
                           <tr>
-                            <th style="width:34px;padding:2px 3px;"></th>
-                            <th style="padding:2px 4px;">Pouvoir</th>
-                            <th style="width:118px;padding:2px 4px;text-align:center;">Coût en charges</th>
+                            <th style="width:34px;padding:2px 3px;background:rgba(240,224,169,.34);"></th>
+                            <th style="padding:2px 4px;background:rgba(240,224,169,.34);">Pouvoir</th>
+                            <th style="width:118px;padding:2px 4px;text-align:center;background:rgba(240,224,169,.34);">Coût en charges</th>
                           </tr>
                         </thead>
                         <tbody>
