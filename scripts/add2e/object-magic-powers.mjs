@@ -68,13 +68,59 @@ function add2eMagicText(...values) {
   return "";
 }
 
+function add2eMagicPowerKey(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function add2eMagicCanonicalPower(power) {
+  if (!power || typeof power !== "object") return null;
+
+  if (typeof globalThis.add2eGetMagicPowerById === "function") {
+    for (const rawId of [power.catalogueId, power.id]) {
+      const id = String(rawId ?? "").trim();
+      if (!id) continue;
+      const found = globalThis.add2eGetMagicPowerById(id);
+      if (found) return found;
+    }
+  }
+
+  const catalogue = typeof globalThis.add2eGetMagicPowerCatalogue === "function"
+    ? globalThis.add2eGetMagicPowerCatalogue()
+    : globalThis.game?.add2e?.magicPowerCatalogue?.get?.() ?? null;
+  const powers = Array.isArray(catalogue?.powers) ? catalogue.powers : [];
+  if (!powers.length) return null;
+
+  const labels = new Set([
+    power.catalogueLabel,
+    power.label,
+    power.name,
+    power.nom,
+    power.displayName
+  ].map(add2eMagicPowerKey).filter(Boolean));
+  if (!labels.size) return null;
+
+  const matches = powers.filter(candidate => {
+    const keys = [candidate?.label, candidate?.name, candidate?.id]
+      .map(add2eMagicPowerKey)
+      .filter(Boolean);
+    return keys.some(key => labels.has(key));
+  });
+  return matches.length === 1 ? matches[0] : null;
+}
+
 function add2eMagicPowerIsActivatable(power) {
-  const catalogueId = String(power?.catalogueId ?? "").trim();
-  const canonicalPower = catalogueId && typeof globalThis.add2eGetMagicPowerById === "function"
-    ? globalThis.add2eGetMagicPowerById(catalogueId)
-    : null;
+  const canonicalPower = add2eMagicCanonicalPower(power);
   const activationType = String(canonicalPower?.activation?.type ?? power?.activation?.type ?? "").trim().toLowerCase();
-  return activationType !== "passive";
+  if (activationType === "passive") return false;
+  if (activationType) return true;
+  return Boolean(add2eObjectPowerOnUsePath(power));
 }
 
 function add2eMagicLinkedSpellEffect(power) {
