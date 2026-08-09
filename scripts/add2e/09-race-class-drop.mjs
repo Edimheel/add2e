@@ -4,7 +4,7 @@
 // ============================================================
 
 import "./09a-race-class-drop-core.mjs";
-import "./09b-race-class-drop-wrapper.mjs";
+import "./09b-race-class-drop-wrapper-v2.mjs";
 
 const ADD2E_CLASS_EFFECT_DIAG_VERSION = "2026-07-11-class-effect-lifecycle-diag-v1";
 globalThis.ADD2E_CLASS_EFFECT_DIAG_VERSION = ADD2E_CLASS_EFFECT_DIAG_VERSION;
