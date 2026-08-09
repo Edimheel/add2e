@@ -1,5 +1,5 @@
 // ADD2E — onUse Clerc niveaux 5-7 : Guérison
-// Version : 2026-05-05-clerc-n5-7-v2-flat
+// Version : 2026-08-09-canonical-hp-dialog-chat-v3
 // Retour attendu par le moteur ADD2E : true = sort consommé, false = sort non consommé.
 
 const ADD2E_SORT_CONFIG = {
@@ -61,54 +61,57 @@ function add2eGetTargets({ fallbackCaster = true } = {}) {
   return (fallbackCaster && casterToken) ? [casterToken] : [];
 }
 
+function add2eHitPointEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (
+    !engine
+    || typeof engine.readHitPoints !== "function"
+    || typeof engine.readMaximumHitPoints !== "function"
+    || typeof engine.applyHitPointDamage !== "function"
+    || typeof engine.applyHitPointHealing !== "function"
+  ) {
+    throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible.");
+  }
+  return engine;
+}
+
 async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? (typeof add2eGetCasterToken === "function" ? add2eGetCasterToken() : null);
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
+
+  const casterToken = speakerToken ?? add2eGetCasterToken();
   const casterActor = actor ?? casterToken?.actor ?? null;
   const casterName = casterActor?.name ?? casterToken?.name ?? "Clerc";
   const spellName = item?.name ?? title ?? "Sort divin";
-  const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
   const targets = Array.from(game.user.targets ?? []);
   const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
   const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? options.regle ?? "";
-  const subtitle = options.subtitle ?? "Sort divin";
+  const rule = options.rule ?? options.regle ?? "Effet du sort appliqué selon sa description et l’arbitrage du MD.";
 
-  const safeCaster = add2eHtmlEscape(casterName);
-  const safeSpell = add2eHtmlEscape(spellName);
-  const safeSubtitle = add2eHtmlEscape(subtitle);
-  const safeTarget = add2eHtmlEscape(targetLabel);
-  const safeOutcome = add2eHtmlEscape(outcome);
-  const safeCasterImg = add2eHtmlEscape(casterImg);
-  const safeSpellImg = add2eHtmlEscape(spellImg);
-
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
-    content: `
-      <div class="add2e-chat-card add2e-clerc-sort"
-           style="border:1px solid #c79222;border-radius:8px;overflow:hidden;background:#fff8e6;color:#5a3b12;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#9f6b0a;color:#fff;padding:7px 9px;">
-          <img src="${safeCasterImg}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #f3d48a;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${safeCaster}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${safeSpell}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">${safeSubtitle}</div>
-          <img src="${safeSpellImg}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #f0d391;background:#fff;" />
-        </div>
-        <div style="padding:9px 10px 10px 10px;background:#fff8e6;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${safeTarget}</div>
-          <div style="border:1px solid #e0ae37;border-radius:6px;background:#fffdf5;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#1c9b4b;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${safeOutcome}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
-          </div>
-          <details style="border:1px solid #e0ae37;border-radius:5px;background:#fffdf5;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#6a4611;">Règle appliquée</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule || "Effet du sort appliqué selon sa description et l’arbitrage du MD."}</div>
-          </details>
-        </div>
-      </div>`
-  });
+  const card = {
+    actor: casterActor,
+    title: title ?? spellName,
+    icon: "fas fa-hand-holding-medical",
+    variant: options.variant ?? "spell",
+    source: {
+      name: casterName,
+      img: casterToken?.document?.texture?.src ?? casterActor?.img ?? item?.img ?? "icons/svg/mystery-man.svg",
+      type: options.subtitle ?? "Sort divin"
+    },
+    rows: [
+      { label: "Sort", value: spellName },
+      { label: "Cible", value: String(targetLabel) },
+      { label: "Effet", value: String(outcome) }
+    ],
+    trustedBodyHtml: `${html}<details style="margin-top:8px;"><summary>Règle appliquée</summary><div style="padding-top:6px;">${rule}</div></details>`,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
+      rolls: Array.isArray(options.rolls) ? options.rolls.filter(Boolean) : []
+    }
+  };
+  globalThis.add2eBuildChatCard(card);
+  return globalThis.add2eCreateChatCard(card);
 }
 
 async function add2eApplyTaggedEffect(targetActor, { name, img, tags, rounds = 0, description = "", changes = [] }) {
@@ -149,27 +152,41 @@ async function add2eChooseMode(config) {
   ].includes(config.script_type);
 
   if (modes.length <= 1 && !needsNote) return { mode: modes[0]?.id ?? "normal" };
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
 
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = value => { if (!done) { done = true; resolve(value); } };
+  let content = `<form class="add2e-cleric-spell-mode-form"><p><b>${add2eHtmlEscape(config.name)}</b></p>`;
+  if (needsNote) {
+    content += `<div class="form-group"><label>Note de scène / cible / paramètres</label><textarea name="note" rows="3"></textarea></div>`;
+  }
+  content += `</form>`;
 
-    let content = `<form><p><b>${add2eHtmlEscape(config.name)}</b></p>`;
-    if (needsNote) {
-      content += `<div class="form-group"><label>Note de scène / cible / paramètres</label><textarea name="note" rows="3"></textarea></div>`;
-    }
-    content += `</form>`;
+  const buttons = modes.map((mode, index) => ({
+    action: mode.id,
+    label: mode.label,
+    icon: "<i class='fas fa-wand-magic-sparkles'></i>",
+    default: index === 0,
+    callback: (_event, button) => ({
+      mode: mode.id,
+      note: String(button.form?.elements?.note?.value ?? "")
+    })
+  }));
+  buttons.push({
+    action: "cancel",
+    label: "Annuler",
+    icon: "<i class='fas fa-times'></i>",
+    callback: () => null
+  });
 
-    const buttons = {};
-    for (const mode of modes) {
-      buttons[mode.id] = {
-        label: mode.label,
-        callback: html => finish({ mode: mode.id, note: html?.find?.("[name='note']")?.val?.() ?? "" })
-      };
-    }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-
-    new Dialog({ title: config.name, content, buttons, default: modes[0]?.id ?? "normal", close: () => finish(null) }).render(true);
+  return globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: modes[0]?.id ?? "normal",
+    add2eClasses: ["add2e-cleric-spell-mode"],
+    window: { title: config.name },
+    content,
+    buttons,
+    close: () => null
   });
 }
 
@@ -205,25 +222,45 @@ async function add2eHeal(config, choice) {
   const inverse = choice?.mode === "inverse";
   const formula = config.dice || "3d8+3";
   const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }), flavor: inverse ? `Forme inversée — ${config.name}` : config.name });
-
   const target = targets[0];
   const targetActor = target.actor ?? target;
-  const amount = Number(roll.total) || 0;
-  const maxHP = Number(targetActor.system?.points_de_coup ?? targetActor.system?.pv_max ?? targetActor.system?.hp?.max ?? 0) || 0;
-  const curHP = Number(targetActor.system?.pdv ?? targetActor.system?.pv ?? targetActor.system?.hp?.value ?? 0) || 0;
+  const amount = Math.max(0, Number(roll.total) || 0);
+  const engine = add2eHitPointEngine();
 
   if (inverse) {
-    const newHp = Math.max(0, curHP - amount);
-    await targetActor.update({ "system.pdv": newHp });
-    await add2eChat("BLESSURES", `<p>Jet : <b>${roll.total}</b></p><p>PV perdus : <b>${amount}</b></p>`, null, { targetLabel: target.name, outcome: "BLESSURES", rule: "Forme inversée : dégâts appliqués à la cible touchée." });
+    const damage = await engine.applyHitPointDamage(targetActor, amount, {
+      reason: `${config.slug || "cleric-spell"}-inverse-damage`
+    });
+    await add2eChat(
+      "BLESSURES",
+      `<p>Jet : <b>${roll.total}</b></p><p>PV perdus : <b>${Number(damage?.effective) || 0}</b></p>`,
+      null,
+      {
+        targetLabel: target.name,
+        outcome: "BLESSURES",
+        rule: "Forme inversée : dégâts appliqués à la cible touchée.",
+        variant: "failure",
+        rolls: [roll]
+      }
+    );
     return true;
   }
 
-  const newHp = maxHP ? Math.min(maxHP, curHP + amount) : curHP + amount;
-  const healed = Math.max(0, newHp - curHP);
-  await targetActor.update({ "system.pdv": newHp });
-  await add2eChat("SOINS", `<p>Jet : <b>${roll.total}</b></p><p>PV rendus : <b>${healed}</b> ${maxHP ? "(limité par le maximum)" : ""}</p>`, null, { targetLabel: target.name, outcome: "SOINS", rule: add2eHtmlEscape(config.description) });
+  const healing = await engine.applyHitPointHealing(targetActor, amount, {
+    reason: `${config.slug || "cleric-spell"}-healing`
+  });
+  await add2eChat(
+    "SOINS",
+    `<p>Jet : <b>${roll.total}</b></p><p>PV rendus : <b>${Number(healing?.effective) || 0}</b> (limité par le maximum)</p>`,
+    null,
+    {
+      targetLabel: target.name,
+      outcome: "SOINS",
+      rule: add2eHtmlEscape(config.description),
+      variant: "success",
+      rolls: [roll]
+    }
+  );
   return true;
 }
 
@@ -233,11 +270,17 @@ async function add2eFullHeal(config) {
 
   const target = targets[0];
   const targetActor = target.actor ?? target;
-  const maxHP = Number(targetActor.system?.points_de_coup ?? targetActor.system?.pv_max ?? targetActor.system?.hp?.max ?? 0) || 0;
-  const curHP = Number(targetActor.system?.pdv ?? targetActor.system?.pv ?? targetActor.system?.hp?.value ?? 0) || 0;
-  const healed = maxHP ? Math.max(0, maxHP - curHP) : 0;
+  const engine = add2eHitPointEngine();
+  const maxHP = engine.readMaximumHitPoints(targetActor);
+  const curHP = engine.readHitPoints(targetActor);
+  if (!Number.isFinite(maxHP) || maxHP <= 0) {
+    ui.notifications.error(`${config.name} : PV maximum canoniques introuvables.`);
+    return false;
+  }
 
-  if (maxHP) await targetActor.update({ "system.pdv": maxHP });
+  const healing = await engine.applyHitPointHealing(targetActor, Math.max(0, maxHP - curHP), {
+    reason: `${config.slug || "cleric-spell"}-full-healing`
+  });
 
   await add2eApplyTaggedEffect(targetActor, {
     name: config.name,
@@ -247,7 +290,17 @@ async function add2eFullHeal(config) {
     description: config.description
   });
 
-  await add2eChat("GUÉRISON", `<p>PV rendus : <b>${healed}</b></p><p>La guérison complète et les états retirés restent à valider selon la règle.</p>`, null, { targetLabel: target.name, outcome: "GUÉRISON", rule: add2eHtmlEscape(config.description) });
+  await add2eChat(
+    "GUÉRISON",
+    `<p>PV rendus : <b>${Number(healing?.effective) || 0}</b></p><p>La guérison complète et les états retirés restent à valider selon la règle.</p>`,
+    null,
+    {
+      targetLabel: target.name,
+      outcome: "GUÉRISON",
+      rule: add2eHtmlEscape(config.description),
+      variant: "success"
+    }
+  );
   return true;
 }
 
@@ -255,12 +308,11 @@ async function add2eDamage(config) {
   const targets = add2eGetTargets({ fallbackCaster: false });
   const formula = config.dice && config.dice !== "special" ? config.dice : "1d20";
   const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }), flavor: config.name });
 
   await add2eChat(config.name, `
     <p>Jet indicatif : <b>${roll.total}</b> (${formula})</p>
     ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `, null, { outcome: "EFFET OFFENSIF", rule: add2eHtmlEscape(config.description) });
+  `, null, { outcome: "EFFET OFFENSIF", rule: add2eHtmlEscape(config.description), variant: "failure", rolls: [roll] });
   return true;
 }
 
