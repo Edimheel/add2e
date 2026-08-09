@@ -68,6 +68,11 @@ function add2eMagicText(...values) {
   return "";
 }
 
+function add2eMagicPowerIsActivatable(power) {
+  const activationType = String(power?.activation?.type ?? "").trim().toLowerCase();
+  return activationType !== "passive";
+}
+
 function add2eMagicLinkedSpellEffect(power) {
   return (Array.isArray(power?.effects) ? power.effects : [])
     .find(effect => ["linked_spell", "linked-spell", "sort_lie", "sort-lié"].includes(String(effect?.type ?? effect?.kind ?? "").trim().toLowerCase()))
@@ -183,7 +188,7 @@ function add2eDecorateMagicPower(power, item = null) {
   decorated.activationLabel = activation.label;
   decorated.temps_incantation = activation.label;
   if (activation.segment !== null) decorated.initiativeSegment = activation.segment;
-  if (decorated.kind === "catalogue" && !add2eObjectPowerOnUsePath(decorated)) {
+  if (decorated.kind === "catalogue" && add2eMagicPowerIsActivatable(decorated) && !add2eObjectPowerOnUsePath(decorated)) {
     decorated.onUse = "add2e://magic-catalogue";
     decorated.onuse = decorated.onUse;
     decorated.on_use = decorated.onUse;
@@ -234,7 +239,7 @@ export function add2eMagicObjectConfiguredPowerArray(item) {
 export function add2eMagicObjectConfiguredPowerEntries(item) {
   return add2eMagicObjectConfiguredPowerArray(item)
     .map((power, index) => ({ power: add2eDecorateMagicPower(power, item), index }))
-    .filter(entry => add2eObjectPowerOnUsePath(entry.power));
+    .filter(entry => add2eMagicPowerIsActivatable(entry.power) && add2eObjectPowerOnUsePath(entry.power));
 }
 
 async function add2eExecuteObjectMagicPowerGuarded(actor, itemSource, power, index, sheet = null) {
