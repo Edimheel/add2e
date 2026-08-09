@@ -84,6 +84,65 @@ function add2eApplyThiefBonusTooltips(actor, sheetRoot) {
   }
 }
 
+function add2eApplyObjectMagicHierarchy(sheetRoot) {
+  const panel = sheetRoot?.querySelector?.(".add2e-object-magic-panel");
+  if (!panel) return;
+
+  for (const item of panel.querySelectorAll(".add2e-object-magic-item")) {
+    const itemRow = item.firstElementChild;
+    if (!(itemRow instanceof HTMLElement)) continue;
+
+    itemRow.style.setProperty("background", "#e1c878", "important");
+    itemRow.style.setProperty("border-left", "4px solid #8f6515", "important");
+    itemRow.style.setProperty("box-shadow", "inset 0 -1px 0 rgba(111,75,18,.24)", "important");
+
+    const itemName = itemRow.querySelector(".sort-name-link") ?? itemRow.querySelector("span");
+    if (itemName instanceof HTMLElement) {
+      itemName.style.setProperty("color", "#4b2e0b", "important");
+      itemName.style.setProperty("font-size", ".98rem", "important");
+      itemName.style.setProperty("font-weight", "950", "important");
+    }
+  }
+
+  for (const row of panel.querySelectorAll("tr.add2e-object-magic-power-row")) {
+    if (!(row instanceof HTMLElement)) continue;
+
+    row.style.setProperty("background", "#fffaf0", "important");
+    row.style.setProperty("border-left", "4px solid #d4b45a", "important");
+
+    const iconCell = row.children?.[0];
+    const nameCell = row.children?.[1];
+    if (iconCell instanceof HTMLElement) iconCell.style.setProperty("padding-left", "9px", "important");
+    if (nameCell instanceof HTMLElement) nameCell.style.setProperty("padding-left", "2px", "important");
+
+    const image = row.querySelector("img.sort-cast-img");
+    if (image instanceof HTMLElement) {
+      for (const property of ["width", "height", "min-width", "max-width", "min-height", "max-height"]) {
+        image.style.setProperty(property, "22px", "important");
+      }
+    }
+
+    const link = row.querySelector(".sort-name-link");
+    if (link instanceof HTMLElement) {
+      link.style.setProperty("color", "#56328a", "important");
+      link.style.setProperty("font-size", ".9rem", "important");
+      link.style.setProperty("font-weight", "700", "important");
+
+      if (!nameCell?.querySelector?.(".add2e-object-magic-child-marker")) {
+        const marker = document.createElement("span");
+        marker.className = "add2e-object-magic-child-marker";
+        marker.textContent = "↳";
+        marker.setAttribute("aria-hidden", "true");
+        marker.style.marginRight = "5px";
+        marker.style.color = "#9a6a20";
+        marker.style.fontWeight = "900";
+        marker.style.lineHeight = "1";
+        nameCell?.insertBefore?.(marker, link);
+      }
+    }
+  }
+}
+
 export function add2eEnhanceCharacterSheetUi(sheet, html) {
   const actor = sheet?.actor ?? sheet?.document;
   if (!actor || actor.type !== "personnage") return;
@@ -95,6 +154,7 @@ export function add2eEnhanceCharacterSheetUi(sheet, html) {
   injectCapacitesTab(sheet, sheetRoot);
   add2eApplyThiefBonusTooltips(actor, sheetRoot);
   injectCharacterUiStyles(sheetRoot);
+  add2eApplyObjectMagicHierarchy(sheetRoot);
   add2eApplySpellJsonColumns(sheet, sheetRoot);
 
   sheet._add2eActivateTab?.(sheet._add2eActiveTab || sheet._add2eReadStoredTab?.() || "resume", sheetRoot);
