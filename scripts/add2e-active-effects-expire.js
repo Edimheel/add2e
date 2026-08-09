@@ -80,12 +80,6 @@ function add2eClone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function add2eEscapeHtml(value) {
-  const div = document.createElement("div");
-  div.textContent = String(value ?? "");
-  return div.innerHTML;
-}
-
 function add2eCurrentRoundForEffects() {
   const round = Number(game.combat?.round ?? 0);
   return Number.isFinite(round) && round > 0 ? round : 0;
@@ -969,63 +963,6 @@ export async function add2eApplyTimedTokenTransformation({ actor, token, effectD
   return { ok: true, cancelled: false, effect, prepared };
 }
 
-function add2eSavingThrowNames() {
-  return ["Paralysie", "Pétrification", "Baguettes", "Souffles", "Sorts"];
-}
-
-function add2eSavingThrowThreshold(actor, index) {
-  const system = actor?.system ?? {};
-  const candidates = [
-    Array.isArray(system.sauvegardes) ? system.sauvegardes[index] : null,
-    Array.isArray(system.savingThrows) ? system.savingThrows[index] : null,
-    system.sauvegardes?.[index],
-    system.savingThrows?.[index],
-    system.details_classe?.progression?.[Math.max(0, Number(system.niveau ?? 1) - 1)]?.savingThrows?.[index]
-  ];
-  for (const value of candidates) {
-    const threshold = add2eNumber(value, NaN);
-    if (Number.isFinite(threshold) && threshold > 0) return threshold;
-  }
-  return NaN;
-}
-
-export async function add2eRollSavingThrow(actor, { index = 4, label = null, sourceName = "", token = null, createChat = true } = {}) {
-  const saveIndex = Math.max(0, Math.floor(add2eNumber(index, 4)));
-  const saveLabel = label || add2eSavingThrowNames()[saveIndex] || "Jet de sauvegarde";
-  const threshold = add2eSavingThrowThreshold(actor, saveIndex);
-  if (!actor || !Number.isFinite(threshold) || threshold <= 0) return { ok: false, success: false, threshold: NaN, total: 0, bonus: 0, roll: null, message: null };
-  const roll = await new Roll("1d20").evaluate({ async: true });
-  if (game.dice3d) await game.dice3d.showForRoll(roll);
-  let bonus = 0;
-  try {
-    const analysis = globalThis.Add2eEffectsEngine?.analyze?.(actor, { type: "save", vsType: saveLabel, frontale: true }) ?? {};
-    bonus = add2eNumber(analysis.bonus_save, 0);
-  } catch (_error) {}
-  const rolled = add2eNumber(roll.total, 0);
-  const total = rolled + bonus;
-  const success = total >= threshold;
-  let message = null;
-  if (createChat) {
-    const colors = ["#c48642", "#6394e8", "#b12f95", "#e67e22", "#a173d9"];
-    const icons = ["fa-skull-crossbones", "fa-mountain", "fa-magic", "fa-fire", "fa-scroll"];
-    const color = colors[saveIndex] ?? "#6c4e95";
-    const icon = icons[saveIndex] ?? "fa-dice-d20";
-    const source = String(sourceName ?? "").trim();
-    const sourceLine = source ? `<div style="margin-top:4px;font-size:12px;color:#555;">Contre : <b>${add2eEscapeHtml(source)}</b></div>` : "";
-    message = await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor, token }),
-      content: `
-        <div class="add2e-card-test" style="border-radius:13px;box-shadow:0 2px 10px #cfdfff88;background:linear-gradient(100deg,#f9fafd 90%,#e6e8fb 100%);border:1.4px solid ${color};max-width:420px;padding:.85em 1.1em .8em;font-family:var(--font-primary);">
-          <div style="display:flex;align-items:center;gap:.7em;margin-bottom:.5em;"><i class="fas ${icon}" style="font-size:2em;color:${color};"></i><span style="font-size:1.12em;font-weight:bold;color:${color};">${add2eEscapeHtml(saveLabel)}</span><span style="margin-left:auto;font-size:1em;font-weight:500;color:#666;">Jet de sauvegarde</span></div>
-          <div style="font-size:1.09em;margin-bottom:.25em;">Seuil : <b>${threshold}</b>&nbsp;&nbsp;|&nbsp;&nbsp;Résultat : <b>${rolled}</b>${bonus ? `&nbsp;&nbsp;|&nbsp;&nbsp;Effets : <b>${bonus >= 0 ? "+" : ""}${bonus}</b> → <b>${total}</b>` : ""}</div>
-          <div style="margin:.2em 0 .1em;font-size:1.1em;"><span style="font-weight:600;color:${success ? "#1cb360" : "#c34040"};">${success ? "✔️ Réussite" : "❌ Échec"}</span></div>
-          ${sourceLine}
-        </div>`
-    });
-  }
-  return { ok: true, success, threshold, total, bonus, roll, message };
-}
-
 globalThis.add2ePrepareTokenTransformation = add2ePrepareTokenTransformation;
 globalThis.add2ePrepareDocumentTransformation = add2ePrepareDocumentTransformation;
 globalThis.add2eFindTokenTransformationEffects = add2eFindTokenTransformationEffects;
@@ -1038,7 +975,6 @@ globalThis.add2eDeleteTokenTransformationEffects = add2eDeleteTokenTransformatio
 globalThis.add2eDeleteDocumentTransformationEffects = add2eDeleteDocumentTransformationEffects;
 globalThis.add2eApplyTimedTokenTransformation = add2eApplyTimedTokenTransformation;
 globalThis.add2eApplyDocumentTransformation = add2eApplyDocumentTransformation;
-globalThis.add2eRollSavingThrow = add2eRollSavingThrow;
 
 function add2eEffectDurationLabel(effect) {
   const remainingData = add2eTimeRemainingRounds(effect, add2eCurrentRoundForEffects());
