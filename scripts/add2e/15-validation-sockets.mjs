@@ -30,7 +30,7 @@ const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
 const FAMILIAR_SCOPE = "add2e";
 const FAMILIAR_FLAG = "familiar";
 const FAMILIAR_RANGE_DEFAULT = 12;
-const VERSION = "2026-08-08-gm-relay-item-mutation-v13";
+const VERSION = "2026-08-09-gm-relay-canonical-hit-points-v14";
 const TAG = "[ADD2E][GM-RELAY]";
 
 const FAMILIAR_ASSETS = Object.freeze({
@@ -65,6 +65,20 @@ function clone(value) {
 function num(value, fallback = 0) {
   const result = Number(value);
   return Number.isFinite(result) ? result : fallback;
+}
+
+function hitPointEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (
+    !engine
+    || typeof engine.readHitPoints !== "function"
+    || typeof engine.readMaximumHitPoints !== "function"
+    || typeof engine.applyHitPointDamage !== "function"
+    || typeof engine.applyHitPointHealing !== "function"
+  ) {
+    throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible.");
+  }
+  return engine;
 }
 
 function relayArray(value) {
@@ -183,20 +197,22 @@ async function normalizeCreatedEffect(effect) {
 async function applyDamage(payload = {}) {
   const actor = await resolveActor(payload);
   if (!actor) return console.warn(`${TAG}[DAMAGE] acteur introuvable`, payload);
-  const amount = Math.abs(num(payload.montant, 0));
+  const signedAmount = num(payload.montant, 0);
+  const amount = Math.abs(signedAmount);
   if (!amount) return false;
-  const system = actor.system ?? {};
-  const max = num(system.points_de_coup, NaN)
-    || num(system.pv_max, NaN)
-    || num(system.points_de_vie, NaN)
-    || num(system.hp?.max, NaN)
-    || num(system.attributes?.hp?.max, 0);
-  const current = [system.pdv, system.pv, system.hp?.value, system.attributes?.hp?.value]
-    .map(value => num(value, NaN))
-    .find(Number.isFinite) ?? max;
-  const heal = String(payload.type ?? "").toLowerCase().includes("soin") || num(payload.montant, 0) < 0;
-  const next = heal ? Math.min(max || current + amount, current + amount) : current - amount;
-  await actor.update({ "system.pdv": next }, { add2eReason: "gm-relay-apply-damage", add2eDetails: payload.details });
+  const engine = hitPointEngine();
+  const heal = String(payload.type ?? "").toLowerCase().includes("soin") || signedAmount < 0;
+  if (heal) {
+    await engine.applyHitPointHealing(actor, amount, {
+      reason: "gm-relay-healing",
+      updateOptions: { add2eDetails: payload.details }
+    });
+  } else {
+    await engine.applyHitPointDamage(actor, amount, {
+      reason: "gm-relay-damage",
+      updateOptions: { add2eDetails: payload.details }
+    });
+  }
   return true;
 }
 
@@ -419,18 +435,23 @@ function familiarCasterForFamiliarActor(actor) {
 }
 
 function familiarCurrentHp(actor) {
-  for (const value of [actor?.system?.pdv, actor?.system?.points_de_coup, actor?.system?.hp?.value, actor?.system?.health?.value]) {
-    const hp = num(value, NaN);
-    if (Number.isFinite(hp)) return hp;
+  if (!actor) return 0;
+  try {
+    return hitPointEngine().readHitPoints(actor);
+  } catch (_error) {
+    return 0;
   }
-  return 0;
 }
 
 function familiarMaxHp(actor, fallback = 0) {
-  for (const value of [actor?.system?.points_de_coup, actor?.system?.hp?.max, actor?.system?.health?.max, actor?.system?.pdv]) {
-    const hp = num(value, NaN);
-    if (Number.isFinite(hp) && hp > 0) return hp;
-  }
+  if (!actor) return Math.max(0, num(fallback, 0));
+  try {
+    const engine = hitPointEngine();
+    const maximum = engine.readMaximumHitPoints(actor);
+    if (Number.isFinite(maximum) && maximum > 0) return maximum;
+    const current = engine.readHitPoints(actor);
+    if (Number.isFinite(current) && current > 0) return current;
+  } catch (_error) {}
   return Math.max(0, num(fallback, 0));
 }
 
@@ -1044,13 +1065,14 @@ async function useFamiliarEffect(actor, effect) {
 async function regenerateFamiliarCaster(caster, link) {
   const amount = Math.max(0, Math.floor(num(link?.regenerationPerRound, 0)));
   if (!caster || !amount || link?.inRange !== true || link?.deathPenaltyApplied === true) return false;
-  const max = num(caster.system?.points_de_coup, NaN);
-  const current = num(caster.system?.pdv, NaN);
-  if (!Number.isFinite(max) || !Number.isFinite(current)) return false;
-  const next = Math.min(max, current + amount);
-  if (next <= current) return false;
-  await caster.update({ "system.pdv": next }, { add2eFamiliarRegeneration: true, add2eInternal: true });
-  return true;
+  const engine = hitPointEngine();
+  const maximum = engine.readMaximumHitPoints(caster);
+  if (!Number.isFinite(maximum) || maximum <= 0) return false;
+  const mutation = await engine.applyHitPointHealing(caster, amount, {
+    reason: "familiar-regeneration",
+    updateOptions: { add2eFamiliarRegeneration: true }
+  });
+  return Number(mutation?.effective) > 0;
 }
 
 async function regenerateOnRound(combat, changes = {}) {
