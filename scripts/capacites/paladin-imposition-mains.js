@@ -1,5 +1,5 @@
 /* ADD2E — Paladin : Imposition des mains */
-const ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = "2026-08-07-canonical-resource-v2";
+const ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = "2026-08-09-canonical-hit-points-v3";
 globalThis.ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = ADD2E_PALADIN_IMPOSITION_MAINS_VERSION;
 
 function a2ePalNum(v, fallback = 0) {
@@ -13,6 +13,19 @@ function a2ePalFeatureLevel(currentActor, currentFeature) {
     ?? currentFeature?._add2eClassLevel
   );
   return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
+}
+
+function a2ePalHitPointEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (
+    !engine
+    || typeof engine.readHitPoints !== "function"
+    || typeof engine.readMaximumHitPoints !== "function"
+    || typeof engine.applyHitPointHealing !== "function"
+  ) {
+    throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible.");
+  }
+  return engine;
 }
 
 if (!actor) {
@@ -29,20 +42,25 @@ if (level === null) {
 const targetToken = Array.from(game.user.targets ?? [])[0];
 const target = targetToken?.actor ?? actor;
 const healAmount = level * 2;
-const current = a2ePalNum(target.system?.pdv, 0);
-const max = a2ePalNum(target.system?.points_de_coup, current);
-const healed = Math.min(max, current + healAmount);
-const gained = Math.max(0, healed - current);
+const hpEngine = a2ePalHitPointEngine();
+const current = hpEngine.readHitPoints(target);
+const max = hpEngine.readMaximumHitPoints(target);
+if (!Number.isFinite(max) || max <= 0) {
+  ui.notifications.error("Imposition des mains : PV maximum canoniques introuvables.");
+  return false;
+}
+
+const healing = await hpEngine.applyHitPointHealing(target, healAmount, {
+  reason: "paladin-lay-on-hands",
+  updateOptions: { render: false }
+});
+const gained = Number(healing.effective) || 0;
+const healed = Number(healing.after);
 
 if (gained <= 0) {
   ui.notifications.info(`${target.name} est déjà à ses PV maximum.`);
   return false;
 }
-
-await target.update(
-  { "system.pdv": healed },
-  { add2eInternal: true, add2eReason: "paladin-lay-on-hands", render: false }
-);
 
 const buildChatCard = globalThis.add2eBuildChatCard;
 const createChatCard = globalThis.add2eCreateChatCard;
