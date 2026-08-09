@@ -1,6 +1,7 @@
 // ============================================================
 // ADD2E — Auto-compatibilité race / classe au drop — wrapper V2
-// Version : 2026-06-16-race-class-drop-split-v8-class-minimums-only
+// Version : 2026-08-09-race-class-drop-common-dialog-v9
+// Compatible Foundry V13/V14/V15.
 // ============================================================
 
 import {
@@ -148,10 +149,18 @@ function add2eRacePassesClassDrop(actor, classData, raceData, alignmentCandidate
 }
 
 function add2eDropStatValue(actor, carac) {
-  const sys = actor?.system ?? {};
-  const raw = sys[`${carac}_base`] ?? sys[carac] ?? 10;
-  const value = Number(raw?.value ?? raw?.total ?? raw);
-  return Number.isFinite(value) ? value : 10;
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine || typeof engine.resolveAbility !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des caractéristiques est indisponible pour les prérequis de classe.");
+  }
+  const resolution = engine.resolveAbility(actor, carac, {
+    type: "class-prerequisite-display",
+    source: "race-class-drop-wrapper",
+    consumer: "race-class-drop-ui"
+  });
+  const value = Number(resolution?.total);
+  if (!Number.isFinite(value)) throw new Error(`Valeur canonique introuvable pour ${carac}.`);
+  return value;
 }
 
 function add2eClassMinRows(actor, classData) {
@@ -206,8 +215,14 @@ function add2eClassMinimumCard(actor, classData) {
   </div>`;
 }
 
+function add2eRequireDialogWait() {
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
+  return globalThis.add2eDialogWait;
+}
+
 async function add2eDialogStatFailure(actor, classData) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
   const card = add2eClassMinimumCard(actor, classData);
   const content = `
     <div class="add2e-multiclass-choice" style="display:grid;gap:9px;min-width:600px;max-width:760px;color:#2b1c0d;">
@@ -226,27 +241,27 @@ async function add2eDialogStatFailure(actor, classData) {
     </div>
   `;
 
-  if (DialogV2?.wait) return DialogV2.wait({
-    classes: ["add2e-multiclass-dialog"],
+  return add2eRequireDialogWait()({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "ok",
+    add2eClasses: ["add2e-multiclass-dialog"],
     window: { title: "ADD2E — Prérequis de classe" },
     content,
-    buttons: [{ action: "ok", label: "Corriger les caractéristiques", default: true, callback: () => true }],
+    buttons: [{
+      action: "ok",
+      label: "Corriger les caractéristiques",
+      icon: "<i class='fas fa-check'></i>",
+      default: true,
+      callback: () => true
+    }],
     modal: true,
     rejectClose: false,
     close: () => true
   });
-  if (DialogV2?.alert) return DialogV2.alert({ window: { title: "ADD2E — Prérequis de classe" }, content, ok: { label: "Corriger les caractéristiques" }, modal: true });
-  ui.notifications.warn(`Caractéristiques insuffisantes pour ${classData.name}.`);
-  return false;
 }
 
 async function add2eDialogChooseClassRaceTile(actor, classData, candidates, reason) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications.error("DialogV2 est indisponible : impossible de choisir une combinaison classe/race.");
-    return null;
-  }
-
+  const wait = add2eRequireDialogWait();
   let checked = false;
   const tiles = candidates.map((race, index) => {
     const raceName = add2eRaceCandidateLabel(race);
@@ -280,13 +295,15 @@ async function add2eDialogChooseClassRaceTile(actor, classData, candidates, reas
     return candidates[Number(raw.split("-")[1]) || 0] ?? null;
   };
 
-  return DialogV2.wait({
-    classes: ["add2e-multiclass-dialog"],
+  return wait({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "validate",
+    add2eClasses: ["add2e-multiclass-dialog"],
     window: { title: "ADD2E — Classe et race" },
     content,
     buttons: [
-      { action: "validate", label: "Valider", default: true, callback: readChoice },
-      { action: "cancel", label: "Annuler", callback: () => null }
+      { action: "validate", label: "Valider", icon: "<i class='fas fa-check'></i>", default: true, callback: readChoice },
+      { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
     ],
     modal: true,
     rejectClose: false,
