@@ -69,7 +69,11 @@ function add2eMagicText(...values) {
 }
 
 function add2eMagicPowerIsActivatable(power) {
-  const activationType = String(power?.activation?.type ?? "").trim().toLowerCase();
+  const catalogueId = String(power?.catalogueId ?? "").trim();
+  const canonicalPower = catalogueId && typeof globalThis.add2eGetMagicPowerById === "function"
+    ? globalThis.add2eGetMagicPowerById(catalogueId)
+    : null;
+  const activationType = String(canonicalPower?.activation?.type ?? power?.activation?.type ?? "").trim().toLowerCase();
   return activationType !== "passive";
 }
 
