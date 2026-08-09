@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-19-vital-status-sync-monster-clear-dead-v1";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-08-09-vital-status-pnj-v2";
 
 const LOCKS = new Set();
 const ADD2E_STATUS_IDS = {
@@ -358,7 +358,8 @@ async function syncTokensAndCombat(actor, status, preserveInactive) {
 }
 
 export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
-  if (!actor || !(add2eVitalNorm(actor?.type) === "personnage" || add2eVitalIsMonster(actor))) return false;
+  const actorType = add2eVitalNorm(actor?.type);
+  if (!actor || !(["personnage", "pnj"].includes(actorType) || add2eVitalIsMonster(actor))) return false;
   if (!game.user?.isGM) return false;
 
   const key = actor.uuid ?? actor.id;
