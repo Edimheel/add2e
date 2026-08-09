@@ -1,7 +1,6 @@
 /** ADD2E - Socle generique des mecanismes de sorts - Foundry V13/V14/V15. */
 const esc = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 const norm = value => String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/\s+/g, "_");
-const style = () => CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 const levelOf = actor => Number(actor?.system?.details?.level?.value ?? actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
 const targetTokens = () => Array.from(game.user?.targets ?? []);
 const targetActors = targets => targets.map(t => t.actor).filter(Boolean);
@@ -12,22 +11,32 @@ const sourceContext = context => {
   const caster = context.actor ?? casterToken?.actor ?? sourceItem?.parent ?? null;
   return { sourceItem, casterToken, caster, level: levelOf(caster), targets: targetTokens() };
 };
-function dialogApi(name) {
-  const api = foundry.applications?.api?.DialogV2;
-  if (!api) ui.notifications?.error?.(`${name} : DialogV2 est requis.`);
-  return api;
-}
 async function confirmDialog(spell, content, fields = "", callback = () => ({})) {
-  const DialogV2 = dialogApi(spell.name);
-  if (!DialogV2) return null;
-  return DialogV2.wait({
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error(`${spell.name} : l’API de fenêtre ADD2E est indisponible.`);
+  }
+  return globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "cast",
+    add2eClasses: ["add2e-spell-confirm-dialog"],
     window: { title: `Lancement : ${spell.name}` },
-    content: `<form style="display:flex;flex-direction:column;gap:8px">${content}${fields}</form>`,
+    content: `<form class="add2e-spell-confirm-form" style="display:flex;flex-direction:column;gap:8px">${content}${fields}</form>`,
     buttons: [
-      { action: "cast", label: "Confirmer le lancement", icon: "fa-solid fa-wand-magic-sparkles", default: true, callback: (event, button) => callback(button.form) },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
+      {
+        action: "cast",
+        label: "Confirmer le lancement",
+        icon: "<i class='fa-solid fa-wand-magic-sparkles'></i>",
+        default: true,
+        callback: (_event, button) => callback(button.form)
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fa-solid fa-xmark'></i>",
+        callback: () => null
+      }
     ],
-    rejectClose: false
+    close: () => null
   });
 }
 async function playVfx(spell, casterToken, targets = []) {
@@ -38,8 +47,35 @@ async function playVfx(spell, casterToken, targets = []) {
   }
   for (const token of list) await canvas.interface?.createScrollingText?.(token.center, spell.name, { anchor: CONST.TEXT_ANCHOR_POINTS?.CENTER ?? 0, direction: CONST.TEXT_ANCHOR_POINTS?.TOP ?? 1, duration: 1400, distance: 80, fontSize: 28, fill: spell.color, stroke: 0x000000, strokeThickness: 4 });
 }
-async function chat(caster, casterToken, spell, body, { whisper = null } = {}) {
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken?.document }), content: `<div class="add2e-chat-card add2e-clerc-sort" style="border:1px solid #c79222;border-radius:8px;background:#fff8e6;color:#5a3b12;padding:10px"><h3 style="margin:0 0 6px">${esc(spell.name)}</h3>${body}</div>`, ...(whisper ? { whisper } : {}), ...style() });
+async function chat(caster, casterToken, spell, body, { whisper = null, rolls = [] } = {}) {
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error(`${spell.name} : les constructeurs communs de cartes ADD2E sont indisponibles.`);
+  }
+  const options = {
+    actor: caster,
+    title: spell.name,
+    icon: "fas fa-wand-magic-sparkles",
+    variant: "spell",
+    source: {
+      name: caster?.name ?? "Lanceur",
+      img: casterToken?.document?.texture?.src ?? caster?.img ?? spell?.img ?? "icons/svg/book.svg",
+      type: "Sort"
+    },
+    trustedBodyHtml: body,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken?.document }),
+      ...(whisper ? { whisper } : {}),
+      ...(Array.isArray(rolls) && rolls.length ? { rolls: rolls.filter(Boolean) } : {}),
+      flags: {
+        add2e: {
+          spellMechanics: true,
+          spellName: spell.name
+        }
+      }
+    }
+  };
+  globalThis.add2eBuildChatCard(options);
+  return globalThis.add2eCreateChatCard(options);
 }
 function durationData(rounds) {
   const value = Number(rounds);
