@@ -96,99 +96,99 @@
             {{/if}}
 
             {{#if add2eObjectMagicItems.length}}
-              <div class="a2e-panel add2e-object-magic-panel" style="box-shadow:none;">
+              <div class="a2e-panel add2e-object-magic-panel" style="box-shadow:none;margin-bottom:8px;">
                 <h3>Objets magiques</h3>
-                <div class="a2e-panel-body">
+                <div class="a2e-panel-body" style="padding:4px 6px 6px;">
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) 118px 32px;gap:6px;align-items:center;padding:2px 4px 3px;border-bottom:1px solid #dac276;color:#6f4b12;font-size:.76em;font-weight:900;text-transform:uppercase;line-height:1;">
+                    <span>Objet</span>
+                    <span style="text-align:center;">Charges</span>
+                    <span style="text-align:center;">Recharge</span>
+                  </div>
                   {{#each add2eObjectMagicItems as |item|}}
-                    <div class="a2e-panel add2e-object-magic-item" data-add2e-recharge-item data-item-id="{{item.id}}" style="box-shadow:none;margin-bottom:8px;">
-                      <h3>
-                        {{#if item.description}}
-                          <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="magic-item-{{item.id}}" title="Afficher / masquer la description de l’objet" style="display:inline-flex;align-items:center;gap:6px;">
-                            <img src="{{item.img}}" alt="{{item.name}}" style="width:26px;height:26px;border-radius:4px;object-fit:cover;vertical-align:middle;">
-                            <span>{{item.name}}</span>
-                          </a>
-                        {{else}}
-                          <img src="{{item.img}}" alt="{{item.name}}" style="width:26px;height:26px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:6px;">
-                          {{item.name}}
-                        {{/if}}
-                        {{#if item.max}}
-                          <span class="add2e-magic-recharge-controls" style="float:right;display:inline-flex;align-items:center;gap:6px;">
-                            <button type="button" class="add2e-magic-recharge-button" style="display:none;"><i class="fas fa-battery-half"></i> Recharger</button>
-                            <span class="sort-memorize-badge" style="float:none;margin:0;">Charges : {{item.charges}} / {{item.max}}</span>
-                          </span>
-                        {{/if}}
-                      </h3>
-                      <div class="a2e-panel-body">
-                        {{#if item.description}}
-                          <div id="desc-chat-magic-item-{{item.id}}" class="sort-description add2e-object-magic-description" style="display:none;margin-bottom:8px;">
-                            <div class="a2e-small sort-description-content">
-                              {{{item.description}}}
-                            </div>
-                          </div>
-                        {{/if}}
-                        <table class="sort-table add2e-object-magic-table">
-                          <thead>
-                            <tr>
-                              <th style="width:42px;"></th>
-                              <th>Pouvoir</th>
-                              <th style="width:90px;">Coût</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {{#each item.powers as |power|}}
-                              {{#if power.onUse}}
-                                <tr class="sort-row add2e-object-magic-power-row" data-sort-id="{{power.id}}">
-                                  <td class="sort-drag">
-                                    <img class="sort-cast-img" data-sort-id="{{power.id}}" src="{{power.img}}" title="Activer {{power.name}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
-                                  </td>
-                                  <td>
-                                    <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{power.id}}" title="Afficher / masquer la description">{{power.name}}</a>
-                                  </td>
-                                  <td>{{#if power.cost}}{{power.cost}}{{else}}—{{/if}}</td>
-                                </tr>
-                                <tr id="desc-chat-{{power.id}}" class="sort-description">
-                                  <td colspan="3" class="sort-description-fullcell">
-                                    <div class="a2e-small sort-description-content">
-                                      {{{power.description}}}
-                                    </div>
-                                  </td>
-                                </tr>
-                              {{/if}}
-                            {{/each}}
-                          </tbody>
-                        </table>
+                    <div class="add2e-object-magic-item" data-add2e-recharge-item data-item-id="{{item.id}}" style="margin:0;border-bottom:1px solid #e4d49c;padding:0;">
+                      <div style="display:grid;grid-template-columns:minmax(0,1fr) 118px 32px;gap:6px;align-items:center;min-height:30px;padding:2px 4px;background:rgba(240,224,169,.34);">
+                        <div style="min-width:0;display:flex;align-items:center;gap:5px;line-height:1.05;">
+                          <img src="{{item.img}}" alt="{{item.name}}" style="width:24px;height:24px;min-width:24px;border-radius:3px;object-fit:cover;border:0;">
+                          {{#if item.description}}
+                            <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="magic-item-{{item.id}}" title="Afficher / masquer la description de l’objet" style="font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{item.name}}</a>
+                          {{else}}
+                            <span style="font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{item.name}}</span>
+                          {{/if}}
+                        </div>
+                        <div style="text-align:center;font-weight:800;line-height:1;">
+                          {{#if item.max}}{{item.charges}} / {{item.max}}{{else}}—{{/if}}
+                        </div>
+                        <div class="add2e-magic-recharge-controls" style="display:flex;align-items:center;justify-content:center;min-width:0;">
+                          {{#if item.max}}
+                            <button type="button" class="add2e-magic-recharge-button" title="Recharger {{item.name}}" aria-label="Recharger {{item.name}}" style="display:none;width:26px;height:26px;min-width:26px;padding:0;margin:0;border-radius:5px;line-height:1;"><i class="fas fa-battery-half"></i></button>
+                          {{/if}}
+                        </div>
                       </div>
+                      {{#if item.description}}
+                        <div id="desc-chat-magic-item-{{item.id}}" class="sort-description add2e-object-magic-description" style="display:none;margin:0;padding:3px 6px 4px;border-top:1px dotted #dac276;">
+                          <div class="a2e-small sort-description-content">{{{item.description}}}</div>
+                        </div>
+                      {{/if}}
+                      <table class="sort-table add2e-object-magic-table" style="margin:0;border:0;">
+                        <thead>
+                          <tr>
+                            <th style="width:34px;padding:2px 3px;"></th>
+                            <th style="padding:2px 4px;">Pouvoir</th>
+                            <th style="width:118px;padding:2px 4px;text-align:center;">Coût en charges</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {{#each item.powers as |power|}}
+                            {{#if power.onUse}}
+                              <tr class="sort-row add2e-object-magic-power-row" data-sort-id="{{power.id}}" style="height:30px;">
+                                <td class="sort-drag" style="width:34px;padding:2px 3px;text-align:center;">
+                                  <img class="sort-cast-img" data-sort-id="{{power.id}}" src="{{power.img}}" title="Activer {{power.name}}" draggable="true" style="width:26px;height:26px;border-radius:4px;object-fit:cover;cursor:pointer;margin:0;border:0;">
+                                </td>
+                                <td style="padding:2px 4px;line-height:1.05;">
+                                  <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{power.id}}" title="Afficher / masquer la description">{{power.name}}</a>
+                                </td>
+                                <td style="padding:2px 4px;text-align:center;font-weight:800;">{{#if power.cost}}{{power.cost}}{{else}}—{{/if}}</td>
+                              </tr>
+                              <tr id="desc-chat-{{power.id}}" class="sort-description">
+                                <td colspan="3" class="sort-description-fullcell" style="padding:3px 6px;">
+                                  <div class="a2e-small sort-description-content">{{{power.description}}}</div>
+                                </td>
+                              </tr>
+                            {{/if}}
+                          {{/each}}
+                        </tbody>
+                      </table>
                     </div>
                   {{/each}}
                 </div>
               </div>
             {{else}}
               {{#if add2eObjectMagicPowers.length}}
-                <div class="a2e-panel add2e-object-magic-panel" style="box-shadow:none;">
+                <div class="a2e-panel add2e-object-magic-panel" style="box-shadow:none;margin-bottom:8px;">
                   <h3>Objets magiques</h3>
-                  <div class="a2e-panel-body">
-                    <table class="sort-table add2e-object-magic-table">
+                  <div class="a2e-panel-body" style="padding:4px 6px 6px;">
+                    <table class="sort-table add2e-object-magic-table" style="margin:0;">
                       <thead>
                         <tr>
-                          <th style="width:42px;"></th>
-                          <th>Objet</th>
-                          <th style="width:120px;">Charges</th>
+                          <th style="width:34px;padding:2px 3px;"></th>
+                          <th style="padding:2px 4px;">Objet / pouvoir</th>
+                          <th style="width:118px;padding:2px 4px;text-align:center;">Charges</th>
                         </tr>
                       </thead>
                       <tbody>
                         {{#each add2eObjectMagicPowers as |power|}}
                           {{#if power.onUse}}
-                            <tr class="sort-row add2e-object-magic-power-row" data-sort-id="{{power.id}}">
-                              <td class="sort-drag">
-                                <img class="sort-cast-img" data-sort-id="{{power.id}}" src="{{power.img}}" title="Activer {{#if power.sourceItemName}}{{power.sourceItemName}}{{else}}{{power.name}}{{/if}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
+                            <tr class="sort-row add2e-object-magic-power-row" data-sort-id="{{power.id}}" style="height:30px;">
+                              <td class="sort-drag" style="width:34px;padding:2px 3px;text-align:center;">
+                                <img class="sort-cast-img" data-sort-id="{{power.id}}" src="{{power.img}}" title="Activer {{#if power.sourceItemName}}{{power.sourceItemName}}{{else}}{{power.name}}{{/if}}" draggable="true" style="width:26px;height:26px;border-radius:4px;object-fit:cover;cursor:pointer;margin:0;border:0;">
                               </td>
-                              <td>
+                              <td style="padding:2px 4px;line-height:1.05;">
                                 <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{power.id}}" title="Afficher / masquer la description">{{#if power.sourceItemName}}{{power.sourceItemName}}{{else}}{{power.name}}{{/if}}</a>
                               </td>
-                              <td>{{#if power.max}}{{power.charges}} / {{power.max}}{{else}}—{{/if}}</td>
+                              <td style="padding:2px 4px;text-align:center;font-weight:800;">{{#if power.max}}{{power.charges}} / {{power.max}}{{else}}—{{/if}}</td>
                             </tr>
                             <tr id="desc-chat-{{power.id}}" class="sort-description">
-                              <td colspan="3" class="sort-description-fullcell">
+                              <td colspan="3" class="sort-description-fullcell" style="padding:3px 6px;">
                                 <div class="a2e-small sort-description-content">
                                   {{#if power.sourceItemDescription}}{{{power.sourceItemDescription}}}{{else}}{{{power.description}}}{{/if}}
                                 </div>
