@@ -2,7 +2,7 @@
 // Compatible Foundry V13/V14/V15.
 // Le sort conserve son comportement actuel : saisir les paramètres de scène puis publier une carte commune.
 
-const ADD2E_SEUIL_VERSION = "2026-08-09-canonical-note-spell-v3";
+const ADD2E_SEUIL_VERSION = "2026-08-09-canonical-note-spell-v4";
 const ADD2E_SEUIL_CONFIG = Object.freeze({
   name: "Seuil",
   slug: "seuil",
@@ -11,6 +11,15 @@ const ADD2E_SEUIL_CONFIG = Object.freeze({
 });
 
 globalThis.ADD2E_SEUIL_VERSION = ADD2E_SEUIL_VERSION;
+
+function add2eSeuilEscape(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 function add2eSeuilCasterToken() {
   return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
@@ -27,7 +36,7 @@ async function add2eSeuilParameters() {
     window: { title: ADD2E_SEUIL_CONFIG.name },
     content: `
       <form class="add2e-seuil-form">
-        <p><b>${ADD2E_SEUIL_CONFIG.name}</b></p>
+        <p><b>${add2eSeuilEscape(ADD2E_SEUIL_CONFIG.name)}</b></p>
         <div class="form-group">
           <label>Note de scène / cible / paramètres</label>
           <textarea name="note" rows="3"></textarea>
@@ -59,6 +68,8 @@ async function add2eSeuilChat(caster, casterToken, note) {
   }
   const targets = Array.from(game.user?.targets ?? []);
   const targetLabel = targets.length ? targets.map(target => target.name).join(", ") : caster?.name ?? "Clerc";
+  const safeDescription = add2eSeuilEscape(ADD2E_SEUIL_CONFIG.description);
+  const safeNote = add2eSeuilEscape(note);
   const options = {
     actor: caster,
     title: ADD2E_SEUIL_CONFIG.name,
@@ -73,7 +84,7 @@ async function add2eSeuilChat(caster, casterToken, note) {
       { label: "Cible", value: targetLabel },
       { label: "Résultat", value: ADD2E_SEUIL_CONFIG.name.toUpperCase() }
     ],
-    trustedBodyHtml: `<p>${ADD2E_SEUIL_CONFIG.description}</p>${note ? `<p>Note : <b>${note}</b></p>` : ""}<details style="margin-top:8px;"><summary>Règle appliquée</summary><div style="padding-top:6px;">${ADD2E_SEUIL_CONFIG.description}</div></details>`,
+    trustedBodyHtml: `<p>${safeDescription}</p>${safeNote ? `<p>Note : <b>${safeNote}</b></p>` : ""}<details style="margin-top:8px;"><summary>Règle appliquée</summary><div style="padding-top:6px;">${safeDescription}</div></details>`,
     chatData: {
       speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
       flags: { add2e: { spell: ADD2E_SEUIL_CONFIG.slug, version: ADD2E_SEUIL_VERSION } }
