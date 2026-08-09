@@ -1309,35 +1309,58 @@
           {
             "schema": 2,
             "kind": "catalogue",
-            "name": "Lévitation",
-            "label": "Lévitation",
-            "automation": "automatic",
+            "catalogueId": "spell_equivalent",
+            "name": "Pouvoir équivalent à un sort",
+            "label": "Pouvoir équivalent à un sort",
+            "category": "spell",
+            "automation": "assisted",
             "activation": {
-              "type": "action",
-              "trigger": "porté/commande"
+              "type": "configured",
+              "trigger": "use-or-passive"
+            },
+            "compatibility": {
+              "itemTypes": [
+                "arme",
+                "armure",
+                "objet"
+              ]
+            },
+            "validation": {
+              "requiresOneOf": [
+                "spellUuid",
+                "spellName"
+              ]
+            },
+            "source": {
+              "section": "III.A-III.D",
+              "page": "121-132"
+            },
+            "catalogue": {
+              "id": "add2e-gdm-magic-powers",
+              "version": "2026-08-03-catalogue-manifest-v8",
+              "runtimeVersion": "2026-07-21-magic-power-catalogue-loader-v1"
             },
             "parameters": {
-              "chargeCost": 0,
-              "activationTime": "1 action",
-              "duration": "Tant que porté, sauf activation contraire",
-              "target": "Selon effet",
-              "spellLevel": 2,
-              "school": "Altération",
               "spellName": "Lévitation",
-              "spellLists": [
-                "magicien"
-              ],
-              "spellOnUse": "systems/add2e/scripts/sorts/magicien-levitation.js"
+              "chargeCost": 0,
+              "overrides": {
+                "system": {
+                  "add2eLevitation": {
+                    "forceSelf": true,
+                    "capacityFormula": "140 + 7 * 1d20",
+                    "selfVerticalSpeed": 6
+                  }
+                }
+              }
             },
             "effects": [
               {
                 "type": "linked_spell",
+                "spellUuid": "@spellUuid",
                 "spellName": "Lévitation",
-                "spellLevel": 2,
-                "spellLists": [
-                  "magicien"
-                ],
+                "casterLevel": "@casterLevel",
                 "chargeCost": 0,
+                "activationTime": "@activationTime",
                 "overrides": {
                   "system": {
                     "add2eLevitation": {
@@ -1349,43 +1372,17 @@
                 }
               }
             ],
-            "compatibility": {
-              "itemTypes": [
-                "objet"
-              ]
-            },
-            "validation": {},
-            "id": "bottes_de_levitation_1",
-            "description": "Permettent au porteur de léviter verticalement.",
-            "onUse": "add2e://magic-catalogue",
-            "source": {
-              "section": "Guide du Maître — objets magiques"
-            },
-            "img": "icons/equipment/feet/boots-leather-brown.webp",
-            "catalogueId": "linked_spell",
-            "category": "spell",
             "effectTemplates": [
               {
                 "type": "linked_spell",
-                "spellName": "Lévitation",
-                "spellLevel": 2,
-                "spellLists": [
-                  "magicien"
-                ],
-                "chargeCost": 0,
-                "overrides": {
-                  "system": {
-                    "add2eLevitation": {
-                      "forceSelf": true,
-                      "capacityFormula": "140 + 7 * 1d20",
-                      "selfVerticalSpeed": 6
-                    }
-                  }
-                }
+                "spellUuid": "@spellUuid",
+                "spellName": "@spellName",
+                "casterLevel": "@casterLevel",
+                "chargeCost": "@chargeCost",
+                "activationTime": "@activationTime",
+                "overrides": "@overrides"
               }
-            ],
-            "onuse": "add2e://magic-catalogue",
-            "on_use": "add2e://magic-catalogue"
+            ]
           }
         ],
         "effet": "Permettent au porteur de léviter verticalement.",
@@ -5797,79 +5794,80 @@
           {
             "schema": 2,
             "kind": "catalogue",
-            "name": "Lévitation",
-            "label": "Lévitation",
-            "automation": "automatic",
+            "catalogueId": "spell_equivalent",
+            "name": "Pouvoir équivalent à un sort",
+            "label": "Pouvoir équivalent à un sort",
+            "category": "spell",
+            "automation": "assisted",
             "activation": {
-              "type": "action",
-              "trigger": "Boire une dose"
+              "type": "configured",
+              "trigger": "use-or-passive"
+            },
+            "compatibility": {
+              "itemTypes": [
+                "arme",
+                "armure",
+                "objet"
+              ]
+            },
+            "validation": {
+              "requiresOneOf": [
+                "spellUuid",
+                "spellName"
+              ]
+            },
+            "source": {
+              "section": "III.A-III.D",
+              "page": "121-132"
+            },
+            "catalogue": {
+              "id": "add2e-gdm-magic-powers",
+              "version": "2026-08-03-catalogue-manifest-v8",
+              "runtimeVersion": "2026-07-21-magic-power-catalogue-loader-v1"
             },
             "parameters": {
-              "chargeCost": 1,
-              "activationTime": "2-5 segments",
-              "duration": "variable",
-              "target": "Selon effet",
-              "spellLevel": 2,
-              "school": "Altération",
               "spellName": "Lévitation",
-              "spellLists": [
-                "magicien"
-              ],
-              "spellOnUse": "systems/add2e/scripts/sorts/magicien-levitation.js"
+              "chargeCost": 1,
+              "overrides": {
+                "system": {
+                  "add2eLevitation": {
+                    "forceSelf": true,
+                    "capacityKg": 300,
+                    "selfVerticalSpeed": 6
+                  }
+                }
+              }
             },
             "effects": [
               {
                 "type": "linked_spell",
+                "spellUuid": "@spellUuid",
                 "spellName": "Lévitation",
-                "spellLevel": 2,
-                "spellLists": [
-                  "magicien"
-                ],
+                "casterLevel": "@casterLevel",
                 "chargeCost": 1,
+                "activationTime": "@activationTime",
                 "overrides": {
                   "system": {
                     "add2eLevitation": {
-                      "forceSelf": true
+                      "forceSelf": true,
+                      "capacityKg": 300,
+                      "selfVerticalSpeed": 6
                     }
                   }
                 }
               }
             ],
-            "compatibility": {
-              "itemTypes": [
-                "objet"
-              ]
-            },
-            "validation": {},
-            "id": "potion_de_levitation_1",
-            "description": "Permet de monter ou descendre verticalement par volonté.",
-            "onUse": "add2e://magic-catalogue",
-            "source": {
-              "section": "Guide du Maître — objets magiques"
-            },
-            "img": "icons/consumables/potions/potion-bottle-corked-blue.webp",
-            "catalogueId": "linked_spell",
-            "category": "spell",
             "effectTemplates": [
               {
                 "type": "linked_spell",
-                "spellName": "Lévitation",
-                "spellLevel": 2,
-                "spellLists": [
-                  "magicien"
-                ],
-                "chargeCost": 1,
-                "overrides": {
-                  "system": {
-                    "add2eLevitation": {
-                      "forceSelf": true
-                    }
-                  }
-                }
+                "spellUuid": "@spellUuid",
+                "spellName": "@spellName",
+                "casterLevel": "@casterLevel",
+                "chargeCost": "@chargeCost",
+                "activationTime": "@activationTime",
+                "overrides": "@overrides"
               }
-            ],
-            "onuse": "add2e://magic-catalogue",
-            "on_use": "add2e://magic-catalogue"
+            ]
           }
         ],
         "effet": "Permet de monter ou descendre verticalement par volonté.",
