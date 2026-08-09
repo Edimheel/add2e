@@ -130,13 +130,6 @@
                         </div>
                       {{/if}}
                       <table class="sort-table add2e-object-magic-table" style="margin:0;border:0;">
-                        <thead>
-                          <tr>
-                            <th style="width:34px;padding:2px 3px;background:rgba(240,224,169,.34);"></th>
-                            <th style="padding:2px 4px;background:rgba(240,224,169,.34);">Pouvoir</th>
-                            <th style="width:118px;padding:2px 4px;text-align:center;background:rgba(240,224,169,.34);">Coût en charges</th>
-                          </tr>
-                        </thead>
                         <tbody>
                           {{#each item.powers as |power|}}
                             {{#if power.onUse}}
@@ -147,7 +140,7 @@
                                 <td style="padding:2px 4px;line-height:1.05;">
                                   <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{power.id}}" title="Afficher / masquer la description">{{power.name}}</a>
                                 </td>
-                                <td style="padding:2px 4px;text-align:center;font-weight:800;">{{#if power.cost}}{{power.cost}}{{else}}—{{/if}}</td>
+                                <td style="width:118px;padding:2px 4px;text-align:center;font-weight:800;">{{#if power.cost}}{{power.cost}}{{else}}—{{/if}}</td>
                               </tr>
                               <tr id="desc-chat-{{power.id}}" class="sort-description">
                                 <td colspan="3" class="sort-description-fullcell" style="padding:3px 6px;">
