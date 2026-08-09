@@ -1,4 +1,4 @@
-// ADD2E — Effects Engine / résolution canonique des défenses et de la CA.
+// ADD2E — Effects Engine / résolution canonique des défenses, de la CA et des sauvegardes.
 // Compatible Foundry V13/V14/V15.
 
 const register = (Engine, methods) => Object.defineProperties(
@@ -10,6 +10,34 @@ const register = (Engine, methods) => Object.defineProperties(
 );
 
 const ADD2E_ARMOR_CLASS_RESOLVER_VERSION = "2026-07-26-canonical-armor-class-v5-derived-dexterity";
+const ADD2E_SAVE_RESOLVER_VERSION = "2026-08-09-canonical-save-owner-v8";
+
+const ADD2E_SAVE_DEFINITIONS = Object.freeze([
+  Object.freeze({ index: 0, key: "mort_paralysie", label: "Paralysie / poison / mort magique", shortLabel: "Paralysie", icon: "fas fa-skull-crossbones", aliases: Object.freeze(["mort_paralysie", "mort", "mort_magique", "paralysie", "poison", "death", "paralysis"]) }),
+  Object.freeze({ index: 1, key: "petrification", label: "Pétrification / polymorphose", shortLabel: "Pétrification", icon: "fas fa-gem", aliases: Object.freeze(["petrification", "polymorphose", "polymorph", "metamorphose", "transformation"]) }),
+  Object.freeze({ index: 2, key: "baguettes", label: "Baguettes, bâtons et bâtonnets", shortLabel: "Baguettes", icon: "fas fa-magic", aliases: Object.freeze(["baguette", "baguettes", "badine", "badines", "baton", "batons", "batonnet", "batonnets", "wand", "wands", "rod", "rods", "staff", "staves"]) }),
+  Object.freeze({ index: 3, key: "souffle", label: "Souffles", shortLabel: "Souffles", icon: "fas fa-fire", aliases: Object.freeze(["souffle", "souffles", "breath", "breath_weapon", "breath_weapons"]) }),
+  Object.freeze({ index: 4, key: "sorts", label: "Sortilèges", shortLabel: "Sorts", icon: "fas fa-scroll", aliases: Object.freeze(["sort", "sorts", "sortilege", "sortileges", "spell", "spells", "magie", "magic"]) })
+]);
+
+const ADD2E_MONSTER_FIGHTER_SAVE_PROGRESSION = Object.freeze([
+  Object.freeze({ level: 0, saves: Object.freeze([16, 18, 17, 20, 19]) }),
+  Object.freeze({ level: 1, saves: Object.freeze([14, 15, 16, 17, 17]) }),
+  Object.freeze({ level: 3, saves: Object.freeze([13, 14, 15, 16, 16]) }),
+  Object.freeze({ level: 5, saves: Object.freeze([11, 12, 13, 13, 14]) }),
+  Object.freeze({ level: 7, saves: Object.freeze([10, 11, 12, 12, 13]) }),
+  Object.freeze({ level: 9, saves: Object.freeze([8, 9, 10, 9, 11]) }),
+  Object.freeze({ level: 11, saves: Object.freeze([7, 8, 9, 8, 10]) }),
+  Object.freeze({ level: 13, saves: Object.freeze([5, 6, 7, 5, 8]) }),
+  Object.freeze({ level: 15, saves: Object.freeze([4, 5, 6, 4, 7]) }),
+  Object.freeze({ level: 17, saves: Object.freeze([3, 4, 5, 4, 6]) })
+]);
+
+const ADD2E_MENTAL_SAVE_KEYS = new Set([
+  "mental", "attaque_mentale", "mental_attack", "charme", "charm", "hypnose", "hypnosis",
+  "illusion", "peur", "effroi", "fear", "possession", "suggestion", "seduction", "telepathie",
+  "telepathy", "fantasme", "phantasm", "enchantement", "enchantment"
+]);
 
 const ADD2E_COMBAT_IDENTITY_PREFIXES = [
   "type_monstre:",
@@ -250,6 +278,462 @@ function add2eArmorLayerModifier(engine, { id, target = "naturel", value, source
   });
 }
 
+function add2eSaveNormalize(engine, value) {
+  if (typeof engine?.normalizeTag !== "function") throw new Error("La normalisation canonique ADD2E n’est pas disponible.");
+  return String(engine.normalizeTag(value) ?? "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eSaveTag(engine, value) {
+  if (typeof engine?.normalizeTag !== "function") throw new Error("La normalisation canonique ADD2E n’est pas disponible.");
+  return String(engine.normalizeTag(value) ?? "");
+}
+
+function add2eSaveArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(add2eSaveArray);
+  if (value instanceof Set) return [...value].flatMap(add2eSaveArray);
+  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
+  return [value];
+}
+
+function add2eSaveDefinition(engine, value) {
+  const numeric = Number(value);
+  if (Number.isInteger(numeric) && numeric >= 0 && numeric < ADD2E_SAVE_DEFINITIONS.length) return ADD2E_SAVE_DEFINITIONS[numeric];
+  const normalized = add2eSaveNormalize(engine, value);
+  if (!normalized) return null;
+  return ADD2E_SAVE_DEFINITIONS.find(definition => definition.key === normalized || definition.aliases.includes(normalized)) ?? null;
+}
+
+function add2eSaveReadFromCollection(engine, raw, definition) {
+  if (!definition || raw === undefined || raw === null) return null;
+  if (Array.isArray(raw)) {
+    const value = engine.readNumber(raw[definition.index]);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+  if (typeof raw !== "object") return null;
+  const accepted = new Set([definition.key, ...definition.aliases, `save${definition.index}`]);
+  for (const [rawKey, rawValue] of Object.entries(raw)) {
+    if (!accepted.has(add2eSaveNormalize(engine, rawKey))) continue;
+    const value = engine.readNumber(rawValue);
+    if (Number.isFinite(value) && value > 0) return value;
+  }
+  return null;
+}
+
+function add2eSaveClassSources(engine, actor, definition) {
+  if (typeof engine.getEmbeddedClassItems !== "function" || typeof engine.getEmbeddedClassLevel !== "function" || typeof engine.getClassProgressionEntryForPassiveRule !== "function") {
+    throw new Error("Les API canoniques de progression de classe ADD2E ne sont pas disponibles.");
+  }
+  const sources = [];
+  for (const classItem of engine.getEmbeddedClassItems(actor)) {
+    const classLevel = engine.getEmbeddedClassLevel(classItem);
+    if (!Number.isFinite(classLevel) || classLevel < 1) continue;
+    const progression = engine.getClassProgressionEntryForPassiveRule({
+      progression: "progression",
+      source: {
+        actor,
+        classItemId: classItem?.id ?? null,
+        classItemUuid: classItem?.uuid ?? null,
+        className: classItem?.name ?? classItem?.system?.label ?? "Classe",
+        classLevel
+      }
+    }, { actor });
+    const target = add2eSaveReadFromCollection(engine, progression?.savingThrows, definition);
+    if (!Number.isFinite(target) || target <= 0) continue;
+    sources.push({
+      kind: "class",
+      target,
+      classItem,
+      className: classItem?.name ?? classItem?.system?.label ?? "Classe",
+      classLevel: Number(classLevel),
+      progression
+    });
+  }
+  return sources;
+}
+
+function add2eMonsterHitDice(actor) {
+  const raw = actor?.system?.hitDice;
+  if (raw === undefined || raw === null || raw === "") return null;
+  if (Number.isFinite(Number(raw)) && Number(raw) > 0) return Math.floor(Number(raw));
+  const match = String(raw).trim().match(/\d+/);
+  return match && Number(match[0]) > 0 ? Number(match[0]) : null;
+}
+
+function add2eSaveMonsterSource(actor, definition) {
+  const actorType = String(actor?.type ?? "").trim().toLowerCase();
+  if (!["monster", "monstre"].includes(actorType)) return null;
+  const hitDice = add2eMonsterHitDice(actor);
+  if (!Number.isFinite(hitDice) || hitDice < 1) return null;
+  const progression = [...ADD2E_MONSTER_FIGHTER_SAVE_PROGRESSION].reverse().find(row => hitDice >= row.level) ?? null;
+  const target = Number(progression?.saves?.[definition.index]);
+  if (!Number.isFinite(target) || target <= 0) return null;
+  return { kind: "monster-progression", target, actor, hitDice, progression, name: `Progression de guerrier · ${hitDice} DV` };
+}
+
+function add2eSaveTargetResolution(engine, actor, definition, context = {}) {
+  const explicit = engine.readNumber(context.saveTarget, context.targetSave, context.threshold);
+  if (Number.isFinite(explicit) && explicit > 0) {
+    const selected = { kind: "context", target: explicit, name: context.saveTargetLabel ?? "Contexte de l’action" };
+    return { definition, target: explicit, selected, candidates: [selected], classSources: [], actorSource: null, monsterSource: null, source: "context" };
+  }
+  const classSources = add2eSaveClassSources(engine, actor, definition);
+  const monsterSource = add2eSaveMonsterSource(actor, definition);
+  const candidates = classSources.length ? classSources : monsterSource ? [monsterSource] : [];
+  const selected = [...candidates].sort((left, right) => Number(left.target) - Number(right.target))[0] ?? null;
+  return {
+    definition,
+    target: Number(selected?.target),
+    selected,
+    candidates,
+    classSources,
+    actorSource: null,
+    monsterSource,
+    source: classSources.length ? "classes" : monsterSource ? "monster-progression" : "none"
+  };
+}
+
+function add2eSaveContextKeys(engine, definition, context = {}) {
+  const keys = new Set(["all", "tout", definition.key, ...definition.aliases].map(value => add2eSaveNormalize(engine, value)).filter(Boolean));
+  const raw = [
+    context.attackType, context.effectType, context.spellType, context.saveContext,
+    context.category, context.saveCategory, context.type, context.actionType, context.source,
+    ...add2eSaveArray(context.tags), ...add2eSaveArray(context.actionTags),
+    ...add2eSaveArray(context.effectTags), ...add2eSaveArray(context.spellTags)
+  ];
+  for (const value of raw) {
+    const normalized = add2eSaveNormalize(engine, value);
+    if (!normalized) continue;
+    keys.add(normalized);
+    for (const part of normalized.split("_")) if (part) keys.add(part);
+  }
+  if ([...keys].some(key => ADD2E_MENTAL_SAVE_KEYS.has(key))) keys.add("mental");
+  return keys;
+}
+
+function add2eSaveTagMatches(engine, definition, matcher, context = {}) {
+  const normalized = add2eSaveNormalize(engine, matcher);
+  return !!normalized && add2eSaveContextKeys(engine, definition, context).has(normalized);
+}
+
+function add2eSaveConstitutionBonus(engine, actor) {
+  if (typeof engine.resolveAbility !== "function") throw new Error("Le résolveur canonique des caractéristiques ADD2E n’est pas disponible.");
+  const total = Number(engine.resolveAbility(actor, "constitution", { type: "save", source: "saving-throw:constitution" })?.total);
+  if (!Number.isFinite(total)) return 0;
+  return Math.max(0, Math.min(5, Math.floor(total / 3.5)));
+}
+
+function add2eSaveIsMentalContext(engine, context = {}) {
+  if (context.mental === true || context.mentalAttack === true || context.attackMental === true) return true;
+  const keys = add2eSaveContextKeys(engine, ADD2E_SAVE_DEFINITIONS[4], context);
+  return [...keys].some(key => ADD2E_MENTAL_SAVE_KEYS.has(key));
+}
+
+function add2eSaveMentalWisdomModifier(engine, actor, definition, context = {}) {
+  if (!add2eSaveIsMentalContext(engine, context)) return null;
+  if (typeof engine.resolveAbilityDerived !== "function") throw new Error("Le résolveur canonique des ajustements dérivés ADD2E n’est pas disponible.");
+  const wisdomDerived = engine.resolveAbilityDerived(actor, "sagesse", {
+    ...context,
+    actor,
+    type: "save",
+    actionType: "save",
+    source: `${context.source ?? "saving-throw"}:mental-wisdom`
+  });
+  const wisdom = Number(wisdomDerived?.total);
+  const value = Number(wisdomDerived?.profile?.magie);
+  if (!Number.isFinite(value) || value === 0) return null;
+  return engine.createModifier({
+    id: `${actor.id}:save:${definition.key}:mental-wisdom`,
+    domain: "save",
+    target: definition.key,
+    operation: "add",
+    value,
+    priority: 100,
+    stacking: { mode: "unique-source", group: "save:mental-wisdom" },
+    source: { kind: "ability", id: `${actor.id}:sagesse`, uuid: actor.uuid ?? "", name: "Sagesse" },
+    metadata: {
+      label: "Ajustement de Sagesse contre les attaques mentales",
+      producer: "resolved-ability-derived",
+      ability: "sagesse",
+      abilityValue: Number.isFinite(wisdom) ? wisdom : null,
+      mental: true
+    }
+  });
+}
+
+function add2eSaveTransientModifiers(engine, actor, definition, context = {}) {
+  const raw = context.saveModifiers ?? context.transientSaveModifiers ?? [];
+  const entries = Array.isArray(raw) ? raw : [raw];
+  const modifiers = [];
+  entries.forEach((entry, index) => {
+    if (entry === undefined || entry === null || entry === "") return;
+    const data = typeof entry === "number" ? { value: entry } : entry;
+    if (!data || typeof data !== "object") return;
+    const value = Number(data.value ?? data.amount ?? data.bonus ?? data.modifier);
+    if (!Number.isFinite(value) || value === 0) return;
+    const requestedTarget = data.target ?? data.saveType ?? data.category ?? definition.key;
+    if (!add2eSaveTagMatches(engine, definition, requestedTarget, context)) return;
+    const label = String(data.label ?? data.name ?? "Modificateur circonstanciel de sauvegarde").trim();
+    const id = String(data.id ?? `${context.source ?? "save"}:transient:${index}`);
+    modifiers.push(engine.createModifier({
+      id,
+      domain: "save",
+      target: definition.key,
+      operation: String(data.operation ?? "add"),
+      value,
+      priority: Number.isFinite(Number(data.priority)) ? Number(data.priority) : 1000,
+      stacking: data.stacking && typeof data.stacking === "object" ? data.stacking : { mode: "stack", group: null },
+      source: {
+        kind: String(data.source?.kind ?? "situational"),
+        id: String(data.source?.id ?? id),
+        uuid: String(data.source?.uuid ?? context.sourceItem?.uuid ?? ""),
+        name: String(data.source?.name ?? context.sourceItem?.name ?? label)
+      },
+      metadata: {
+        ...(data.metadata && typeof data.metadata === "object" ? data.metadata : {}),
+        label,
+        producer: "save-context",
+        transient: true
+      }
+    }));
+  });
+  return modifiers;
+}
+
+function add2eSaveTagModifiers(engine, actor, definition, context = {}) {
+  if (typeof engine.getActiveTags !== "function") throw new Error("La collecte canonique des tags ADD2E n’est pas disponible.");
+  const modifiers = [];
+  const push = ({ tag, value, label, suffix }) => {
+    const amount = Number(value);
+    if (!Number.isFinite(amount) || amount === 0) return;
+    modifiers.push(engine.createModifier({
+      id: `${actor.id}:save:${definition.key}:${suffix}:${tag}`,
+      domain: "save",
+      target: definition.key,
+      operation: "add",
+      value: amount,
+      priority: 100,
+      stacking: { mode: "stack", group: null },
+      source: { kind: "tag", id: `${actor.id}:${tag}`, uuid: actor.uuid ?? "", name: actor.name ?? "Acteur" },
+      metadata: { label, sourceTag: tag, producer: "save-tag-normalization" }
+    }));
+  };
+
+  for (const rawTag of engine.getActiveTags(actor)) {
+    const tag = add2eSaveTag(engine, rawTag);
+    if (!tag) continue;
+    if (tag.startsWith("bonus_save:")) {
+      push({ tag, value: Number(tag.split(":").at(-1)), label: "Bonus général de sauvegarde", suffix: "general" });
+      continue;
+    }
+    if (context.frontale === true && tag.startsWith("bonus_save_frontal:")) {
+      push({ tag, value: Number(tag.split(":").at(-1)), label: "Bonus frontal de sauvegarde", suffix: "frontal" });
+      continue;
+    }
+    if (!tag.startsWith("bonus_save_vs:")) continue;
+    const parts = tag.split(":");
+    const rawValue = parts.at(-1);
+    const matcher = parts.slice(1, -1).join(":");
+    if (!add2eSaveTagMatches(engine, definition, matcher, context)) continue;
+    if (rawValue === "const") {
+      push({ tag, value: add2eSaveConstitutionBonus(engine, actor), label: `Bonus racial de Constitution contre ${definition.shortLabel.toLowerCase()}`, suffix: "constitution" });
+    } else {
+      push({ tag, value: Number(rawValue), label: `Bonus de sauvegarde contre ${matcher || definition.shortLabel.toLowerCase()}`, suffix: "conditional" });
+    }
+  }
+  return modifiers;
+}
+
+function add2eSaveCanonicalModifiers(engine, actor, definition, context = {}) {
+  if (typeof engine.collect !== "function" || typeof engine.normalizeModifier !== "function") throw new Error("Le collecteur canonique de modificateurs ADD2E n’est pas disponible.");
+  const modifiers = [];
+  for (const raw of engine.collect(actor, context)) {
+    const normalized = engine.normalizeModifier(raw, { source: raw?.source });
+    if (!normalized || normalized.domain !== "save") continue;
+    const sourceContext = raw?._context ?? {};
+    const sourceItem = sourceContext.sourceItem ?? null;
+    const sourceType = String(sourceItem?.type ?? "").toLowerCase();
+    if (sourceItem && ADD2E_DEFENSIVE_EQUIPMENT_TYPES.has(sourceType) && !engine.itemEquipped(sourceItem)) continue;
+    const target = add2eSaveNormalize(engine, normalized.target);
+    if (!add2eSaveTagMatches(engine, definition, target, context)) continue;
+    modifiers.push({ ...normalized, target: target === "all" || target === "tout" ? "all" : definition.key, _context: sourceContext });
+  }
+  return modifiers;
+}
+
+function add2eSaveDeduplicate(modifiers = []) {
+  const seen = new Set();
+  return modifiers.filter(modifier => {
+    if (!modifier) return false;
+    const source = modifier.source ?? {};
+    const sourceTag = String(modifier.metadata?.sourceTag ?? "");
+    const key = sourceTag || JSON.stringify([
+      modifier.id, modifier.domain, modifier.target, modifier.operation, modifier.value,
+      modifier.priority, modifier.stacking?.mode, modifier.stacking?.group,
+      source.uuid ?? source.id ?? source.name ?? ""
+    ]);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function add2eResolveSavingThrow(engine, actor, saveType, context = {}) {
+  if (!actor) throw new Error("Acteur manquant pour la résolution du jet de sauvegarde.");
+  const definition = add2eSaveDefinition(engine, saveType);
+  if (!definition) throw new Error(`Catégorie de sauvegarde inconnue : ${saveType}`);
+  const saveContext = {
+    ...context,
+    actor,
+    type: "save",
+    actionType: "save",
+    saveType: definition.key,
+    saveCategory: definition.key,
+    saveIndex: definition.index,
+    source: context.source ?? "canonical-save-resolver"
+  };
+  const targetResolution = add2eSaveTargetResolution(engine, actor, definition, saveContext);
+  const canonical = add2eSaveCanonicalModifiers(engine, actor, definition, saveContext);
+  const canonicalSourceTags = new Set(canonical.map(modifier => String(modifier?.metadata?.sourceTag ?? "")).filter(Boolean));
+  const tagModifiers = add2eSaveTagModifiers(engine, actor, definition, saveContext)
+    .filter(modifier => !canonicalSourceTags.has(String(modifier?.metadata?.sourceTag ?? "")));
+  const mentalWisdom = add2eSaveMentalWisdomModifier(engine, actor, definition, saveContext);
+  const transient = add2eSaveTransientModifiers(engine, actor, definition, saveContext);
+  const bonusResolution = engine.resolve(actor, {
+    domain: "save",
+    target: definition.key,
+    base: 0,
+    context: saveContext,
+    modifiers: add2eSaveDeduplicate([
+      ...canonical,
+      ...tagModifiers,
+      ...(mentalWisdom ? [mentalWisdom] : []),
+      ...transient
+    ])
+  });
+  return {
+    definition,
+    index: definition.index,
+    key: definition.key,
+    label: definition.label,
+    target: targetResolution.target,
+    targetResolution,
+    bonus: Number(bonusResolution.total) || 0,
+    bonusResolution,
+    context: saveContext,
+    version: ADD2E_SAVE_RESOLVER_VERSION
+  };
+}
+
+async function add2eRollSavingThrow(engine, actor, saveType, options = {}) {
+  const { createChat: _createChat = false, showDice = true, source = "canonical-save-executor", ...context } = options ?? {};
+  if (!actor) {
+    return { ok: false, canRoll: false, reason: "missing-actor", actor: null, resolution: null, roll: null, d20: null, bonus: 0, total: null, target: null, threshold: null, success: false, chatMessage: null, version: ADD2E_SAVE_RESOLVER_VERSION };
+  }
+  const resolution = engine.resolveSavingThrow(actor, saveType, { ...context, source });
+  const target = Number(resolution?.target);
+  if (!Number.isFinite(target) || target <= 0) {
+    return { ok: false, canRoll: false, reason: "missing-target", actor, resolution, roll: null, d20: null, bonus: Number(resolution?.bonus) || 0, total: null, target: null, threshold: null, success: false, chatMessage: null, version: ADD2E_SAVE_RESOLVER_VERSION };
+  }
+  const roll = new Roll("1d20");
+  await roll.evaluate();
+  if (showDice !== false) {
+    try { await game.dice3d?.showForRoll?.(roll); } catch (_error) {}
+  }
+  const d20 = Number(roll.total) || 0;
+  const bonus = Number(resolution.bonus) || 0;
+  const total = d20 + bonus;
+  const success = total >= target;
+  return {
+    ok: true,
+    canRoll: true,
+    reason: "rolled",
+    actor,
+    resolution,
+    roll,
+    d20,
+    bonus,
+    total,
+    target,
+    threshold: target,
+    success,
+    chatMessage: null,
+    version: ADD2E_SAVE_RESOLVER_VERSION
+  };
+}
+
+function add2eInstallCanonicalSaveResolver(Engine) {
+  register(Engine, {
+    getSaveCategory(value) {
+      const definition = add2eSaveDefinition(this, value);
+      if (definition) return definition.key;
+      const key = add2eSaveNormalize(this, value);
+      if (key.includes("peur") || key.includes("fear")) return "peur";
+      if (key.includes("poison")) return "poison";
+      return key;
+    },
+
+    resolveSavingThrow(actor, saveType, context = {}) {
+      return add2eResolveSavingThrow(this, actor, saveType, context);
+    },
+
+    rollSavingThrow(actor, saveType, options = {}) {
+      return add2eRollSavingThrow(this, actor, saveType, options);
+    },
+
+    getSaveTarget(actor, saveType, context = {}) {
+      return this.resolveSavingThrow(actor, saveType, { ...context, source: context.source ?? "get-save-target" }).target;
+    },
+
+    getSaveBonus(actor, saveType, options = {}) {
+      return this.resolveSavingThrow(actor, saveType, { ...options, source: options.source ?? "get-save-bonus" }).bonus;
+    },
+
+    getActionSaveThreshold(actor, saveType = "sorts", context = {}) {
+      return this.resolveSavingThrow(actor, saveType, { ...context, source: context.source ?? "action-save-threshold" }).target;
+    },
+
+    async rollActionSave(actor, saveType = "sorts", bonus = 0, context = {}) {
+      const numericBonus = Number(bonus) || 0;
+      const saveModifiers = [
+        ...add2eSaveArray(context.saveModifiers),
+        ...(numericBonus ? [{
+          id: `${context.source ?? "action-save"}:explicit-bonus`,
+          value: numericBonus,
+          target: saveType,
+          label: context.bonusLabel ?? "Bonus de sauvegarde de l’action",
+          source: { kind: "action", id: context.source ?? "action-save", name: context.bonusLabel ?? "Action" }
+        }] : [])
+      ];
+      const result = await this.rollSavingThrow(actor, saveType, {
+        ...context,
+        saveModifiers,
+        source: context.source ?? "action-save",
+        createChat: context.createChat === true,
+        showDice: context.showDice !== false
+      });
+      return {
+        ...result,
+        type: result.resolution?.key ?? String(saveType ?? ""),
+        threshold: Number(result.target),
+        total: Number(result.total) || 0,
+        bonus: Number(result.bonus) || 0,
+        canRoll: result.ok === true
+      };
+    }
+  });
+
+  Engine.__add2eCanonicalSaveResolverVersion = ADD2E_SAVE_RESOLVER_VERSION;
+  globalThis.ADD2E_SAVE_RESOLVER_VERSION = ADD2E_SAVE_RESOLVER_VERSION;
+  globalThis.add2eResolveSavingThrow = (actor, saveType, context = {}) => Engine.resolveSavingThrow(actor, saveType, context);
+  globalThis.add2eRollSavingThrow = (actor, saveType, options = {}) => Engine.rollSavingThrow(actor, saveType, options);
+  globalThis.add2eGetSaveTarget = (actor, saveType, context = {}) => Engine.getSaveTarget(actor, saveType, context);
+}
+
 export function installEffectsEngineDefense(Engine) {
   register(Engine, {
     getDexDefense(actor, context = {}) {
@@ -361,10 +845,7 @@ export function installEffectsEngineDefense(Engine) {
         if (modifier) naturalModifiers.push(modifier);
       }
 
-      const dex = ignoreDex ? 0 : this.getDexDefense(actor, {
-        ...context,
-        source: context.source ?? "armor-class-dexterity"
-      });
+      const dex = ignoreDex ? 0 : this.getDexDefense(actor, { ...context, source: context.source ?? "armor-class-dexterity" });
       const dexModifier = add2eArmorLayerModifier(this, {
         id: `${actor.id}:armor-class:dexterity`,
         value: dex,
@@ -718,5 +1199,6 @@ export function installEffectsEngineDefense(Engine) {
     }
   });
 
+  add2eInstallCanonicalSaveResolver(Engine);
   globalThis.ADD2E_ARMOR_CLASS_RESOLVER_VERSION = ADD2E_ARMOR_CLASS_RESOLVER_VERSION;
 }
