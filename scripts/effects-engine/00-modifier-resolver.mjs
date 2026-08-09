@@ -1,6 +1,6 @@
 // ADD2E — Effects Engine / résolveur générique de modificateurs.
 // Compatible Foundry V13/V14/V15.
-// Version : 2026-08-03-canonical-armor-defense-v3
+// Version : 2026-08-09-canonical-hit-point-mutation-v4
 
 import {
   ADD2E_MODIFIER_DOMAINS,
@@ -574,6 +574,138 @@ export function installModifierResolver(Engine) {
       };
     },
 
+    readHitPoints(actor) {
+      if (!actor?.system) throw new Error("Acteur invalide pour la lecture canonique des points de vie.");
+      const current = Number(actor.system.pdv);
+      if (!Number.isFinite(current)) throw new Error(`PV courants canoniques absents pour ${actor.name ?? actor.id ?? "acteur"}.`);
+      return current;
+    },
+
+    readMaximumHitPoints(actor) {
+      if (!actor?.system) throw new Error("Acteur invalide pour la lecture canonique des points de vie maximum.");
+      const maximum = Number(actor.system.points_de_coup);
+      return Number.isFinite(maximum) && maximum > 0 ? maximum : null;
+    },
+
+    async setHitPoints(actor, options = {}) {
+      if (!actor?.system || typeof actor.update !== "function") {
+        throw new Error("Acteur invalide pour la mutation canonique des points de vie.");
+      }
+
+      const previousCurrentRaw = Number(actor.system.pdv);
+      const previousMaximumRaw = Number(actor.system.points_de_coup);
+      const previousCurrent = Number.isFinite(previousCurrentRaw) ? previousCurrentRaw : null;
+      const previousMaximum = Number.isFinite(previousMaximumRaw) && previousMaximumRaw > 0 ? previousMaximumRaw : null;
+      const hasCurrent = options.current !== undefined && options.current !== null && options.current !== "";
+      const hasMaximum = options.maximum !== undefined && options.maximum !== null && options.maximum !== "";
+      const update = isObject(options.updates) ? clone(options.updates) : {};
+
+      let nextMaximum = previousMaximum;
+      if (hasMaximum) {
+        const requestedMaximum = Number(options.maximum);
+        if (!Number.isFinite(requestedMaximum) || requestedMaximum <= 0) {
+          throw new Error("PV maximum canoniques invalides.");
+        }
+        nextMaximum = Math.max(1, Math.floor(requestedMaximum));
+        update["system.points_de_coup"] = nextMaximum;
+      }
+
+      let nextCurrent = previousCurrent;
+      if (hasCurrent) {
+        const requestedCurrent = Number(options.current);
+        if (!Number.isFinite(requestedCurrent)) throw new Error("PV courants canoniques invalides.");
+        nextCurrent = Math.floor(requestedCurrent);
+      }
+      if (Number.isFinite(nextCurrent) && Number.isFinite(nextMaximum) && options.clampToMaximum !== false) {
+        nextCurrent = Math.min(nextMaximum, nextCurrent);
+      }
+      if (hasCurrent || (hasMaximum && Number.isFinite(nextCurrent) && nextCurrent > nextMaximum)) {
+        update["system.pdv"] = nextCurrent;
+      }
+
+      if (!Object.keys(update).length) {
+        return {
+          changed: false,
+          actor,
+          previousCurrent,
+          previousMaximum,
+          current: previousCurrent,
+          maximum: previousMaximum
+        };
+      }
+
+      const reason = String(options.reason ?? "hit-points-mutation");
+      await actor.update(update, {
+        add2eInternal: true,
+        add2eHitPointMutation: true,
+        add2eReason: reason,
+        ...(isObject(options.updateOptions) ? options.updateOptions : {})
+      });
+
+      if (options.syncVital !== false && Object.prototype.hasOwnProperty.call(update, "system.pdv")) {
+        if (typeof globalThis.add2eSyncActorVitalStatus !== "function") {
+          throw new Error("Le synchroniseur canonique des états vitaux ADD2E est indisponible.");
+        }
+        await globalThis.add2eSyncActorVitalStatus(actor, { reason });
+      }
+
+      const currentRaw = Number(actor.system?.pdv);
+      const maximumRaw = Number(actor.system?.points_de_coup);
+      return {
+        changed: true,
+        actor,
+        previousCurrent,
+        previousMaximum,
+        current: Number.isFinite(currentRaw) ? currentRaw : nextCurrent,
+        maximum: Number.isFinite(maximumRaw) && maximumRaw > 0 ? maximumRaw : nextMaximum,
+        update
+      };
+    },
+
+    async applyHitPointDamage(actor, amount, options = {}) {
+      const damage = Math.max(0, Number(amount) || 0);
+      const before = this.readHitPoints(actor);
+      if (damage <= 0) {
+        return { changed: false, actor, before, after: before, amount: 0, effective: 0 };
+      }
+      const result = await this.setHitPoints(actor, {
+        ...options,
+        current: before - damage,
+        reason: options.reason ?? "hit-points-damage"
+      });
+      return {
+        ...result,
+        before,
+        after: result.current,
+        amount: damage,
+        effective: Math.max(0, before - Number(result.current))
+      };
+    },
+
+    async applyHitPointHealing(actor, amount, options = {}) {
+      const healing = Math.max(0, Number(amount) || 0);
+      const before = this.readHitPoints(actor);
+      const maximum = this.readMaximumHitPoints(actor);
+      if (healing <= 0) {
+        return { changed: false, actor, before, after: before, maximum, amount: 0, effective: 0 };
+      }
+      const requested = before + healing;
+      const after = Number.isFinite(maximum) ? Math.min(maximum, requested) : requested;
+      const result = await this.setHitPoints(actor, {
+        ...options,
+        current: after,
+        reason: options.reason ?? "hit-points-healing"
+      });
+      return {
+        ...result,
+        before,
+        after: result.current,
+        maximum,
+        amount: healing,
+        effective: Math.max(0, Number(result.current) - before)
+      };
+    },
+
     addTagsInto(dst, raw) {
       if (!dst) return;
       const add = typeof dst.add === "function"
@@ -717,7 +849,6 @@ export function installModifierResolver(Engine) {
       const canonical = this.itemArmorClassModifiers(item, ["set", "minmax"])
         .some(modifier => ["naturel", "total", "all"].includes(this.normalizeKey(modifier.target)));
       if (canonical) return null;
-
       const system = item?.system ?? {};
       const type = String(item?.type ?? "").toLowerCase();
       if (type === "armure" || type === "armor") {
