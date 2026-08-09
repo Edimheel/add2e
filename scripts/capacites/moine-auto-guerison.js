@@ -3,7 +3,7 @@
  * Script exécuté via on_use d'une classFeature.
  * Compatible Foundry V13 / V14 / V15.
  */
-const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-08-07-canonical-resource-v6";
+const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-08-09-canonical-hit-points-v7";
 
 globalThis.ADD2E_MOINE_AUTO_GUERISON_VERSION = ADD2E_MOINE_AUTO_GUERISON_VERSION;
 
@@ -72,6 +72,19 @@ async function a2eRollMonkHealFormula(formula) {
   return { total: Math.max(0, Math.floor(a2eNum(roll.total, 0))), roll };
 }
 
+function a2eMonkHitPointEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (
+    !engine
+    || typeof engine.readHitPoints !== "function"
+    || typeof engine.readMaximumHitPoints !== "function"
+    || typeof engine.applyHitPointHealing !== "function"
+  ) {
+    throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible.");
+  }
+  return engine;
+}
+
 if (!actor) {
   ui.notifications.error("Auto-guérison du moine : acteur introuvable.");
   return false;
@@ -91,8 +104,6 @@ if (!healFormula) {
   return false;
 }
 
-const current = a2eNum(actor.system?.pdv, 0);
-const max = a2eNum(actor.system?.points_de_coup, current);
 const healRoll = await a2eRollMonkHealFormula(healFormula);
 const healAmount = healRoll.total;
 if (healAmount <= 0) {
@@ -100,17 +111,24 @@ if (healAmount <= 0) {
   return false;
 }
 
-const healed = Math.min(max, current + healAmount);
-const gained = Math.max(0, healed - current);
+const hpEngine = a2eMonkHitPointEngine();
+const current = hpEngine.readHitPoints(actor);
+const max = hpEngine.readMaximumHitPoints(actor);
+if (!Number.isFinite(max) || max <= 0) {
+  ui.notifications.error("Auto-guérison du moine : PV maximum canoniques introuvables.");
+  return false;
+}
+
+const healing = await hpEngine.applyHitPointHealing(actor, healAmount, {
+  reason: "monk-self-heal",
+  updateOptions: { render: false }
+});
+const gained = Number(healing.effective) || 0;
+const healed = Number(healing.after);
 if (gained <= 0) {
   ui.notifications.info(`${actor.name} est déjà à ses PV maximum.`);
   return false;
 }
-
-await actor.update(
-  { "system.pdv": healed },
-  { add2eInternal: true, add2eReason: "monk-self-heal", render: false }
-);
 
 const buildChatCard = globalThis.add2eBuildChatCard;
 const createChatCard = globalThis.add2eCreateChatCard;
