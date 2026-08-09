@@ -1,12 +1,12 @@
 // ============================================================================
 // ADD2E — États vitaux : constantes, lecture PV et règles métier.
-// Version : 2026-08-09-vital-status-canonical-lethal-outcome-v5
+// Version : 2026-08-09-vital-status-canonical-lethal-outcome-v6
 // ============================================================================
 
-export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-08-09-vital-status-canonical-lethal-outcome-v5";
+export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-08-09-vital-status-canonical-lethal-outcome-v6";
 export const ADD2E_RESURRECTION_RULES_VERSION = "2026-07-26-resurrection-constitution-v1";
 export const ADD2E_NATURAL_REGENERATION_VERSION = "2026-07-26-natural-regeneration-v1";
-export const ADD2E_LETHAL_OUTCOME_VERSION = "2026-08-09-canonical-lethal-outcome-v1";
+export const ADD2E_LETHAL_OUTCOME_VERSION = "2026-08-09-canonical-lethal-outcome-v2";
 
 export const ADD2E_VITAL_STATUS = {
   unconscious: { key: "unconscious", name: "Inconscient", icon: "icons/svg/daze.svg" },
@@ -144,6 +144,52 @@ export async function add2eApplyLethalOutcome(actor, {
   const engine = add2eVitalHitPointEngine();
   const before = Number(engine.readHitPoints(actor));
   const current = Number.isFinite(before) ? Math.min(before, lethalHitPoints) : lethalHitPoints;
+  const ownsActor = game.user?.isGM === true || actor.isOwner === true;
+
+  if (!ownsActor) {
+    if (Object.keys(updates ?? {}).length) {
+      throw new Error("Une issue létale distante avec mises à jour associées doit être exécutée par le MJ propriétaire.");
+    }
+    const amount = Number.isFinite(before) ? Math.max(0, before - current) : 0;
+    if (amount <= 0) {
+      return {
+        applied: false,
+        relayed: false,
+        reason: "already-lethal",
+        lethalHitPoints,
+        status: "dead",
+        before: Number.isFinite(before) ? before : null,
+        after: current,
+        mutation: null
+      };
+    }
+    if (typeof game.socket?.emit !== "function") {
+      throw new Error("Le relais MJ ADD2E est indisponible pour l’issue létale.");
+    }
+    game.socket.emit("system.add2e", {
+      type: "ADD2E_GM_OPERATION",
+      operation: "applyDamage",
+      payload: {
+        actorUuid: actor.uuid ?? "",
+        actorId: actor.id ?? "",
+        montant: amount,
+        type: "lethal-outcome",
+        details: reason
+      }
+    });
+    return {
+      applied: true,
+      relayed: true,
+      pending: true,
+      reason,
+      lethalHitPoints,
+      status: "dead",
+      before: Number.isFinite(before) ? before : null,
+      after: current,
+      mutation: null
+    };
+  }
+
   const mutation = await engine.setHitPoints(actor, {
     current,
     reason,
@@ -156,6 +202,8 @@ export async function add2eApplyLethalOutcome(actor, {
 
   return {
     applied: true,
+    relayed: false,
+    pending: false,
     reason,
     lethalHitPoints,
     status: "dead",
