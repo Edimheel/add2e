@@ -116,6 +116,19 @@ const __add2eMinorCureResult = await (async () => {
     return result;
   }
 
+  function hitPointEngine() {
+    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+    if (
+      !engine
+      || typeof engine.readHitPoints !== "function"
+      || typeof engine.readMaximumHitPoints !== "function"
+      || typeof engine.applyHitPointHealing !== "function"
+    ) {
+      throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible.");
+    }
+    return engine;
+  }
+
   function requestGmHealing({ amount, details }) {
     if (amount <= 0) return true;
     if (!game.socket?.emit) {
@@ -184,19 +197,24 @@ const __add2eMinorCureResult = await (async () => {
     }
 
     const healing = await roll(FORMULA);
-    const max = Number(target.system?.points_de_coup ?? target.system?.pdv_max);
-    const before = Number(target.system?.pdv ?? 0);
-    if (!Number.isFinite(max)) {
-      ui.notifications?.error?.(`${CURE} : PV maximum introuvables.`);
+    const amount = Math.max(0, Number(healing.total) || 0);
+    const engine = hitPointEngine();
+    const before = engine.readHitPoints(target);
+    const max = engine.readMaximumHitPoints(target);
+    if (!Number.isFinite(max) || max <= 0) {
+      ui.notifications?.error?.(`${CURE} : PV maximum canoniques introuvables.`);
       return false;
     }
 
-    const restored = Math.min(Math.max(0, Number(healing.total) || 0), Math.max(0, max - before));
-    const after = before + restored;
+    let restored = Math.min(amount, Math.max(0, max - before));
+    let after = before + restored;
     if (game.user?.isGM || target.isOwner) {
-      await target.update({ "system.pdv": after }, { add2eReason: "soins-mineurs" });
-      await globalThis.add2eSyncActorVitalStatus?.(target, { reason: "soins-mineurs" });
-    } else if (!requestGmHealing({ amount: restored, details: `${CURE} : ${restored} PV rendus` })) {
+      const result = await engine.applyHitPointHealing(target, amount, {
+        reason: "soins-mineurs"
+      });
+      restored = Number(result?.effective) || 0;
+      after = Number(result?.after);
+    } else if (!requestGmHealing({ amount, details: `${CURE} : ${amount} PV de soins` })) {
       return false;
     }
 
@@ -205,7 +223,7 @@ const __add2eMinorCureResult = await (async () => {
       title: CURE,
       targetName: target.name,
       status: "SOINS MINEURS",
-      resultHtml: `<div style="font-weight:900;color:${COLORS.success};">SOINS RÉUSSIS</div><div style="margin-top:4px;">Jet : <b>1d8</b> = <b>${Number(healing.total) || 0}</b></div><div>PV rendus : <b>${restored}</b>${restored < (Number(healing.total) || 0) ? " (limite par le maximum)" : ""}</div><div style="font-size:.84em;color:#6b5a35;margin-top:4px;">${before} → ${after} PV</div>`,
+      resultHtml: `<div style="font-weight:900;color:${COLORS.success};">SOINS RÉUSSIS</div><div style="margin-top:4px;">Jet : <b>1d8</b> = <b>${amount}</b></div><div>PV rendus : <b>${restored}</b>${restored < amount ? " (limite par le maximum)" : ""}</div><div style="font-size:.84em;color:#6b5a35;margin-top:4px;">${before} → ${after} PV</div>`,
       rule: "Au toucher, le sort rend 1d8 points de vie sans dépasser le maximum normal. Il n’affecte pas les morts-vivants ni les créatures sans corps matériel."
     });
     return true;
