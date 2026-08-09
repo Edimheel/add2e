@@ -5,7 +5,7 @@
 
 import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-07-28-canonical-hit-points-closure-v11";
+const VERSION = "2026-08-09-canonical-hit-point-mutation-v12";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 const hitPointQueues = new Map();
@@ -294,8 +294,8 @@ async function syncClassProgressionSummary(actor, { reason = "class-item-progres
 
 function hitPointEngine() {
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
-  if (typeof engine?.resolveHitPoints !== "function") {
-    throw new Error("Le résolveur canonique ADD2E des points de vie n’est pas disponible.");
+  if (typeof engine?.resolveHitPoints !== "function" || typeof engine?.setHitPoints !== "function") {
+    throw new Error("Le résolveur/mutateur canonique ADD2E des points de vie n’est pas disponible.");
   }
   if (typeof engine?.resolveAbilityDerived !== "function") {
     throw new Error("Le résolveur canonique ADD2E des ajustements de caractéristiques n’est pas disponible.");
@@ -635,19 +635,31 @@ async function applyHitPointState(actor, options = {}) {
     return false;
   }
 
-  if (Object.keys(state.updates).length) {
-    await actor.update(state.updates, {
-      add2eInternal: true,
-      add2eMulticlassInternal: true,
-      add2eHitPointResolution: true,
-      add2eReason: state.reason,
-      render: false
+  const updates = clone(state.updates ?? {});
+  const writeMaximum = Object.prototype.hasOwnProperty.call(updates, "system.points_de_coup");
+  const writeCurrent = Object.prototype.hasOwnProperty.call(updates, "system.pdv");
+  delete updates["system.points_de_coup"];
+  delete updates["system.pdv"];
+  const written = writeMaximum || writeCurrent || Object.keys(updates).length > 0;
+
+  if (written) {
+    const engine = hitPointEngine();
+    await engine.setHitPoints(actor, {
+      ...(writeMaximum ? { maximum: state.maximum } : {}),
+      ...(writeCurrent ? { current: state.current } : {}),
+      updates,
+      reason: state.reason,
+      updateOptions: {
+        add2eMulticlassInternal: true,
+        add2eHitPointResolution: true,
+        render: false
+      }
     });
   }
 
   const finalState = {
     ...state,
-    written: Object.keys(state.updates).length > 0,
+    written,
     finalMaximum: n(actor.system?.points_de_coup, state.maximum),
     finalCurrent: n(actor.system?.pdv, state.current)
   };
