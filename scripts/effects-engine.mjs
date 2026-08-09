@@ -157,90 +157,11 @@ function installPassiveClassFeatureContract(Engine) {
   });
 }
 
-function installGenericSaveExtensions(Engine) {
+function installGenericResistanceExtensions(Engine) {
   const baseGetResistanceInfo = Engine.getResistanceInfo?.bind(Engine);
   const baseCheckResistanceDetails = Engine.checkResistanceDetails?.bind(Engine);
-  const baseRollActionSave = Engine.rollActionSave?.bind(Engine);
 
   Object.defineProperties(Engine, {
-    getSaveCategory: {
-      configurable: true,
-      writable: true,
-      value(value) {
-        const key = this.normalizeTag(value);
-        if (!key) return "";
-        if (key.includes("peur") || key.includes("fear")) return "peur";
-        if (key.includes("poison")) return "poison";
-        if (key.includes("baguette") || key.includes("wand") || key.includes("baton") || key.includes("rod") || key.includes("staff")) return "baguettes";
-        if (key.includes("petrification") || key.includes("metamorph") || key.includes("transformation")) return "petrification";
-        if (key.includes("souffle") || key.includes("breath")) return "souffle";
-        if (key.includes("sort") || key.includes("magie") || key.includes("magic") || key.includes("spell")) return "sorts";
-        if (key.includes("mort") || key.includes("paralys")) return "mort_paralysie";
-        return key;
-      }
-    },
-    getSaveBonusVs: {
-      configurable: true,
-      writable: true,
-      value(actor, vsType) {
-        if (!actor || !vsType) return 0;
-        const category = this.getSaveCategory(vsType);
-        const aliases = {
-          peur: ["peur", "fear"],
-          poison: ["poison"],
-          baguettes: ["baguette", "baguettes", "wand", "rod", "staff", "baton", "batons", "batonnet", "batonnets"],
-          petrification: ["petrification", "metamorphose", "transformation"],
-          souffle: ["souffle", "breath"],
-          sorts: ["sort", "sorts", "sortilege", "sortileges", "spell", "spells", "magie", "magic"],
-          mort_paralysie: ["mort", "paralysie", "death"]
-        }[category] ?? [this.normalizeTag(vsType)];
-        let bonus = 0;
-        for (const tag of this.getActiveTags(actor)) {
-          if (tag.startsWith("bonus_save:")) {
-            bonus += Number(tag.split(":")[1]) || 0;
-            continue;
-          }
-          if (!tag.startsWith("bonus_save_vs:")) continue;
-          const [, rawMatcher, rawValue] = tag.split(":");
-          if (rawValue === "const") continue;
-          const matcher = this.normalizeTag(rawMatcher);
-          if (matcher === "tout" || matcher === "all" || aliases.some(alias => matcher === this.normalizeTag(alias))) bonus += Number(rawValue) || 0;
-        }
-        return bonus;
-      }
-    },
-    getBonusSaveConstitution: {
-      configurable: true,
-      writable: true,
-      value(actor, saveType) {
-        const category = this.getSaveCategory(saveType);
-        const tags = this.getActiveTags(actor);
-        const has = matcher => tags.includes(`bonus_save_vs:${matcher}:const`);
-        const applies = (category === "poison" && has("poison"))
-          || (category === "baguettes" && (has("baguette") || has("baguettes") || has("baton") || has("staff")))
-          || (category === "sorts" && (has("magie") || has("magic") || has("sort") || has("sorts") || has("spell")));
-        if (!applies) return 0;
-        if (typeof this.resolveAbilityDerived !== "function") {
-          throw new Error("Le résolveur canonique ADD2E de Constitution est indisponible pour les sauvegardes.");
-        }
-        const constitution = this.resolveAbilityDerived(actor, "constitution", {
-          domain: "saving-throw",
-          type: category,
-          source: "racial-constitution-save",
-          consumer: "effects-engine"
-        });
-        return Math.max(0, Math.min(5, Math.floor((Number(constitution?.total) || 0) / 3.5)));
-      }
-    },
-    getSaveBonus: {
-      configurable: true,
-      writable: true,
-      value(actor, saveType, options = {}) {
-        let bonus = this.getSaveBonusVs(actor, saveType) + this.getBonusSaveConstitution(actor, saveType);
-        if (options.frontale === true) bonus += this.getSaveBonusFrontal(actor);
-        return bonus;
-      }
-    },
     getResistanceInfo: {
       configurable: true,
       writable: true,
@@ -261,16 +182,6 @@ function installGenericSaveExtensions(Engine) {
           return result;
         }
         return baseCheckResistanceDetails?.(actor, typeResist, options) ?? { found: false, resiste: false, type: String(typeResist ?? ""), matchedType: "", tag: "", pct: 0, jet: 0 };
-      }
-    },
-    rollActionSave: {
-      configurable: true,
-      writable: true,
-      async value(actor, saveType = "sorts", bonus = 0) {
-        const racialBonus = this.getSaveBonus(actor, saveType);
-        const result = await baseRollActionSave?.(actor, saveType, (Number(bonus) || 0) + racialBonus);
-        if (result && typeof result === "object") result.racialBonus = racialBonus;
-        return result;
       }
     }
   });
@@ -711,7 +622,7 @@ function add2eIsCapabilityTransformationNaturalAttackActive(actor, item) {
 
 installPublicNormalizationContract(Add2eEffectsEngine);
 installPassiveClassFeatureContract(Add2eEffectsEngine);
-installGenericSaveExtensions(Add2eEffectsEngine);
+installGenericResistanceExtensions(Add2eEffectsEngine);
 installSingleReadActionRules(Add2eEffectsEngine);
 installGateOnUseOutcomeContract(Add2eEffectsEngine);
 
