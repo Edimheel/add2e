@@ -1,8 +1,8 @@
 // ADD2E — Consommation Baie Délicieuse / Baie Empoisonnée
 // Compatible Foundry V13/V14/V15.
-// Version : 2026-08-07-canonical-resource-v4
+// Version : 2026-08-09-canonical-hit-points-v5
 
-const ADD2E_BAIE_TAG = "[ADD2E][OBJET_ONUSE][BAIE_CONSOMMATION_V4]";
+const ADD2E_BAIE_TAG = "[ADD2E][OBJET_ONUSE][BAIE_CONSOMMATION_V5]";
 
 function add2eHtmlEscape(value) {
   const div = document.createElement("div");
@@ -29,8 +29,15 @@ function add2eReadQty(sourceItem) {
 
 function add2eBerryResourceEngine() {
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-  if (!engine || typeof engine.transactResources !== "function") {
-    throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour la consommation des baies.");
+  if (
+    !engine
+    || typeof engine.transactResources !== "function"
+    || typeof engine.readHitPoints !== "function"
+    || typeof engine.readMaximumHitPoints !== "function"
+    || typeof engine.applyHitPointDamage !== "function"
+    || typeof engine.applyHitPointHealing !== "function"
+  ) {
+    throw new Error("Les domaines canoniques ADD2E resource et hit-points ne sont pas disponibles pour la consommation des baies.");
   }
   return engine;
 }
@@ -124,13 +131,13 @@ if (!item) {
 }
 
 const mode = item.flags?.add2e?.berryMode ?? "heal";
-const healAmount = Number(item.flags?.add2e?.healAmount ?? 1) || 0;
-const damageAmount = Number(item.flags?.add2e?.damageAmount ?? 0) || 0;
-const current = Number(targetActor.system?.pdv ?? 0);
-const max = Number(targetActor.system?.points_de_coup ?? targetActor.system?.pv_max ?? 0) || 0;
-if (!Number.isFinite(current)) {
-  ui.notifications.warn(`Baie : impossible de lire system.pdv sur ${targetActor.name}.`);
-  console.warn(`${ADD2E_BAIE_TAG}[MISSING_SYSTEM_PDV]`, { actor: targetActor.name, system: targetActor.system });
+const healAmount = Math.max(0, Number(item.flags?.add2e?.healAmount ?? 1) || 0);
+const damageAmount = Math.max(0, Number(item.flags?.add2e?.damageAmount ?? 0) || 0);
+const engine = add2eBerryResourceEngine();
+const current = engine.readHitPoints(targetActor);
+const max = engine.readMaximumHitPoints(targetActor);
+if (mode !== "poison" && (!Number.isFinite(max) || max <= 0)) {
+  ui.notifications.warn(`Baie : PV maximum canoniques introuvables pour ${targetActor.name}.`);
   return false;
 }
 
@@ -141,13 +148,19 @@ if (quantityBefore < 1) {
 }
 
 let hpAfter = current;
-const transaction = await add2eBerryResourceEngine().transactResources(
+let hpEffective = 0;
+const transaction = await engine.transactResources(
   add2eBerryResource(targetActor, item),
   async () => {
-    hpAfter = mode === "poison"
-      ? Math.max(0, current - damageAmount)
-      : max > 0 ? Math.min(max, current + healAmount) : current + healAmount;
-    await targetActor.update({ "system.pdv": hpAfter });
+    const mutation = mode === "poison"
+      ? await engine.applyHitPointDamage(targetActor, damageAmount, {
+        reason: "berry-poison-damage"
+      })
+      : await engine.applyHitPointHealing(targetActor, healAmount, {
+        reason: "berry-healing"
+      });
+    hpAfter = Number(mutation?.after);
+    hpEffective = Math.max(0, Number(mutation?.effective) || 0);
     return true;
   },
   {
@@ -169,14 +182,14 @@ const itemName = item.name;
 if (mode === "poison") {
   await add2eChat(
     label,
-    `<p><b>${add2eHtmlEscape(targetActor.name)}</b> consomme une baie empoisonnée et subit <b>${damageAmount}</b> dégât.</p>`,
-    { targetLabel: targetActor.name, outcome: `${damageAmount} dégât`, variant: "failure" }
+    `<p><b>${add2eHtmlEscape(targetActor.name)}</b> consomme une baie empoisonnée et subit <b>${hpEffective}</b> dégât.</p>`,
+    { targetLabel: targetActor.name, outcome: `${hpEffective} dégât`, variant: "failure" }
   );
 } else {
   await add2eChat(
     label,
-    `<p><b>${add2eHtmlEscape(targetActor.name)}</b> consomme une baie délicieuse et récupère <b>${healAmount}</b> PV.</p>`,
-    { targetLabel: targetActor.name, outcome: `+${healAmount} PV`, variant: "success" }
+    `<p><b>${add2eHtmlEscape(targetActor.name)}</b> consomme une baie délicieuse et récupère <b>${hpEffective}</b> PV.</p>`,
+    { targetLabel: targetActor.name, outcome: `+${hpEffective} PV`, variant: "success" }
   );
 }
 
@@ -190,6 +203,7 @@ console.log(`${ADD2E_BAIE_TAG}[DONE]`, {
   mode,
   hpBefore: current,
   hpAfter,
+  hpEffective,
   qtyBefore: quantityBefore,
   qtyAfter: quantityAfter
 });
