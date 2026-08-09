@@ -25,12 +25,10 @@ import {
 
 const ADD2E_SOCKET = "system.add2e";
 const ADD2E_GM_OPERATION = "ADD2E_GM_OPERATION";
-const ADD2E_ATTACK_PLAYER_LOCAL_CHAT = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
-const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
 const FAMILIAR_SCOPE = "add2e";
 const FAMILIAR_FLAG = "familiar";
 const FAMILIAR_RANGE_DEFAULT = 12;
-const VERSION = "2026-08-09-gm-relay-canonical-hit-points-v14";
+const VERSION = "2026-08-09-gm-relay-common-chat-v15";
 const TAG = "[ADD2E][GM-RELAY]";
 
 const FAMILIAR_ASSETS = Object.freeze({
@@ -53,8 +51,6 @@ const familiarRegenerationMarkers = new Map();
 const familiarArtworkQueue = new Set();
 let familiarHudRefreshQueued = false;
 let familiarHudObserver = null;
-
-globalThis.ADD2E_LOCAL_PLAYER_ATTACK_CHAT_RELAY_VERSION = VERSION;
 
 function clone(value) {
   if (typeof foundry?.utils?.deepClone === "function") return foundry.utils.deepClone(value);
@@ -79,6 +75,12 @@ function hitPointEngine() {
     throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible.");
   }
   return engine;
+}
+
+function requireCommonChatApi() {
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Le constructeur commun des cartes de chat ADD2E n’est pas disponible.");
+  }
 }
 
 function relayArray(value) {
@@ -141,43 +143,6 @@ async function resolveActor(payload = {}) {
     if (placeable?.document?.actor) return placeable.document.actor;
   }
   return payload.actorId ? game.actors?.get?.(payload.actorId) ?? null : null;
-}
-
-function localAttackCardKey(payload = {}) {
-  return String(payload.id ?? `${payload.version ?? "none"}:${payload.speaker?.alias ?? "ADD2E"}:${String(payload.content ?? "").slice(0, 120)}`);
-}
-
-function responsiblePlayerId(ids = []) {
-  const ordered = ids.filter(Boolean);
-  return ordered.find(id => game.users?.get?.(id)?.active && !game.users?.get?.(id)?.isGM)
-    ?? ordered.find(id => game.users?.get?.(id) && !game.users?.get?.(id)?.isGM)
-    ?? Array.from(game.users ?? []).find(user => user.active && !user.isGM)?.id
-    ?? null;
-}
-
-async function createPersistentPlayerAttackChat(payload = {}) {
-  const userIds = Array.isArray(payload.userIds) ? payload.userIds.filter(Boolean) : [];
-  const content = String(payload.content ?? "");
-  if (!content || game.user?.isGM || game.user?.id !== responsiblePlayerId(userIds)) return false;
-
-  globalThis.ADD2E_LOCAL_ATTACK_CHAT_SEEN ??= new Set();
-  const key = localAttackCardKey(payload);
-  if (globalThis.ADD2E_LOCAL_ATTACK_CHAT_SEEN.has(key)) return false;
-  globalThis.ADD2E_LOCAL_ATTACK_CHAT_SEEN.add(key);
-
-  try {
-    await ChatMessage.create({
-      speaker: payload.speaker ?? { alias: "ADD2E" },
-      content,
-      whisper: userIds,
-      blind: false,
-      flags: { add2e: { attackChatVisibility: "players-only", attackChatVisibilityVersion: VERSION, localAttackKey: key, createdByPlayerRelay: true } }
-    });
-    return true;
-  } catch (error) {
-    console.error(`${TAG}[PLAYER_CHAT]`, error);
-    return false;
-  }
 }
 
 function currentCombatRound() {
@@ -713,18 +678,40 @@ async function familiarRangeMessage(caster, link, inRange, distance) {
     ...Array.from(game.users ?? []).filter(user => user.active && user.isGM).map(user => user.id)
   ])];
   if (!recipients.length) return;
-  const color = inRange ? "#2f8f46" : "#b33a2e";
+
+  requireCommonChatApi();
   const title = inRange ? "LIAISON RÉTABLIE" : "FAMILIER TROP ÉLOIGNÉ";
   const label = link.label ?? "Le familier";
   const distanceLabel = Number.isFinite(distance) ? `${distance.toFixed(1)} cases` : "hors de portée";
+  const rangeLabel = `${link.range ?? FAMILIAR_RANGE_DEFAULT} cases`;
   const text = inRange
     ? `${label} est à nouveau à portée. Les bienfaits sont réactivés.`
-    : `${label} est à ${distanceLabel}. Les bienfaits sont suspendus au-delà de ${link.range ?? FAMILIAR_RANGE_DEFAULT} cases.`;
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: caster }), whisper: recipients,
-    content: `<div class="add2e-chat-card" style="border:1px solid ${color};border-radius:8px;background:#fffdf6;padding:.65em .8em;"><b style="color:${color};">${title}</b><div style="margin-top:.25em;">${text}</div></div>`,
-    flags: { add2e: { familiarRange: true, familiarLinkId: link.linkId, inRange } }
-  });
+    : `${label} est à ${distanceLabel}. Les bienfaits sont suspendus au-delà de ${rangeLabel}.`;
+  const card = {
+    actor: caster,
+    title,
+    icon: "fas fa-link",
+    variant: inRange ? "success" : "failure",
+    source: {
+      name: caster?.name ?? "Magicien",
+      img: caster?.img,
+      type: "Familier",
+      meta: label
+    },
+    rows: [
+      { label: "Distance", value: distanceLabel },
+      { label: "Portée", value: rangeLabel }
+    ],
+    message: text,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster }),
+      whisper: recipients,
+      flags: { add2e: { familiarRange: true, familiarLinkId: link.linkId, inRange } }
+    }
+  };
+  const preview = globalThis.add2eBuildChatCard(card);
+  if (!String(preview ?? "").trim()) throw new Error("La carte de portée du familier est vide.");
+  await globalThis.add2eCreateChatCard(card);
 }
 
 async function ensureFamiliarTokenVisible(token, actor) {
@@ -1048,7 +1035,31 @@ async function useFamiliarEffect(actor, effect) {
     const senses = familiarActor?.system?.senses ?? data.senses ?? "Aucun sens spécial renseigné.";
     const placeable = canvas?.scene?.id === link.sceneId ? canvas?.tokens?.get?.(link.tokenId) ?? canvas?.tokens?.placeables?.find?.(token => token?.id === link.tokenId || token?.document?.id === link.tokenId) ?? null : null;
     if (placeable?.center) canvas?.animatePan?.({ x: placeable.center.x, y: placeable.center.y, duration: 250 });
-    await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-chat-card" style="border:1px solid #496f99;border-radius:8px;background:#f4f9ff;padding:.65em .8em;"><b>Vision partagée — ${link.label}</b><div style="margin-top:.25em;">${senses}</div><div style="margin-top:.4em;font-size:.9em;">La scène est centrée sur le familier. La sélection du magicien et le HUD restent inchangés.</div></div>`, flags: { add2e: { familiarSenseShare: true, familiarLinkId: link.linkId } } });
+
+    requireCommonChatApi();
+    const card = {
+      actor,
+      title: `Vision partagée — ${link.label}`,
+      icon: "fas fa-eye",
+      variant: "ability",
+      source: {
+        name: actor?.name ?? "Magicien",
+        img: actor?.img,
+        type: "Familier",
+        meta: link.label
+      },
+      rows: [
+        { label: "Sens du familier", value: senses }
+      ],
+      message: "La scène est centrée sur le familier. La sélection du magicien et le HUD restent inchangés.",
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor }),
+        flags: { add2e: { familiarSenseShare: true, familiarLinkId: link.linkId } }
+      }
+    };
+    const preview = globalThis.add2eBuildChatCard(card);
+    if (!String(preview ?? "").trim()) throw new Error("La carte de partage des sens du familier est vide.");
+    await globalThis.add2eCreateChatCard(card);
     return true;
   }
   if (data.action === "toggle-follow") {
@@ -1287,8 +1298,6 @@ function registerSocketRelays() {
     if (data?.type === SHOP_BUY_RESULT) return handleShopBuyResult(data);
     if (data?.type === SOCKET_RECOVERY) return handleProjectileRecoveryResult(data);
     if (data?.type === SOCKET_COMPONENT_RESULT) return handleSpellComponentResult(data);
-    if (data?.type === ADD2E_ATTACK_PLAYER_LOCAL_CHAT) return createPersistentPlayerAttackChat(data.payload ?? {});
-    if (data?.type === ADD2E_ATTACK_GM_DETAIL_CHAT) return;
     if (data?.type === "applyDamageFlag") {
       if (isResponsibleGM()) await applyDamage({ ...data, ...(data.flagData ?? {}) });
       return;
