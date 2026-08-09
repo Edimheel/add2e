@@ -1,9 +1,9 @@
 // ADD2E — onUse Magicien : Identification
-// Version : 2026-07-14-identification-objets-magiques-v1
+// Version : 2026-08-09-identification-icon-selection-v2
 // Retour attendu : true = sort consommé, false = sort non consommé.
 
 const __add2eIdentificationResult = await (async () => {
-  const DialogV2 = foundry?.applications?.api?.DialogV2 ?? globalThis.DialogV2;
+  const IDENTIFIABLE_ITEM_TYPES = new Set(["objet", "arme", "armure"]);
 
   const escapeHtml = value => String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -11,10 +11,6 @@ const __add2eIdentificationResult = await (async () => {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-
-  const chatStyleData = () => CONST.CHAT_MESSAGE_STYLES
-    ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
-    : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 
   const sourceItem =
     ((typeof sort !== "undefined" && sort) ? sort : null)
@@ -32,8 +28,13 @@ const __add2eIdentificationResult = await (async () => {
     return false;
   }
 
-  if (!DialogV2) {
-    ui.notifications.error("Identification : DialogV2 est indisponible.");
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    ui.notifications.error("Identification : l’API de fenêtre ADD2E est indisponible.");
+    return false;
+  }
+
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    ui.notifications.error("Identification : l’API commune des cartes de chat ADD2E est indisponible.");
     return false;
   }
 
@@ -56,6 +57,13 @@ const __add2eIdentificationResult = await (async () => {
     || candidate?.system?.identified === true
     || candidate?.getFlag?.("add2e", "identified") === true;
 
+  const isIdentifiableItem = candidate => {
+    const type = String(candidate?.type ?? "").trim().toLowerCase();
+    return IDENTIFIABLE_ITEM_TYPES.has(type)
+      && isMagicItem(candidate)
+      && !isIdentified(candidate);
+  };
+
   const genericName = candidate => String(
     candidate?.system?.nom_non_identifie
     ?? candidate?.system?.unidentifiedName
@@ -72,49 +80,64 @@ const __add2eIdentificationResult = await (async () => {
   ).trim() || "Objet magique";
 
   const candidates = (caster.items?.contents ?? Array.from(caster.items ?? []))
-    .filter(candidate => isMagicItem(candidate) && !isIdentified(candidate))
+    .filter(isIdentifiableItem)
     .sort((a, b) => genericName(a).localeCompare(genericName(b), "fr"));
 
   if (!candidates.length) {
-    ui.notifications.warn(`${caster.name} ne possède aucun objet magique non identifié.`);
+    ui.notifications.warn(`${caster.name} ne possède aucun objet magique non identifié pouvant être identifié.`);
     return false;
   }
 
-  const options = candidates.map(candidate => `
-    <option value="${escapeHtml(candidate.id)}">
-      ${escapeHtml(genericName(candidate))}
-    </option>
-  `).join("");
+  const choices = candidates.map((candidate, index) => {
+    const itemId = escapeHtml(candidate.id);
+    const name = escapeHtml(genericName(candidate));
+    const image = escapeHtml(candidate.img || "icons/svg/item-bag.svg");
+    const type = escapeHtml(String(candidate.type ?? "objet"));
+    return `
+      <label style="display:grid;grid-template-columns:54px minmax(0,1fr) 20px;gap:9px;align-items:center;min-height:62px;padding:6px 8px;border:1px solid var(--a2e-dialog-border);border-radius:8px;background:var(--a2e-dialog-paper-light);cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.10);">
+        <img src="${image}" alt="" style="display:block;width:50px;height:50px;min-width:50px;max-width:50px;border:1px solid var(--a2e-dialog-border);border-radius:6px;object-fit:cover;background:#fff;">
+        <span style="display:grid;gap:2px;min-width:0;">
+          <strong style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--a2e-dialog-dark);font-size:.98rem;">${name}</strong>
+          <small style="opacity:.72;text-transform:capitalize;">${type}</small>
+        </span>
+        <input type="radio" name="itemId" value="${itemId}"${index === 0 ? " checked" : ""} required style="margin:0;justify-self:center;">
+      </label>
+    `;
+  }).join("");
 
-  const selectedId = await DialogV2.wait({
+  const selectedId = await globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "identify",
+    add2eClasses: ["add2e-identification-window"],
     window: {
-      title: "ADD2E — Identification",
-      icon: "fa-solid fa-magnifying-glass-sparkles"
+      title: "ADD2E — Identification"
     },
-    position: { width: 520 },
+    position: { width: 720 },
     content: `
-      <form class="add2e-identification-form">
-        <div class="form-group">
-          <label>Objet à identifier</label>
-          <div class="form-fields">
-            <select name="itemId" required>${options}</select>
-          </div>
-          <p class="hint">Seuls les objets magiques non identifiés portés par ${escapeHtml(caster.name)} sont proposés.</p>
+      <form class="add2e-identification-form" style="display:grid;gap:9px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 9px;border:1px solid var(--a2e-dialog-border);border-radius:8px;background:var(--a2e-dialog-paper-dark);">
+          <strong style="color:var(--a2e-dialog-dark);">Objet à identifier</strong>
+          <span style="font-size:.82rem;opacity:.78;">${candidates.length} objet${candidates.length > 1 ? "s" : ""}</span>
         </div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:430px;overflow:auto;padding:1px;">
+          ${choices}
+        </div>
+        <p class="hint" style="margin:0;">Seuls les objets, armes et armures magiques non identifiés portés par ${escapeHtml(caster.name)} sont proposés.</p>
       </form>
     `,
     buttons: [
       {
-        action: "cancel",
-        label: "Annuler",
-        icon: "fa-solid fa-xmark"
-      },
-      {
         action: "identify",
         label: "Identifier",
-        icon: "fa-solid fa-wand-magic-sparkles",
+        icon: "<i class='fas fa-wand-magic-sparkles'></i>",
         default: true,
-        callback: (_event, button) => button.form?.elements?.itemId?.value || false
+        callback: (_event, button) => button.form?.querySelector?.('input[name="itemId"]:checked')?.value || false
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
       }
     ],
     close: () => null
@@ -123,13 +146,8 @@ const __add2eIdentificationResult = await (async () => {
   if (!selectedId) return false;
 
   const targetItem = caster.items?.get?.(selectedId) ?? candidates.find(candidate => candidate.id === selectedId);
-  if (!targetItem || !isMagicItem(targetItem)) {
-    ui.notifications.error("Identification : l’objet sélectionné est introuvable ou n’est pas magique.");
-    return false;
-  }
-
-  if (isIdentified(targetItem)) {
-    ui.notifications.warn(`${targetItem.name} est déjà identifié.`);
+  if (!targetItem || !isIdentifiableItem(targetItem)) {
+    ui.notifications.error("Identification : l’objet sélectionné est introuvable, déjà identifié ou n’est pas un équipement magique identifiable.");
     return false;
   }
 
@@ -149,7 +167,6 @@ const __add2eIdentificationResult = await (async () => {
   }
 
   await targetItem.update(updateData);
-
   caster.sheet?.render?.(false);
 
   const casterToken =
@@ -158,38 +175,44 @@ const __add2eIdentificationResult = await (async () => {
     ?? caster.getActiveTokens?.()[0]
     ?? null;
 
-  const content = `
-    <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-      <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-        <img src="${escapeHtml(caster.img || "icons/svg/mystery-man.svg")}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;">
-        <div style="flex:1;line-height:1.1;">
-          <div style="font-weight:800;font-size:14px;">${escapeHtml(caster.name)}</div>
-          <div style="font-size:12px;font-weight:700;">lance ${escapeHtml(sourceItem.name || "Identification")}</div>
-        </div>
-        <img src="${escapeHtml(sourceItem.img || "icons/svg/book.svg")}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;">
-      </div>
-      <div style="padding:10px;background:#f6f0ff;">
-        <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:9px;text-align:center;">
-          <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;">Objet identifié</div>
-          <p style="margin:6px 0 0;"><b>${escapeHtml(oldName)}</b> est révélé comme étant :</p>
-          <p style="margin:5px 0 0;font-size:1.1em;"><b>${escapeHtml(revealedName)}</b></p>
-          <p style="margin:7px 0 0;">Ses pouvoirs magiques sont désormais accessibles.</p>
-        </div>
-      </div>
-    </div>
-  `;
-
   await globalThis.ADD2E_PLAY_SPELL_FX?.("identification", { casterToken });
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
-    content,
-    ...chatStyleData()
-  });
+
+  const card = {
+    actor: caster,
+    title: "Identification — Objet identifié",
+    icon: "fas fa-magnifying-glass-sparkles",
+    variant: "magic",
+    source: {
+      name: caster.name,
+      img: caster.img,
+      type: sourceItem.name || "Identification"
+    },
+    target: {
+      name: revealedName,
+      img: targetItem.img || "icons/svg/item-bag.svg",
+      type: "Objet magique"
+    },
+    rows: [
+      { label: "Avant identification", value: oldName },
+      { label: "Objet révélé", value: revealedName }
+    ],
+    message: "Ses propriétés magiques sont désormais révélées.",
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken })
+    }
+  };
+
+  const preview = globalThis.add2eBuildChatCard(card);
+  if (!String(preview ?? "").trim()) {
+    throw new Error("Identification : la carte de chat ADD2E est vide.");
+  }
+  await globalThis.add2eCreateChatCard(card);
 
   console.log("[ADD2E][IDENTIFICATION][SUCCESS]", {
     actor: caster.name,
     actorId: caster.id,
     itemId: targetItem.id,
+    itemType: targetItem.type,
     oldName,
     revealedName
   });
