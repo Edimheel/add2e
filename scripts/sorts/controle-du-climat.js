@@ -2,7 +2,7 @@
 // Compatible Foundry V13/V14/V15.
 // Le script valide et documente les changements autorisés ; il ne crée pas de moteur météo parallèle.
 
-const ADD2E_CONTROLE_DU_CLIMAT_VERSION = "2026-08-09-canonical-weather-rules-v5";
+const ADD2E_CONTROLE_DU_CLIMAT_VERSION = "2026-08-09-canonical-weather-rules-v6";
 
 const ADD2E_CONTROLE_DU_CLIMAT_PROFILES = Object.freeze({
   clerc: Object.freeze({
@@ -91,8 +91,8 @@ function add2eControleDuClimatCasterToken() {
 }
 
 function add2eControleDuClimatRequireApis() {
-  if (typeof globalThis.add2eDialogWait !== "function") {
-    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  if (typeof globalThis.add2eDialogWait !== "function" || typeof globalThis.add2eDialogAlert !== "function") {
+    throw new Error("L’API commune de fenêtre ADD2E est indisponible.");
   }
   if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
     throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
