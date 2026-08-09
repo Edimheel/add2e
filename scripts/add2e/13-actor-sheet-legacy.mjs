@@ -13,15 +13,13 @@ import "./13e-actor-sheet-drop-compendium-resolver.mjs";
 import "./13f-actor-sheet-registration.mjs";
 
 const ADD2E_SAVE_CHAT_PRESENTATION_VERSION = "2026-07-24-save-chat-single-dsn-v2-compact";
-const ADD2E_ABILITY_CHECK_VERSION = "2026-07-24-canonical-ability-check-v1";
-const ADD2E_ABILITY_HUD_PRESENTATION_VERSION = "2026-07-24-canonical-ability-hud-v1";
+const ADD2E_ABILITY_HUD_PRESENTATION_VERSION = "2026-08-09-canonical-ability-hud-v2";
 const ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION = "2026-06-22-level-pipeline-v2";
 globalThis.ADD2E_SAVE_CHAT_PRESENTATION_VERSION = ADD2E_SAVE_CHAT_PRESENTATION_VERSION;
-globalThis.ADD2E_ABILITY_CHECK_VERSION = ADD2E_ABILITY_CHECK_VERSION;
 globalThis.ADD2E_ABILITY_HUD_PRESENTATION_VERSION = ADD2E_ABILITY_HUD_PRESENTATION_VERSION;
 globalThis.ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION = ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION;
 
-const ADD2E_ABILITY_DEFINITIONS = Object.freeze({
+const ADD2E_ABILITY_PRESENTATION = Object.freeze({
   force: Object.freeze({ key: "force", label: "Force", shortLabel: "FOR", icon: "fas fa-dumbbell" }),
   dexterite: Object.freeze({ key: "dexterite", label: "Dextérité", shortLabel: "DEX", icon: "fas fa-running" }),
   constitution: Object.freeze({ key: "constitution", label: "Constitution", shortLabel: "CON", icon: "fas fa-heartbeat" }),
@@ -150,7 +148,7 @@ function add2eAbilityEngine() {
 }
 
 function add2eAbilityDefinition(value) {
-  return ADD2E_ABILITY_DEFINITIONS[add2eAbilityNormalize(value)] ?? null;
+  return ADD2E_ABILITY_PRESENTATION[add2eAbilityNormalize(value)] ?? null;
 }
 
 function add2eAbilityModifier(entry) {
@@ -163,33 +161,6 @@ function add2eAbilityModifier(entry) {
   if (operation === "multiply") return `${label} ×${value}`;
   if (operation === "minmax") return `${label} (limite)`;
   return `${label} ${add2eSaveSigned(value)}`;
-}
-
-function add2eResolveAbilityCheck(actor, ability, context = {}) {
-  if (!actor) throw new Error("Aucun acteur pour ce test de caractéristique.");
-  const definition = add2eAbilityDefinition(ability);
-  if (!definition) throw new Error(`Caractéristique inconnue : ${String(ability ?? "") || "vide"}`);
-  const engine = add2eAbilityEngine();
-  if (typeof engine?.resolveAbility !== "function") {
-    throw new Error("Le résolveur canonique ADD2E de caractéristiques n’est pas disponible.");
-  }
-  const resolution = engine.resolveAbility(actor, definition.key, {
-    ...context,
-    type: context.type ?? "ability-check",
-    source: context.source ?? "ability-check"
-  });
-  return {
-    version: ADD2E_ABILITY_CHECK_VERSION,
-    actor,
-    definition,
-    key: definition.key,
-    label: definition.label,
-    icon: definition.icon,
-    base: Number(resolution?.base) || 0,
-    target: Number(resolution?.total) || 0,
-    resolution,
-    context: { ...context }
-  };
 }
 
 async function add2eCreateAbilityCheckCard(result, options = {}) {
@@ -226,7 +197,7 @@ async function add2eCreateAbilityCheckCard(result, options = {}) {
           abilityTarget: result.target,
           abilityD20: result.d20,
           abilitySuccess: result.success === true,
-          abilityCheckVersion: ADD2E_ABILITY_CHECK_VERSION
+          abilityCheckVersion: result.version ?? globalThis.ADD2E_ABILITY_CHECK_VERSION ?? null
         }
       }
     }
@@ -236,59 +207,20 @@ async function add2eCreateAbilityCheckCard(result, options = {}) {
   return globalThis.add2eCreateChatCard(card);
 }
 
-async function add2eCanonicalRollAbilityCheck(actor, ability, options = {}) {
-  const resolved = add2eResolveAbilityCheck(actor, ability, options);
-  const roll = new Roll("1d20");
-  await roll.evaluate();
-  const d20 = Number(roll.total) || 0;
-  const success = d20 <= resolved.target;
-  const result = {
-    ...resolved,
-    ok: true,
-    roll,
-    d20,
-    total: d20,
-    success
-  };
-  if (options.createChat === false) return result;
-  const chatMessage = await add2eCreateAbilityCheckCard(result, options);
-  return { ...result, chatMessage };
-}
-
-function add2eInstallAbilityCheckExecutor() {
+function add2eInstallAbilityCheckPresentation() {
   const engine = add2eAbilityEngine();
-  if (!engine?.resolveAbility) return false;
+  if (typeof engine?.resolveAbilityCheck !== "function" || typeof engine?.rollAbilityCheck !== "function") return false;
 
-  Object.defineProperties(engine, {
-    resolveAbilityCheck: {
-      configurable: true,
-      writable: true,
-      value(actor, ability, context = {}) {
-        return add2eResolveAbilityCheck(actor, ability, context);
-      }
-    },
-    rollAbilityCheck: {
-      configurable: true,
-      writable: true,
-      async value(actor, ability, options = {}) {
-        return add2eCanonicalRollAbilityCheck(actor, ability, options);
-      }
-    }
-  });
-
-  engine.__add2eAbilityCheckVersion = ADD2E_ABILITY_CHECK_VERSION;
   globalThis.add2eRollCharacteristicCard = async (actor, ability, options = {}) => {
-    const result = await add2eCanonicalRollAbilityCheck(actor, ability, {
-      ...options,
-      createChat: true
-    });
-    return result.chatMessage;
+    const result = await engine.rollAbilityCheck(actor, ability, options);
+    const chatMessage = await add2eCreateAbilityCheckCard(result, options);
+    return chatMessage;
   };
   return true;
 }
 
-add2eInstallAbilityCheckExecutor();
-Hooks.once("ready", add2eInstallAbilityCheckExecutor);
+add2eInstallAbilityCheckPresentation();
+Hooks.once("ready", add2eInstallAbilityCheckPresentation);
 
 function add2eAbilityHudActor() {
   const state = globalThis.add2eHudCheck?.() ?? {};
@@ -303,7 +235,8 @@ function add2eAbilityHudActor() {
 function add2eRefreshAbilityHud() {
   const root = document.getElementById("add2e-action-hud");
   const actor = add2eAbilityHudActor();
-  if (!root || !actor) return false;
+  const engine = add2eAbilityEngine();
+  if (!root || !actor || typeof engine?.resolveAbilityCheck !== "function") return false;
 
   for (const button of root.querySelectorAll("[data-section='caracs'] [data-action='roll-ability']")) {
     const definition = add2eAbilityDefinition(button.dataset.ability);
@@ -311,7 +244,7 @@ function add2eRefreshAbilityHud() {
     const valueRoot = cell?.querySelector("b");
     if (!definition || !cell || !valueRoot) continue;
 
-    const resolved = add2eResolveAbilityCheck(actor, definition.key, {
+    const resolved = engine.resolveAbilityCheck(actor, definition.key, {
       source: "action-hud-ability-display",
       consumer: "action-hud"
     });
