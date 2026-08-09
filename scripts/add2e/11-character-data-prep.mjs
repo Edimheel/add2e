@@ -2,7 +2,7 @@
 //  HOOK UNIQUE updateActor
 // =======================
 
-const ADD2E_CHARACTER_DATA_PREP_VERSION = "2026-07-28-canonical-character-data-consumers-v4";
+const ADD2E_CHARACTER_DATA_PREP_VERSION = "2026-08-09-canonical-vital-status-consumer-v5";
 globalThis.ADD2E_CHARACTER_DATA_PREP_VERSION = ADD2E_CHARACTER_DATA_PREP_VERSION;
 
 const ADD2E_CARAC_CHANGE_KEYS = Object.freeze([
@@ -40,6 +40,12 @@ function add2eActorUpdateChangesCharacteristic(changes = {}) {
       || foundry.utils.hasProperty(changes, path);
   });
   return systemChanged || add2eChangesTouchModifiers(changes);
+}
+
+function add2eActorUpdateChangesHitPoints(changes = {}) {
+  return Object.prototype.hasOwnProperty.call(changes?.system ?? {}, "pdv")
+    || Object.prototype.hasOwnProperty.call(changes ?? {}, "system.pdv")
+    || foundry.utils.hasProperty(changes ?? {}, "system.pdv");
 }
 
 Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
@@ -95,53 +101,24 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   } catch (_e) {}
 
   // =====================================================
-  // 2) Gestion auto des états INCONSCIENT / MORT (PV courants)
+  // 2) Synchronisation des états vitaux après édition manuelle des PV
+  //    Les mutations canoniques synchronisent déjà l'état via setHitPoints().
   // =====================================================
   try {
-    if (game.user.isGM && game.user.id === game.users.activeGM?.id) {
-      const HP_PATHS = ["system.pdv"];
-      let hpPathChanged = null;
-
-      for (const path of HP_PATHS) {
-        if (foundry.utils.hasProperty(changes, path)) {
-          hpPathChanged = path;
-          break;
-        }
+    const responsibleGM = game.user?.isGM && (!game.users?.activeGM || game.user.id === game.users.activeGM.id);
+    const manualHitPointChange = add2eActorUpdateChangesHitPoints(changes)
+      && options?.add2eHitPointMutation !== true;
+    if (responsibleGM && manualHitPointChange) {
+      if (typeof globalThis.add2eSyncActorVitalStatus !== "function") {
+        throw new Error("Le synchroniseur canonique des états vitaux ADD2E est indisponible.");
       }
-
-      if (hpPathChanged) {
-        const newHP = Number(foundry.utils.getProperty(actor, hpPathChanged) ?? 0);
-        const actorType = String(actor?.type ?? "").trim().toLowerCase();
-        const isMonster = actorType === "monster" || actorType === "monstre";
-
-        const DEAD_STATUS = "dead";
-        const UNCONSCIOUS_STATUS = "unconscious";
-
-        if (isMonster) {
-          if (typeof globalThis.add2eSyncActorVitalStatus === "function") {
-            await globalThis.add2eSyncActorVitalStatus(actor, { reason: "11-character-data-prep:monster-hp" });
-          } else if (newHP <= 0) {
-            await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: false, overlay: false });
-            await actor.toggleStatusEffect(DEAD_STATUS, { active: true, overlay: true });
-          } else {
-            await actor.toggleStatusEffect(DEAD_STATUS, { active: false, overlay: false });
-            await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: false, overlay: false });
-          }
-        } else if (actorType === "personnage") {
-          if (newHP <= -11) {
-            await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: false, overlay: false });
-            await actor.toggleStatusEffect(DEAD_STATUS, { active: true, overlay: true });
-          } else if (newHP <= 0) {
-            await actor.toggleStatusEffect(DEAD_STATUS, { active: false, overlay: false });
-            await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: true, overlay: true });
-          } else {
-            await actor.toggleStatusEffect(DEAD_STATUS, { active: false, overlay: false });
-            await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: false, overlay: false });
-          }
-        }
-      }
+      await globalThis.add2eSyncActorVitalStatus(actor, {
+        reason: "11-character-data-prep:manual-hit-point-change"
+      });
     }
-  } catch (_e) {}
+  } catch (error) {
+    console.error("[ADD2E][CHARACTER_DATA_PREP][VITAL_STATUS]", { actor: actor?.name, error });
+  }
 
   // =====================================================
   // 3) Synchronisation des tokens liés
