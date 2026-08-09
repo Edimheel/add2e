@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "catalogueId": "add2e-gdm-magic-powers",
-  "version": "2026-08-08-gdm-iii-e-movement-v3-linked-levitation",
+  "version": "2026-08-09-gdm-iii-e-movement-v4-generic-spell-equivalent",
   "extends": "../catalogue-pouvoirs-objets-magiques.json",
   "status": "canonical-movement-and-encumbrance-powers",
   "source": {
@@ -207,95 +207,6 @@
         "page": "136-138"
       },
       "description": "Réduit une vitesse par paliers lorsque la charge transportée dépasse un seuil défini par l’objet."
-    },
-    {
-      "id": "misc_linked_levitation",
-      "label": "Lévitation par sort lié",
-      "category": "movement",
-      "compatibility": {
-        "itemTypes": [
-          "objet"
-        ]
-      },
-      "activation": {
-        "type": "action",
-        "trigger": "use"
-      },
-      "automation": "automatic",
-      "parameters": {
-        "spellName": {
-          "type": "fixed",
-          "value": "Lévitation",
-          "required": true,
-          "label": "Sort lié"
-        },
-        "chargeCost": {
-          "type": "integer",
-          "min": 0,
-          "default": 0,
-          "required": true,
-          "label": "Coût en charges"
-        },
-        "forceSelf": {
-          "type": "boolean",
-          "default": true,
-          "label": "Limiter au porteur"
-        },
-        "capacityKg": {
-          "type": "number",
-          "min": 0,
-          "required": false,
-          "label": "Capacité fixe",
-          "unit": "kg"
-        },
-        "capacityFormula": {
-          "type": "string",
-          "required": false,
-          "label": "Formule de capacité",
-          "description": "Formule utilisée lorsque la capacité propre à l’objet est tirée une seule fois, puis conservée sur l’objet."
-        },
-        "selfVerticalSpeed": {
-          "type": "number",
-          "min": 0,
-          "default": 6,
-          "required": true,
-          "label": "Vitesse verticale du porteur",
-          "unit": "m/round"
-        },
-        "duration": {
-          "type": "string",
-          "required": false,
-          "label": "Durée propre à l’objet"
-        }
-      },
-      "validation": {
-        "requiresOneOf": [
-          "capacityKg",
-          "capacityFormula"
-        ]
-      },
-      "effects": [
-        {
-          "type": "linked_spell",
-          "spellName": "@spellName",
-          "chargeCost": "@chargeCost",
-          "overrides": {
-            "system": {
-              "add2eLevitation": {
-                "forceSelf": "@forceSelf",
-                "capacityKg": "@capacityKg",
-                "capacityFormula": "@capacityFormula",
-                "selfVerticalSpeed": "@selfVerticalSpeed"
-              }
-            }
-          }
-        }
-      ],
-      "source": {
-        "section": "III.E",
-        "page": "136-138"
-      },
-      "description": "Réutilise le sort Lévitation du compendium et ne remplace que les paramètres explicitement propres à l’objet magique."
     }
   ],
   "auditReferences": [
@@ -368,14 +279,19 @@
       "selectableAsTemplate": false,
       "powers": [
         {
-          "id": "misc_linked_levitation",
+          "id": "spell_equivalent",
           "parameters": {
             "spellName": "Lévitation",
             "chargeCost": 0,
-            "forceSelf": true,
-            "capacityFormula": "140 + 7 * 1d20",
-            "selfVerticalSpeed": 6,
-            "duration": "Tant que porté, sauf activation contraire"
+            "overrides": {
+              "system": {
+                "add2eLevitation": {
+                  "forceSelf": true,
+                  "capacityFormula": "140 + 7 * 1d20",
+                  "selfVerticalSpeed": 6
+                }
+              }
+            }
           }
         }
       ],
@@ -389,14 +305,19 @@
       "selectableAsTemplate": false,
       "powers": [
         {
-          "id": "misc_linked_levitation",
+          "id": "spell_equivalent",
           "parameters": {
             "spellName": "Lévitation",
             "chargeCost": 1,
-            "forceSelf": true,
-            "capacityKg": 300,
-            "selfVerticalSpeed": 6,
-            "duration": "variable"
+            "overrides": {
+              "system": {
+                "add2eLevitation": {
+                  "forceSelf": true,
+                  "capacityKg": 300,
+                  "selfVerticalSpeed": 6
+                }
+              }
+            }
           }
         }
       ],
@@ -413,7 +334,7 @@
     ],
     "coverageMode": "canonical-movement-mechanics",
     "generatorIntegration": true,
-    "powerCount": 3,
+    "powerCount": 2,
     "excluded": [
       "terrain penalties",
       "broom passenger load",
