@@ -1,11 +1,12 @@
 // ============================================================================
 // ADD2E — États vitaux : constantes, lecture PV et règles métier.
-// Version : 2026-08-09-vital-status-canonical-hit-points-v4
+// Version : 2026-08-09-vital-status-canonical-lethal-outcome-v5
 // ============================================================================
 
-export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-08-09-vital-status-canonical-hit-points-v4";
+export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-08-09-vital-status-canonical-lethal-outcome-v5";
 export const ADD2E_RESURRECTION_RULES_VERSION = "2026-07-26-resurrection-constitution-v1";
 export const ADD2E_NATURAL_REGENERATION_VERSION = "2026-07-26-natural-regeneration-v1";
+export const ADD2E_LETHAL_OUTCOME_VERSION = "2026-08-09-canonical-lethal-outcome-v1";
 
 export const ADD2E_VITAL_STATUS = {
   unconscious: { key: "unconscious", name: "Inconscient", icon: "icons/svg/daze.svg" },
@@ -109,18 +110,59 @@ export function add2eVitalHpUpdatePath() {
   return "system.pdv";
 }
 
+export function add2eVitalLethalHitPoints(actor) {
+  const type = add2eVitalActorType(actor);
+  if (type === "personnage" || type === "pnj") return -11;
+  if (type === "monster" || type === "monstre" || add2eVitalIsMonster(actor)) return 0;
+  return null;
+}
+
 export function add2eVitalDesiredStatus(actor) {
   const hp = add2eVitalReadHP(actor);
+  const lethalHitPoints = add2eVitalLethalHitPoints(actor);
   const type = add2eVitalActorType(actor);
 
   if (type === "personnage" || type === "pnj") {
-    if (hp <= -11) return "dead";
+    if (lethalHitPoints !== null && hp <= lethalHitPoints) return "dead";
     if (hp <= 0) return "unconscious";
-  } else if (type === "monster" || type === "monstre" || add2eVitalIsMonster(actor)) {
-    if (hp <= 0) return "dead";
+  } else if (lethalHitPoints !== null && hp <= lethalHitPoints) {
+    return "dead";
   }
 
   return null;
+}
+
+export async function add2eApplyLethalOutcome(actor, {
+  reason = "lethal-outcome",
+  updates = {},
+  updateOptions = {}
+} = {}) {
+  if (!actor?.system) return { applied: false, reason: "actor-missing" };
+  const lethalHitPoints = add2eVitalLethalHitPoints(actor);
+  if (lethalHitPoints === null) return { applied: false, reason: "actor-type-unsupported" };
+
+  const engine = add2eVitalHitPointEngine();
+  const before = Number(engine.readHitPoints(actor));
+  const current = Number.isFinite(before) ? Math.min(before, lethalHitPoints) : lethalHitPoints;
+  const mutation = await engine.setHitPoints(actor, {
+    current,
+    reason,
+    updates,
+    updateOptions: {
+      ...updateOptions,
+      add2eLethalOutcome: true
+    }
+  });
+
+  return {
+    applied: true,
+    reason,
+    lethalHitPoints,
+    status: "dead",
+    before: Number.isFinite(before) ? before : null,
+    after: Number(mutation?.after ?? current),
+    mutation
+  };
 }
 
 export function add2eVitalStatusAliases(effect) {
@@ -260,9 +302,6 @@ export async function add2eAttemptResurrection({
   const now = Date.now();
 
   if (!rollResult.success) {
-    const currentHp = add2eVitalReadHP(targetActor);
-    const type = add2eVitalActorType(targetActor);
-    const deadHp = type === "personnage" || type === "pnj" ? Math.min(currentHp, -11) : Math.min(currentHp, 0);
     const nextState = {
       ...state,
       version: ADD2E_RESURRECTION_RULES_VERSION,
@@ -274,8 +313,7 @@ export async function add2eAttemptResurrection({
       lastAttemptSource: sourceItem?.uuid ?? source,
       lastAttemptResult: "failure"
     };
-    await engine.setHitPoints(targetActor, {
-      current: deadHp,
+    await add2eApplyLethalOutcome(targetActor, {
       reason: "resurrection-survival-failure",
       updates: { "flags.add2e.resurrection": nextState },
       updateOptions: { add2eResurrection: true }
@@ -573,5 +611,7 @@ export async function add2eApplyNaturalRegeneration(actor, {
 
 globalThis.ADD2E_RESURRECTION_RULES_VERSION = ADD2E_RESURRECTION_RULES_VERSION;
 globalThis.ADD2E_NATURAL_REGENERATION_VERSION = ADD2E_NATURAL_REGENERATION_VERSION;
+globalThis.ADD2E_LETHAL_OUTCOME_VERSION = ADD2E_LETHAL_OUTCOME_VERSION;
 globalThis.add2eAttemptResurrection = add2eAttemptResurrection;
 globalThis.add2eApplyNaturalRegeneration = add2eApplyNaturalRegeneration;
+globalThis.add2eApplyLethalOutcome = add2eApplyLethalOutcome;
