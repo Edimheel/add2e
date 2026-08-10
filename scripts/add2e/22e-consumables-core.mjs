@@ -13,7 +13,7 @@ import {
   esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-08-10-consumables-core-v20-canonical-components";
+export const ADD2E_CONSUMABLES_VERSION = "2026-08-10-consumables-core-v21-canonical-components-fix";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -112,12 +112,16 @@ function makeRequirement(value) {
   };
 }
 
-function addRequirement(out, value) {
-  const requirement = makeRequirement(value);
-  if (!requirement) return;
+function pushNormalizedRequirement(out, requirement) {
   const existing = out.find(entry => entry.key === requirement.key && entry.consume === requirement.consume && !entry.alternatives);
   if (existing) existing.quantity += requirement.quantity;
   else out.push(requirement);
+}
+
+function addRequirement(out, value) {
+  const requirement = makeRequirement(value);
+  if (!requirement) return;
+  pushNormalizedRequirement(out, requirement);
 }
 
 function addAlternativeRequirement(out, alternatives) {
@@ -127,7 +131,10 @@ function addAlternativeRequirement(out, alternatives) {
     if (requirement && !clean.some(entry => entry.key === requirement.key && entry.consume === requirement.consume)) clean.push(requirement);
   }
   if (!clean.length) return;
-  if (clean.length === 1) return addRequirement(out, clean[0]);
+  if (clean.length === 1) {
+    pushNormalizedRequirement(out, clean[0]);
+    return;
+  }
   out.push({
     name: clean.map(entry => entry.name).join(" ou "),
     key: clean.map(entry => entry.key).join("__or__"),
@@ -165,7 +172,7 @@ function collectRequirement(out, value) {
 
 function spellHasMaterialComponent(sort) {
   const raw = sort?.system?.composantes;
-  const values = Array.isArray(raw) ? raw : String(raw ?? "").split(/[,;|/\s]+/g);
+  const values = Array.isArray(raw) ? raw : String(raw ?? "").replaceAll("/", ",").split(/[,;|\s]+/g);
   return values.some(value => String(value ?? "").trim().toUpperCase() === "M");
 }
 
