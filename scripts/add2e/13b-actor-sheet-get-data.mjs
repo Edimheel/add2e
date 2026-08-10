@@ -1,10 +1,11 @@
-// ADD2E — Point d'entrée getData de la feuille ApplicationV2.
+// ADD2E — Préparation des données dérivées de la feuille ApplicationV2.
 // Les calculs de sorts proviennent exclusivement de 07-spellcasting-rules.mjs.
+// Aucun remplacement de getData : 13a orchestre directement cette préparation.
 // Compatible Foundry V13/V14/V15.
 
 import "./13b-actor-sheet-get-data-core.mjs";
 
-const ADD2E_CLASS_MECHANICS_VERSION = "2026-08-10-sheet-derived-display-v5";
+const ADD2E_CLASS_MECHANICS_VERSION = "2026-08-10-sheet-derived-display-v6-native-preparation";
 globalThis.ADD2E_CLASS_MECHANICS_VERSION = ADD2E_CLASS_MECHANICS_VERSION;
 
 function add2eClassMechanicsNormalize(value) {
@@ -15,6 +16,17 @@ function add2eClassMechanicsNormalize(value) {
     .replace(/[’']/g, "")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
+}
+
+function add2eClassItems(actor) {
+  return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+}
+
+function add2eClassHasCanonicalTag(item, tag) {
+  const wanted = add2eClassMechanicsNormalize(tag);
+  if (!wanted) return false;
+  const tags = Array.isArray(item?.system?.tags) ? item.system.tags : [];
+  return tags.some(value => add2eClassMechanicsNormalize(value) === wanted);
 }
 
 function add2eNatureSaveBonus(engine, actor, element) {
@@ -35,15 +47,8 @@ function add2eGetClassNatureMechanics(actor) {
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
   if (!engine) throw new Error("Le moteur canonique ADD2E est indisponible pour l’affichage des capacités naturelles.");
   const tags = new Set(engine.getActiveTags?.(actor) ?? []);
-  const classItems = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-  const natureClass = classItems.find(item => {
-    const values = [item.name, item.system?.slug, item.system?.label, ...(Array.isArray(item.system?.tags) ? item.system.tags : [])]
-      .map(add2eClassMechanicsNormalize);
-    return values.some(value => value === "druide" || value === "classe_druide");
-  }) ?? null;
-  const level = natureClass
-    ? Number(globalThis.add2eSpellClassLevel?.(actor, { classItemId: natureClass.id }) ?? natureClass.system?.niveau ?? 0) || 0
-    : 0;
+  const natureClass = add2eClassItems(actor).find(item => add2eClassHasCanonicalTag(item, "classe:druide")) ?? null;
+  const level = natureClass ? Number(natureClass.system?.niveau) || 0 : 0;
 
   return {
     classItem: natureClass,
@@ -89,14 +94,13 @@ function add2eUniqueLanguages(value) {
 }
 
 function add2eLanguageClassProfile(actor) {
-  const values = Array.from(actor?.items ?? [])
-    .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
-    .flatMap(item => [item?.name, item?.system?.slug, item?.system?.label, item?.system?.nom])
-    .map(add2eClassMechanicsNormalize)
-    .filter(Boolean);
+  const classes = add2eClassItems(actor);
   return {
-    druid: values.some(value => value.includes("druide") || value.includes("druid")),
-    thief: values.some(value => value.includes("voleur") || value.includes("thief") || value.includes("assassin"))
+    druid: classes.some(item => add2eClassHasCanonicalTag(item, "classe:druide")),
+    thief: classes.some(item =>
+      add2eClassHasCanonicalTag(item, "classe:voleur")
+      || add2eClassHasCanonicalTag(item, "classe:assassin")
+    )
   };
 }
 
@@ -150,7 +154,7 @@ function add2ePrepareConstitutionHitPointBonus(actor, data) {
   const constitution = data?.abilityDerived?.constitution;
   if (!constitution) throw new Error("Le profil canonique de Constitution est indisponible pour l’affichage des PV.");
 
-  const classItems = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  const classItems = add2eClassItems(actor);
   let progression = null;
   let value = Math.trunc(Number(constitution.profile?.pv) || 0);
 
@@ -236,25 +240,16 @@ function add2ePrepareCharismaSocialProfile(actor, data) {
   return social;
 }
 
-function add2eInstallDerivedSheetDisplays() {
-  const prototype = globalThis.Add2eActorSheet?.prototype;
-  if (!prototype || prototype.__add2eDerivedSheetDisplaysV2 === true) return Boolean(prototype);
-  const originalGetData = prototype.getData;
-  if (typeof originalGetData !== "function") throw new Error("getData ApplicationV2 est indisponible pour les profils dérivés de la feuille.");
-
-  prototype.getData = async function add2eDerivedSheetDisplaysGetData(...args) {
-    const data = await originalGetData.apply(this, args);
-    add2ePrepareConstitutionHitPointBonus(this.actor, data);
-    add2ePrepareLanguageQuota(this.actor, data);
-    add2ePrepareCharismaSocialProfile(this.actor, data);
-    return data;
-  };
-  prototype.__add2eDerivedSheetDisplaysV2 = true;
-  return true;
+function add2ePrepareDerivedSheetDisplays(actor, data) {
+  if (!actor || !data) throw new Error("Acteur ou contexte de feuille absent pour la préparation dérivée ADD2E.");
+  add2ePrepareConstitutionHitPointBonus(actor, data);
+  add2ePrepareLanguageQuota(actor, data);
+  add2ePrepareCharismaSocialProfile(actor, data);
+  return data;
 }
 
-add2eInstallDerivedSheetDisplays();
 globalThis.add2eGetClassNatureMechanics = add2eGetClassNatureMechanics;
 globalThis.add2ePrepareLanguageQuota = add2ePrepareLanguageQuota;
 globalThis.add2ePrepareConstitutionHitPointBonus = add2ePrepareConstitutionHitPointBonus;
 globalThis.add2ePrepareCharismaSocialProfile = add2ePrepareCharismaSocialProfile;
+globalThis.add2ePrepareDerivedSheetDisplays = add2ePrepareDerivedSheetDisplays;
