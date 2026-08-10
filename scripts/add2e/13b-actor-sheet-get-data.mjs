@@ -4,7 +4,7 @@
 
 import "./13b-actor-sheet-get-data-core.mjs";
 
-const ADD2E_CLASS_MECHANICS_VERSION = "2026-07-27-sheet-multiclass-constitution-hp-v4";
+const ADD2E_CLASS_MECHANICS_VERSION = "2026-08-10-sheet-derived-display-v5";
 globalThis.ADD2E_CLASS_MECHANICS_VERSION = ADD2E_CLASS_MECHANICS_VERSION;
 
 function add2eClassMechanicsNormalize(value) {
@@ -17,59 +17,24 @@ function add2eClassMechanicsNormalize(value) {
     .replace(/^_+|_+$/g, "");
 }
 
-function add2eInstallElementalSaveBonuses() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-  if (!engine || engine.__add2eElementalSaveBonuses === true) return Boolean(engine);
-  const baseCategory = typeof engine.getSaveCategory === "function" ? engine.getSaveCategory.bind(engine) : null;
-  const baseBonus = typeof engine.getSaveBonusVs === "function" ? engine.getSaveBonusVs.bind(engine) : null;
-
-  engine.getSaveCategory = function getSaveCategoryWithElements(value) {
-    const key = add2eClassMechanicsNormalize(value);
-    if (/feu|fire|flamme|incend/.test(key)) return "feu";
-    if (/foudre|electric|lightning|eclair/.test(key)) return "foudre";
-    return baseCategory?.(value) ?? key;
-  };
-
-  engine.getSaveBonusVs = function getSaveBonusVsWithElements(actor, vsType) {
-    const category = this.getSaveCategory(vsType);
-    if (!["feu", "foudre"].includes(category)) return baseBonus?.(actor, vsType) ?? 0;
-
-    const aliases = category === "feu"
-      ? new Set(["feu", "fire", "flamme", "incendie"])
-      : new Set(["foudre", "electricite", "electricity", "lightning", "eclair"]);
-    let general = 0;
-    let elemental = 0;
-    for (const tag of this.getActiveTags?.(actor) ?? []) {
-      if (tag.startsWith("bonus_save:")) {
-        general += Number(tag.split(":")[1]) || 0;
-        continue;
-      }
-      if (!tag.startsWith("bonus_save_vs:")) continue;
-      const [, rawMatcher, rawValue] = tag.split(":");
-      const matcher = add2eClassMechanicsNormalize(rawMatcher);
-      if (matcher === "all" || matcher === "tout") general += Number(rawValue) || 0;
-      else if (aliases.has(matcher)) elemental = Math.max(elemental, Number(rawValue) || 0);
-    }
-    return general + elemental;
-  };
-
-  const baseHasImmunity = typeof engine.hasImmunity === "function" ? engine.hasImmunity.bind(engine) : null;
-  engine.hasImmunity = function hasImmunityWithConditionalClassTags(actor, immunityType) {
-    const key = add2eClassMechanicsNormalize(immunityType);
-    if ((key.includes("charme") || key.includes("charm")) && (key.includes("bois") || key.includes("woodland"))) {
-      const tags = this.getActiveTags?.(actor) ?? [];
-      if (tags.includes("immunite:charme_creatures_bois") || tags.includes("immunite:charme:creatures_bois")) return true;
-    }
-    return baseHasImmunity?.(actor, immunityType) ?? false;
-  };
-
-  engine.__add2eElementalSaveBonuses = true;
-  return true;
+function add2eNatureSaveBonus(engine, actor, element) {
+  if (typeof engine?.getSaveBonus !== "function") {
+    throw new Error("Le résolveur canonique des bonus de sauvegarde ADD2E est indisponible.");
+  }
+  const key = add2eClassMechanicsNormalize(element);
+  return Number(engine.getSaveBonus(actor, "sorts", {
+    category: key,
+    effectType: key,
+    saveContext: key,
+    tags: [key, `damage:${key}`],
+    source: `actor-sheet-class-nature:${key}`
+  })) || 0;
 }
 
 function add2eGetClassNatureMechanics(actor) {
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-  const tags = new Set(engine?.getActiveTags?.(actor) ?? []);
+  if (!engine) throw new Error("Le moteur canonique ADD2E est indisponible pour l’affichage des capacités naturelles.");
+  const tags = new Set(engine.getActiveTags?.(actor) ?? []);
   const classItems = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
   const natureClass = classItems.find(item => {
     const values = [item.name, item.system?.slug, item.system?.label, ...(Array.isArray(item.system?.tags) ? item.system.tags : [])]
@@ -90,8 +55,8 @@ function add2eGetClassNatureMechanics(actor) {
     extraNaturalLanguages: tags.has("langue_naturelle:supplementaire") ? Math.max(0, level - 2) : 0,
     immuneWoodlandCharm: tags.has("immunite:charme_creatures_bois") || tags.has("immunite:charme:creatures_bois"),
     animalShape: tags.has("forme_animale") || tags.has("forme_animale:3_jour"),
-    saveBonusFire: engine?.getSaveBonusVs?.(actor, "feu") ?? 0,
-    saveBonusLightning: engine?.getSaveBonusVs?.(actor, "foudre") ?? 0,
+    saveBonusFire: add2eNatureSaveBonus(engine, actor, "feu"),
+    saveBonusLightning: add2eNatureSaveBonus(engine, actor, "foudre"),
     version: ADD2E_CLASS_MECHANICS_VERSION
   };
 }
@@ -288,9 +253,7 @@ function add2eInstallDerivedSheetDisplays() {
   return true;
 }
 
-add2eInstallElementalSaveBonuses();
 add2eInstallDerivedSheetDisplays();
-Hooks.once("ready", add2eInstallElementalSaveBonuses);
 globalThis.add2eGetClassNatureMechanics = add2eGetClassNatureMechanics;
 globalThis.add2ePrepareLanguageQuota = add2ePrepareLanguageQuota;
 globalThis.add2ePrepareConstitutionHitPointBonus = add2ePrepareConstitutionHitPointBonus;
