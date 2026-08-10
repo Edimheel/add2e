@@ -1,6 +1,6 @@
 // scripts/add2e/handlebars-helpers.mjs
 // ADD2E — Helpers Handlebars partagés.
-// Version : 2026-07-25-display-only-helpers-v7
+// Version : 2026-08-10-display-only-helpers-v8-canonical-components
 
 if (typeof Handlebars !== "undefined" && !Handlebars.helpers.json) {
   Handlebars.registerHelper("json", ctx => JSON.stringify(ctx, null, 2));
@@ -39,24 +39,164 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.formatSortChamp) {
 function add2eHbsSlug(value) {
   return String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[’']/g, "_").replace(/[^a-z0-9:+-]+/g, "_").replace(/^_+|_+$/g, "");
 }
-function add2eHbsAsArray(value) { if (Array.isArray(value)) return value; if (!value) return []; if (typeof value === "object") return Object.values(value); return [value]; }
-function add2eHbsToTagArray(value) { if (!value) return []; if (Array.isArray(value)) return value.flatMap(add2eHbsToTagArray).filter(Boolean); if (typeof value === "string") return value.split(/[,;|\n]+/g).map(v => v.trim()).filter(Boolean); if (typeof value === "object") { for (const key of ["tags", "effectTags", "effecttags", "list", "items", "value"]) if (value[key] !== undefined) return add2eHbsToTagArray(value[key]); } return []; }
-function add2eHbsDamageData(item) { const s = item?.system ?? {}; return s.dégâts ?? s.degats ?? s.damage ?? s.damages ?? null; }
-function add2eHbsDamagePart(data, keys) { if (!data || typeof data !== "object") return ""; for (const key of keys) { const value = data[key]; if (value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim(); } return ""; }
-function add2eHbsDisplayDamageForItem(item) { const data = add2eHbsDamageData(item); if (typeof data === "string" && data.trim()) return data.trim(); const medium = add2eHbsDamagePart(data, ["contre_moyen", "moyen", "medium", "m", "M"]); const large = add2eHbsDamagePart(data, ["contre_grand", "grand", "large", "g", "G", "L"]); if (medium || large) return `${medium || "-"} / ${large || "-"}`; const s = item?.system ?? {}; const directMedium = s.degats_moyen ?? s.dégâts_moyen ?? s.degatsMoyen ?? s.damageMedium; const directLarge = s.degats_grand ?? s.dégâts_grand ?? s.degatsGrand ?? s.damageLarge; if (directMedium || directLarge) return `${directMedium || "-"} / ${directLarge || "-"}`; return "-"; }
-function add2eHbsComponentSlug(component) { const s = component?.system ?? {}; return add2eHbsSlug(s.slug ?? s.composantSlug ?? s.sousType ?? s.sous_type ?? component?.name ?? ""); }
-function add2eHbsIsOnlyComponentCode(value) { const t = String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, ""); return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(t); }
-function add2eHbsCleanComponentName(value) { return String(value ?? "").trim().replace(/[.!?;:]+$/g, "").replace(/^d['’]\s*/i, "").replace(/^(un|une)?\s*peu\s+de\s+/i, "").replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "").replace(/^(quelques|plusieurs)\s+/i, "").replace(/^petit morceau de\s+/i, "").replace(/^morceau de\s+/i, "").trim(); }
-function add2eHbsMaterialRawName(value) { if (value && typeof value === "object") return value.nom ?? value.name ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id; return value; }
-function add2eHbsMaterialQty(value) { if (value && typeof value === "object") return value.quantite ?? value.quantity ?? value.qty ?? value.nombre ?? value.count ?? 1; return 1; }
-function add2eHbsStructuredAlternative(value) { if (!value || typeof value !== "object" || Array.isArray(value)) return false; const condition = String(value.condition ?? value.conditions ?? value.note ?? value.notes ?? "").toLowerCase(); const consommation = String(value.consommation ?? value.consumption ?? value.consume ?? "").toLowerCase(); return condition.includes("alternative") || /\bou\b/i.test(condition) || (consommation.includes("optionnel") && condition.length > 0); }
-function add2eHbsAddSpellMaterialEntry(entries, raw, quantity = 1, consume = true) { const nom = add2eHbsCleanComponentName(raw); if (!nom || add2eHbsIsOnlyComponentCode(nom)) return; const slug = add2eHbsSlug(nom); if (!slug) return; if (entries.some(e => e.slug === slug)) return; entries.push({ slug, nom, quantite: Math.max(1, Number(quantity) || 1), consomme: consume !== false }); }
-function add2eHbsAddAlternativeMaterials(entries, alternatives) { const clean = []; for (const alt of alternatives) { const nom = add2eHbsCleanComponentName(add2eHbsMaterialRawName(alt)); if (!nom || add2eHbsIsOnlyComponentCode(nom)) continue; const slug = add2eHbsSlug(nom); if (!slug || clean.some(e => e.slug === slug)) continue; clean.push({ slug, nom, quantite: Math.max(1, Number(add2eHbsMaterialQty(alt)) || 1), consomme: true }); } if (clean.length === 1) add2eHbsAddSpellMaterialEntry(entries, clean[0].nom, clean[0].quantite, true); else if (clean.length > 1) { const groupSlug = clean.map(e => e.slug).join("__or__"); if (entries.some(e => e.slug === groupSlug)) return; entries.push({ slug: groupSlug, nom: clean.map(e => e.nom).join(" ou "), quantite: 1, consomme: true, alternatives: clean }); } }
-function add2eHbsCollectSpellMaterials(entries, value) { if (value === null || value === undefined || value === "") return; if (Array.isArray(value)) { const alternatives = value.filter(add2eHbsStructuredAlternative); const keys = new Set(alternatives.map(e => `${add2eHbsMaterialRawName(e)}|${add2eHbsMaterialQty(e)}`)); if (alternatives.length > 1) add2eHbsAddAlternativeMaterials(entries, alternatives); for (const entry of value) { const key = `${add2eHbsMaterialRawName(entry)}|${add2eHbsMaterialQty(entry)}`; if (alternatives.length > 1 && keys.has(key)) continue; add2eHbsCollectSpellMaterials(entries, entry); } return; } if (typeof value === "string") { for (const part of value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean)) { const alternatives = part.split(/\bou\b/gi).map(v => v.trim()).filter(Boolean); if (alternatives.length > 1) add2eHbsAddAlternativeMaterials(entries, alternatives); else add2eHbsAddSpellMaterialEntry(entries, part, 1, true); } return; } if (typeof value === "object") { const alternatives = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or; if (Array.isArray(alternatives) && alternatives.length) { add2eHbsAddAlternativeMaterials(entries, alternatives); return; } const name = add2eHbsMaterialRawName(value); const qty = add2eHbsMaterialQty(value); if (name) add2eHbsAddSpellMaterialEntry(entries, name, qty, value.consomme ?? value.consume ?? value.consommation !== "non" ?? true); } }
-function add2eHbsSpellMaterialEntries(sort) { const s = sort?.system ?? sort ?? {}; const flags = sort?.flags?.add2e ?? sort?.add2e ?? {}; const entries = []; const primaryFields = [s.composants_materiels, s.composantsMateriels, sort?.composants_materiels].filter(v => v !== undefined && v !== null && v !== ""); const fallbackFields = [s.composants_requis, s.composantsMateriel, s.composant_materiel, s.composantMateriel, s.materiel, s.matériel, s.material, s.materialComponent, s.materialComponents, s.material_components, s.requiredComponents, s.componentsRequired, s.components?.material, s.components?.materials, sort?.materialComponents, sort?.composants_requis, flags.composants_requis, flags.composants, flags.components, flags.requiredComponents].filter(v => v !== undefined && v !== null && v !== ""); const fields = primaryFields.length ? primaryFields : fallbackFields; for (const field of fields) add2eHbsCollectSpellMaterials(entries, field); if (!entries.length) { for (const field of [s.composants_materiels_objets, sort?.composants_materiels_objets]) add2eHbsCollectSpellMaterials(entries, field); } for (const tag of [...add2eHbsToTagArray(s.tags), ...add2eHbsToTagArray(s.effectTags), ...add2eHbsToTagArray(flags.tags), ...add2eHbsToTagArray(flags.effectTags)]) { const raw = String(tag ?? "").trim(); if (/^composant[:_]/i.test(raw)) add2eHbsAddSpellMaterialEntry(entries, raw.replace(/^composant[:_]/i, ""), 1, true); } return entries; }
-function add2eHbsSpellMaterialSlugs(sort) { return add2eHbsSpellMaterialEntries(sort).flatMap(entry => entry.alternatives?.length ? entry.alternatives.map(a => a.slug) : [entry.slug]).filter(Boolean); }
-function add2eHbsSpellComponentTypes(sort) { const s = sort?.system ?? sort ?? {}; const raw = s.composantes ?? s.components ?? sort?.composantes ?? ""; if (Array.isArray(raw)) return raw.map(v => String(v).trim().toUpperCase()).filter(Boolean).join(", ") || "—"; if (raw && typeof raw === "object") return Object.values(raw).map(v => String(v).trim().toUpperCase()).filter(Boolean).join(", ") || "—"; const text = String(raw ?? "").trim(); return text ? text.replace(/\s+/g, "").split(/[,;|/]+/).map(v => v.trim().toUpperCase()).filter(Boolean).join(", ") : "—"; }
-function add2eHbsSigned(value) { const n = Number(value || 0); return `${n >= 0 ? "+" : ""}${n}`; }
+
+function add2eHbsAsArray(value) {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  if (typeof value === "object") return Object.values(value);
+  return [value];
+}
+
+function add2eHbsDamageData(item) {
+  const s = item?.system ?? {};
+  return s.dégâts ?? s.degats ?? s.damage ?? s.damages ?? null;
+}
+
+function add2eHbsDamagePart(data, keys) {
+  if (!data || typeof data !== "object") return "";
+  for (const key of keys) {
+    const value = data[key];
+    if (value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim();
+  }
+  return "";
+}
+
+function add2eHbsDisplayDamageForItem(item) {
+  const data = add2eHbsDamageData(item);
+  if (typeof data === "string" && data.trim()) return data.trim();
+  const medium = add2eHbsDamagePart(data, ["contre_moyen", "moyen", "medium", "m", "M"]);
+  const large = add2eHbsDamagePart(data, ["contre_grand", "grand", "large", "g", "G", "L"]);
+  if (medium || large) return `${medium || "-"} / ${large || "-"}`;
+  const s = item?.system ?? {};
+  const directMedium = s.degats_moyen ?? s.dégâts_moyen ?? s.degatsMoyen ?? s.damageMedium;
+  const directLarge = s.degats_grand ?? s.dégâts_grand ?? s.degatsGrand ?? s.damageLarge;
+  if (directMedium || directLarge) return `${directMedium || "-"} / ${directLarge || "-"}`;
+  return "-";
+}
+
+function add2eHbsComponentSlug(component) {
+  return add2eHbsSlug(component?.flags?.add2e?.slug);
+}
+
+function add2eHbsIsOnlyComponentCode(value) {
+  const text = add2eHbsSlug(value).replace(/_/g, "");
+  return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(text);
+}
+
+function add2eHbsMaterialName(value) {
+  if (typeof value === "string") return value.trim();
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+  return String(value.nom ?? value.slug ?? "").trim();
+}
+
+function add2eHbsMaterialSlug(value, name = add2eHbsMaterialName(value)) {
+  if (value && typeof value === "object" && !Array.isArray(value) && value.slug) return add2eHbsSlug(value.slug);
+  return add2eHbsSlug(name);
+}
+
+function add2eHbsMaterialQty(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return 1;
+  return Math.max(1, Math.floor(Number(value.quantite) || 1));
+}
+
+function add2eHbsMaterialConsumes(value) {
+  return !(value && typeof value === "object" && !Array.isArray(value) && value.consomme === false);
+}
+
+function add2eHbsMakeMaterialEntry(value) {
+  const nom = add2eHbsMaterialName(value);
+  if (!nom || add2eHbsIsOnlyComponentCode(nom)) return null;
+  const materialSlug = add2eHbsMaterialSlug(value, nom);
+  if (!materialSlug) return null;
+  return {
+    slug: materialSlug,
+    nom,
+    quantite: add2eHbsMaterialQty(value),
+    consomme: add2eHbsMaterialConsumes(value)
+  };
+}
+
+function add2eHbsPushMaterialEntry(entries, entry) {
+  const existing = entries.find(candidate => candidate.slug === entry.slug && candidate.consomme === entry.consomme && !candidate.alternatives);
+  if (existing) existing.quantite += entry.quantite;
+  else entries.push(entry);
+}
+
+function add2eHbsAddSpellMaterialEntry(entries, value) {
+  const entry = add2eHbsMakeMaterialEntry(value);
+  if (entry) add2eHbsPushMaterialEntry(entries, entry);
+}
+
+function add2eHbsAddAlternativeMaterials(entries, alternatives) {
+  const clean = [];
+  for (const alternative of alternatives) {
+    const entry = add2eHbsMakeMaterialEntry(alternative);
+    if (entry && !clean.some(candidate => candidate.slug === entry.slug && candidate.consomme === entry.consomme)) clean.push(entry);
+  }
+  if (!clean.length) return;
+  if (clean.length === 1) {
+    add2eHbsPushMaterialEntry(entries, clean[0]);
+    return;
+  }
+  entries.push({
+    slug: clean.map(entry => entry.slug).join("__or__"),
+    nom: clean.map(entry => entry.nom).join(" ou "),
+    quantite: 1,
+    consomme: clean.some(entry => entry.consomme !== false),
+    alternatives: clean
+  });
+}
+
+function add2eHbsCollectSpellMaterials(entries, value) {
+  if (value === null || value === undefined || value === "") return;
+
+  if (Array.isArray(value)) {
+    for (const entry of value) add2eHbsCollectSpellMaterials(entries, entry);
+    return;
+  }
+
+  if (typeof value === "string") {
+    for (const rawPart of value.split(/[,;|\n]+/g).map(part => part.trim()).filter(Boolean)) {
+      const alternatives = rawPart.split(/\bou\b/gi).map(entry => entry.trim()).filter(Boolean);
+      if (alternatives.length > 1) add2eHbsAddAlternativeMaterials(entries, alternatives);
+      else add2eHbsAddSpellMaterialEntry(entries, rawPart);
+    }
+    return;
+  }
+
+  if (typeof value === "object") {
+    if (Array.isArray(value.alternatives) && value.alternatives.length) {
+      add2eHbsAddAlternativeMaterials(entries, value.alternatives);
+      return;
+    }
+    add2eHbsAddSpellMaterialEntry(entries, value);
+  }
+}
+
+function add2eHbsSpellMaterialEntries(sort) {
+  const entries = [];
+  add2eHbsCollectSpellMaterials(entries, sort?.system?.composants_materiels ?? sort?.composants_materiels);
+  return entries;
+}
+
+function add2eHbsSpellMaterialSlugs(sort) {
+  return add2eHbsSpellMaterialEntries(sort)
+    .flatMap(entry => entry.alternatives?.length ? entry.alternatives.map(alternative => alternative.slug) : [entry.slug])
+    .filter(Boolean);
+}
+
+function add2eHbsSpellComponentTypes(sort) {
+  const raw = sort?.system?.composantes ?? sort?.composantes ?? "";
+  if (Array.isArray(raw)) return raw.map(value => String(value).trim().toUpperCase()).filter(Boolean).join(", ") || "—";
+  const text = String(raw ?? "").trim();
+  if (!text) return "—";
+  return text.replaceAll("/", ",").split(/[,;|\s]+/g).map(value => value.trim().toUpperCase()).filter(Boolean).join(", ") || "—";
+}
+
+function add2eHbsSigned(value) {
+  const n = Number(value || 0);
+  return `${n >= 0 ? "+" : ""}${n}`;
+}
 
 if (typeof Handlebars !== "undefined") {
   Handlebars.registerHelper("capitalize", str => (str && typeof str === "string") ? str.charAt(0).toUpperCase() + str.slice(1) : str);
@@ -68,8 +208,27 @@ if (typeof Handlebars !== "undefined") {
   Handlebars.registerHelper("negativeNumber", function(value) { const n = Number(value || 0); return n === 0 ? 0 : -Math.abs(n); });
   Handlebars.registerHelper("signedNumber", function(value) { return add2eHbsSigned(value); });
   Handlebars.registerHelper("add2eItemDisplayDamage", function(item) { return add2eHbsDisplayDamageForItem(item); });
-  Handlebars.registerHelper("componentSpellNames", function(component, sortsParNiveau) { const componentSlug = add2eHbsComponentSlug(component); if (!componentSlug || !sortsParNiveau || typeof sortsParNiveau !== "object") return "—"; const spells = []; for (const list of Object.values(sortsParNiveau)) for (const sort of add2eHbsAsArray(list)) { const slugs = add2eHbsSpellMaterialSlugs(sort); if (slugs.includes(componentSlug)) spells.push(String(sort?.name ?? "Sort")); } return spells.length ? [...new Set(spells)].sort((a, b) => a.localeCompare(b)).join(", ") : "—"; });
-  Handlebars.registerHelper("spellMaterialComponents", function(sort) { const entries = add2eHbsSpellMaterialEntries(sort); if (!entries.length) return "—"; const text = entries.map(entry => { const qty = entry.quantite > 1 ? ` x${entry.quantite}` : ""; const state = entry.consomme ? "" : " (non consommé)"; return `${entry.nom}${qty}${state}`; }).join(", "); return text || "—"; });
+  Handlebars.registerHelper("componentSpellNames", function(component, sortsParNiveau) {
+    const componentSlug = add2eHbsComponentSlug(component);
+    if (!componentSlug || !sortsParNiveau || typeof sortsParNiveau !== "object") return "—";
+    const spells = [];
+    for (const list of Object.values(sortsParNiveau)) {
+      for (const sort of add2eHbsAsArray(list)) {
+        if (add2eHbsSpellMaterialSlugs(sort).includes(componentSlug)) spells.push(String(sort?.name ?? "Sort"));
+      }
+    }
+    return spells.length ? [...new Set(spells)].sort((a, b) => a.localeCompare(b)).join(", ") : "—";
+  });
+  Handlebars.registerHelper("spellMaterialComponents", function(sort) {
+    const entries = add2eHbsSpellMaterialEntries(sort);
+    if (!entries.length) return "—";
+    const text = entries.map(entry => {
+      const qty = entry.quantite > 1 ? ` x${entry.quantite}` : "";
+      const state = entry.consomme ? "" : " (non consommé)";
+      return `${entry.nom}${qty}${state}`;
+    }).join(", ");
+    return text || "—";
+  });
   Handlebars.registerHelper("spellComponentTypes", function(sort) { return add2eHbsSpellComponentTypes(sort); });
 }
 
