@@ -1,12 +1,10 @@
 // ============================================================
-// ADD2E — Auto-compatibilité race / classe au drop — wrapper V2
-// Version : 2026-08-09-race-class-drop-common-dialog-v9
+// ADD2E — Auto-compatibilité race / classe au drop — services
+// Version : 2026-08-10-race-class-drop-services-v10
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
 import {
-  ADD2E_RACE_CLASS_DROP_VERSION,
-  add2eResolveDropCompatibilityWithPopup,
   checkClassStatMin,
   add2eApplyRaceItemDataToActor,
   add2eApplyClassItemDataToActor,
@@ -155,7 +153,7 @@ function add2eDropStatValue(actor, carac) {
   }
   const resolution = engine.resolveAbility(actor, carac, {
     type: "class-prerequisite-display",
-    source: "race-class-drop-wrapper",
+    source: "race-class-drop-services",
     consumer: "race-class-drop-ui"
   });
   const value = Number(resolution?.total);
@@ -358,61 +356,6 @@ async function add2eEnsureCompatibleRaceForClassDrop(actor, classData, sheet) {
   return { ok: true, handled: true, selectedRace, appliedClass: true };
 }
 
-function add2eInstallDropCompatibilityPopupWrapper() {
-  const SheetClass = globalThis.Add2eActorSheet;
-  if (!SheetClass?.prototype?._onDrop) return false;
-  if (SheetClass.prototype._add2eDropCompatPopupWrapped) return true;
-
-  const original = SheetClass.prototype._onDrop;
-  SheetClass.prototype._onDrop = async function add2eDropCompatPopupWrapped(event) {
-    let raw = null;
-    let itemData = null;
-    try {
-      raw = JSON.parse(event.dataTransfer?.getData("text/plain") || "{}");
-      itemData = await add2eResolveRaceClassDropItemData(raw);
-    } catch (e) {
-      console.warn("[ADD2E][DROP][RACE_CLASSE] Impossible de lire les données de drop.", e);
-    }
-
-    if (itemData?.type === "classe") {
-      const raceResult = await add2eEnsureCompatibleRaceForClassDrop(this.actor, itemData, this);
-      if (!raceResult.ok || raceResult.handled) {
-        event.preventDefault();
-        event.stopPropagation();
-        return raceResult.ok === true;
-      }
-    }
-
-    if (itemData && ["classe", "race"].includes(itemData.type)) {
-      const resolved = await add2eResolveDropCompatibilityWithPopup(this.actor, itemData, this);
-      console.log("[ADD2E][DROP][RACE_CLASSE][RESOLVED]", {
-        ...resolved,
-        sourceCompendium: itemData.flags?.add2e?.dropResolvedFromCompendium === true,
-        sourceUuid: itemData.flags?.add2e?.dropResolvedUuid ?? itemData.uuid ?? null
-      });
-      if (!resolved.ok || resolved.handled) {
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
-      }
-    }
-
-    return original.call(this, event);
-  };
-
-  SheetClass.prototype._add2eDropCompatPopupWrapped = true;
-  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe installé.", ADD2E_RACE_CLASS_DROP_VERSION, "class-minimums-only");
-  return true;
-}
-
-Hooks.once("ready", () => {
-  if (!add2eInstallDropCompatibilityPopupWrapper()) {
-    setTimeout(add2eInstallDropCompatibilityPopupWrapper, 250);
-    setTimeout(add2eInstallDropCompatibilityPopupWrapper, 1000);
-  }
-});
-
 try { globalThis.add2eResolveRaceClassDropItemData = add2eResolveRaceClassDropItemData; } catch (_e) {}
 try { globalThis.add2eLoadRaceCandidatesFromCompendium = add2eLoadRaceCandidatesFromCompendium; } catch (_e) {}
 try { globalThis.add2eEnsureCompatibleRaceForClassDrop = add2eEnsureCompatibleRaceForClassDrop; } catch (_e) {}
-try { globalThis.add2eInstallDropCompatibilityPopupWrapper = add2eInstallDropCompatibilityPopupWrapper; } catch (_e) {}
