@@ -1,8 +1,8 @@
-// ADD2E — Postprocess getData des objets magiques.
+// ADD2E — Préparation des données de feuille pour les objets magiques.
 // Les pouvoirs virtuels proviennent exclusivement du runtime canonique.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
-const ADD2E_OBJECT_MAGIC_POSTPROCESS_VERSION = "2026-08-07-canonical-object-power-resource-v3";
+const ADD2E_OBJECT_MAGIC_POSTPROCESS_VERSION = "2026-08-10-native-object-magic-sheet-v4";
 globalThis.ADD2E_OBJECT_MAGIC_POSTPROCESS_VERSION = ADD2E_OBJECT_MAGIC_POSTPROCESS_VERSION;
 
 function add2eMagicPowerDescription(power) {
@@ -137,87 +137,68 @@ function add2eObjectMagicPowerRow(actor, virtualSpell, itemSource, power, index)
   };
 }
 
-function add2eInstallObjectMagicGetDataPostprocess() {
-  const SheetClass = globalThis.Add2eActorSheet;
-  if (!SheetClass) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant le postprocess objets magiques.");
-  if (SheetClass.prototype.__add2eCanonicalObjectMagicGetData === ADD2E_OBJECT_MAGIC_POSTPROCESS_VERSION) return true;
+function add2ePrepareObjectMagicSheetData(sheet, data) {
+  if (!sheet || !data) throw new Error("Feuille ou contexte absent pour la préparation des objets magiques.");
+  const actor = add2eObjectMagicActorDocument(sheet, data);
+  const items = Array.from(actor.items ?? []);
+  const magicItemTypes = new Set(["arme", "armure", "objet", "object", "magic", "objet_magique"]);
+  const powersForHbs = [];
+  const itemsForHbs = [];
+  const potionsForHbs = [];
 
-  const originalGetData = SheetClass.prototype.getData;
-  if (typeof originalGetData !== "function") throw new Error("[ADD2E] Add2eActorSheet.getData est indisponible.");
+  if (typeof globalThis.add2eMagicItemEquippedOrUsable !== "function") {
+    throw new Error("Le résolveur canonique d'utilisation des objets magiques est indisponible.");
+  }
 
-  SheetClass.prototype.getData = async function add2eCanonicalObjectMagicGetData(...args) {
-    const data = await originalGetData.apply(this, args);
-    try {
-      const actor = add2eObjectMagicActorDocument(this, data);
-      const items = Array.from(actor.items ?? []);
-      const magicItemTypes = new Set(["arme", "armure", "objet", "object", "magic", "objet_magique"]);
-      const powersForHbs = [];
-      const itemsForHbs = [];
-      const potionsForHbs = [];
+  for (const itemSource of items) {
+    if (!magicItemTypes.has(String(itemSource?.type ?? "").toLowerCase())) continue;
+    if (!globalThis.add2eMagicItemEquippedOrUsable(itemSource)) continue;
 
-      for (const itemSource of items) {
-        if (!magicItemTypes.has(String(itemSource?.type ?? "").toLowerCase())) continue;
-        if (typeof globalThis.add2eMagicItemEquippedOrUsable !== "function") {
-          throw new Error("Le résolveur canonique d'utilisation des objets magiques est indisponible.");
-        }
-        if (!globalThis.add2eMagicItemEquippedOrUsable(itemSource)) continue;
+    const powerEntries = add2eObjectMagicActivePowerEntries(itemSource);
+    if (!powerEntries.length) continue;
 
-        const powerEntries = add2eObjectMagicActivePowerEntries(itemSource);
-        if (!powerEntries.length) continue;
+    const potion = add2eObjectMagicIsPotion(itemSource);
+    const powers = powerEntries.map(entry => entry.power);
+    const chargeInfo = add2eObjectMagicChargeInfo(itemSource, powers);
+    const itemPowers = [];
 
-        const potion = add2eObjectMagicIsPotion(itemSource);
-        const powers = powerEntries.map(entry => entry.power);
-        const chargeInfo = add2eObjectMagicChargeInfo(itemSource, powers);
-        const itemPowers = [];
+    for (const { power, index } of powerEntries) {
+      const virtualSpell = add2eObjectMagicBuildVirtualSort(actor, itemSource, power, index);
+      const row = add2eObjectMagicPowerRow(actor, virtualSpell, itemSource, power, index);
 
-        for (const { power, index } of powerEntries) {
-          const virtualSpell = add2eObjectMagicBuildVirtualSort(actor, itemSource, power, index);
-          const row = add2eObjectMagicPowerRow(actor, virtualSpell, itemSource, power, index);
-
-          if (potion) {
-            potionsForHbs.push({
-              ...row,
-              itemId: itemSource.id,
-              potionName: itemSource.name,
-              potionImg: itemSource.img || row.img,
-              doses: row.charges,
-              doseMax: row.max
-            });
-          } else {
-            powersForHbs.push(row);
-            itemPowers.push(row);
-          }
-        }
-
-        if (!potion && itemPowers.length) {
-          itemsForHbs.push({
-            id: itemSource.id,
-            name: itemSource.name,
-            img: itemSource.img || "icons/svg/aura.svg",
-            description: itemSource.system?.description || "",
-            charges: Number(chargeInfo?.max) > 0 ? Number(chargeInfo.current) || 0 : null,
-            max: Number(chargeInfo?.max) > 0 ? Number(chargeInfo.max) || 0 : null,
-            powers: itemPowers
-          });
-        }
+      if (potion) {
+        potionsForHbs.push({
+          ...row,
+          itemId: itemSource.id,
+          potionName: itemSource.name,
+          potionImg: itemSource.img || row.img,
+          doses: row.charges,
+          doseMax: row.max
+        });
+      } else {
+        powersForHbs.push(row);
+        itemPowers.push(row);
       }
-
-      data.add2ePotionRows = potionsForHbs.sort((left, right) => String(left.potionName).localeCompare(String(right.potionName), "fr"));
-      data.add2ePotionQuantity = data.add2ePotionRows.reduce((total, row) => total + Math.max(0, Number(row.doses) || 0), 0);
-      data.add2eObjectMagicPowers = powersForHbs;
-      data.add2eObjectMagicItems = itemsForHbs;
-    } catch (error) {
-      console.error("[ADD2E][OBJETS_MAGIQUES][GETDATA][ERROR]", error);
-      data.add2ePotionRows ??= [];
-      data.add2ePotionQuantity ??= 0;
-      data.add2eObjectMagicPowers ??= [];
-      data.add2eObjectMagicItems ??= [];
     }
-    return data;
-  };
 
-  SheetClass.prototype.__add2eCanonicalObjectMagicGetData = ADD2E_OBJECT_MAGIC_POSTPROCESS_VERSION;
-  return true;
+    if (!potion && itemPowers.length) {
+      itemsForHbs.push({
+        id: itemSource.id,
+        name: itemSource.name,
+        img: itemSource.img || "icons/svg/aura.svg",
+        description: itemSource.system?.description || "",
+        charges: Number(chargeInfo?.max) > 0 ? Number(chargeInfo.current) || 0 : null,
+        max: Number(chargeInfo?.max) > 0 ? Number(chargeInfo.max) || 0 : null,
+        powers: itemPowers
+      });
+    }
+  }
+
+  data.add2ePotionRows = potionsForHbs.sort((left, right) => String(left.potionName).localeCompare(String(right.potionName), "fr"));
+  data.add2ePotionQuantity = data.add2ePotionRows.reduce((total, row) => total + Math.max(0, Number(row.doses) || 0), 0);
+  data.add2eObjectMagicPowers = powersForHbs;
+  data.add2eObjectMagicItems = itemsForHbs;
+  return data;
 }
 
 function add2eScrollChatPlainText(value) {
@@ -290,7 +271,7 @@ function add2eInstallUnifiedScrollChatStyles() {
   document.head.append(style);
 }
 
-add2eInstallObjectMagicGetDataPostprocess();
+globalThis.add2ePrepareObjectMagicSheetData = add2ePrepareObjectMagicSheetData;
 globalThis.add2eMagicPowerDescription = add2eMagicPowerDescription;
 Hooks.on("renderChatMessageHTML", add2eNormalizeScrollChatRender);
 Hooks.once("ready", add2eInstallUnifiedScrollChatStyles);
