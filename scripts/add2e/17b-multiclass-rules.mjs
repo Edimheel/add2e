@@ -203,6 +203,19 @@ export function parseXpRange(raw) {
   return { min: values[0] ?? 0, max: values[1] ?? null };
 }
 
+/**
+ * Répartit exactement un total d'XP entre les classes d'un multiclassé.
+ * Le quotient est identique pour toutes les classes et le reste entier est
+ * attribué dans l'ordre des classes déjà présentes afin de ne perdre aucun XP.
+ */
+export function splitMulticlassXp(totalXpValue, classCountValue) {
+  const totalXp = Math.max(0, Math.floor(num(totalXpValue, 0)));
+  const classCount = Math.max(1, Math.floor(num(classCountValue, 1)));
+  const base = Math.floor(totalXp / classCount);
+  const remainder = totalXp - (base * classCount);
+  return Array.from({ length: classCount }, (_entry, index) => base + (index < remainder ? 1 : 0));
+}
+
 export function progressionRows(classSystem) {
   return (Array.isArray(classSystem?.progression) ? classSystem.progression : [])
     .map((row, index) => {
