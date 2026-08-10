@@ -1,9 +1,8 @@
 // ============================================================
-// ADD2E — Tirage et affectation des caractéristiques — DialogV2
-// Compatible Foundry V13/V14/V15.
+// ADD2E — Tirage et affectation des caractéristiques — API commune des fenêtres
+// Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via dialog-ui.mjs uniquement.
 // ============================================================
-const ADD2E_CARAC_ROLLER_VERSION = "2026-07-23-carac-roller-independent-class-plans-v12";
-const ADD2E_CARAC_DIALOG_WIDTH = 600;
+const ADD2E_CARAC_ROLLER_VERSION = "2026-08-10-carac-roller-common-dialog-v13";
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
   force: "FOR",
@@ -71,10 +70,6 @@ function add2eCaracRequirementMinimum(value) {
   return add2eCaracNumber(value, 0);
 }
 
-function add2eCaracDialogV2() {
-  return foundry?.applications?.api?.DialogV2 ?? null;
-}
-
 function add2eCaracSheetRoot(sheet) {
   const source = sheet?.element;
   const root = source?.jquery ? source[0] : source;
@@ -135,20 +130,23 @@ class Add2eCaracRoller {
     this.selectedIdx = null;
     this.dialogRef = null;
     this._dlgRoot = null;
+    this._boundDialogRoot = null;
     this._applied = false;
     this._closing = false;
     this._keepOnTopTimer = null;
     this._suggestionPlans = new Map();
     this._classesPromise = null;
     this._classSuggestionGeneration = 0;
-    this._dialogEventsBound = false;
     this._uid = `add2e-carac-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     this._sheetTargetHandler = this._onSheetTargetClick.bind(this);
     this._dialogClickHandler = this._onDialogClick.bind(this);
     this._oldValues = Object.fromEntries(ADD2E_CARACS.map(carac => [carac, add2eCaracDefinitiveValue(this.actor, carac)]));
     this._oldNaturalValues = Object.fromEntries(ADD2E_CARACS.map(carac => [carac, add2eCaracNaturalValue(this.actor, carac)]));
     this._oldForceEx = add2eCaracExceptionalStrength(this.actor);
-    this.render();
+    void this.render().catch(error => {
+      console.error("[ADD2E][CARAC_ROLLER][DIALOG_ERROR]", error);
+      ui.notifications?.error?.("Impossible d’ouvrir le tirage des caractéristiques.");
+    });
   }
 
   static rollCarac() {
@@ -165,29 +163,59 @@ class Add2eCaracRoller {
     this.selectedIdx = null;
   }
 
-  render() {
-    const DialogV2 = add2eCaracDialogV2();
-    if (!DialogV2) {
-      ui.notifications.error("DialogV2 est introuvable : tirage des caractéristiques impossible.");
-      return;
+  async render() {
+    if (typeof globalThis.add2eDialogWait !== "function") {
+      throw new Error("L’API de fenêtre ADD2E est indisponible pour le tirage des caractéristiques.");
     }
 
     this._rollValues();
     this._applied = false;
     this._closing = false;
-    this.dialogRef = new DialogV2({
+
+    return globalThis.add2eDialogWait({
+      add2eTheme: "parchment",
+      add2ePrimaryAction: "apply",
+      add2eClasses: ["add2e-carac-roller-window"],
       window: { title: "Tirage des caractéristiques" },
       content: this._buildContent(),
-      buttons: [{ action: "add2e-technical-cancel", label: "Annuler", default: true, callback: () => this.cancel() }],
-      close: () => this._onDialogClosed()
-    }, { width: ADD2E_CARAC_DIALOG_WIDTH, height: "auto" });
-    this.dialogRef.render({ force: true });
+      buttons: [
+        {
+          action: "apply",
+          label: "Valider",
+          icon: "<i class='fas fa-check'></i>",
+          default: true,
+          callback: async () => {
+            const applied = await this.apply();
+            return applied === true ? "applied" : null;
+          }
+        },
+        {
+          action: "cancel",
+          label: "Annuler",
+          icon: "<i class='fas fa-times'></i>",
+          callback: async () => {
+            await this.cancel();
+            return "cancelled";
+          }
+        }
+      ],
+      render: (_event, dialog) => this._onDialogRendered(dialog),
+      close: () => {
+        void this._onDialogClosed();
+        return null;
+      }
+    });
+  }
 
+  _onDialogRendered(dialog) {
+    this.dialogRef = dialog ?? null;
     setTimeout(() => {
-      this._dlgRoot = document.querySelector(`[data-add2e-carac-roller="${this._uid}"]`);
-      if (!this._dlgRoot) return;
-      this._hideNativeFooter();
-      this._lockDialogGeometry();
+      const source = dialog?.element;
+      const appRoot = source?.jquery ? source[0] : source;
+      const root = appRoot?.querySelector?.(`[data-add2e-carac-roller="${this._uid}"]`)
+        ?? document.querySelector(`[data-add2e-carac-roller="${this._uid}"]`);
+      if (!root) return;
+      this._dlgRoot = root;
       this._bindDialogEvents();
       this._bindSheetTargets();
       this._updateCaracDisplay();
@@ -209,13 +237,6 @@ class Add2eCaracRoller {
 
   _buildContent() {
     return `
-      <style>
-        .add2e-carac-popup .add2e-carac-value:hover { filter:brightness(1.06); transform:translateY(-1px); }
-        .add2e-carac-popup .add2e-carac-value.selected { outline:2px solid #8d1f1f!important; box-shadow:0 0 0 2px #e2c178,0 0 10px rgba(120,40,20,.45)!important; }
-        .add2e-carac-popup .add2e-carac-value.used { opacity:.82!important; background:linear-gradient(180deg,#8b7b63 0%,#5f533f 100%)!important; color:#fff2d0!important; }
-        .add2e-carac-popup .add2e-carac-value.used .assigned-label { color:#ffe19b!important; }
-        .add2e-carac-popup .add2e-class-suggestion:hover { filter:brightness(1.13); transform:translateY(-1px); }
-      </style>
       <div class="add2e-carac-popup" data-add2e-carac-roller="${this._uid}" style="box-sizing:border-box!important;width:100%!important;min-width:100%!important;max-width:100%!important;padding:10px!important;color:#2a1b0d!important;background:linear-gradient(180deg,#efe0bc 0%,#d8bd82 100%)!important;border:2px solid #5a3418!important;border-radius:8px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)!important;">
         <div style="border:1px solid #8a6330!important;border-radius:8px!important;background:rgba(255,247,218,.62)!important;padding:8px 10px!important;margin-bottom:9px!important;box-shadow:inset 0 0 10px rgba(90,52,24,.15)!important;">
           <div style="font-size:.96rem!important;font-weight:900!important;color:#5b1e16!important;margin-bottom:3px!important;">Affectation des caractéristiques</div>
@@ -225,8 +246,6 @@ class Add2eCaracRoller {
         <div id="classes-suggestions" style="margin:0 0 9px 0!important;padding:8px 10px!important;border:1px solid #8a6330!important;border-radius:8px!important;background:rgba(43,28,13,.10)!important;max-height:360px!important;overflow:auto!important;"></div>
         <div class="add2e-carac-actions" style="display:flex!important;justify-content:center!important;align-items:center!important;gap:10px!important;margin-top:8px!important;">
           <button type="button" class="add2e-carac-action reroll reroll-caracs-btn" style="min-width:110px!important;padding:6px 12px!important;border-radius:7px!important;font-weight:900!important;cursor:pointer!important;box-shadow:0 2px 5px rgba(0,0,0,.25)!important;border:1px solid #775122!important;background:linear-gradient(180deg,#f6dfad,#d19b4c)!important;color:#2d1c0b!important;">Relancer</button>
-          <button type="button" class="add2e-carac-action validate apply-caracs-btn" style="min-width:110px!important;padding:6px 12px!important;border-radius:7px!important;font-weight:900!important;cursor:pointer!important;box-shadow:0 2px 5px rgba(0,0,0,.25)!important;border:1px solid #6e1414!important;background:linear-gradient(180deg,#a7372d,#6e1714)!important;color:#fff1d5!important;">Valider</button>
-          <button type="button" class="add2e-carac-action cancel cancel-caracs-btn" style="min-width:110px!important;padding:6px 12px!important;border-radius:7px!important;font-weight:900!important;cursor:pointer!important;box-shadow:0 2px 5px rgba(0,0,0,.25)!important;border:1px solid #6a5640!important;background:linear-gradient(180deg,#7b6c5c,#4f463b)!important;color:#fff1d5!important;">Annuler</button>
         </div>
       </div>`;
   }
@@ -235,31 +254,11 @@ class Add2eCaracRoller {
     return this._dlgRoot?.closest?.(".application, .window-app, .app, .dialog") ?? null;
   }
 
-  _hideNativeFooter() {
-    for (const footer of this._dialogWindowElement()?.querySelectorAll?.(".form-footer, .dialog-buttons, footer") ?? []) {
-      if (!footer.closest("[data-add2e-carac-roller]")) footer.style.display = "none";
-    }
-  }
-
-  _lockDialogGeometry() {
-    const windowElement = this._dialogWindowElement();
-    if (!windowElement) return;
-    const width = `${ADD2E_CARAC_DIALOG_WIDTH}px`;
-    windowElement.style.setProperty("width", width, "important");
-    windowElement.style.setProperty("min-width", width, "important");
-    windowElement.style.setProperty("max-width", width, "important");
-    const content = this._dlgRoot?.closest?.(".window-content, .application-content") ?? this._dlgRoot?.parentElement;
-    content?.style?.setProperty("width", "100%", "important");
-    content?.style?.setProperty("box-sizing", "border-box", "important");
-  }
-
   _keepDialogOnTop() {
     const windowElement = this._dialogWindowElement();
     if (!windowElement) return;
     windowElement.style.zIndex = "2147483000";
     windowElement.dataset.add2eAlwaysOnTop = "carac-roller";
-    this._hideNativeFooter();
-    this._lockDialogGeometry();
   }
 
   _startKeepOnTop() {
@@ -273,9 +272,15 @@ class Add2eCaracRoller {
   }
 
   _bindDialogEvents() {
-    if (this._dialogEventsBound || !this._dlgRoot) return;
-    this._dialogEventsBound = true;
+    if (!this._dlgRoot || this._boundDialogRoot === this._dlgRoot) return;
+    this._boundDialogRoot?.removeEventListener?.("click", this._dialogClickHandler);
     this._dlgRoot.addEventListener("click", this._dialogClickHandler);
+    this._boundDialogRoot = this._dlgRoot;
+  }
+
+  _unbindDialogEvents() {
+    this._boundDialogRoot?.removeEventListener?.("click", this._dialogClickHandler);
+    this._boundDialogRoot = null;
   }
 
   _onDialogClick(event) {
@@ -302,21 +307,9 @@ class Add2eCaracRoller {
       return;
     }
 
-    if (button.matches(".apply-caracs-btn")) {
-      event.preventDefault();
-      this.apply();
-      return;
-    }
-
     if (button.matches(".reroll-caracs-btn")) {
       event.preventDefault();
       this.reroll();
-      return;
-    }
-
-    if (button.matches(".cancel-caracs-btn")) {
-      event.preventDefault();
-      this.cancel();
     }
   }
 
@@ -423,6 +416,24 @@ class Add2eCaracRoller {
     this._refreshClassSuggestions();
   }
 
+  _updateApplyButtonState() {
+    const complete = ADD2E_CARACS.every(carac => this.assigned[carac] !== undefined);
+    const root = this._dialogWindowElement();
+    const applyButton = root?.querySelector?.([
+      'footer button[data-action="apply"]',
+      'footer button[value="apply"]',
+      '.form-footer button[data-action="apply"]',
+      '.form-footer button[value="apply"]',
+      '.window-footer button[data-action="apply"]',
+      '.window-footer button[value="apply"]',
+      '.dialog-buttons button[data-action="apply"]',
+      '.dialog-buttons button[value="apply"]'
+    ].join(","));
+    if (!applyButton) return;
+    applyButton.disabled = !complete;
+    applyButton.setAttribute("aria-disabled", complete ? "false" : "true");
+  }
+
   _updateAssignLabels() {
     this._dlgRoot?.querySelectorAll(".add2e-carac-value").forEach(element => {
       const index = Number(element.dataset.idx);
@@ -434,6 +445,7 @@ class Add2eCaracRoller {
     });
     this._sheetTargets().forEach(element => element.classList.toggle("assignable", this.selectedIdx !== null));
     this._updatePendingSheetBorders();
+    this._updateApplyButtonState();
   }
 
   _naturalValueForCarac(carac) {
@@ -571,7 +583,7 @@ class Add2eCaracRoller {
   async apply() {
     if (!ADD2E_CARACS.every(carac => this.assigned[carac] !== undefined)) {
       ui.notifications.warn("Toutes les caractéristiques doivent être affectées.");
-      return;
+      return false;
     }
 
     const naturalCaracs = {};
@@ -590,15 +602,21 @@ class Add2eCaracRoller {
     });
     if (typeof this.sheet?.autoSetCaracAjustements === "function") await this.sheet.autoSetCaracAjustements();
     this._applied = true;
+    this._closing = true;
+    this._stopKeepOnTop();
     this._unbindSheetTargets();
     ui.notifications.info("Affectation terminée.");
     await this.sheet?.render?.(false);
-    this._closeDialogOnly();
+    return true;
   }
 
   async cancel() {
+    if (this._closing) return true;
+    this._closing = true;
+    this._stopKeepOnTop();
     await this._restoreOldCaracs();
-    this._closeDialogOnly();
+    this._unbindSheetTargets();
+    return true;
   }
 
   async _restoreOldCaracs() {
@@ -616,21 +634,16 @@ class Add2eCaracRoller {
     await this.sheet?.render?.(false);
   }
 
-  _closeDialogOnly() {
-    if (this._closing) return;
-    this._closing = true;
-    this._stopKeepOnTop();
-    this._unbindSheetTargets();
-    this.dialogRef?.close?.();
-  }
-
-  _onDialogClosed() {
+  async _onDialogClosed() {
     this._stopKeepOnTop();
     if (!this._applied && !this._closing) {
       this._closing = true;
-      this._restoreOldCaracs();
+      await this._restoreOldCaracs();
     }
     this._unbindSheetTargets();
+    this._unbindDialogEvents();
+    this._dlgRoot = null;
+    this.dialogRef = null;
   }
 }
 
