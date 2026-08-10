@@ -3,7 +3,7 @@
 // Compatible Foundry V13/V14/V15.
 
 export const ADD2E_SHOP_ENGINE_VERSION = "2026-08-08-shop-catalog-v1";
-export const ADD2E_VENDOR_VERSION = "2026-08-10-vendor-v32-canonical-projectile-contract";
+export const ADD2E_VENDOR_VERSION = "2026-08-10-vendor-v33-canonical-currency-payments";
 export const VENDOR_SCOPE = "add2e";
 export const VENDOR_NAME = "Marchand de composants et projectiles";
 export const VENDOR_FOLDER = "ADD2E — Boutique";
@@ -25,9 +25,9 @@ const SHOP_CATALOG_CACHE = new Map();
 const PROJECTILE_SPENT_REQUESTS = new Set();
 
 export const COINS = [
-  { key: "pp", label: "PP", pc: 500 },
-  { key: "po", label: "PO", pc: 100 },
-  { key: "pe", label: "PE", pc: 50 },
+  { key: "pp", label: "PP", pc: 1000 },
+  { key: "po", label: "PO", pc: 200 },
+  { key: "pe", label: "PE", pc: 100 },
   { key: "pa", label: "PA", pc: 10 },
   { key: "pc", label: "PC", pc: 1 }
 ];
@@ -198,7 +198,7 @@ export function formatMoney(value) {
   return parts.length ? parts.join(" ") : "0 PC";
 }
 
-export function priceCopper(item) {
+function priceSpec(item) {
   const system = item?.system ?? {};
   const raw = system.prix ?? system.price ?? system.cout ?? system.coût ?? system.cost ?? item?.getFlag?.(VENDOR_SCOPE, "prix") ?? item?.flags?.add2e?.prix ?? null;
   let value = 0;
@@ -219,7 +219,63 @@ export function priceCopper(item) {
     currency = isAmmunition(item) ? "pa" : "po";
   }
   const coin = COINS.find(entry => entry.key === lower(currency)) ?? COINS.find(entry => entry.key === "po");
-  return Math.max(1, Math.round(Number(value) * coin.pc));
+  return {
+    value: Number(value),
+    currency: coin.key,
+    coin,
+    copper: Math.max(1, Math.round(Number(value) * coin.pc))
+  };
+}
+
+export function priceCopper(item) {
+  return priceSpec(item).copper;
+}
+
+export function formatItemPrice(item, quantityValue = 1, multiplierValue = 1) {
+  const spec = priceSpec(item);
+  const requested = Math.max(1, Math.floor(num(quantityValue, 1)));
+  const multiplier = Math.max(0, num(multiplierValue, 1)) || 1;
+  const unitCopper = Math.max(1, Math.round(spec.copper * multiplier));
+  const totalCopper = unitCopper * requested;
+  const directAmount = spec.value * multiplier * requested;
+  if (Number.isInteger(directAmount) && Math.round(directAmount * spec.coin.pc) === totalCopper) {
+    return `${directAmount} ${spec.coin.label}`;
+  }
+  return formatMoney(totalCopper);
+}
+
+export function spendMoney(money, copper) {
+  const wallet = moneyFrom(money);
+  let remaining = Math.max(0, Math.floor(num(copper, 0)));
+  if (remaining === 0) return wallet;
+  if (toCopper(wallet) < remaining) return null;
+
+  const next = { ...wallet };
+  for (const coin of COINS) {
+    if (coin.pc > remaining) continue;
+    const count = Math.min(next[coin.key], Math.floor(remaining / coin.pc));
+    if (!count) continue;
+    next[coin.key] -= count;
+    remaining -= count * coin.pc;
+    if (remaining === 0) return next;
+  }
+
+  const breakingCoin = [...COINS]
+    .reverse()
+    .find(coin => coin.pc > remaining && next[coin.key] > 0);
+  if (!breakingCoin) return null;
+
+  next[breakingCoin.key] -= 1;
+  let change = breakingCoin.pc - remaining;
+  for (const coin of COINS) {
+    if (coin.pc >= breakingCoin.pc) continue;
+    const count = Math.floor(change / coin.pc);
+    if (!count) continue;
+    next[coin.key] += count;
+    change -= count * coin.pc;
+  }
+  if (change !== 0) throw new Error("Le rendu de monnaie ADD2E n’a pas pu être résolu exactement.");
+  return next;
 }
 
 export async function dialog({ title = "Boutique", content = "", yes = "Compris", no = "Fermer", theme = "parchment" } = {}) {
@@ -627,9 +683,9 @@ export async function restockShop(shop) {
 }
 
 async function subtractMoney(actor, copper) {
-  const total = toCopper(getMoney(actor));
-  if (total < copper) return false;
-  await setMoney(actor, fromCopper(total - copper));
+  const next = spendMoney(getMoney(actor), copper);
+  if (!next) return false;
+  await setMoney(actor, next);
   return true;
 }
 
@@ -644,8 +700,9 @@ export async function shopBuyLocal({ shop, buyer, item, quantity: requestedQuant
   if (available < requested) return { ok: false, message: `${entry.name} : stock disponible ${available}.` };
   const unitPrice = Math.max(1, Math.round(priceCopper(entry) * definition.pricing.buyMultiplier));
   const total = unitPrice * requested;
-  if (toCopper(getMoney(buyer)) < total) return { ok: false, message: `${buyer.name} n’a pas assez d’argent. Prix : ${formatMoney(total)}.` };
-  if (confirm && !await dialog({ title: "Confirmer l’achat", content: `<p>Acheter <b>${requested} × ${esc(entry.name)}</b> pour <b>${formatMoney(total)}</b> ?</p>`, yes: "Acheter", no: "Annuler" })) return { ok: false, cancelled: true };
+  const totalLabel = formatItemPrice(entry, requested, definition.pricing.buyMultiplier);
+  if (toCopper(getMoney(buyer)) < total) return { ok: false, message: `${buyer.name} n’a pas assez d’argent. Prix : ${totalLabel}.` };
+  if (confirm && !await dialog({ title: "Confirmer l’achat", content: `<p>Acheter <b>${requested} × ${esc(entry.name)}</b> pour <b>${totalLabel}</b> ?</p>`, yes: "Acheter", no: "Annuler" })) return { ok: false, cancelled: true };
 
   const sourceDocument = await resolveShopCatalogDocument(entry);
   if (!sourceDocument) return { ok: false, message: `${entry.name} : document de compendium introuvable.` };
@@ -660,7 +717,7 @@ export async function shopBuyLocal({ shop, buyer, item, quantity: requestedQuant
     await writeShopStockOverride(shop, entry, stockBefore);
     throw error;
   }
-  return { ok: true, message: `${buyer.name} achète ${requested} × ${entry.name} pour ${formatMoney(total)}.`, entry };
+  return { ok: true, message: `${buyer.name} achète ${requested} × ${entry.name} pour ${totalLabel}.`, entry };
 }
 
 export async function assignShopItem({ shop, buyer, item, quantity: requestedQuantity = 1 } = {}) {
