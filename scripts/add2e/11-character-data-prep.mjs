@@ -2,7 +2,7 @@
 //  HOOK UNIQUE updateActor
 // =======================
 
-const ADD2E_CHARACTER_DATA_PREP_VERSION = "2026-08-09-canonical-vital-status-consumer-v6";
+const ADD2E_CHARACTER_DATA_PREP_VERSION = "2026-08-10-remove-legacy-spell-mirrors-v7";
 globalThis.ADD2E_CHARACTER_DATA_PREP_VERSION = ADD2E_CHARACTER_DATA_PREP_VERSION;
 
 const ADD2E_CARAC_CHANGE_KEYS = Object.freeze([
@@ -59,6 +59,8 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, userId) => {
 
   // =====================================================
   // 0) Niveau : validation et consommateurs non-PV
+  //    La synchronisation des sorts est déclenchée depuis l’Item classe,
+  //    propriétaire canonique de la progression.
   // =====================================================
   if (changes?.system && Object.prototype.hasOwnProperty.call(changes.system, "niveau")) {
     const clamp = add2eClampLevelToClassMax(actor, changes.system.niveau, null, { notify: true });
@@ -67,16 +69,9 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, userId) => {
       changes.system.niveau = clamp.level;
     }
 
-    const lvl = Number(changes.system.niveau) || Number(actor.system?.niveau) || 1;
     try {
       await add2eSyncMonkUnarmedWeapon(actor);
     } catch (_e) {}
-
-    try {
-      await add2eSyncNewSpellLevelsAfterActorLevelChange(actor, lvl);
-    } catch (_e) {
-      ui.notifications.error("Erreur pendant la synchronisation des sorts au changement de niveau. Voir la console.");
-    }
   }
 
   // =====================================================
@@ -134,17 +129,6 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, userId) => {
   } catch (_e) {}
 });
 
-async function consommerSortMemorise(actor, nomSort, niveau = 1) {
-  const chemin = `system.memorized.${niveau}.${nomSort}`;
-  const nb = foundry.utils.getProperty(actor, chemin) ?? 0;
-  if (nb > 0) {
-    await actor.update({ [chemin]: nb - 1 });
-    ui.notifications.info(`${nomSort} (niv.${niveau}) consommé pour ${actor.name} (${nb - 1} restants)`);
-  } else {
-    ui.notifications.warn(`${actor.name} n'a plus de ${nomSort} (niv.${niveau}) mémorisé !`);
-  }
-}
-
 async function majImageToken(actor, newImg) {
   if (!actor || typeof actor.update !== "function") return;
   await actor.update({
@@ -179,31 +163,6 @@ function rollHitDice(hdString) {
   return total;
 }
 
-// =========================================================
-// ASSURE actor.system.spellcasting pour les personnages uniquement
-// Source stricte : item classe embarqué -> classItem.system.spellcasting
-// =========================================================
-Hooks.once("ready", () => {
-  (async () => {
-    try {
-      if (!game.user.isGM) return;
-
-      for (const actor of game.actors?.contents ?? []) {
-        if (actor.type !== "personnage") continue;
-        if (actor.system?.spellcasting !== undefined && actor.system?.spellcasting !== null) continue;
-
-        const classItem = actor.items?.find(i => i.type === "classe") || null;
-        const scFromClass = classItem?.system?.spellcasting ?? null;
-        if (!scFromClass || typeof scFromClass !== "object") continue;
-        if (!Array.isArray(scFromClass.lists) || scFromClass.lists.length === 0) continue;
-
-        await actor.update({ "system.spellcasting": foundry.utils.duplicate(scFromClass) });
-      }
-    } catch (_e) {}
-  })();
-});
-
-try { globalThis.consommerSortMemorise = consommerSortMemorise; } catch (_e) {}
 try { globalThis.majImageToken = majImageToken; } catch (_e) {}
 try { globalThis.plageToRollFormula = plageToRollFormula; } catch (_e) {}
 try { globalThis.rollHitDice = rollHitDice; } catch (_e) {}
