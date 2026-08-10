@@ -1,4 +1,4 @@
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-07-canonical-class-feature-resource-v25";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-10-canonical-class-items-v26";
 const ADD2E_CLASS_FEATURE_USAGE_FLAG = "classFeatureUsage";
 
 const GENERIC_ACTIONS = new Map([
@@ -97,6 +97,31 @@ function keyOf(value) {
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
 }
+
+function canonicalClassTag(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/\s+/g, "_");
+}
+
+function classTags(system = {}) {
+  const raw = Array.isArray(system?.tags) ? system.tags : [];
+  return [...new Set(raw.map(canonicalClassTag).filter(tag => tag.startsWith("classe:")))];
+}
+
+function classTagForKey(value) {
+  const raw = canonicalClassTag(value);
+  if (!raw) return "";
+  return raw.startsWith("classe:") ? raw : `classe:${raw.replace(/^classe_/, "")}`;
+}
+
+const classLevel = item => {
+  const value = Number(item?.system?.niveau);
+  return Number.isFinite(value) && value >= 1 ? Math.floor(value) : null;
+};
 
 class Add2eClassFeatureUsageAbort extends Error {
   constructor() {
@@ -324,45 +349,6 @@ function canonicalThiefKey(value) {
   return String(resolver(value) ?? "").trim();
 }
 
-const classSlug = (system, name = "") => keyOf(system?.slug ?? system?.label ?? system?.nom ?? system?.name ?? name);
-const classLevel = item => {
-  const value = Number(item?.system?.niveau ?? item?.system?.level);
-  return Number.isFinite(value) && value >= 1 ? Math.floor(value) : null;
-};
-const isThiefClass = (system, name = "") => {
-  const value = classSlug(system, name);
-  return value.includes("voleur") || value.includes("assassin");
-};
-const isMonkClass = (system, name = "") => classSlug(system, name).includes("moine");
-
-let THIEF_REFERENCE_SYSTEM = null;
-
-async function loadThiefReferenceSystem() {
-  const world = Array.from(game.items ?? []).find(item =>
-    String(item?.type ?? "").toLowerCase() === "classe"
-    && classSlug(item.system ?? {}, item.name) === "voleur"
-  );
-  if (world) {
-    THIEF_REFERENCE_SYSTEM = clone(world.system ?? {});
-    return THIEF_REFERENCE_SYSTEM;
-  }
-
-  for (const pack of Array.from(game.packs ?? [])) {
-    if (pack.documentName !== "Item") continue;
-    let documents = [];
-    try { documents = await pack.getDocuments(); }
-    catch (_error) { continue; }
-    const item = documents.find(document =>
-      String(document?.type ?? "").toLowerCase() === "classe"
-      && classSlug(document.system ?? {}, document.name) === "voleur"
-    );
-    if (!item) continue;
-    THIEF_REFERENCE_SYSTEM = clone(item.system ?? {});
-    return THIEF_REFERENCE_SYSTEM;
-  }
-  return null;
-}
-
 function classSystems(actor) {
   return Array.from(actor?.items ?? [])
     .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
@@ -370,10 +356,16 @@ function classSystems(actor) {
       const level = classLevel(item);
       if (level === null) return null;
       const system = clone(item.system ?? {});
+      const tags = classTags(system);
+      if (!tags.length) {
+        throw new Error(`Item de classe « ${item.name ?? item.id} » sans tag canonique classe:*.`);
+      }
+      const primaryTag = tags[0];
       return {
         ...system,
-        _add2eClassSlug: classSlug(system, item.name),
-        _add2eClassName: item.name || system.label || system.nom || system.name || "Classe",
+        _add2eClassSlug: primaryTag.slice("classe:".length),
+        _add2eClassTags: tags,
+        _add2eClassName: item.name || "Classe",
         _add2eClassLevel: level,
         _add2eClassItemId: item.id
       };
@@ -387,6 +379,7 @@ function pushFeatures(output, value, source, system) {
       ...feature,
       _add2eFeatureSource: feature?._add2eFeatureSource ?? source,
       _add2eClassSlug: feature?._add2eClassSlug ?? system?._add2eClassSlug ?? null,
+      _add2eClassTags: feature?._add2eClassTags ?? system?._add2eClassTags ?? [],
       _add2eClassName: feature?._add2eClassName ?? system?._add2eClassName ?? null,
       _add2eClassLevel: feature?._add2eClassLevel ?? system?._add2eClassLevel ?? null,
       _add2eClassItemId: feature?._add2eClassItemId ?? system?._add2eClassItemId ?? null
@@ -397,29 +390,13 @@ function pushFeatures(output, value, source, system) {
 function classFeatures(actor) {
   const output = [];
   const seen = new Set();
-  const featureFields = new Set([
-    "activeClassFeatures",
-    "activableClassFeatures",
-    "classFeaturesActives",
-    "capacitesActives",
-    "capacitesActivables",
-    "classFeatures",
-    "classFeaturesDebloquees",
-    "capacitesClasse",
-    "passiveClassFeatures",
-    "passiveFeatures",
-    "capacitesPassives"
-  ]);
-
   for (const system of classSystems(actor)) {
-    for (const [field, value] of Object.entries(system)) {
-      if (featureFields.has(field)) pushFeatures(output, value, field, system);
-    }
+    pushFeatures(output, system.classFeatures, "classFeatures", system);
   }
 
   return output.filter(feature => {
     const key = keyOf(feature);
-    const identity = `${feature._add2eClassItemId ?? feature._add2eClassSlug ?? ""}|${key}|${onUseOf(feature)}|${feature._add2eFeatureSource ?? ""}`;
+    const identity = `${feature._add2eClassItemId ?? feature._add2eClassSlug ?? ""}|${key}|${onUseOf(feature)}`;
     if ((!key && !onUseOf(feature)) || seen.has(identity)) return false;
     seen.add(identity);
     return true;
@@ -451,28 +428,19 @@ function thiefStatus(actor) {
 }
 
 function isThiefFeature(feature) {
-  return [
-    feature?._add2eClassSlug,
-    feature?._add2eClassName,
-    feature?.sourceClassSlug,
-    feature?.sourceClassName,
-    feature?.classSlug,
-    feature?.className,
-    feature?.classe,
-    feature?.class
-  ].map(keyOf).some(value => value.includes("voleur") || value.includes("assassin"));
+  const tags = Array.isArray(feature?._add2eClassTags) ? feature._add2eClassTags : [];
+  return tags.includes("classe:voleur") || tags.includes("classe:assassin");
 }
 
-function progression(actor, slug = null) {
-  const wanted = keyOf(slug ?? "");
+function progression(actor, classKey = null) {
   const systems = classSystems(actor);
-  const ordered = wanted
-    ? [
-      ...systems.filter(system => system._add2eClassSlug === wanted || keyOf(system._add2eClassName) === wanted),
-      ...systems.filter(system => system._add2eClassSlug !== wanted && keyOf(system._add2eClassName) !== wanted)
-    ]
+  const wantedTag = classKey === null || classKey === undefined || classKey === ""
+    ? ""
+    : classTagForKey(classKey);
+  const selected = wantedTag
+    ? systems.filter(system => system._add2eClassTags.includes(wantedTag))
     : systems;
-  for (const system of ordered) {
+  for (const system of selected) {
     if (!Array.isArray(system.progression)) continue;
     const level = system._add2eClassLevel;
     const row = system.progression.find(entry => Number(entry?.niveau ?? entry?.level ?? 0) === level)
@@ -484,26 +452,20 @@ function progression(actor, slug = null) {
 
 function thiefSource(actor) {
   const systems = classSystems(actor);
-  const own = systems.find(system => isThiefClass(system, system._add2eClassName));
-  if (own) return own;
-  const monk = systems.find(system => isMonkClass(system, system._add2eClassName));
-  if (!monk || !THIEF_REFERENCE_SYSTEM) return null;
-  return {
-    ...clone(THIEF_REFERENCE_SYSTEM),
-    _add2eClassSlug: "voleur",
-    _add2eClassName: "Voleur",
-    _add2eClassLevel: monk._add2eClassLevel,
-    _add2eClassItemId: monk._add2eClassItemId
-  };
+  return systems.find(system => system._add2eClassTags.includes("classe:voleur") || system._add2eClassTags.includes("classe:assassin"))
+    ?? systems.find(system => system._add2eClassTags.includes("classe:moine"))
+    ?? null;
 }
 
 function thiefProgression(actor) {
   const source = thiefSource(actor);
   if (!source || !Array.isArray(source.progression)) return null;
   const level = source._add2eClassLevel;
-  return source.progression.find(row => Number(row?.niveau ?? row?.level ?? 0) === level)
+  const row = source.progression.find(entry => Number(entry?.niveau ?? entry?.level ?? 0) === level)
     ?? source.progression[level - 1]
     ?? null;
+  if (!row?.thiefSkills || typeof row.thiefSkills !== "object" || Array.isArray(row.thiefSkills)) return null;
+  return row;
 }
 
 function thiefTable(actor) {
@@ -976,8 +938,7 @@ function restoreHud() {
   document.head.appendChild(style);
 }
 
-Hooks.once("ready", async () => {
-  await loadThiefReferenceSystem();
+Hooks.once("ready", () => {
   restoreHud();
   installHud();
   installMovementBlock();
