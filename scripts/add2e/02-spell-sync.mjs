@@ -4,7 +4,7 @@
 // Compatible Foundry V13 / V14 / V15
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-08-07-spell-sync-canonical-memorization-v8";
+const ADD2E_SPELL_SYNC_VERSION = "2026-08-10-spell-sync-render-batch-v9";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
@@ -31,6 +31,21 @@ const ADD2E_SPELL_SYNC_RUNNING = globalThis.ADD2E_SPELL_SYNC_RUNNING instanceof 
 globalThis.ADD2E_SPELL_SYNC_RUNNING = ADD2E_SPELL_SYNC_RUNNING;
 
 const ADD2E_SPELL_SYNC_AUTO_CLASS_SLUGS = new Set(["clerc", "druide", "ranger", "paladin"]);
+
+function add2eSpellSyncMutationOptions(extra = {}) {
+  return {
+    ...extra,
+    add2eInternal: true,
+    add2eMulticlassInternal: true,
+    add2eSpellSync: true,
+    render: false
+  };
+}
+
+async function add2eSpellSyncUpdateActor(actor, updates, reason) {
+  if (!actor?.update || !updates || !Object.keys(updates).length) return null;
+  return actor.update(updates, add2eSpellSyncMutationOptions({ add2eReason: reason }));
+}
 
 function add2eSpellSyncClone(value) {
   if (value === undefined || value === null) return value;
@@ -407,7 +422,9 @@ function add2eSpellSyncGetPreviousSignature(actor) {
 }
 
 async function add2eSpellSyncSetLevelSignature(actor, signature) {
-  if (actor?.setFlag) await actor.setFlag("add2e", "autoSpellSyncLevelSignature", signature ?? add2eSpellSyncLevelSignature(actor));
+  return add2eSpellSyncUpdateActor(actor, {
+    "flags.add2e.autoSpellSyncLevelSignature": signature ?? add2eSpellSyncLevelSignature(actor)
+  }, "spell-sync-level-signature");
 }
 
 async function add2eResetActorSpellMemorization(actor, reason = "level-down") {
@@ -424,7 +441,7 @@ async function add2eResetActorSpellMemorization(actor, reason = "level-down") {
       "flags.add2e.-=memorizedCount": null
     });
   }
-  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eSpellSync: true, reason });
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, add2eSpellSyncMutationOptions({ add2eReason: reason }));
   if (updates.length) console.info("[ADD2E][SPELL_SYNC][MEMORIZED_RESET]", { actor: actor.name, reason, reset: updates.length });
   return { reset: updates.length };
 }
@@ -515,7 +532,9 @@ function add2eSpellSyncGetLastMax(actor) {
 }
 
 async function add2eSpellSyncSetLastMax(actor, value) {
-  if (actor?.setFlag) await actor.setFlag("add2e", "autoSpellSyncMaxLevel", Math.max(0, Number(value) || 0));
+  return add2eSpellSyncUpdateActor(actor, {
+    "flags.add2e.autoSpellSyncMaxLevel": Math.max(0, Number(value) || 0)
+  }, "spell-sync-max-level");
 }
 
 function add2eSpellSyncOpenWaitMessage({ classItem, maxSpellLevel } = {}) {
@@ -588,7 +607,7 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
     entries.push(entry);
   }
 
-  entries.sort((left, right) => left.level - right.level || String(left.name).localeCompare(String(right.name), "fr") || left.stableKey.localeCompare(right.stableKey, "fr"));
+  entries.sort((left, right) => left.level - right.level || String(left.name).localeCompare(right.name, "fr") || left.stableKey.localeCompare(right.stableKey, "fr"));
   const cache = {
     cacheKey,
     builtAt: Date.now(),
@@ -631,7 +650,7 @@ async function add2ePruneActorSpellsForClassLevel(actor, classItem, actorLevel, 
     if (!add2eSpellSyncCanUseSpellLevel(actor, classLists, add2eSpellSyncSpellLevel(sort.system ?? {}), maxSpellLevel, { importMode: true })) ids.push(sort.id);
   }
   const existing = ids.filter(id => actor.items.has(id));
-  if (existing.length) await actor.deleteEmbeddedDocuments("Item", existing, { add2eInternal: true, add2eSpellSync: true });
+  if (existing.length) await actor.deleteEmbeddedDocuments("Item", existing, add2eSpellSyncMutationOptions({ add2eReason: "spell-level-prune" }));
   await add2eSpellSyncSetLastMax(actor, maxSpellLevel);
   if (options.notify !== false && existing.length) ui.notifications.info(`Sorts non accessibles retirés : ${existing.length}.`);
   return { handled: true, deleted: existing.length, maxSpellLevel, actorLevel: level };
@@ -749,7 +768,7 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
   const waitDialog = options.showWait !== false ? add2eSpellSyncOpenWaitMessage({ actor, classItem, mode, minSpellLevel, maxSpellLevel }) : null;
 
   try {
-    const cache = await add2eBuildSpellSyncCache({ force: !!options.forceCacheRefresh || mode === "replace" });
+    const cache = await add2eBuildSpellSyncCache({ force: options.forceCacheRefresh === true });
     if (!cache.entries.length) {
       ui.notifications.error("Aucun sort trouvé dans add2e.sorts.");
       return { handled: true, imported: 0, updated: 0, deleted: 0, maxSpellLevel, error: "empty-cache" };
@@ -805,14 +824,13 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
     }
 
     const existing = [...new Set(idsToDelete)].filter(id => actor.items.has(id));
-    if (existing.length) await actor.deleteEmbeddedDocuments("Item", existing, { add2eInternal: true, add2eSpellSync: true, add2eCompendiumTruth: true });
+    if (existing.length) await actor.deleteEmbeddedDocuments("Item", existing, add2eSpellSyncMutationOptions({ add2eCompendiumTruth: true, add2eReason: "spell-sync-replace-delete" }));
 
     const liveMergeUpdates = mergeUpdates.filter(update => actor.items.has(update._id));
-    if (liveMergeUpdates.length) await actor.updateEmbeddedDocuments("Item", liveMergeUpdates, {
-      add2eInternal: true,
-      add2eSpellSync: true,
-      add2eSharedSpellMerge: true
-    });
+    if (liveMergeUpdates.length) await actor.updateEmbeddedDocuments("Item", liveMergeUpdates, add2eSpellSyncMutationOptions({
+      add2eSharedSpellMerge: true,
+      add2eReason: "spell-sync-merge"
+    }));
 
     const createData = selected.map(entry => {
       const data = add2eSpellSyncPrepareCompendiumData(add2eSpellSyncClone(entry.data));
@@ -834,7 +852,7 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
       return data;
     });
 
-    if (createData.length) await actor.createEmbeddedDocuments("Item", createData, { add2eInternal: true, add2eSpellSync: true });
+    if (createData.length) await actor.createEmbeddedDocuments("Item", createData, add2eSpellSyncMutationOptions({ add2eReason: "spell-sync-create" }));
     await add2eSpellSyncSetLastMax(actor, maxSpellLevel);
     const summary = {
       actor: actor.name,
@@ -890,7 +908,7 @@ async function add2eSyncNewSpellLevelsAfterActorLevelChange(actor, newLevel = nu
       const classLists = add2eSpellSyncClassLists(classItem);
       const maxSpellLevel = add2eSpellSyncMaxSpellLevel(classItem, level);
       const knownBefore = Math.max(add2eSpellSyncGetLastMax(actor), add2eSpellSyncMaxExistingLevel(actor, classLists));
-      const prune = await add2ePruneActorSpellsForClassLevel(actor, classItem, level, { notify: true });
+      const prune = await add2ePruneActorSpellsForClassLevel(actor, classItem, level, { notify: true, render: false });
       deleted += prune?.deleted ?? 0;
       if (!levelDecreased && maxSpellLevel < knownBefore) reset += (await add2eResetActorSpellMemorization(actor, "spell-cap-down")).reset ?? 0;
       const previousKnownMax = Math.max(add2eSpellSyncGetLastMax(actor), add2eSpellSyncMaxExistingLevel(actor, classLists));
@@ -900,8 +918,9 @@ async function add2eSyncNewSpellLevelsAfterActorLevelChange(actor, newLevel = nu
         actorLevel: level,
         minSpellLevel,
         showWait: maxSpellLevel > previousKnownMax,
-        forceCacheRefresh: true,
-        preserveMemorization: !levelDecreased
+        forceCacheRefresh: false,
+        preserveMemorization: !levelDecreased,
+        render: false
       });
       imported += result?.imported ?? 0;
       updated += result?.updated ?? 0;
@@ -938,7 +957,8 @@ async function add2eResyncSelectedActorSpells(options = {}) {
       actorLevel: add2eSpellSyncClassLevel(actor, classItem),
       minSpellLevel: 1,
       showWait: options.showWait !== false,
-      forceCacheRefresh: true
+      forceCacheRefresh: false,
+      render: false
     });
     imported += result?.imported ?? 0;
     updated += result?.updated ?? 0;
@@ -954,13 +974,20 @@ function add2eSpellSyncChangeTouchesLevels(changes = {}) {
     .some(path => foundry.utils.hasProperty(changes, path));
 }
 
-Hooks.on("preUpdateActor", (actor, changes = {}) => {
+function add2eSpellSyncInternalUpdate(options = {}) {
+  return options?.add2eInternal === true
+    || options?.add2eMulticlassInternal === true
+    || options?.add2eSpellSync === true;
+}
+
+Hooks.on("preUpdateActor", (actor, changes = {}, options = {}) => {
+  if (add2eSpellSyncInternalUpdate(options)) return;
   if (!actor || actor.type !== "personnage" || !add2eSpellSyncChangeTouchesLevels(changes)) return;
   ADD2E_SPELL_SYNC_PREUPDATE_LEVELS.set(actor.uuid || actor.id, add2eSpellSyncLevelSignature(actor));
 });
 
 Hooks.on("updateActor", (actor, changes = {}, options = {}) => {
-  if (!game.user?.isGM || options?.add2eInternal || !actor || actor.type !== "personnage") return;
+  if (!game.user?.isGM || add2eSpellSyncInternalUpdate(options) || !actor || actor.type !== "personnage") return;
   if (!add2eSpellSyncChangeTouchesLevels(changes)) return;
   window.setTimeout(() => {
     add2eSyncNewSpellLevelsAfterActorLevelChange(actor, null, { reason: "updateActor-level-change" })
