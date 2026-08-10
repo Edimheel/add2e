@@ -4,7 +4,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-08-10-single-drop-router-v5";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-08-10-single-drop-router-v6";
 const ADD2E_SPELL_DROP_PENDING = globalThis.ADD2E_SPELL_DROP_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_DROP_PENDING
   : new Set();
@@ -409,16 +409,6 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
   }
 };
 
-if (!globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV4) {
-  globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV4 = true;
-  const previousOnRender = globalThis.Add2eActorSheet.prototype._onRender;
-  globalThis.Add2eActorSheet.prototype._onRender = async function add2eSafeDropOnRender(context, options = {}) {
-    const result = await previousOnRender.call(this, context, options);
-    bindDropAnywhere(this);
-    return result;
-  };
-}
-
 function isStorageActor(actor) {
   if (!actor || actor.documentName !== "Actor") return false;
   const flags = actor.flags?.add2e ?? {};
@@ -498,6 +488,7 @@ Hooks.on("deleteItem", (item, options = {}, userId = null) => {
   setTimeout(() => renderActorApplications(actor), 100);
 });
 
+try { globalThis.add2eBindActorSheetDropAnywhere = bindDropAnywhere; } catch (_error) {}
 try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catch (_error) {}
 try { globalThis.add2eDropBulkDelete = add2eDropBulkDelete; } catch (_error) {}
 try { globalThis.add2eDropIsBoutiqueConsumable = isBoutiqueConsumable; } catch (_error) {}
