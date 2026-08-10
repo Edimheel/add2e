@@ -1,16 +1,27 @@
 // ============================================================
-// ADD2E — Helpers globaux encore utilisés par la feuille legacy
+// ADD2E — Utilitaires transversaux de feuille et de scène.
+// Aucun calcul métier de classe, d'alignement, de PV ou d'effet ne vit ici.
+// Compatible Foundry V13/V14/V15.
 // ============================================================
 
-const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-07-01-legacy-global-helpers-v8-distance-measure";
-globalThis.ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = ADD2E_LEGACY_GLOBAL_HELPERS_VERSION;
-console.log("[ADD2E][LEGACY_GLOBAL_HELPERS][VERSION]", ADD2E_LEGACY_GLOBAL_HELPERS_VERSION);
+const ADD2E_GLOBAL_UTILITIES_VERSION = "2026-08-10-global-utilities-v9-bigbang";
+globalThis.ADD2E_GLOBAL_UTILITIES_VERSION = ADD2E_GLOBAL_UTILITIES_VERSION;
 
 const ADD2E_SHEET_IMAGE_FALLBACK = "icons/svg/item-bag.svg";
 const ADD2E_SHEET_MISSING_IMAGES = globalThis.ADD2E_SHEET_MISSING_IMAGES instanceof Set
   ? globalThis.ADD2E_SHEET_MISSING_IMAGES
   : new Set();
 globalThis.ADD2E_SHEET_MISSING_IMAGES = ADD2E_SHEET_MISSING_IMAGES;
+
+function add2eNormalizeUtilityKey(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[\s\-]+/g, "_")
+    .replace(/_+/g, "_");
+}
 
 function add2eSheetImageSource(image) {
   return String(image?.currentSrc || image?.getAttribute?.("src") || "").trim();
@@ -19,10 +30,9 @@ function add2eSheetImageSource(image) {
 function add2eSheetImageSourceKeys(source) {
   const value = String(source ?? "").trim();
   if (!value) return [];
-
   const keys = new Set([value]);
   try { keys.add(new URL(value, document.baseURI).href); }
-  catch (_e) {}
+  catch (_error) {}
   return [...keys];
 }
 
@@ -42,10 +52,7 @@ function add2eApplySheetImageFallback(image) {
 
   const source = add2eSheetImageSource(image);
   if (source === ADD2E_SHEET_IMAGE_FALLBACK || source.endsWith(`/${ADD2E_SHEET_IMAGE_FALLBACK}`)) return;
-
-  for (const key of add2eSheetImageSourceKeys(source)) {
-    ADD2E_SHEET_MISSING_IMAGES.add(key);
-  }
+  for (const key of add2eSheetImageSourceKeys(source)) ADD2E_SHEET_MISSING_IMAGES.add(key);
 
   image.dataset.add2eImageFallbackApplied = "true";
   image.dataset.add2eImageFallbackSource = source;
@@ -59,16 +66,11 @@ function add2eApplySheetImageFallback(image) {
   image.src = ADD2E_SHEET_IMAGE_FALLBACK;
 }
 
-// Le listener est posé une seule fois sur document, en capture. Il s'exécute
-// avant un éventuel onerror ou listener ajouté sur l'image par une feuille,
-// puis bloque la propagation : aucune erreur d'image ne peut provoquer render().
 if (!globalThis.__ADD2E_SHEET_IMAGE_ERROR_CAPTURE_V5) {
   globalThis.__ADD2E_SHEET_IMAGE_ERROR_CAPTURE_V5 = true;
-
   document.addEventListener("error", event => {
     const image = event.target;
     if (!add2eIsCharacterSheetImage(image)) return;
-
     event.preventDefault?.();
     event.stopImmediatePropagation?.();
     add2eApplySheetImageFallback(image);
@@ -77,21 +79,11 @@ if (!globalThis.__ADD2E_SHEET_IMAGE_ERROR_CAPTURE_V5) {
 
 function add2eRegisterSheetImageFallbacks(root) {
   if (!root?.find) return;
-
   root.find("img[src]").each((_index, image) => {
     if (!image || String(image.tagName ?? "").toLowerCase() !== "img") return;
-
     image.loading = "lazy";
     image.decoding = "async";
-
-    // Après la première 404, une nouvelle feuille n'essaie plus l'URL
-    // absente : elle reçoit directement l'icône locale.
-    if (add2eIsKnownMissingSheetImage(image)) {
-      add2eApplySheetImageFallback(image);
-      return;
-    }
-
-    if (image.complete && image.naturalWidth === 0) {
+    if (add2eIsKnownMissingSheetImage(image) || (image.complete && image.naturalWidth === 0)) {
       add2eApplySheetImageFallback(image);
     }
   });
@@ -99,22 +91,8 @@ function add2eRegisterSheetImageFallbacks(root) {
 
 globalThis.add2eRegisterSheetImageFallbacks = add2eRegisterSheetImageFallbacks;
 
-function add2eLegacyNormalize(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[\s\-]+/g, "_")
-    .replace(/_+/g, "_");
-}
-
 // ============================================================
-// ADD2E — Conversion générique des distances de scène
-// Les unités physiques restent physiques. L'unité `adnd-inch` est une unité
-// tactique du manuel : 3 m pour une zone, 3 m/intérieur ou 9 m/extérieur pour
-// une portée. `measure` indique si la valeur de règle est un rayon ou diamètre.
-// Les gabarits Foundry reçoivent toujours un rayon.
+// ADD2E — Conversion générique des distances de scène.
 // ============================================================
 
 const ADD2E_DISTANCE_UNIT_METERS = Object.freeze({
@@ -138,22 +116,22 @@ function add2eSceneDistanceNumber(value, fallback = NaN) {
 }
 
 function add2eSceneDistanceUsage(value) {
-  const normalized = add2eLegacyNormalize(value).replace(/_/g, "");
+  const normalized = add2eNormalizeUtilityKey(value).replace(/_/g, "");
   return ["range", "portee", "portee_sort", "spellrange"].includes(normalized) ? "range" : "area";
 }
 
 function add2eSceneDistanceEnvironment(value) {
-  const normalized = add2eLegacyNormalize(value).replace(/_/g, "");
+  const normalized = add2eNormalizeUtilityKey(value).replace(/_/g, "");
   return ["exterior", "outside", "outdoor", "exterieur", "dehors"].includes(normalized) ? "exterior" : "interior";
 }
 
 function add2eSceneDistanceMeasure(value) {
-  const normalized = add2eLegacyNormalize(value).replace(/_/g, "");
+  const normalized = add2eNormalizeUtilityKey(value).replace(/_/g, "");
   return ["diameter", "diametre", "diametere", "diam"].includes(normalized) ? "diameter" : "radius";
 }
 
 function add2eSceneDistanceUnit(value, fallback = "ft") {
-  const normalized = add2eLegacyNormalize(value).replace(/_/g, "");
+  const normalized = add2eNormalizeUtilityKey(value).replace(/_/g, "");
   if (["adndinch", "adndtacticalinch", "tacticalinch", "tacticalinches", "pouceadnd", "poucetactique", "poucestactiques"].includes(normalized)) return "adnd-inch";
   if (["in", "inch", "inches", "pouce", "pouces"].includes(normalized)) return "in";
   if (["ft", "foot", "feet", "pied", "pieds"].includes(normalized)) return "ft";
@@ -195,13 +173,6 @@ function add2eConvertSceneDistance(value, fromUnit = "ft", toUnit = "ft", option
   return meters / ADD2E_DISTANCE_UNIT_METERS[target];
 }
 
-/**
- * Retourne une distance de règle sous toutes les formes nécessaires à Foundry.
- * `distance` décrit la mesure de règle ; `measure` vaut `radius` ou `diameter`.
- * `sceneDistance`, `gridCells` et `pixels` restent volontairement le RAYON à
- * transmettre au gabarit ou au test géométrique, afin de rester compatibles
- * avec les usages existants.
- */
 function add2eSceneDistance({
   scene = canvas?.scene ?? null,
   distance = 0,
@@ -234,7 +205,6 @@ function add2eSceneDistance({
     sourceLabel: sourceUnit === "adnd-inch" ? `${sourceDistance}\"` : `${sourceDistance} ${add2eSceneDistanceUnitLabel(sourceUnit)}`,
     measure: resolvedMeasure,
     measureMeters,
-    // Conservé pour les appels déjà basés sur une distance de règle unique.
     sourceMeters: measureMeters,
     tactical: sourceUnit === "adnd-inch" ? {
       usage: resolvedUsage,
@@ -243,7 +213,6 @@ function add2eSceneDistance({
     } : null,
     radiusMeters,
     diameterMeters,
-    // Alias de compatibilité : toujours le rayon, comme MeasuredTemplate.distance.
     sceneDistance: radiusSceneDistance,
     gridCells: radiusGridCells,
     pixels: radiusPixels,
@@ -272,72 +241,12 @@ Hooks.once("ready", () => {
   game.add2e.scene.tacticalInchMeters = add2eTacticalInchMeters;
 });
 
-function add2eLegacyArray(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value.flatMap(add2eLegacyArray).filter(Boolean);
-  if (typeof value === "string") return value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
-  if (value && typeof value === "object") {
-    for (const key of ["value", "values", "list", "lists", "items", "allowed", "alignments", "alignements"]) {
-      if (value[key] !== undefined) return add2eLegacyArray(value[key]);
-    }
-  }
-  return [value];
-}
-
-function add2eClassAllowedAlignmentsFallback(classSystem = {}) {
-  const sources = [
-    classSystem.alignements_autorises,
-    classSystem.alignementsAutorises,
-    classSystem.allowedAlignments,
-    classSystem.alignmentsAllowed,
-    classSystem.alignements,
-    classSystem.alignments,
-    classSystem.alignment,
-    classSystem.alignement
-  ];
-
-  const out = [];
-  for (const src of sources) out.push(...add2eLegacyArray(src));
-
-  const tags = add2eLegacyArray(classSystem.requirementTags);
-  for (const raw of tags) {
-    const tag = add2eLegacyNormalize(raw);
-    const parts = tag.split(":");
-    if (parts[0] !== "prerequis" || parts[1] !== "alignement") continue;
-    if (parts[2] === "allow" && parts[3]) out.push(parts.slice(3).join(":"));
-  }
-
-  return [...new Set(out.map(v => String(v ?? "").trim()).filter(Boolean))];
-}
-
-if (typeof globalThis.add2eClassAllowedAlignments !== "function") {
-  globalThis.add2eClassAllowedAlignments = add2eClassAllowedAlignmentsFallback;
-}
-
-if (typeof globalThis.add2ePickClassAlignment !== "function") {
-  globalThis.add2ePickClassAlignment = function add2ePickClassAlignment(actor, classSystem = {}) {
-    const allowed = globalThis.add2eClassAllowedAlignments?.(classSystem) ?? [];
-    const current = String(actor?.system?.alignement ?? "").trim();
-    const currentNorm = add2eLegacyNormalize(current);
-
-    if (allowed.length) {
-      const match = allowed.find(a => add2eLegacyNormalize(a) === currentNorm);
-      if (match) return current;
-      return allowed[0];
-    }
-
-    return current;
-  };
-}
-
 if (typeof globalThis.add2eRegisterImgPicker !== "function") {
   globalThis.add2eRegisterImgPicker = function add2eRegisterImgPicker(html, sheet) {
     const root = html?.jquery ? html : $(html);
     if (!root?.find) return;
 
-    // Fallback local uniquement : aucune écriture d'Actor/Item et aucun render().
     add2eRegisterSheetImageFallbacks(root);
-
     const actor = sheet?.actor ?? sheet?.document;
     if (!actor) return;
 
@@ -363,124 +272,3 @@ if (typeof globalThis.add2eRegisterImgPicker !== "function") {
       });
   };
 }
-
-// ============================================================
-// ADD2E — Helpers d'écriture propres pour scripts onUse
-// Un seul protocole socket : ADD2E_GM_OPERATION.
-// La réception MJ reste centralisée dans scripts/add2e/15-validation-sockets.mjs.
-// ============================================================
-
-const ADD2E_SPELL_GM_HELPERS_VERSION = "2026-05-24-spell-gm-helpers-v1";
-globalThis.ADD2E_SPELL_GM_HELPERS_VERSION = ADD2E_SPELL_GM_HELPERS_VERSION;
-
-function add2eHasDirectActorWrite(actorDoc) {
-  if (!actorDoc) return false;
-  if (game.user?.isGM) return true;
-  return !!actorDoc.isOwner || actorDoc.testUserPermission?.(game.user, "OWNER") === true;
-}
-
-function add2eReadHpMax(actorDoc) {
-  const sys = actorDoc?.system ?? {};
-  return Number(sys.points_de_coup)
-    || Number(sys.pv_max)
-    || Number(sys.points_de_vie)
-    || Number(sys.hp?.max)
-    || Number(sys.attributes?.hp?.max)
-    || 0;
-}
-
-function add2eReadHpCurrent(actorDoc, max = 0) {
-  const sys = actorDoc?.system ?? {};
-  for (const raw of [sys.pdv, sys.pv, sys.hp?.value, sys.attributes?.hp?.value]) {
-    if (raw === undefined || raw === null || raw === "") continue;
-    const n = Number(raw);
-    if (Number.isFinite(n)) return n;
-  }
-  return Number(max) || 0;
-}
-
-async function add2eApplyDamageDirect({ actorDoc, montant = 0, type = "degats", details = "" } = {}) {
-  if (!actorDoc) return false;
-  const amount = Math.abs(Number(montant) || 0);
-  if (!amount) return true;
-
-  const isHeal = String(type ?? "").toLowerCase().includes("soin") || Number(montant) < 0;
-  const max = add2eReadHpMax(actorDoc);
-  const current = add2eReadHpCurrent(actorDoc, max);
-  const next = isHeal ? Math.min(max || current + amount, current + amount) : current - amount;
-
-  await actorDoc.update({ "system.pdv": next }, { add2eReason: "spell-apply-damage", add2eDetails: details });
-  console.log("[ADD2E][SPELL_GM_HELPERS][APPLY_DAMAGE_DIRECT]", { actor: actorDoc.name, type, montant, current, max, next, details });
-  return true;
-}
-
-function add2ePayloadFromTarget(cible, data = {}) {
-  const tokenDoc = cible?.document ?? cible?.token?.document ?? null;
-  const actorDoc = cible?.actor ?? cible;
-  return {
-    actorId: actorDoc?.id ?? tokenDoc?.actorId ?? null,
-    actorUuid: actorDoc?.uuid ?? null,
-    sceneId: tokenDoc?.parent?.id ?? canvas?.scene?.id ?? null,
-    tokenId: tokenDoc?.id ?? null,
-    ...data
-  };
-}
-
-function add2eEmitGMOperation(operation, payload = {}) {
-  const activeGM = game.users?.activeGM ?? game.users?.find?.(u => u.active && u.isGM) ?? null;
-  if (!game.socket || (!game.user?.isGM && !activeGM)) return false;
-  game.socket.emit("system.add2e", {
-    type: "ADD2E_GM_OPERATION",
-    operation,
-    payload: { ...payload, fromUserId: game.user.id, sentAt: Date.now() }
-  });
-  console.log("[ADD2E][SPELL_GM_HELPERS][GM_OPERATION_EMIT]", { operation, payload });
-  return true;
-}
-
-if (typeof globalThis.add2eApplyDamage !== "function") {
-  globalThis.add2eApplyDamage = async function add2eApplyDamage({ cible, montant = 0, type = "degats", details = "" } = {}) {
-    const actorDoc = cible?.actor ?? cible;
-    if (!actorDoc) return false;
-    if (add2eHasDirectActorWrite(actorDoc)) return await add2eApplyDamageDirect({ actorDoc, montant, type, details });
-
-    const ok = add2eEmitGMOperation("applyDamage", add2ePayloadFromTarget(cible, { montant, type, details }));
-    if (!ok) ui.notifications?.error(`ADD2E : aucun MJ actif pour appliquer ${details || type}.`);
-    return ok;
-  };
-}
-
-if (typeof globalThis.add2eDeleteActiveEffects !== "function") {
-  globalThis.add2eDeleteActiveEffects = async function add2eDeleteActiveEffects({ actor, effects = [], ids = [], tags = [], names = [] } = {}) {
-    const actorDoc = actor;
-    if (!actorDoc) return { deleted: 0, blocked: true };
-    const wantedIds = [...ids, ...effects.map(e => e?.id).filter(Boolean)].filter(Boolean);
-
-    if (add2eHasDirectActorWrite(actorDoc)) {
-      let finalIds = [...wantedIds];
-      if (tags.length || names.length) {
-        const tagNorms = tags.map(add2eLegacyNormalize);
-        const nameNorms = names.map(add2eLegacyNormalize);
-        for (const effect of actorDoc.effects ?? []) {
-          const eTags = add2eLegacyArray(effect.flags?.add2e?.tags ?? effect.getFlag?.("add2e", "tags") ?? []).map(add2eLegacyNormalize);
-          const eName = add2eLegacyNormalize(effect.name);
-          if (tagNorms.some(t => eTags.includes(t)) || nameNorms.some(n => eName.includes(n))) finalIds.push(effect.id);
-        }
-      }
-      finalIds = [...new Set(finalIds)].filter(Boolean);
-      if (finalIds.length) await actorDoc.deleteEmbeddedDocuments("ActiveEffect", finalIds);
-      return { deleted: finalIds.length, blocked: false };
-    }
-
-    const ok = add2eEmitGMOperation("deleteActiveEffects", {
-      actorUuid: actorDoc.uuid,
-      actorId: actorDoc.id,
-      effectIds: wantedIds,
-      tags,
-      names
-    });
-    return { deleted: 0, blocked: !ok, relayed: ok };
-  };
-}
-
-console.log("[ADD2E][SPELL_GM_HELPERS][READY]", ADD2E_SPELL_GM_HELPERS_VERSION);
