@@ -4,9 +4,10 @@
  * - Inventaire complet
  * - Injection automatique des pouvoirs d'objets
  * - Défense et sauvegardes exclusivement canoniques
+ * - Mémorisation des sorts exclusivement via 07-spellcasting-rules.mjs
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-08-07-canonical-monster-power-resource-v17";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-08-10-canonical-monster-spell-memorization-v18";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const ADD2E_MONSTER_ACTOR_SHEET_V2 = foundry?.applications?.sheets?.ActorSheetV2;
@@ -364,111 +365,39 @@ function __add2eResolvePowerResource(actor, sourceItem, power, index) {
   });
 }
 
-function __add2eMonsterSpellResourceEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-  if (!engine
-    || typeof engine.resolveResource !== "function"
-    || typeof engine.consumeResource !== "function"
-    || typeof engine.recoverResource !== "function") {
-    throw new Error("Le domaine canonique ADD2E resource est indisponible pour les sorts de monstre.");
-  }
-  return engine;
-}
-
-function __add2eMonsterSpellMemoryMap(sort) {
-  const raw = sort?.flags?.add2e?.memorizedByList ?? sort?.getFlag?.("add2e", "memorizedByList") ?? {};
-  return raw && typeof raw === "object" && !Array.isArray(raw) ? add2eSpellClone(raw) : {};
-}
-
-function __add2eMonsterSpellResource(sort, options = {}) {
-  if (!sort || String(sort.type ?? "").toLowerCase() !== "sort" || sort.system?.isPower === true || sort.system?.isObjectPower === true) {
-    throw new Error("La ressource de mémorisation du sort de monstre est invalide.");
-  }
-  const actor = sort.actor ?? sort.parent ?? null;
-  const level = Math.max(1, Number(sort.system?.niveau ?? sort.system?.level ?? 1) || 1);
-  return {
-    id: `${sort.uuid ?? sort.id}:memorization:monster`,
-    type: "spell-memorization",
-    label: `${sort.name} — Monstre`,
-    document: sort,
-    actor,
-    item: sort,
-    target: `monster:${level}`,
-    get current() {
-      return Math.max(0, Math.floor(Number(__add2eMonsterSpellMemoryMap(sort).monster) || 0));
-    },
-    maximum: null,
-    cost: Math.max(0, Number(options.cost ?? 1) || 0),
-    recovery: Math.max(0, Number(options.recovery ?? 1) || 0),
-    recoveryPeriod: "manual",
-    source: {
-      kind: "spell",
-      id: String(sort.id ?? ""),
-      uuid: String(sort.uuid ?? ""),
-      name: String(sort.name ?? "Sort")
-    },
-    context: {
-      spellList: "monster",
-      spellLevel: level,
-      consumer: options.consumer ?? "monster-sheet"
-    },
-    write: async nextValue => {
-      const next = Math.max(0, Math.floor(Number(nextValue) || 0));
-      const byList = __add2eMonsterSpellMemoryMap(sort);
-      if (next > 0) byList.monster = next;
-      else delete byList.monster;
-      await sort.update({
-        "flags.add2e.memorizedByList": byList,
-        "flags.add2e.-=memorizedCount": null
-      }, {
-        render: false,
-        diff: false,
-        add2eSpellPreparation: true,
-        add2eReason: options.reason ?? "monster-spell-memorization-resource"
-      });
-    }
+function __add2eMonsterSpellApi() {
+  const api = {
+    getEntry: globalThis.add2eGetSpellEntryForSpell,
+    getCount: globalThis.add2eGetMemorizedCountForEntry,
+    setCount: globalThis.add2eSetMemorizedCountForEntry
   };
-}
-
-function __add2eMonsterSpellResourceCount(sort) {
-  const engine = __add2eMonsterSpellResourceEngine();
-  const state = engine.resolveResource(__add2eMonsterSpellResource(sort, {
-    cost: 0,
-    recovery: 0,
-    consumer: "monster-sheet-display"
-  }), {
-    cost: 0,
-    recovery: 0,
-    consumer: "monster-sheet-display"
-  });
-  return Math.max(0, Number(state?.current) || 0);
-}
-
-async function __add2eMigrateMonsterSpellMemorization(actor) {
-  if (!actor || actor.type !== "monster") return 0;
-  const updates = [];
-  for (const sort of actor.items.filter(item => String(item?.type ?? "").toLowerCase() === "sort")) {
-    if (sort.system?.isPower === true || sort.system?.isObjectPower === true) continue;
-    const legacyRaw = sort.flags?.add2e?.memorizedCount;
-    if (legacyRaw === undefined || legacyRaw === null || legacyRaw === "") continue;
-    const byList = __add2eMonsterSpellMemoryMap(sort);
-    if (!Object.prototype.hasOwnProperty.call(byList, "monster")) {
-      byList.monster = Math.max(0, Math.floor(Number(legacyRaw) || 0));
-    }
-    updates.push({
-      _id: sort.id,
-      "flags.add2e.memorizedByList": byList,
-      "flags.add2e.-=memorizedCount": null
-    });
+  for (const [name, fn] of Object.entries(api)) {
+    if (typeof fn !== "function") throw new Error(`API canonique de mémorisation des sorts de monstre indisponible : ${name}.`);
   }
-  if (!updates.length) return 0;
-  await actor.updateEmbeddedDocuments("Item", updates, {
-    render: false,
-    diff: false,
-    add2eSpellPreparation: true,
-    add2eReason: "migrate-monster-memorized-count"
-  });
-  return updates.length;
+  return api;
+}
+
+function __add2eMonsterSpellEntry(actor, sort) {
+  const api = __add2eMonsterSpellApi();
+  const entry = api.getEntry(actor, sort);
+  if (!entry || String(entry.key ?? "") !== "monster") {
+    throw new Error(`Entrée canonique de mémorisation de monstre introuvable pour « ${sort?.name ?? "Sort"} ».`);
+  }
+  return { api, entry };
+}
+
+function __add2eMonsterSpellResourceCount(actor, sort) {
+  const { api, entry } = __add2eMonsterSpellEntry(actor, sort);
+  return Math.max(0, Math.floor(Number(api.getCount(sort, entry)) || 0));
+}
+
+async function __add2eAdjustMonsterSpellMemorization(actor, sort, delta) {
+  const { api, entry } = __add2eMonsterSpellEntry(actor, sort);
+  const current = Math.max(0, Math.floor(Number(api.getCount(sort, entry)) || 0));
+  const next = Math.max(0, current + Math.trunc(Number(delta) || 0));
+  if (next === current) return current;
+  await api.setCount(sort, entry, next);
+  return next;
 }
 
 function __add2eMonsterSpellView(sort, { isPower = false, actor = null, sourceItem = null, powerEntry = null, powerIndex = 0 } = {}) {
@@ -490,7 +419,7 @@ function __add2eMonsterSpellView(sort, { isPower = false, actor = null, sourceIt
       resourceLabel = "À volonté";
     }
   } else {
-    current = __add2eMonsterSpellResourceCount(sort);
+    current = __add2eMonsterSpellResourceCount(actor, sort);
     resourceLabel = String(current);
   }
 
@@ -692,8 +621,6 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
   }
 
   async getData() {
-    await __add2eMigrateMonsterSpellMemorization(this.actor);
-
     const armorClassResolution = add2eResolveMonsterArmorClass(this.actor, {
       source: "monster-sheet-get-data"
     });
@@ -1046,16 +973,7 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
       const id = $(event.currentTarget).data("sortId");
       const sort = this.actor.items.get(id);
       if (!sort) return;
-      const engine = __add2eMonsterSpellResourceEngine();
-      await engine.recoverResource(__add2eMonsterSpellResource(sort, {
-        recovery: 1,
-        consumer: "monster-sheet-memorize-plus",
-        reason: "monster-spell-memorize-plus"
-      }), {
-        amount: 1,
-        consumer: "monster-sheet-memorize-plus",
-        reason: "monster-spell-memorize-plus"
-      });
+      await __add2eAdjustMonsterSpellMemorization(this.actor, sort, 1);
       this.render(false);
     });
 
@@ -1064,17 +982,8 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
       const id = $(event.currentTarget).data("sortId");
       const sort = this.actor.items.get(id);
       if (!sort) return;
-      const engine = __add2eMonsterSpellResourceEngine();
-      const result = await engine.consumeResource(__add2eMonsterSpellResource(sort, {
-        cost: 1,
-        consumer: "monster-sheet-memorize-minus",
-        reason: "monster-spell-memorize-minus"
-      }), {
-        cost: 1,
-        consumer: "monster-sheet-memorize-minus",
-        reason: "monster-spell-memorize-minus"
-      });
-      if (result?.ok !== false) this.render(false);
+      await __add2eAdjustMonsterSpellMemorization(this.actor, sort, -1);
+      this.render(false);
     });
 
     html.find(".toggle-sort-desc-chat").off("click.add2e-monster-desc").on("click.add2e-monster-desc", event => {
