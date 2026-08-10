@@ -7,7 +7,7 @@ import { add2eBindActorSheetSpellListeners } from "./add2e/13d-actor-sheet-liste
 import { add2eRollCharacteristicCard, add2eRollSaveCard } from "./add2e/13d-actor-sheet-listeners-rolls.mjs";
 import { getMoney, formatMoney, isAmmunition, isComponent } from "./add2e/22a-vendor-core.mjs";
 
-const PNJ_SHEET_VERSION = "2026-08-10-pnj-canonical-saving-throws-v11";
+const PNJ_SHEET_VERSION = "2026-08-10-pnj-no-component-monkey-patch-v12";
 const PNJ_TYPE = "pnj";
 const ActorsCollection = foundry.documents.collections.Actors;
 const CharacterSheetBase = globalThis.Add2eActorSheet;
@@ -695,21 +695,10 @@ export class Add2ePnjSheet extends CharacterSheetBase {
   }
 }
 
-function installPnjComponentBypass() {
-  const api = globalThis.ADD2E_CONSUMABLES;
-  if (!api?.add2eReserveSpellComponents || api.__add2ePnjComponentBypass === PNJ_SHEET_VERSION) return;
-  const reserve = api.add2eReserveSpellComponents.bind(api);
-  api.add2eReserveSpellComponents = async (actor, sort) => actor?.type === PNJ_TYPE
-    ? { blocked: false, skipped: true, actor, sort }
-    : reserve(actor, sort);
-  api.__add2ePnjComponentBypass = PNJ_SHEET_VERSION;
-}
-
 ActorsCollection.registerSheet("add2e", Add2ePnjSheet, {
   types: [PNJ_TYPE],
   makeDefault: true,
   label: "ADD2e — PNJ"
 });
 
-Hooks.once("ready", installPnjComponentBypass);
 try { globalThis.Add2ePnjSheet = Add2ePnjSheet; } catch (_error) {}
