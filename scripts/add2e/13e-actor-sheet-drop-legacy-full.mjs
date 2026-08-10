@@ -4,7 +4,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-08-10-single-drop-router-v6";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-08-10-canonical-item-drop-v7";
 const ADD2E_SPELL_DROP_PENDING = globalThis.ADD2E_SPELL_DROP_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_DROP_PENDING
   : new Set();
@@ -86,63 +86,6 @@ function rawTags(itemData) {
   const flags = itemData?.flags?.add2e ?? {};
   return [system.tags, system.effectTags, system.effecttags, flags.tags, flags.effectTags, flags.effecttags]
     .flatMap(values).map(norm).filter(Boolean);
-}
-
-function isThrownWeapon(itemData) {
-  if (itemType(itemData) !== "arme") return false;
-  const system = itemData?.system ?? {};
-  const tags = rawTags(itemData);
-  return system.arme_de_jet === true || system.armeDeJet === true || system.isThrown === true
-    || tags.some(tag => ["usage:lancer", "usage_lancer", "usage:jet", "arme_de_jet", "type_arme:arme_de_jet"].includes(tag));
-}
-
-function projectileType(tags) {
-  for (const tag of tags) {
-    for (const prefix of ["munition:", "projectile:", "ammo:", "ammunition:"]) {
-      if (tag.startsWith(prefix) && tag.length > prefix.length) return tag.slice(prefix.length);
-    }
-  }
-  return "projectile";
-}
-
-function looksLikeProjectile(itemData) {
-  if (!itemData || !["arme", "objet"].includes(itemType(itemData)) || isThrownWeapon(itemData)) return false;
-  const system = itemData.system ?? {};
-  const fields = [system.categorie, system.category, system.type, system.sousType, system.sous_type].map(norm);
-  const tags = rawTags(itemData);
-  return fields.includes("munition") || fields.includes("projectile")
-    || tags.some(tag => tag === "munition" || tag === "projectile" || tag.startsWith("munition:") || tag.startsWith("projectile:") || tag === "trait:munition" || tag === "trait:projectile");
-}
-
-function add2eDropNormalizeProjectileItemData(itemData) {
-  if (!looksLikeProjectile(itemData)) return itemData;
-  const data = clone(itemData);
-  const type = projectileType(rawTags(data));
-  data.type = "objet";
-  data.system = data.system ?? {};
-  data.flags = data.flags ?? {};
-  data.flags.add2e = data.flags.add2e ?? {};
-  const tags = new Set([...rawTags(data), "munition", "projectile", "trait:munition", `munition:${type}`, `projectile:${type}`]);
-  Object.assign(data.system, {
-    categorie: "munition",
-    category: "munition",
-    type: "munition",
-    sousType: type,
-    sous_type: type,
-    munitionType: type,
-    munition_type: type,
-    tags: [...tags]
-  });
-  Object.assign(data.flags.add2e, {
-    kind: "projectile",
-    vendorKind: "projectile",
-    category: "munition",
-    projectile: true,
-    ammunition: true,
-    sourceItemType: itemType(itemData),
-    tags: [...tags]
-  });
-  return data;
 }
 
 function isBoutiqueConsumable(item) {
@@ -351,9 +294,8 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
     catch (_error) { return false; }
   }
   if (raw?.type !== "Item") return false;
-  let itemData = await resolveDropItemData(raw);
+  const itemData = await resolveDropItemData(raw);
   if (!itemData) return false;
-  itemData = add2eDropNormalizeProjectileItemData(itemData);
   const type = itemType(itemData);
   if (!new Set(["arme", "armure", "sort", "classe", "race", "objet"]).has(type)) return false;
 
@@ -373,13 +315,14 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
       ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou préparer “${spellSource.name}”.`);
       return false;
     }
-    itemData = markManualSpellList(itemData, spellCheck.entry);
-    pendingKey = spellDropKey(this.actor, itemData, spellCheck.entry);
+    const markedItemData = markManualSpellList(itemData, spellCheck.entry);
+    pendingKey = spellDropKey(this.actor, markedItemData, spellCheck.entry);
     if (ADD2E_SPELL_DROP_PENDING.has(pendingKey)) {
-      ui.notifications?.info?.(`Ajout de “${itemData.name}” en cours.`);
+      ui.notifications?.info?.(`Ajout de “${markedItemData.name}” en cours.`);
       return true;
     }
     ADD2E_SPELL_DROP_PENDING.add(pendingKey);
+    Object.assign(itemData, markedItemData);
   }
 
   try {
