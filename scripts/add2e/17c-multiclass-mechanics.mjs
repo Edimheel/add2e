@@ -5,7 +5,7 @@
 
 import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-08-09-canonical-hit-point-mutation-v12";
+const VERSION = "2026-08-10-canonical-hit-point-mutation-v13-render-batch";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 const hitPointQueues = new Map();
@@ -265,7 +265,8 @@ async function ensureCanonicalClassProgression(actor) {
   await actor.updateEmbeddedDocuments("Item", [update], {
     add2eInternal: true,
     add2eMulticlassInternal: true,
-    add2eReason: "single-class-item-progression-migration"
+    add2eReason: "single-class-item-progression-migration",
+    render: false
   });
   return true;
 }
@@ -725,6 +726,13 @@ function queue(actor, reason) {
   }, 0));
 }
 
+function internalClassMutation(options = {}) {
+  return options?.add2eInternal === true
+    || options?.add2eMulticlassInternal === true
+    || options?.add2eClassDrop === true
+    || options?.add2eSpellSync === true;
+}
+
 function installSheetPatch() {
   const proto = globalThis.Add2eActorSheet?.prototype;
   if (!proto || proto.__add2eClassProgressionPatch === VERSION) return;
@@ -782,12 +790,15 @@ Hooks.once("ready", async () => {
   }
 });
 setTimeout(installSheetPatch, 0);
-Hooks.on("createItem", item => {
+Hooks.on("createItem", (item, options = {}) => {
+  if (internalClassMutation(options)) return;
   if (String(item?.type ?? "").toLowerCase() === "classe") queue(item.parent, "create-class-item");
 });
-Hooks.on("updateItem", item => {
+Hooks.on("updateItem", (item, _changes = {}, options = {}) => {
+  if (internalClassMutation(options)) return;
   if (String(item?.type ?? "").toLowerCase() === "classe") queue(item.parent, "update-class-item");
 });
-Hooks.on("deleteItem", item => {
+Hooks.on("deleteItem", (item, options = {}) => {
+  if (internalClassMutation(options)) return;
   if (String(item?.type ?? "").toLowerCase() === "classe") queue(item.parent, "delete-class-item");
 });
