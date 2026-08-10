@@ -7,7 +7,7 @@ import {
   add2eRefundSpellComponents as add2eCoreRefundSpellComponents
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_CONSUMABLES_VERSION = "2026-08-10-canonical-ammunition-contract-v10";
+const ADD2E_CONSUMABLES_VERSION = "2026-08-10-canonical-ammunition-contract-v11";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -229,6 +229,188 @@ export function add2eGetCompatibleProjectiles(actor, arme) {
 export function add2eGetEquippedProjectileForWeapon(actor, arme) {
   return add2eGetCompatibleProjectiles(actor, arme)
     .find(projectile => projectile.system?.equipee === true || projectile.system?.equipped === true) ?? null;
+}
+
+const ADD2E_AMMUNITION_REPAIR_PROFILES = Object.freeze({
+  fronde: Object.freeze({ role: "launcher", required: "fronde", defaultAmmo: "pierre_de_fronde", forceNotThrown: true }),
+  fustibale: Object.freeze({ role: "launcher", required: "fronde", defaultAmmo: "balle_de_fronde", forceNotThrown: true }),
+  sarbacane: Object.freeze({ role: "launcher", required: "sarbacane", defaultAmmo: "aiguille_de_sarbacane", forceNotThrown: true }),
+  arquebuse: Object.freeze({ role: "launcher", required: "balle_arquebuse", defaultAmmo: "balle_arquebuse", forceNotThrown: true }),
+  pierre_de_fronde: Object.freeze({ role: "ammunition", family: "fronde" }),
+  balle_de_fronde: Object.freeze({ role: "ammunition", family: "fronde" }),
+  aiguille_de_sarbacane: Object.freeze({ role: "ammunition", family: "sarbacane" }),
+  balle_arquebuse: Object.freeze({ role: "ammunition", family: "balle_arquebuse" })
+});
+
+function add2eAmmunitionRepairSlug(item) {
+  return add2eCanonicalTagValue(item, "slug") || add2eSlugify(item?.system?.slug);
+}
+
+function add2eAmmunitionRepairUpdate(item) {
+  const slug = add2eAmmunitionRepairSlug(item);
+  const profile = ADD2E_AMMUNITION_REPAIR_PROFILES[slug];
+  if (!profile) return null;
+
+  if (profile.role === "launcher") {
+    const update = {
+      "system.utilise_munition": true,
+      "system.projectileConsomme": true,
+      "system.carquois": true,
+      "system.munition_requise": profile.required,
+      "system.munition_par_defaut": profile.defaultAmmo
+    };
+    if (profile.forceNotThrown) update["system.arme_de_jet"] = false;
+    return { slug, profile, update };
+  }
+
+  return {
+    slug,
+    profile,
+    update: {
+      "system.munition_type": profile.family,
+      "system.munition_slug": slug
+    }
+  };
+}
+
+function add2eArquebusAmmunitionData() {
+  const tags = ["arme", "type_arme:munition", "slug:balle_arquebuse"];
+  return {
+    name: "Balle d'arquebuse",
+    type: "arme",
+    img: "systems/add2e/assets/icones/armes/Fronde_bille.webp",
+    system: {
+      nom: "Balle d'arquebuse",
+      cout: "1 pa/10",
+      prix: "1 pa/10",
+      quantite: 10,
+      categorie: "projectile_propulse",
+      type: "projectile_propulse",
+      base: true,
+      equipee: false,
+      magique: false,
+      bonus_force_toucher: false,
+      bonus_force_degats: false,
+      effectTags: tags,
+      tags,
+      famille_arme: ["munition", "arme_a_feu"],
+      source: "AD&D2 Player's Handbook — Arquebus : projectile en balle de fer ; Player's Option: Combat & Tactics — Bullet 1 sp/10",
+      description: "Balle de fer utilisée comme projectile d'arquebuse.",
+      type_arme: "munition",
+      munition_type: "balle_arquebuse",
+      munition_slug: "balle_arquebuse"
+    },
+    effects: [],
+    flags: {
+      add2e: {
+        munitionCarquois: {
+          version: "2026-08-10-canonical-ammunition-repair-v1",
+          role: "munition",
+          munition_type: "balle_arquebuse",
+          munition_slug: "balle_arquebuse"
+        }
+      }
+    }
+  };
+}
+
+async function add2eRepairAmmunitionDocuments(documents, report, scope) {
+  for (const item of documents ?? []) {
+    if (String(item?.type ?? "").toLowerCase() !== "arme") continue;
+    const repair = add2eAmmunitionRepairUpdate(item);
+    if (!repair) continue;
+    await item.update(repair.update, {
+      add2eInternal: true,
+      add2eReason: "canonical-ammunition-contract-repair",
+      render: false
+    });
+    report.updated.push({ scope, id: item.id, name: item.name, slug: repair.slug, role: repair.profile.role });
+  }
+}
+
+function add2eHasArquebusAmmunition(documents) {
+  return Array.from(documents ?? []).some(item => add2eAmmunitionRepairSlug(item) === "balle_arquebuse");
+}
+
+async function add2eCreateWorldArquebusAmmunition(report) {
+  if (add2eHasArquebusAmmunition(game.items ?? [])) return null;
+  const created = await Item.create(add2eArquebusAmmunitionData(), {
+    renderSheet: false,
+    add2eInternal: true,
+    add2eReason: "canonical-ammunition-contract-repair"
+  });
+  if (created) report.created.push({ scope: "world", id: created.id, name: created.name, slug: "balle_arquebuse" });
+  return created;
+}
+
+async function add2eRepairAmmunitionPack(report, packId = "add2e.armes") {
+  const pack = game.packs?.get?.(packId) ?? null;
+  if (!pack || pack.documentName !== "Item") {
+    report.skipped.push({ scope: "compendium", reason: `Pack ${packId} introuvable.` });
+    return;
+  }
+
+  const wasLocked = pack.locked === true;
+  let unlockedHere = false;
+  try {
+    if (wasLocked) {
+      if (typeof pack.configure !== "function") throw new Error("Le pack ne peut pas être déverrouillé par l'API Foundry.");
+      await pack.configure({ locked: false });
+      unlockedHere = true;
+    }
+
+    let documents = await pack.getDocuments();
+    await add2eRepairAmmunitionDocuments(documents, report, `compendium:${packId}`);
+    documents = await pack.getDocuments();
+    if (!add2eHasArquebusAmmunition(documents)) {
+      const [created] = await Item.createDocuments([add2eArquebusAmmunitionData()], {
+        pack: pack.collection,
+        renderSheet: false,
+        add2eInternal: true,
+        add2eReason: "canonical-ammunition-contract-repair"
+      });
+      if (created) report.created.push({ scope: `compendium:${packId}`, id: created.id, name: created.name, slug: "balle_arquebuse" });
+    }
+  } catch (error) {
+    report.errors.push({ scope: `compendium:${packId}`, error: String(error?.message ?? error) });
+  } finally {
+    if (unlockedHere) {
+      try { await pack.configure({ locked: true }); }
+      catch (error) { report.errors.push({ scope: `compendium:${packId}`, error: `Reverrouillage impossible : ${String(error?.message ?? error)}` }); }
+    }
+  }
+}
+
+export async function add2eRepairCanonicalAmmunitionContracts({
+  repairWorldItems = true,
+  repairActors = true,
+  repairCompendium = true,
+  createArquebusAmmunition = true,
+  packId = "add2e.armes"
+} = {}) {
+  if (!game.user?.isGM) throw new Error("La réparation canonique des munitions est réservée au MJ.");
+
+  const report = { updated: [], created: [], skipped: [], errors: [] };
+
+  if (repairWorldItems) {
+    await add2eRepairAmmunitionDocuments(game.items ?? [], report, "world");
+    if (createArquebusAmmunition) await add2eCreateWorldArquebusAmmunition(report);
+  }
+
+  if (repairActors) {
+    for (const actor of game.actors?.contents ?? []) {
+      await add2eRepairAmmunitionDocuments(actor.items ?? [], report, `actor:${actor.id}`);
+    }
+  }
+
+  if (repairCompendium) await add2eRepairAmmunitionPack(report, packId);
+
+  console.info("[ADD2E][CONSUMABLES][AMMUNITION_REPAIR]", report);
+  if (report.updated.length) console.table(report.updated);
+  if (report.created.length) console.table(report.created);
+  if (report.errors.length) console.warn("[ADD2E][CONSUMABLES][AMMUNITION_REPAIR][ERRORS]", report.errors);
+  ui.notifications?.info?.(`Contrats de munitions corrigés : ${report.updated.length} objet(s) mis à jour, ${report.created.length} créé(s).`);
+  return report;
 }
 
 export async function add2eEquipProjectile(actor, projectile) {
@@ -512,6 +694,7 @@ const api = {
   add2eGetWeaponRequiredAmmoType,
   add2eGetCompatibleProjectiles,
   add2eGetEquippedProjectileForWeapon,
+  add2eRepairCanonicalAmmunitionContracts,
   add2eEquipProjectile,
   add2eEquipHybridThrownWeaponAsContact,
   add2eConsumeThrownWeapon,
@@ -526,6 +709,7 @@ const api = {
 globalThis.ADD2E_CONSUMABLES = { ...(globalThis.ADD2E_CONSUMABLES ?? {}), ...api };
 globalThis.add2eGetCompatibleProjectiles = add2eGetCompatibleProjectiles;
 globalThis.add2eGetEquippedProjectileForWeapon = add2eGetEquippedProjectileForWeapon;
+globalThis.add2eRepairCanonicalAmmunitionContracts = add2eRepairCanonicalAmmunitionContracts;
 globalThis.add2eEquipProjectile = add2eEquipProjectile;
 globalThis.add2eEquipHybridThrownWeaponAsContact = add2eEquipHybridThrownWeaponAsContact;
 globalThis.add2eConsumeThrownWeapon = add2eConsumeThrownWeapon;
