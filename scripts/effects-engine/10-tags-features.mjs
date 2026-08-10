@@ -737,11 +737,23 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       };
 
       globalThis.add2eLastResistanceRoll = result;
-      if (options.chat !== false && typeof ChatMessage !== "undefined") {
-        ChatMessage.create({
-          speaker: ChatMessage.getSpeaker({ actor }),
-          content: `<div class="add2e-chat-card"><b>Résistance</b> ${actor?.name || "Cible"} vs ${typeResist} : ${jet}/${info.pct}% — ${resiste ? "réussite" : "échec"}</div>`
-        });
+      if (options.chat !== false) {
+        const createChatCard = globalThis.add2eCreateChatCard;
+        if (typeof createChatCard !== "function") {
+          throw new Error("L’API commune de carte chat ADD2E est indisponible pour le jet de résistance.");
+        }
+        void createChatCard({
+          actor,
+          title: "Résistance",
+          icon: "fas fa-shield-halved",
+          variant: resiste ? "success" : "failure",
+          rows: [
+            { label: "Type", value: String(typeResist ?? "Résistance") },
+            { label: "Chance", value: `${info.pct}%` },
+            { label: "Jet", value: String(jet) }
+          ],
+          message: resiste ? "Résistance réussie." : "Résistance échouée."
+        }).catch(error => console.error("[ADD2E][RESISTANCE][CHAT_ERROR]", error));
       }
       return result;
     },
