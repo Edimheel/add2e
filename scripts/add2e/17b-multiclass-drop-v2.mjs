@@ -1,12 +1,12 @@
-// ADD2E — Multiclassage : route unique des drops classe/race
-// ApplicationV2 / DialogV2 uniquement.
+// ADD2E — Multiclassage : route unique des drops classe/race.
+// Compatible Foundry V13/V14/V15 — fenêtres via l’API commune dialog-ui.mjs uniquement.
 
 import { classItems, classSlug, cloneItemData, itemLabel } from "./17b-multiclass-core.mjs";
 import { currentRaceOrCompatibleAlternatives, raceCompatibleForMulticlass, worldItemsByType } from "./17b-multiclass-rules.mjs";
 import { showClassDropChoiceDialog } from "./17b-multiclass-dialogs.mjs";
 import { addClassAsMulticlass, applyClassAsMonoclass, applyRaceForMulticlass, replaceClassInMulticlass } from "./17b-multiclass-operations.mjs";
 
-const ADD2E_DROP_PROGRESS_VERSION = "2026-07-03-class-drop-spell-transaction-v3";
+const ADD2E_DROP_PROGRESS_VERSION = "2026-08-10-common-dialog-progress-v4";
 const DROP_PROGRESS = globalThis.ADD2E_DROP_PROGRESS instanceof Map ? globalThis.ADD2E_DROP_PROGRESS : new Map();
 globalThis.ADD2E_DROP_PROGRESS = DROP_PROGRESS;
 globalThis.ADD2E_DROP_PROGRESS_VERSION = ADD2E_DROP_PROGRESS_VERSION;
@@ -22,6 +22,14 @@ function dropProgressEscape(value) {
 
 function dropProgressRoot(context) {
   return document.querySelector?.(`[data-add2e-drop-progress="${context?.id ?? ""}"]`) ?? null;
+}
+
+function dropProgressApplication(context) {
+  return dropProgressRoot(context)?.closest?.(".application, .window-app") ?? null;
+}
+
+function dropProgressCloseButton(context) {
+  return dropProgressApplication(context)?.querySelector?.('button[data-action="add2e-progress-close"]') ?? null;
 }
 
 function dropProgressRender(context) {
@@ -42,7 +50,16 @@ function dropProgressRender(context) {
       return `<li style="display:flex;gap:7px;align-items:flex-start;color:${color};"><i class="fas ${icon}" aria-hidden="true" style="margin-top:2px;"></i><span>${dropProgressEscape(entry.label)}</span></li>`;
     }).join("");
   }
+  const closeButton = dropProgressCloseButton(context);
+  if (closeButton) closeButton.disabled = context.finished !== true;
   return true;
+}
+
+function dropProgressWait() {
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
+  return globalThis.add2eDialogWait;
 }
 
 function dropProgressOpen(actor, { className = "" } = {}) {
@@ -55,7 +72,8 @@ function dropProgressOpen(actor, { className = "" } = {}) {
     id: `add2e-drop-progress-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     key,
     actor,
-    dialog: null,
+    dialogPromise: null,
+    finished: false,
     stage: "Analyse de la classe déposée…",
     detail: className ? `${className} pour ${actor?.name ?? "personnage"}.` : `Mise à jour de ${actor?.name ?? "personnage"}.`,
     progress: 4,
@@ -63,37 +81,42 @@ function dropProgressOpen(actor, { className = "" } = {}) {
   };
   DROP_PROGRESS.set(key, context);
 
-  const DialogV2 = foundry?.applications?.api?.DialogV2 ?? null;
-  if (DialogV2) {
-    try {
-      context.dialog = new DialogV2({
-        window: { title: "Mise à jour du personnage", resizable: false },
-        content: `
-          <section data-add2e-drop-progress="${context.id}" style="min-width:460px;padding:12px 14px;border:1px solid #6d4a1f;border-radius:9px;background:linear-gradient(180deg,#fff8e6,#ead4a2);color:#2d2011;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
-              <i class="fas fa-user-gear" aria-hidden="true" style="font-size:1.5rem;color:#805514;"></i>
-              <div><strong>Mise à jour du personnage</strong><br><small>${dropProgressEscape(actor?.name ?? "Personnage")}</small></div>
-            </div>
-            <div data-add2e-drop-current style="font-weight:800;">Analyse de la classe déposée…</div>
-            <div data-add2e-drop-detail style="margin-top:3px;font-size:.86rem;">${dropProgressEscape(context.detail)}</div>
-            <div style="height:7px;margin-top:10px;overflow:hidden;border-radius:999px;background:#c9ae72;"><div data-add2e-drop-bar style="width:4%;height:100%;background:#805514;transition:width .2s ease;"></div></div>
-            <ol data-add2e-drop-steps style="display:grid;gap:4px;margin:11px 0 0;padding:0;list-style:none;font-size:.85rem;"></ol>
-          </section>`,
-        buttons: [{ action: "add2e-progress-technical", label: "Fermer", callback: () => undefined }],
-        modal: false,
-        rejectClose: false,
-        close: () => undefined
-      }, { width: 530, height: "auto" });
-      context.dialog.render({ force: true });
-      setTimeout(() => {
-        const root = dropProgressRoot(context);
-        const application = root?.closest?.(".application, .window-app, .app, .dialog") ?? null;
-        for (const footer of application?.querySelectorAll?.(".form-footer, .dialog-buttons, footer") ?? []) footer.style.display = "none";
-        dropProgressRender(context);
-      }, 0);
-    } catch (_error) {
-      context.dialog = null;
-    }
+  try {
+    context.dialogPromise = Promise.resolve(dropProgressWait()({
+      add2eTheme: "parchment",
+      add2ePrimaryAction: "add2e-progress-close",
+      add2eClasses: ["add2e-drop-progress-window"],
+      window: { title: "Mise à jour du personnage", resizable: false },
+      content: `
+        <section data-add2e-drop-progress="${context.id}" style="min-width:460px;padding:12px 14px;border:1px solid #6d4a1f;border-radius:9px;background:linear-gradient(180deg,#fff8e6,#ead4a2);color:#2d2011;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+            <i class="fas fa-user-gear" aria-hidden="true" style="font-size:1.5rem;color:#805514;"></i>
+            <div><strong>Mise à jour du personnage</strong><br><small>${dropProgressEscape(actor?.name ?? "Personnage")}</small></div>
+          </div>
+          <div data-add2e-drop-current style="font-weight:800;">Analyse de la classe déposée…</div>
+          <div data-add2e-drop-detail style="margin-top:3px;font-size:.86rem;">${dropProgressEscape(context.detail)}</div>
+          <div style="height:7px;margin-top:10px;overflow:hidden;border-radius:999px;background:#c9ae72;"><div data-add2e-drop-bar style="width:4%;height:100%;background:#805514;transition:width .2s ease;"></div></div>
+          <ol data-add2e-drop-steps style="display:grid;gap:4px;margin:11px 0 0;padding:0;list-style:none;font-size:.85rem;"></ol>
+        </section>`,
+      buttons: [{
+        action: "add2e-progress-close",
+        label: "Fermer",
+        icon: "<i class='fas fa-check'></i>",
+        default: true,
+        callback: () => true
+      }],
+      modal: false,
+      rejectClose: false,
+      close: () => undefined
+    })).catch(error => {
+      console.error("[ADD2E][MULTICLASS][DROP_PROGRESS_DIALOG]", error);
+      return undefined;
+    });
+    setTimeout(() => dropProgressRender(context), 0);
+    setTimeout(() => dropProgressRender(context), 50);
+  } catch (error) {
+    DROP_PROGRESS.delete(key);
+    throw error;
   }
   return context;
 }
@@ -126,10 +149,16 @@ function dropProgressFinish(actor, { success = true, message = "" } = {}) {
     ? "La feuille a été actualisée. Le personnage peut maintenant être utilisé."
     : "Aucune action supplémentaire n’est en cours.";
   context.progress = 100;
+  context.finished = true;
   dropProgressRender(context);
   setTimeout(() => dropProgressRender(context), 0);
   DROP_PROGRESS.delete(key);
-  setTimeout(() => context.dialog?.close?.({ force: true }), success ? 700 : 1000);
+  setTimeout(() => {
+    const closeButton = dropProgressCloseButton(context);
+    if (!closeButton) return;
+    closeButton.disabled = false;
+    closeButton.click();
+  }, success ? 700 : 1000);
   return true;
 }
 
