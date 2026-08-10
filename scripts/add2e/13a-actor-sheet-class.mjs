@@ -2,7 +2,7 @@
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 // Le contexte rendu utilise une vue isolée du système de l'acteur.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-08-10-native-drop-handler-v12";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-08-10-native-class-progression-v13";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -36,11 +36,6 @@ function add2eCloneSheetValue(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-/**
- * Vue utilisée par les templates. Le document reste disponible dans
- * context.document ; les enrichissements de getData ne peuvent ainsi jamais
- * muter actor.system pendant un rendu.
- */
 function add2eBuildActorSheetView(actor) {
   if (!actor) return null;
   return {
@@ -82,11 +77,6 @@ function add2eSpellEntryAvailableFromClassItem(actor, entry, spellLevel) {
   });
 }
 
-/**
- * 13b construit initialement les groupes de sorts. Cette passe terminale ne
- * consulte jamais system.niveau : chaque entrée est validée depuis son Item
- * classe source, ce qui évite qu'un Clerc/Magicien perde une liste au rendu.
- */
 function add2eRefreshSpellRowsFromClassItems(actor, context) {
   const entries = globalThis.add2eGetSpellcastingEntries?.(actor);
   const levels = context?.add2eSpellLevels;
@@ -197,10 +187,7 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
     classes: ["add2e", "sheet", "actor", "personnage", "add2e-character-v2-app"],
     tag: "form",
     position: { width: 1050, height: 900 },
-    window: {
-      title: "ADD2e Personnage",
-      resizable: true
-    },
+    window: { title: "ADD2e Personnage", resizable: true },
     form: {
       submitOnChange: true,
       closeOnSubmit: false,
@@ -208,23 +195,18 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
     }
   };
 
-  static PARTS = {
-    main: { template: "systems/add2e/templates/actor/character-sheet.hbs" }
-  };
+  static PARTS = { main: { template: "systems/add2e/templates/actor/character-sheet.hbs" } };
 
   static async _add2eSubmitForm(event, form, formData) {
     const app = this;
     const actor = app?.actor ?? app?.document;
     if (!actor?.update) return;
-
     const expanded = foundry.utils.expandObject(formData?.object ?? {});
     const updateData = {};
-
     if (expanded.system) updateData.system = expanded.system;
     if (typeof expanded.name === "string" && expanded.name.trim()) updateData.name = expanded.name.trim();
     if (typeof expanded.img === "string") updateData.img = expanded.img;
     if (expanded.flags) updateData.flags = expanded.flags;
-
     if (Object.keys(updateData).length) await actor.update(updateData);
   }
 
@@ -247,35 +229,32 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
     await super._onRender?.(context, options);
     add2eEnsureApplicationV2CharacterCss();
     add2eBindApplicationV2Close(this);
+
     const bindDrop = globalThis.add2eBindActorSheetDropAnywhere;
-    if (typeof bindDrop !== "function") {
-      throw new Error("Le binder canonique ADD2E du drop de feuille personnage est indisponible.");
-    }
+    if (typeof bindDrop !== "function") throw new Error("Le binder canonique ADD2E du drop de feuille personnage est indisponible.");
     bindDrop(this);
+
+    const bindClassProgression = globalThis.add2eBindDirectMulticlassFields;
+    if (typeof bindClassProgression !== "function") throw new Error("Le binder canonique ADD2E de progression de classe est indisponible.");
+    bindClassProgression(this);
+
     const html = add2eAsJQuery(add2eGetElementForApplicationV2(this));
     if (!html.length) return;
-
     try { this.activateListeners?.(html); }
     catch (error) { console.warn("[ADD2E][ACTOR_SHEET_V2][LISTENERS] Erreur activateListeners", error); }
-
     try { add2eEnhanceCharacterSheetUi?.(this, html); } catch (_error) {}
     try { this._add2eActivateTab?.(this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume", html); } catch (_error) {}
   }
 
   async close(options = {}) {
     this._add2eClosing = true;
-    try {
-      return await super.close(options);
-    } finally {
-      this._add2eClosing = false;
-    }
+    try { return await super.close(options); }
+    finally { this._add2eClosing = false; }
   }
 
   async _onDrop(event, data = null) {
     const handler = globalThis.add2eHandleActorSheetDrop;
-    if (typeof handler !== "function") {
-      throw new Error("Le routeur canonique ADD2E du drop de feuille personnage est indisponible.");
-    }
+    if (typeof handler !== "function") throw new Error("Le routeur canonique ADD2E du drop de feuille personnage est indisponible.");
     return handler(this, event, data);
   }
 
@@ -299,9 +278,7 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
 
   _add2eNativeRender(force = false, options = {}) {
     if (this._add2eClosing) return this;
-    const renderOptions = (typeof force === "object" && force !== null)
-      ? force
-      : { ...(options ?? {}), force: !!force };
+    const renderOptions = (typeof force === "object" && force !== null) ? force : { ...(options ?? {}), force: !!force };
     return super.render(renderOptions);
   }
 
