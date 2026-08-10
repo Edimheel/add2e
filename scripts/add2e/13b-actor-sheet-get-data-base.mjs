@@ -12,90 +12,17 @@ function add2eThiefActivityNormalize(value) {
     .replace(/^_+|_+$/g, "");
 }
 
-function add2eThiefActivityValues(value) {
-  if (value === undefined || value === null || value === "") return [];
-  if (Array.isArray(value)) return value.flatMap(add2eThiefActivityValues);
-  if (value instanceof Set) return [...value].flatMap(add2eThiefActivityValues);
-  if (typeof value === "object") {
-    for (const key of ["tags", "effectTags", "effecttags", "list", "items", "value"]) {
-      if (value[key] !== undefined) return add2eThiefActivityValues(value[key]);
-    }
-  }
-  return [value];
-}
-
-function add2eThiefActivityItemEquipped(item) {
-  const system = item?.system ?? {};
-  return [system.equipee, system.equipped, system.portee, system.worn, system.estEquipee, system.est_equipee, system.equipe]
-    .some(value => value === true || ["true", "1", "yes", "oui", "on", "equipped", "equipe", "équipé", "equipee", "équipée", "worn", "portee", "portée"].includes(String(value ?? "").trim().toLowerCase()));
-}
-
-function add2eThiefActivityClassIsThief(item) {
-  const system = item?.system ?? {};
-  const values = [
-    item?.name,
-    system.slug,
-    system.label,
-    system.nom,
-    system.name,
-    system.classe,
-    ...add2eThiefActivityValues(system.tags),
-    ...add2eThiefActivityValues(system.effectTags)
-  ].map(add2eThiefActivityNormalize).filter(Boolean);
-  return values.some(value => value === "voleur" || value.includes("voleur") || value === "assassin" || value.includes("assassin"));
-}
-
-function add2eThiefActivityArmorIsLeather(item) {
-  const system = item?.system ?? {};
-  const values = [
-    item?.name,
-    system.nom,
-    system.matiere,
-    system.material,
-    system.type_armure,
-    system.type,
-    ...add2eThiefActivityValues(system.tags),
-    ...add2eThiefActivityValues(system.effectTags),
-    ...add2eThiefActivityValues(item?.flags?.add2e?.tags),
-    ...add2eThiefActivityValues(item?.flags?.add2e?.effectTags)
-  ].map(add2eThiefActivityNormalize).filter(Boolean);
-
-  return values.some(value => value === "cuir"
-    || value.includes("matiere_cuir")
-    || value.includes("type_armure_cuir")
-    || value.includes("armure_cuir")
-    || value.includes("leather"));
-}
-
 export function add2ePrepareThiefActivityData(actor) {
-  const classes = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-  const multiclass = actor?.system?.multiclasse?.enabled === true || classes.length > 1;
-  const applies = actor?.type === "personnage" && multiclass && classes.some(add2eThiefActivityClassIsThief);
-  const armors = Array.from(actor?.items ?? []).filter(item => {
-    const type = String(item?.type ?? "").toLowerCase();
-    return ["armure", "armor"].includes(type) && add2eThiefActivityItemEquipped(item);
-  });
-  const blockingItems = applies
-    ? armors.filter(item => !add2eThiefActivityArmorIsLeather(item)).map(item => ({ id: item.id, name: item.name, img: item.img }))
-    : [];
-  const blocked = applies && blockingItems.length > 0;
-
-  return {
-    source: "actor-sheet",
-    applies,
-    ok: !blocked,
-    blocked,
-    allowedArmor: "Armure de cuir ou aucune armure",
-    blockingItems,
-    message: blocked
-      ? "Les compétences de voleur sont indisponibles tant que ce personnage multiclassé porte une armure autre qu’une armure de cuir."
-      : ""
-  };
+  const resolver = globalThis.add2eGetThiefActivityEquipmentStatus;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E de l’équipement des activités de voleur est indisponible.");
+  }
+  const status = resolver(actor);
+  if (!status || typeof status !== "object") {
+    throw new Error("Le résolveur canonique ADD2E de l’équipement des activités de voleur a renvoyé un état invalide.");
+  }
+  return foundry.utils.deepClone(status);
 }
-
-// Le HUD et les contrôleurs d’action ne calculent pas cette règle : ils lisent
-// l’état préparé par la feuille personnage.
-globalThis.add2eGetThiefActivityEquipmentStatus = add2ePrepareThiefActivityData;
 
 function add2eSummaryClassFeatureKey(feature) {
   const raw = feature?.id
