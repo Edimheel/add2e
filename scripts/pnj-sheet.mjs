@@ -7,7 +7,7 @@ import { add2eBindActorSheetSpellListeners } from "./add2e/13d-actor-sheet-liste
 import { add2eRollCharacteristicCard, add2eRollSaveCard } from "./add2e/13d-actor-sheet-listeners-rolls.mjs";
 import { getMoney, formatMoney, isAmmunition, isComponent } from "./add2e/22a-vendor-core.mjs";
 
-const PNJ_SHEET_VERSION = "2026-08-10-pnj-common-dialog-v9";
+const PNJ_SHEET_VERSION = "2026-08-10-pnj-canonical-armor-classification-v10";
 const PNJ_TYPE = "pnj";
 const ActorsCollection = foundry.documents.collections.Actors;
 const CharacterSheetBase = globalThis.Add2eActorSheet;
@@ -24,6 +24,14 @@ globalThis.ADD2E_PNJ_SHEET_VERSION = PNJ_SHEET_VERSION;
 function number(value, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function pnjEquipmentEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (typeof engine?.isShieldItem !== "function" || typeof engine?.isHelmetItem !== "function") {
+    throw new Error("Le contrat canonique ADD2E de classification des armures est indisponible.");
+  }
+  return engine;
 }
 
 function clone(value) {
@@ -583,12 +591,16 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     const actor = this.actor;
     const equip = item.system?.equipee !== true;
     if (item.type === "armure" && equip) {
-      const name = String(item.name ?? "").toLowerCase();
-      const shield = name.includes("bouclier");
-      const helmet = name.includes("heaume") || name.includes("casque");
+      const engine = pnjEquipmentEngine();
+      const shield = engine.isShieldItem(item) === true;
+      const helmet = engine.isHelmetItem(item) === true;
       if (!shield && !helmet) {
         const updates = actor.items
-          .filter(candidate => candidate.type === "armure" && candidate.id !== item.id && candidate.system?.equipee === true && !String(candidate.name ?? "").toLowerCase().includes("bouclier") && !/heaume|casque/.test(String(candidate.name ?? "").toLowerCase()))
+          .filter(candidate => candidate.type === "armure"
+            && candidate.id !== item.id
+            && candidate.system?.equipee === true
+            && engine.isShieldItem(candidate) !== true
+            && engine.isHelmetItem(candidate) !== true)
           .map(candidate => ({ _id: candidate.id, "system.equipee": false }));
         if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eReason: "pnj-unequip-body-armor" });
       }
