@@ -33,7 +33,7 @@ import {
   mergeMulticlassChanges,
   updateDirectMulticlassField
 } from "./17b-multiclass-direct-fields.mjs";
-import { compatibleMulticlassClassCandidates, installDropWrapperDeferred } from "./17b-multiclass-drop.mjs";
+import { compatibleMulticlassClassCandidates } from "./17b-multiclass-drop.mjs";
 
 const multiCombatTimers = new Map();
 globalThis.ADD2E_MULTICLASS_VERSION = MULTICLASS_VERSION;
@@ -382,7 +382,6 @@ installGetDataPatch();
 Hooks.once("ready", () => {
   installClassFeatureGlobals();
   installGetDataPatch();
-  installDropWrapperDeferred();
   setTimeout(() => {
     installThiefItemProjection();
     installEffectsEngineItemProgressionPatch();
