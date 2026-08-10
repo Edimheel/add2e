@@ -14,7 +14,7 @@ import {
   esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-08-08-consumables-core-v18-gm-relay";
+export const ADD2E_CONSUMABLES_VERSION = "2026-08-10-consumables-core-v19-pnj-owner";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -513,6 +513,7 @@ function findProjectedComponentForRequirement(actor, requirement, projected) {
 }
 
 function buildSpellComponentConsumptionPlan(actor, sort, requirements = null) {
+  if (String(actor?.type ?? "").toLowerCase() === "pnj") return { ok: true, blocked: false, skipped: true, allocations: [] };
   if (!componentSettingEnabled()) return { ok: true, skipped: true, allocations: [] };
   const requirementsToReserve = Array.isArray(requirements) && requirements.length ? requirements : spellComponentRequirements(sort);
   if (!requirementsToReserve.length) {
