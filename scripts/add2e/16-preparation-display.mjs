@@ -1,17 +1,22 @@
 // ============================================================
 // ADD2E — Contrôles de mémorisation des sorts
-// Version : 2026-08-10-canonical-preparation-consumer-v3
+// Version : 2026-08-10-character-preparation-consumer-v4
 // Source exclusive des quotas et compteurs : 07-spellcasting-rules.mjs.
 // Source exclusive des composants : 22e-consumables-core.mjs.
+// Cette interface ne gère que les personnages ; la feuille de monstre consomme 07 directement.
 // Compatible Foundry V13/V14/V15 et ApplicationV2.
 // ============================================================
 
-const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-08-10-canonical-preparation-consumer-v3";
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-08-10-character-preparation-consumer-v4";
 globalThis.ADD2E_SPELL_PREP_SCROLL_VERSION = ADD2E_SPELL_PREP_SCROLL_VERSION;
 
 function add2eSpellPrepDebug(stage, payload = {}) {
   if (globalThis.ADD2E_DEBUG_SPELL_PREP !== true) return;
   console.info(`[ADD2E][SPELL_PREP][${stage}]`, payload);
+}
+
+function add2eSpellPrepSupportsActor(actor) {
+  return actor?.documentName === "Actor" && String(actor?.type ?? "").toLowerCase() === "personnage";
 }
 
 function add2eSpellPrepEscapeHtml(value) {
@@ -228,7 +233,7 @@ function add2eSpellPrepEnsureComponentStyle(root) {
 }
 
 function add2eSpellPrepInjectComponents(actor, root) {
-  if (!actor?.items || !root) return;
+  if (!add2eSpellPrepSupportsActor(actor) || !actor?.items || !root) return;
   if (typeof globalThis.add2eGetSpellComponentStatus !== "function") {
     throw new Error("Le propriétaire canonique des composants de sort ADD2E est indisponible.");
   }
@@ -261,12 +266,14 @@ function add2eSpellPrepAccessMessage(check, entry, spellLevel) {
 }
 
 async function add2eHandleSpellPreparationButton(button, event = null, actorOverride = null) {
+  const actor = actorOverride ?? add2eSpellPrepResolveActorFromButton(button);
+  if (!add2eSpellPrepSupportsActor(actor)) return false;
+
   event?.preventDefault?.();
   event?.stopPropagation?.();
   event?.stopImmediatePropagation?.();
   button?.blur?.();
 
-  const actor = actorOverride ?? add2eSpellPrepResolveActorFromButton(button);
   if (!actor?.items) return ui.notifications.warn("Acteur introuvable pour la préparation du sort.");
   const snapshot = add2eSpellPrepSnapshot(actor);
 
@@ -323,7 +330,7 @@ async function add2eHandleSpellPreparationButton(button, event = null, actorOver
 }
 
 function add2eBindNativeHbsSpellPreparationControls(actor, root) {
-  if (!actor || !root || typeof root.querySelectorAll !== "function") return;
+  if (!add2eSpellPrepSupportsActor(actor) || !root || typeof root.querySelectorAll !== "function") return;
   if (root.dataset) root.dataset.actorId = String(actor.id ?? "");
   for (const button of root.querySelectorAll(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus")) {
     const row = button.closest?.("tr.sort-row, tr[data-sort-id]");
@@ -348,13 +355,15 @@ function add2eInstallDelegatedSpellPreparationControls() {
   document.addEventListener("click", event => {
     const button = event.target?.closest?.(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus");
     if (!button || button.dataset.add2ePrepBound === "1") return;
-    void add2eHandleSpellPreparationButton(button, event, null);
+    const actor = add2eSpellPrepResolveActorFromButton(button);
+    if (!add2eSpellPrepSupportsActor(actor)) return;
+    void add2eHandleSpellPreparationButton(button, event, actor);
   }, true);
 }
 
 function add2eOnActorSheetRendered(app, html) {
   const actor = app?.actor ?? app?.document;
-  if (actor?.documentName !== "Actor") return;
+  if (!add2eSpellPrepSupportsActor(actor)) return;
   const root = add2eSpellPrepDomRoot(app, html);
   setTimeout(() => {
     add2eBindNativeHbsSpellPreparationControls(actor, root);
