@@ -1,12 +1,12 @@
-// ADD2E — Multiclassage : route unique des drops classe/race.
+// ADD2E — Multiclassage : route directe des drops classe/race.
 // Compatible Foundry V13/V14/V15 — fenêtres via l’API commune dialog-ui.mjs uniquement.
 
-import { classItems, classSlug, cloneItemData, itemLabel } from "./17b-multiclass-core.mjs";
+import { classItems, classSlug, itemLabel } from "./17b-multiclass-core.mjs";
 import { currentRaceOrCompatibleAlternatives, raceCompatibleForMulticlass, worldItemsByType } from "./17b-multiclass-rules.mjs";
 import { showClassDropChoiceDialog } from "./17b-multiclass-dialogs.mjs";
 import { addClassAsMulticlass, applyClassAsMonoclass, applyRaceForMulticlass, replaceClassInMulticlass } from "./17b-multiclass-operations.mjs";
 
-const ADD2E_DROP_PROGRESS_VERSION = "2026-08-10-single-pass-class-drop-v5";
+const ADD2E_DROP_PROGRESS_VERSION = "2026-08-10-direct-class-race-router-v6";
 const DROP_PROGRESS = globalThis.ADD2E_DROP_PROGRESS instanceof Map ? globalThis.ADD2E_DROP_PROGRESS : new Map();
 globalThis.ADD2E_DROP_PROGRESS = DROP_PROGRESS;
 globalThis.ADD2E_DROP_PROGRESS_VERSION = ADD2E_DROP_PROGRESS_VERSION;
@@ -245,43 +245,34 @@ export function compatibleMulticlassClassCandidates(actor, preferredClassData = 
   return output.sort((left, right) => itemLabel(left, "Classe").localeCompare(itemLabel(right, "Classe"), game.i18n?.lang ?? "fr"));
 }
 
-async function resolveDroppedItemData(event, data = null) {
-  const editor = foundry?.applications?.ux?.TextEditor?.implementation;
-  const raw = data ?? editor?.getDragEventData?.(event) ?? null;
-  if (!raw) return null;
-  if (raw.system && ["classe", "race"].includes(raw.type)) return cloneItemData(raw);
-  if (raw.data?.system && ["classe", "race"].includes(raw.data.type)) return cloneItemData(raw.data);
-  if (raw.uuid) {
-    const doc = await fromUuid(raw.uuid).catch(() => null);
-    if (doc instanceof Item) return cloneItemData(doc);
-  }
-  if (raw.pack && (raw.id || raw._id)) {
-    const pack = game.packs.get(raw.pack);
-    const doc = pack ? await pack.getDocument(raw.id ?? raw._id).catch(() => null) : null;
-    if (doc instanceof Item) return cloneItemData(doc);
-  }
-  return null;
-}
-
 async function applyFirstClassSafely(sheet, classData) {
   const actor = sheet?.actor;
   if (!actor || classItems(actor).length) return false;
 
   dropProgressUpdate(actor, "Vérification de la race et des prérequis…", { progress: 16 });
-  const raceResult = await globalThis.add2eEnsureCompatibleRaceForClassDrop?.(actor, classData, sheet);
+  const ensureRace = globalThis.add2eEnsureCompatibleRaceForClassDrop;
+  if (typeof ensureRace !== "function") {
+    throw new Error("Le service canonique ADD2E de compatibilité race/classe est indisponible.");
+  }
+  const raceResult = await ensureRace(actor, classData, sheet);
   if (raceResult?.handled) return raceResult.ok === true;
   if (raceResult?.ok === false) return false;
 
   const alignment = typeof globalThis.add2ePickClassAlignment === "function"
     ? globalThis.add2ePickClassAlignment(actor, classData.system ?? {})
     : actor.system?.alignement ?? "";
-  const valid = typeof globalThis.checkClassStatMin === "function"
-    ? globalThis.checkClassStatMin(actor, classData, null, alignment, { silent: false, ignoreLevelMax: true })
-    : true;
-  if (!valid) return false;
+  const check = globalThis.checkClassStatMin;
+  if (typeof check !== "function") {
+    throw new Error("Le validateur canonique ADD2E des prérequis de classe est indisponible.");
+  }
+  if (!check(actor, classData, null, alignment, { silent: false, ignoreLevelMax: true })) return false;
 
   dropProgressUpdate(actor, "Création de la classe et recalcul du personnage…", { progress: 38 });
-  const created = await globalThis.add2eApplyClassItemDataToActor?.(actor, classData, sheet, {
+  const applyClass = globalThis.add2eApplyClassItemDataToActor;
+  if (typeof applyClass !== "function") {
+    throw new Error("Le mutateur canonique ADD2E de classe est indisponible.");
+  }
+  const created = await applyClass(actor, classData, sheet, {
     alignmentCandidate: alignment,
     notify: true,
     reason: "first-class-safe-drop"
@@ -353,44 +344,19 @@ async function runMulticlassRaceDropWithProgress(sheet, itemData) {
   }
 }
 
+export async function routeClassRaceDrop(sheet, itemData) {
+  const actor = sheet?.actor;
+  if (!actor || actor.type !== "personnage") return undefined;
+  const type = String(itemData?.type ?? "").toLowerCase();
+  if (!itemData || !["classe", "race"].includes(type)) return undefined;
+
+  if (type === "classe") return runClassDropWithProgress(sheet, itemData);
+  if (type === "race" && classItems(actor).length > 1) return runMulticlassRaceDropWithProgress(sheet, itemData);
+  return undefined;
+}
+
 try { globalThis.add2eDropProgressBegin = dropProgressOpen; } catch (_error) {}
 try { globalThis.add2eDropProgressUpdate = dropProgressUpdate; } catch (_error) {}
 try { globalThis.add2eDropProgressIsActive = dropProgressActive; } catch (_error) {}
 try { globalThis.add2eDropProgressFinish = dropProgressFinish; } catch (_error) {}
-
-export function installDropWrapper() {
-  const SheetClass = globalThis.Add2eActorSheet;
-  if (!SheetClass?.prototype?._onDrop) return false;
-  if (SheetClass.prototype._add2eMulticlassWrapped === "item-progression-v3-drop-progress") return true;
-  const original = SheetClass.prototype._onDrop;
-  SheetClass.prototype._onDrop = async function add2eMulticlassDropWrapped(event, data = null) {
-    const actor = this.actor;
-    if (!actor || actor.type !== "personnage") return original.call(this, event, data);
-    const itemData = await resolveDroppedItemData(event, data);
-    if (!itemData || !["classe", "race"].includes(itemData.type)) return original.call(this, event, data);
-
-    if (itemData.type === "classe") {
-      event?.preventDefault?.();
-      event?.stopPropagation?.();
-      return runClassDropWithProgress(this, itemData);
-    }
-
-    if (itemData.type === "race" && classItems(actor).length > 1) {
-      event?.preventDefault?.();
-      event?.stopPropagation?.();
-      return runMulticlassRaceDropWithProgress(this, itemData);
-    }
-    return original.call(this, event, data);
-  };
-  SheetClass.prototype._add2eMulticlassWrapped = "item-progression-v3-drop-progress";
-  return true;
-}
-
-export function installDropWrapperDeferred() {
-  setTimeout(() => {
-    if (!installDropWrapper()) {
-      setTimeout(installDropWrapper, 500);
-      setTimeout(installDropWrapper, 1500);
-    }
-  }, 0);
-}
+try { globalThis.add2eRouteClassRaceDrop = routeClassRaceDrop; } catch (_error) {}
