@@ -3,7 +3,7 @@
 // Compatible Foundry V13/V14/V15.
 
 export const ADD2E_SHOP_ENGINE_VERSION = "2026-08-08-shop-catalog-v1";
-export const ADD2E_VENDOR_VERSION = "2026-08-08-vendor-v31-canonical-shop-api";
+export const ADD2E_VENDOR_VERSION = "2026-08-10-vendor-v32-canonical-projectile-contract";
 export const VENDOR_SCOPE = "add2e";
 export const VENDOR_NAME = "Marchand de composants et projectiles";
 export const VENDOR_FOLDER = "ADD2E — Boutique";
@@ -81,22 +81,39 @@ export function tags(item) {
 export const quantity = item => Math.max(0, Math.floor(num(item?.system?.quantite ?? item?.system?.quantity ?? 0, 0)));
 export const quantityUpdate = value => ({ "system.quantite": Math.max(0, Math.floor(num(value, 0))) });
 
-export function isAmmunition(item) {
+function canonicalTagValue(item, prefix) {
+  const wanted = `${lower(prefix)}:`;
+  if (wanted === ":") return "";
+  const raw = tags(item).find(tag => String(tag).startsWith(wanted));
+  return raw ? slug(String(raw).split(":").slice(1).join(":")) : "";
+}
+
+function canonicalAmmunitionSlug(item) {
   const system = item?.system ?? {};
-  const name = lower(item?.name);
-  const fields = [system.categorie, system.category, system.sousType, system.sous_type, system.type, system.subtype, system.kind, system.slot].map(lower).filter(Boolean);
+  const explicit = system.munition_slug ?? system.munitionSlug ?? system.ammoSlug ?? system.slug;
+  return explicit ? slug(explicit) : canonicalTagValue(item, "slug");
+}
+
+function canonicalAmmunitionFamily(item) {
+  const system = item?.system ?? {};
+  const explicit = system.munition_type ?? system.munitionType ?? system.ammoType ?? system.ammunitionType;
+  return explicit ? slug(explicit) : "";
+}
+
+function canonicalIdentityKey(value) {
+  return slug(value).replace(/_/g, "");
+}
+
+export function isAmmunition(item) {
+  if (!item) return false;
+  const system = item.system ?? {};
+  if (slug(system.type_arme) === "munition") return true;
+  if (slug(system.categorie ?? system.category) === "munition") return true;
+  if (slug(system.type ?? system.subtype) === "munition") return true;
   const itemTags = tags(item);
-  const accepted = new Set([
-    "munition", "munitions", "projectile", "projectiles", "ammo", "ammunition",
-    "trait:munition", "trait:projectile", "categorie:munition", "categorie:projectile",
-    "type:munition", "type:projectile", "type_arme:munition"
-  ]);
-  if (/\b(carquois|quiver|etui|etuis|étui|étuis|sac|sacoche|container|contenant|boite|boîte|bourse)\b/.test(name)) return false;
-  if (fields.some(value => ["carquois", "quiver", "contenant", "container", "sac", "sacoche"].includes(value))) return false;
-  if (itemTags.some(value => ["carquois", "quiver", "contenant", "container", "sac", "sacoche"].includes(value))) return false;
-  if (fields.some(value => accepted.has(value))) return true;
-  if (itemTags.some(value => accepted.has(value) || value.startsWith("munition:") || value.startsWith("projectile:"))) return true;
-  return /\b(fleche|fleches|flèche|flèches|carreau|carreaux|trait|traits|bille|billes|aiguille|aiguilles|pierre de fronde|pierres de fronde|balle d[’']arquebuse|balles d[’']arquebuse)\b/.test(name);
+  return itemTags.includes("type_arme:munition")
+    || itemTags.includes("categorie:munition")
+    || itemTags.includes("type:munition");
 }
 
 export function isComponent(item) {
@@ -233,6 +250,7 @@ const DEFAULT_INDEX_FIELDS = [
   "system.prix", "system.price", "system.cout", "system.coût", "system.cost", "system.devise", "system.currency",
   "system.quantite", "system.quantity", "system.categorie", "system.category", "system.sousType", "system.sous_type", "system.subtype", "system.kind", "system.slot",
   "system.tags", "system.effectTags", "system.effecttags", "system.type_arme", "system.famille_arme", "system.type_armure", "system.type_bouclier", "system.structure", "system.taille",
+  "system.munition_type", "system.munition_slug", "system.munition_requise", "system.munition_par_defaut",
   "system.sorts_associes", "system.sortsAssocies", "system.spells", "system.spellNames",
   "system.arme_de_jet", "system.armeDeJet", "system.isThrown", "system.arme_de_contact", "system.armeDeContact", "system.isMelee", "system.corps_a_corps",
   "system.utilise_munition", "system.utiliseMunition", "system.projectileConsomme", "system.carquois",
@@ -882,30 +900,41 @@ function projectileResource(actor, projectile, { cost = 0, recovery = 0 } = {}) 
   };
 }
 
+function weaponRequiredAmmunitionType(weapon) {
+  if (!weapon || weapon?.system?.utilise_munition !== true) return "";
+  const required = slug(weapon.system?.munition_requise);
+  if (!required) {
+    throw new Error(`${weapon.name ?? "Arme"} : utilise_munition=true mais munition_requise est absente.`);
+  }
+  return required;
+}
+
 function weaponRequiresProjectile(weapon) {
-  if (typeof globalThis.add2eGetWeaponUsageProfile !== "function") throw new Error("Le propriétaire canonique du profil d’usage des armes est indisponible.");
-  return globalThis.add2eGetWeaponUsageProfile(weapon)?.requiresEquippedProjectile === true;
+  return !!weaponRequiredAmmunitionType(weapon);
 }
 
 function isEquippedProjectile(item) {
-  const system = item?.system ?? {};
-  const flags = item?.flags?.add2e ?? {};
-  return system.equipee === true || system.equiped === true || system.equipped === true || flags.equippedProjectile === true || flags.carquoisEquipe === true || flags.selectedProjectile === true;
+  return item?.system?.equipee === true;
 }
 
 function projectileCompatibilityKeys(weapon) {
-  const text = `${lower(weapon?.name)} ${tags(weapon).join(" ")}`;
-  if (/\barbalete\b/.test(text)) return ["carreau", "carreaux", "bolt"];
-  if (/\barc\b/.test(text)) return ["fleche", "fleches", "arrow"];
-  if (/\bfronde\b/.test(text)) return ["bille", "billes", "pierre", "pierres", "bullet"];
-  return [];
+  const required = weaponRequiredAmmunitionType(weapon);
+  return required ? [required] : [];
 }
 
 function projectileMatchesWeapon(projectile, weapon) {
-  const keys = projectileCompatibilityKeys(weapon);
-  if (!keys.length) return true;
-  const text = `${lower(projectile?.name)} ${tags(projectile).join(" ")}`;
-  return keys.some(key => text.includes(key));
+  if (!isAmmunition(projectile)) return false;
+  const required = weaponRequiredAmmunitionType(weapon);
+  if (!required) return false;
+
+  const ammoFamily = canonicalAmmunitionFamily(projectile);
+  const ammoSlug = canonicalAmmunitionSlug(projectile);
+  if (!ammoFamily && !ammoSlug) return false;
+  if (ammoFamily === required) return true;
+  if (ammoSlug === required || ammoSlug.startsWith(`${required}_`)) return true;
+
+  const defaultSlug = slug(weapon?.system?.munition_par_defaut);
+  return Boolean(defaultSlug && ammoSlug && canonicalIdentityKey(defaultSlug) === canonicalIdentityKey(ammoSlug));
 }
 
 function findEquippedProjectile(actor, weapon = null) {
@@ -941,9 +970,9 @@ function projectileSpentType(value, item = null) {
 }
 
 function recoveryItemForEntry(actor, entry) {
-  const byId = entry?.itemId ? actor?.items?.get?.(entry.itemId) ?? null : null;
-  if (byId && (isAmmunition(byId) || isThrownWeapon(byId))) return byId;
-  return Array.from(actor?.items ?? []).find(item => item?.name === entry?.itemName && (isAmmunition(item) || isThrownWeapon(item))) ?? null;
+  if (!entry?.itemId) return null;
+  const item = actor?.items?.get?.(entry.itemId) ?? null;
+  return item && (isAmmunition(item) || isThrownWeapon(item)) ? item : null;
 }
 
 export async function recordProjectileSpentOperation(payload = {}) {
@@ -954,19 +983,20 @@ export async function recordProjectileSpentOperation(payload = {}) {
   const actor = payload.actorUuid ? await fromUuid(payload.actorUuid).catch(() => null) : game.actors?.get?.(payload.actorId) ?? null;
   if (!actorUsesProjectileInventory(actor)) return false;
   const actorId = actor.id ?? payload.actorId;
-  const itemKey = payload.itemId ?? payload.itemName ?? null;
-  if (!actorId || !itemKey) return false;
-  const item = payload.itemId ? actor.items?.get?.(payload.itemId) ?? null : null;
+  const itemId = String(payload.itemId ?? "").trim();
+  if (!actorId || !itemId) return false;
+  const item = actor.items?.get?.(itemId) ?? null;
+  if (!item) return false;
   const type = projectileSpentType(payload.type, item);
   const spent = clone(combat.getFlag(VENDOR_SCOPE, PROJECTILE_FLAG) ?? {});
   spent[actorId] ??= { actorId, actorName: actor.name ?? payload.actorName ?? "Acteur", items: {} };
   spent[actorId].actorName = actor.name ?? payload.actorName ?? spent[actorId].actorName;
   spent[actorId].items ??= {};
-  spent[actorId].items[itemKey] ??= { itemId: payload.itemId ?? null, itemName: payload.itemName ?? "Projectile", img: payload.img ?? null, type, spent: 0 };
-  const entry = spent[actorId].items[itemKey];
-  entry.itemId = payload.itemId ?? entry.itemId ?? null;
-  entry.itemName = payload.itemName ?? entry.itemName ?? "Projectile";
-  entry.img = payload.img ?? entry.img ?? null;
+  spent[actorId].items[itemId] ??= { itemId, itemName: payload.itemName ?? item.name ?? "Projectile", img: payload.img ?? item.img ?? null, type, spent: 0 };
+  const entry = spent[actorId].items[itemId];
+  entry.itemId = itemId;
+  entry.itemName = payload.itemName ?? item.name ?? entry.itemName ?? "Projectile";
+  entry.img = payload.img ?? item.img ?? entry.img ?? null;
   entry.type = type;
   entry.spent = Math.max(0, Math.floor(num(entry.spent, 0))) + Math.max(1, Math.floor(num(payload.quantity, 1)));
   await combat.setFlag(VENDOR_SCOPE, PROJECTILE_FLAG, spent);
@@ -977,7 +1007,7 @@ export async function recordProjectileSpentOperation(payload = {}) {
 async function recordProjectileSpent({ actor, projectile, quantity: requestedQuantity = 1 }) {
   if (!actorUsesProjectileInventory(actor)) return false;
   const combat = game.combat;
-  if (!combat?.id) return false;
+  if (!combat?.id || !projectile?.id) return false;
   const payload = {
     requestId: foundry.utils.randomID(),
     userId: game.user?.id,
@@ -986,13 +1016,13 @@ async function recordProjectileSpent({ actor, projectile, quantity: requestedQua
     actorUuid: actor?.uuid,
     actorName: actor?.name,
     actorType: actor?.type,
-    itemId: projectile?.id,
-    itemName: projectile?.name,
-    img: projectile?.img,
+    itemId: projectile.id,
+    itemName: projectile.name,
+    img: projectile.img,
     type: projectileSpentType(null, projectile),
     quantity: Math.max(1, Math.floor(num(requestedQuantity, 1)))
   };
-  if (!payload.actorId || !(payload.itemId || payload.itemName)) return false;
+  if (!payload.actorId) return false;
   if (game.user?.isGM) return recordProjectileSpentOperation(payload);
   game.socket?.emit?.("system.add2e", { type: GM_OPERATION_TYPE, operation: GM_OPERATION_PROJECTILE_SPENT, payload });
   return true;
