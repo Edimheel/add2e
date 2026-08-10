@@ -2,7 +2,7 @@
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 // Le contexte rendu utilise une vue isolée du système de l'acteur.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-08-10-native-class-progression-v13";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-08-10-native-derived-context-v14";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -133,13 +133,17 @@ function add2eRefreshSpellRowsFromClassItems(actor, context) {
 
 function add2eComposeFinalSheetContext(actor, context) {
   if (actor?.type !== "personnage" || !context) return context;
-  try {
-    const composed = globalThis.add2eApplyMulticlassProgressionToSheet?.(actor, context) ?? context;
-    return add2eRefreshSpellRowsFromClassItems(actor, composed);
-  } catch (error) {
-    console.warn("[ADD2E][ACTOR_SHEET][CLASS_CONTEXT_ERROR]", { actor: actor?.name, error });
-    return context;
+  const prepareDerived = globalThis.add2ePrepareDerivedSheetDisplays;
+  if (typeof prepareDerived !== "function") {
+    throw new Error("Le préparateur canonique ADD2E des données dérivées de feuille est indisponible.");
   }
+  const applyClassProgression = globalThis.add2eApplyMulticlassProgressionToSheet;
+  if (typeof applyClassProgression !== "function") {
+    throw new Error("Le préparateur canonique ADD2E de progression de classe est indisponible.");
+  }
+  const derived = prepareDerived(actor, context);
+  const composed = applyClassProgression(actor, derived);
+  return add2eRefreshSpellRowsFromClassItems(actor, composed);
 }
 
 function add2eEnsureApplicationV2CharacterCss() {
