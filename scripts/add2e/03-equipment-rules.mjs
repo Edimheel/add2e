@@ -1,11 +1,10 @@
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags canoniques
-// Version : 2026-08-10-canonical-equipment-restrictions-v10
+// Version : 2026-08-10-canonical-equipment-restrictions-v11-bigbang
 // Source principale : Items "classe" embarqués sur l'acteur.
 // Schéma canonique des tags d'équipement :
 // - arme / armure / bouclier
 // - type_arme:<type> / type_armure:<type> / type_bouclier:<type>
-// - slug:<identifiant> uniquement lorsqu'il est fourni par la donnée source
 // Règle multiclassée AD&D 2e :
 // - équipement : autorisé si au moins une classe l'autorise ;
 // - activités de voleur : test indépendant sur l'armure de corps équipée
@@ -66,20 +65,12 @@ function add2ePushEquipTags(target, raw) {
   for (const tag of add2eToEquipArray(raw)) add2ePushEquipTag(target, tag);
 }
 
-function add2eHasUsefulValue(value) {
-  if (value === true || value === false) return true;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "string") return value.trim() !== "";
-  if (value && typeof value === "object") return Object.keys(value).length > 0;
-  return false;
-}
-
 function add2eGetActorClassItems(actor) {
   return actor?.items?.filter?.(i => String(i?.type ?? "").toLowerCase() === "classe") ?? [];
 }
 
 function add2eActorIsMulticlass(actor) {
-  return actor?.system?.multiclasse?.enabled === true || add2eGetActorClassItems(actor).length > 1;
+  return add2eGetActorClassItems(actor).length > 1;
 }
 
 function add2eActorBypassesClassEquipmentRestrictions(actor) {
@@ -202,7 +193,7 @@ function add2eCheckEquipmentAllowedForClass(actor, item, kind) {
   }
 
   const classItems = add2eGetActorClassItems(actor);
-  if (add2eActorIsMulticlass(actor) && classItems.length > 1) {
+  if (add2eActorIsMulticlass(actor)) {
     const checks = classItems.map(cls => add2eCheckEquipmentAllowedForClassSystem(add2eClassSystemFromItem(cls), item, kind));
     const allowed = checks.find(c => c.ok);
     return allowed
@@ -296,37 +287,16 @@ function add2eInstallWeaponClassEquipmentGuard() {
   else Hooks.once("ready", reconcileAllActors);
 }
 
-function add2eFindActorClassSystemByName(actor, className) {
-  const wanted = add2eNormalizeEquipTag(className);
-  const classItems = add2eGetActorClassItems(actor);
-  const item = classItems.find(cls => {
-    const sys = cls.system ?? {};
-    return [cls.name, sys.label, sys.nom, sys.name, sys.classe].map(add2eNormalizeEquipTag).includes(wanted);
-  });
-  return item ? add2eClassSystemFromItem(item) : null;
-}
-
-function add2eCheckEquippedItemsForClassActivity(actor, className) {
-  const classe = add2eFindActorClassSystemByName(actor, className);
-  if (!classe) return { ok: true, reason: "class-not-present", className, failures: [] };
-  const failures = [];
-  for (const item of actor?.items ?? []) {
-    if (!add2eEquipmentEngine().itemEquipped(item)) continue;
-    const type = String(item.type ?? "").toLowerCase();
-    if (type !== "arme" && type !== "armure") continue;
-    const kind = type === "arme" ? "arme" : "armure";
-    const check = add2eCheckEquipmentAllowedForClassSystem(classe, item, kind);
-    if (!check.ok) failures.push({ itemId: item.id, itemName: item.name, kind, check });
-  }
-  return failures.length ? { ok: false, reason: "equipped-items-not-allowed-for-class-activity", className, failures } : { ok: true, reason: "equipped-items-allowed-for-class-activity", className, failures: [] };
-}
-
-function add2eGetThiefActivityRawArmorTags(item) {
+function add2eIsThiefActivityClassItem(item) {
+  if (String(item?.type ?? "").toLowerCase() !== "classe") return false;
   const system = item?.system ?? {};
-  return [
-    ...add2eToEquipArray(system.tags),
-    ...add2eToEquipArray(item?.flags?.add2e?.tags)
-  ].map(tag => String(tag).trim()).filter(Boolean);
+  if (system.thiefSkillMechanic?.enabled === true || system.assassinSkillMechanic?.enabled === true) return true;
+  const progression = Array.isArray(system.progression) ? system.progression : [];
+  return progression.some(row => row?.thiefSkills && typeof row.thiefSkills === "object" && !Array.isArray(row.thiefSkills));
+}
+
+function add2eThiefActivityClassItems(actor) {
+  return add2eGetActorClassItems(actor).filter(add2eIsThiefActivityClassItem);
 }
 
 function add2eIsThiefActivityBodyArmor(item) {
@@ -336,17 +306,17 @@ function add2eIsThiefActivityBodyArmor(item) {
 }
 
 function add2eCheckThiefActivityEquipmentAllowed(actor) {
-  const className = "Voleur";
-  const classe = add2eFindActorClassSystemByName(actor, className);
-  if (!classe) return { ok: true, reason: "class-not-present", className, failures: [] };
+  const classItems = add2eThiefActivityClassItems(actor);
+  const className = classItems.map(item => item.name).filter(Boolean).join(" / ") || "Compétence de voleur";
+  if (!classItems.length) return { ok: true, reason: "thief-activity-class-not-present", className, failures: [] };
 
+  const classe = add2eClassSystemFromItem(classItems[0]);
   const failures = [];
   for (const item of actor?.items ?? []) {
     if (!add2eIsThiefActivityBodyArmor(item)) continue;
 
-    const itemTags = add2eGetThiefActivityRawArmorTags(item);
-    const armorType = add2eNormalizeEquipTag(item?.system?.type_armure);
-    if (armorType === "cuir" || itemTags.includes("type_armure:cuir")) continue;
+    const itemTags = add2eGetItemEquipTags(item);
+    if (itemTags.includes("type_armure:cuir")) continue;
 
     failures.push({
       itemId: item.id,
@@ -356,7 +326,7 @@ function add2eCheckThiefActivityEquipmentAllowed(actor) {
         ok: false,
         reason: "thief-activity-body-armor-not-leather",
         classe,
-        classeLabel: classe.__classItemName ?? classe.label ?? classe.nom ?? classe.name ?? className,
+        classeLabel: className,
         itemTags,
         requiredTag: "type_armure:cuir",
         mode: "thief-body-armor-tag"
@@ -370,13 +340,14 @@ function add2eCheckThiefActivityEquipmentAllowed(actor) {
 }
 
 function add2eGetThiefActivityEquipmentStatus(actor) {
-  const thiefClass = add2eFindActorClassSystemByName(actor, "Voleur");
-  if (!thiefClass) {
+  const classItems = add2eThiefActivityClassItems(actor);
+  const className = classItems.map(item => item.name).filter(Boolean).join(" / ") || "Compétence de voleur";
+  if (!classItems.length) {
     return {
       applies: false,
       ok: true,
-      reason: "thief-class-not-present",
-      className: "Voleur",
+      reason: "thief-activity-class-not-present",
+      className,
       failures: [],
       blockingItems: [],
       message: ""
@@ -396,8 +367,8 @@ function add2eGetThiefActivityEquipmentStatus(actor) {
   return {
     applies: true,
     ok: check?.ok !== false,
-    reason: check?.reason ?? "equipped-items-allowed-for-class-activity",
-    className: "Voleur",
+    reason: check?.reason ?? "equipped-items-allowed-for-thief-activity",
+    className,
     failures,
     blockingItems,
     message: check?.ok === false
@@ -406,61 +377,7 @@ function add2eGetThiefActivityEquipmentStatus(actor) {
   };
 }
 
-function add2eThiefClassLevel(actor, thiefClass) {
-  const rawKey = thiefClass?.slug ?? thiefClass?.label ?? thiefClass?.nom ?? thiefClass?.name ?? thiefClass?.__classItemName ?? "Voleur";
-  const key = add2eNormalizeEquipTag(rawKey);
-  const levels = actor?.system?.niveaux_par_classe ?? {};
-  if (key && levels[key] !== undefined) return Math.max(1, Number(levels[key]) || 1);
-  return Math.max(1, Number(actor?.system?.niveau ?? 1) || 1);
-}
-
-function add2eThiefActivityRollContext(actor) {
-  const thiefClass = add2eFindActorClassSystemByName(actor, "Voleur");
-  if (!thiefClass || !actor) return actor;
-
-  const system = {
-    ...(actor.system ?? {}),
-    classe: thiefClass.__classItemName ?? thiefClass.label ?? thiefClass.nom ?? thiefClass.name ?? "Voleur",
-    details_classe: thiefClass,
-    niveau: add2eThiefClassLevel(actor, thiefClass)
-  };
-
-  return new Proxy(actor, {
-    get(target, property) {
-      if (property === "system") return system;
-      const value = Reflect.get(target, property, target);
-      return typeof value === "function" ? value.bind(target) : value;
-    }
-  });
-}
-
-function add2eInstallThiefActivityRollGuard() {
-  if (globalThis.__ADD2E_THIEF_ACTIVITY_ROLL_GUARD_V1) return;
-  globalThis.__ADD2E_THIEF_ACTIVITY_ROLL_GUARD_V1 = true;
-
-  const install = () => {
-    const original = globalThis.add2eRollThiefSkill;
-    if (typeof original !== "function" || original.__add2eThiefActivityGuard) return;
-
-    const guarded = async function add2eRollThiefSkillWithEquipmentGuard(actor, ...args) {
-      const status = add2eGetThiefActivityEquipmentStatus(actor);
-      if (status.applies && !status.ok) {
-        ui.notifications?.warn?.(status.message || "Les capacités de voleur sont indisponibles avec l'équipement actuellement porté.");
-        return false;
-      }
-      return original.call(this, add2eThiefActivityRollContext(actor), ...args);
-    };
-    guarded.__add2eThiefActivityGuard = true;
-    guarded.__add2eThiefActivityOriginal = original;
-    globalThis.add2eRollThiefSkill = guarded;
-  };
-
-  if (game?.ready) queueMicrotask(install);
-  else Hooks.once("ready", install);
-}
-
 add2eInstallWeaponClassEquipmentGuard();
-add2eInstallThiefActivityRollGuard();
 
 globalThis.add2eNormalizeEquipTag = add2eNormalizeEquipTag;
 globalThis.add2eToEquipArray = add2eToEquipArray;
@@ -468,22 +385,17 @@ globalThis.add2eGetActorClassSystem = add2eGetActorClassSystem;
 globalThis.add2eGetActorClassItems = add2eGetActorClassItems;
 globalThis.add2eGetItemEquipTags = add2eGetItemEquipTags;
 globalThis.add2eCheckEquipmentAllowedForClass = add2eCheckEquipmentAllowedForClass;
-globalThis.add2eCheckEquippedItemsForClassActivity = add2eCheckEquippedItemsForClassActivity;
 globalThis.add2eCheckThiefActivityEquipmentAllowed = add2eCheckThiefActivityEquipmentAllowed;
 globalThis.add2eGetThiefActivityEquipmentStatus = add2eGetThiefActivityEquipmentStatus;
 try { globalThis.add2eDeepClone = add2eDeepClone; } catch (_e) {}
 try { globalThis.add2ePushEquipTag = add2ePushEquipTag; } catch (_e) {}
 try { globalThis.add2ePushEquipTags = add2ePushEquipTags; } catch (_e) {}
-try { globalThis.add2eHasUsefulValue = add2eHasUsefulValue; } catch (_e) {}
 try { globalThis.add2eGetActorClassItem = add2eGetActorClassItem; } catch (_e) {}
 try { globalThis.add2eHasTagRestriction = add2eHasTagRestriction; } catch (_e) {}
 try { globalThis.add2eCheckItemTagRestriction = add2eCheckItemTagRestriction; } catch (_e) {}
 try { globalThis.add2eIsShield = add2eIsShield; } catch (_e) {}
 try { globalThis.add2eIsHelmet = add2eIsHelmet; } catch (_e) {}
 try { globalThis.add2eCheckEquipmentAllowedForClassSystem = add2eCheckEquipmentAllowedForClassSystem; } catch (_e) {}
-try { globalThis.add2eFindActorClassSystemByName = add2eFindActorClassSystemByName; } catch (_e) {}
-try { globalThis.add2eThiefClassLevel = add2eThiefClassLevel; } catch (_e) {}
-try { globalThis.add2eThiefActivityRollContext = add2eThiefActivityRollContext; } catch (_e) {}
 try { globalThis.add2eIsWeaponItem = add2eIsWeaponItem; } catch (_e) {}
 try { globalThis.add2eGetForbiddenEquippedWeapons = add2eGetForbiddenEquippedWeapons; } catch (_e) {}
 try { globalThis.add2eReconcileEquippedWeaponsForClass = add2eReconcileEquippedWeaponsForClass; } catch (_e) {}
