@@ -2,7 +2,7 @@
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 // Le contexte rendu utilise une vue isolée du système de l'acteur.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-08-10-native-drop-binding-v11";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-08-10-native-drop-handler-v12";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -271,9 +271,12 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
     }
   }
 
-  async _onDrop(event) {
-    event?.preventDefault?.();
-    return false;
+  async _onDrop(event, data = null) {
+    const handler = globalThis.add2eHandleActorSheetDrop;
+    if (typeof handler !== "function") {
+      throw new Error("Le routeur canonique ADD2E du drop de feuille personnage est indisponible.");
+    }
+    return handler(this, event, data);
   }
 
   _add2eNativeGetData() {
