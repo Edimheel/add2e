@@ -1,6 +1,6 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs, parchemins et composants.
-// Version : 2026-08-07-canonical-resource-cast-v5
+// Version : 2026-08-10-strict-memorized-resource-cast-v6
 
 import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
@@ -28,72 +28,28 @@ function add2eCastResourceEngine() {
   return engine;
 }
 
-function listKeys(sortDoc) {
-  try {
-    if (typeof globalThis.add2eGetSpellListsFromItem === "function") return globalThis.add2eGetSpellListsFromItem(sortDoc).map(norm).filter(Boolean);
-  } catch (_e) {}
-  const system = sortDoc?.system ?? {};
-  const flags = sortDoc?.flags?.add2e ?? {};
-  const raw = [flags.learnedSpellLists, flags.knownSpellLists, flags.grantedSpellLists, system.spellLists, system.liste, system.liste_sort, system.listeSort, system.classe, system.class]
-    .flatMap(value => Array.isArray(value) ? value : value ? [value] : []);
-  return raw.flatMap(value => String(value ?? "").split(/[,;|\n]+/g)).map(norm).filter(Boolean);
-}
-
-function sourceKeys(sortDoc) {
-  const flags = sortDoc?.flags?.add2e ?? {};
-  return [sortDoc?.uuid, sortDoc?._stats?.compendiumSource, sortDoc?.flags?.core?.sourceId, flags.sourceUuid, flags.sourceId, flags.importKey, flags.foundryId, sortDoc?.id, sortDoc?._id]
-    .map(value => String(value ?? "").trim())
-    .filter(Boolean);
-}
-
-function resolveActorSpell(actorDoc, sortDoc) {
-  if (!actorDoc?.items || !sortDoc) return sortDoc ?? null;
-  if (sortDoc.system?.isPower) return sortDoc;
-  if (sortDoc.parent?.id === actorDoc.id && actorDoc.items.get(sortDoc.id)) return sortDoc;
-  for (const id of [sortDoc.id, sortDoc._id].map(value => String(value ?? "").trim()).filter(Boolean)) {
-    const direct = actorDoc.items.get(id);
-    if (direct) return direct;
+function add2eCastConsumablesApi() {
+  const api = globalThis.ADD2E_CONSUMABLES;
+  if (!api
+    || typeof api.add2eReserveSpellComponents !== "function"
+    || typeof api.add2eRefundSpellComponents !== "function"
+    || typeof api.add2eFinalizeSpellComponents !== "function") {
+    throw new Error("Le propriétaire canonique ADD2E des composants de sort est indisponible.");
   }
-  const keys = new Set(sourceKeys(sortDoc));
-  const importKey = String(sortDoc.flags?.add2e?.importKey ?? "").trim();
-  const routedClass = norm(sortDoc.flags?.add2e?.routedClass ?? sortDoc.system?.classe ?? sortDoc.system?.class ?? "");
-  const targetName = norm(sortDoc.name);
-  const targetLevel = Number(sortDoc.system?.niveau ?? sortDoc.system?.level ?? 1) || 1;
-  const targetLists = listKeys(sortDoc);
-  const spells = Array.from(actorDoc.items ?? []).filter(item => String(item.type ?? "").toLowerCase() === "sort");
-  let found = spells.find(item => sourceKeys(item).some(key => keys.has(key)));
-  if (found) return found;
-  found = spells.find(item => importKey && String(item.flags?.add2e?.importKey ?? "") === importKey);
-  if (found) return found;
-  found = spells.find(item => {
-    if (norm(item.name) !== targetName) return false;
-    if ((Number(item.system?.niveau ?? item.system?.level ?? 1) || 1) !== targetLevel) return false;
-    const lists = listKeys(item);
-    if (targetLists.length && !targetLists.some(key => lists.includes(key))) return false;
-    if (routedClass && lists.length && !lists.includes(routedClass)) return false;
-    return true;
-  });
-  if (found) return found;
-  console.warn("[ADD2E][CAST_SPELL][RESOLVE_ACTOR_SPELL][FALLBACK_INPUT]", {
-    actor: actorDoc.name,
-    sort: sortDoc.name,
-    sortId: sortDoc.id,
-    importKey,
-    routedClass,
-    targetLevel,
-    targetLists
-  });
-  return sortDoc;
+  return api;
+}
+
+function add2eResolveOwnedMemorizedSpell(actorDoc, sortDoc) {
+  if (!actorDoc?.items || !sortDoc) return null;
+  if (sortDoc?.system?.isPower === true) return sortDoc;
+  const id = String(sortDoc.id ?? "").trim();
+  if (!id || String(sortDoc?.parent?.id ?? "") !== String(actorDoc.id ?? "")) return null;
+  const owned = actorDoc.items.get(id) ?? null;
+  return owned && String(owned.type ?? "").toLowerCase() === "sort" ? owned : null;
 }
 
 function getCasterToken(actorDoc) {
   return canvas?.tokens?.controlled?.[0] ?? actorDoc?.getActiveTokens?.()?.[0] ?? null;
-}
-
-function onUseManagesSpellComponents(scriptPath, sortDoc) {
-  const explicit = sortDoc?.flags?.add2e?.componentManagement ?? sortDoc?.system?.componentManagement ?? sortDoc?.system?.gestionComposants;
-  if (["onUse", "onuse", "script", "manual", "manuel"].includes(String(explicit ?? "").trim())) return true;
-  return norm(scriptPath).includes("benediction");
 }
 
 function renderApplication(app) {
@@ -162,12 +118,30 @@ async function refreshActorSpellSheets(actorDoc, sortDoc, value) {
   }, 80);
 }
 
+function add2eCanonicalCasterLevel(actorDoc, sortDoc) {
+  if (actorDoc?.type === "personnage"
+    && typeof globalThis.add2eGetSpellEntryForSpell === "function"
+    && typeof globalThis.add2eGetSpellAccessEntryDetails === "function"
+    && typeof globalThis.add2eSpellClassLevel === "function") {
+    const entry = globalThis.add2eGetSpellEntryForSpell(actorDoc, sortDoc);
+    if (entry) {
+      const spellLevel = Number(sortDoc?.system?.niveau) || 1;
+      const access = globalThis.add2eGetSpellAccessEntryDetails(actorDoc, entry, spellLevel);
+      const source = access?.eligibleSources?.[0] ?? entry?.sources?.[0] ?? null;
+      const level = source ? Number(globalThis.add2eSpellClassLevel(actorDoc, source)) : 0;
+      if (Number.isFinite(level) && level > 0) return Math.floor(level);
+    }
+  }
+  const monsterLevel = actorDoc?.type === "monster" ? Number(actorDoc.system?.niveau) : 0;
+  return Number.isFinite(monsterLevel) && monsterLevel > 0 ? Math.floor(monsterLevel) : 1;
+}
+
 async function fallbackChat(actorDoc, sortDoc, chargeLabel = "") {
   if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
     throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
   }
   const info = sortDoc.system ?? {};
-  const level = Number(actorDoc.system?.niveau) || Number(info.niveau) || 1;
+  const level = add2eCanonicalCasterLevel(actorDoc, sortDoc);
   const fields = [
     ["Portée", "portee"],
     ["Durée", "duree"],
@@ -199,14 +173,17 @@ async function fallbackChat(actorDoc, sortDoc, chargeLabel = "") {
 }
 
 function add2eDivineCastingSource(actor, sort) {
-  if (!actor || !sort || globalThis.add2eIsRegularPreparableSpell?.(sort) === false) return null;
-  const entry = globalThis.add2eGetSpellEntryForSpell?.(actor, sort) ?? null;
+  if (!actor || !sort || typeof globalThis.add2eIsRegularPreparableSpell !== "function") return null;
+  if (globalThis.add2eIsRegularPreparableSpell(sort) === false) return null;
+  if (typeof globalThis.add2eGetSpellEntryForSpell !== "function") {
+    throw new Error("Le propriétaire canonique des entrées de sorts ADD2E est indisponible.");
+  }
+  const entry = globalThis.add2eGetSpellEntryForSpell(actor, sort) ?? null;
   const sources = Array.isArray(entry?.sources) && entry.sources.length ? entry.sources : entry ? [entry] : [];
   for (const source of sources) {
     const classItem = actor.items?.get?.(source?.classItemId) ?? null;
     const casting = classItem?.system?.spellcasting ?? {};
-    if (norm(casting.mode ?? classItem?.system?.casterType) !== "divine") continue;
-    if (casting.enabled === false) continue;
+    if (casting.enabled !== true || norm(casting.mode) !== "divine") continue;
     return { entry, source, classItem, casting };
   }
   return null;
@@ -350,10 +327,12 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
   const scrollCast = castMode === "scroll";
   const inputSort = sort;
 
-  if (!scrollCast) sort = resolveActorSpell(actor, sort);
-  if (!sort) {
-    ui.notifications.warn("Sort introuvable sur l'acteur.");
-    return false;
+  if (!scrollCast) {
+    sort = add2eResolveOwnedMemorizedSpell(actor, sort);
+    if (!sort) {
+      ui.notifications.warn("Le lancement mémorisé exige l’Item sort exact appartenant à cet acteur.");
+      return false;
+    }
   }
 
   if (scrollCast && (!sourceItem || sourceItem.parent?.id !== actor.id)) {
@@ -392,7 +371,8 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
 
   async function refundComponents(reason = "") {
     if (!componentReservation) return false;
-    const refunded = await globalThis.ADD2E_CONSUMABLES?.add2eRefundSpellComponents?.(componentReservation);
+    const api = add2eCastConsumablesApi();
+    const refunded = await api.add2eRefundSpellComponents(componentReservation);
     if (refunded) console.log("[ADD2E][CAST_SPELL][REFUND][COMPONENTS]", { reason, sort: spellToUse?.name });
     componentReservation = null;
     return Boolean(refunded);
@@ -402,11 +382,8 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
     if (!componentReservation) return true;
     const reservation = componentReservation;
     componentReservation = null;
-    const finalize = globalThis.ADD2E_CONSUMABLES?.add2eFinalizeSpellComponents;
-    if (typeof finalize !== "function") {
-      throw new Error("Le finaliseur canonique ADD2E des composants de sort est indisponible.");
-    }
-    const finalized = await finalize(reservation);
+    const api = add2eCastConsumablesApi();
+    const finalized = await api.add2eFinalizeSpellComponents(reservation);
     if (!finalized) {
       console.error("[ADD2E][CAST_SPELL][FINALIZE][COMPONENTS_FAILED]", { reason, actor: actor.name, sort: spellToUse?.name, reservation });
       ui.notifications.error("Les composants ont été consommés, mais la suppression des piles épuisées doit être vérifiée par le MJ.");
@@ -416,10 +393,7 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
 
   async function reserveComponents() {
     if (scrollCast || sort.system?.isPower) return true;
-    const api = globalThis.ADD2E_CONSUMABLES;
-    if (!api?.add2eReserveSpellComponents) return true;
-    const scriptPath = add2eGetSortOnUsePath(spellToUse);
-    if (onUseManagesSpellComponents(scriptPath, spellToUse)) return true;
+    const api = add2eCastConsumablesApi();
     componentReservation = await api.add2eReserveSpellComponents(actor, spellToUse);
     if (componentReservation?.blocked) {
       const blockedMessage = componentReservation.message;
@@ -567,7 +541,11 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
     }
 
     if (scrollCast) {
-      const consumed = await globalThis.ADD2E_ARCANE_DOCUMENTS?.consumeScrollSpell?.(
+      const consumeScrollSpell = globalThis.ADD2E_ARCANE_DOCUMENTS?.consumeScrollSpell;
+      if (typeof consumeScrollSpell !== "function") {
+        throw new Error("Le propriétaire canonique des parchemins ADD2E est indisponible.");
+      }
+      const consumed = await consumeScrollSpell(
         actor,
         sourceItem,
         sourceSpellKey || sort.flags?.add2e?.scrollSpellKey
