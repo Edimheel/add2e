@@ -1,13 +1,14 @@
 // ============================================================
 // ADD2E — Spellcasting par Items classe
-// Version : 2026-08-10-canonical-preparation-source-v6
-// Les Items classe sont l’unique source de niveau et de listes de sorts.
+// Version : 2026-08-10-unified-spell-memorization-v7
+// Les Items classe sont l’unique source de niveau et de listes de sorts des PJ.
 // Les profils dérivés canoniques sont l’unique source Intelligence/Sagesse.
 // Les emplacements sont lus exclusivement depuis spellcasting.preparationSource.
+// Toute mémorisation, y compris celle des monstres, utilise ce propriétaire unique.
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-10-canonical-preparation-source-v6";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-10-unified-spell-memorization-v7";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -37,14 +38,15 @@ function add2eNormalizeSpellKey(value) {
     paladin: "clerc",
     druid: "druide", druide: "druide", druidique: "druide",
     wizard: "magicien", mage: "magicien", magic_user: "magicien", magicien: "magicien", magician: "magicien",
-    illusionist: "illusionniste", illusionniste: "illusionniste"
+    illusionist: "illusionniste", illusionniste: "illusionniste",
+    monster: "monster", monstre: "monster"
   };
   return aliases[normalized] || normalized;
 }
 
 function add2eSpellLabel(value) {
   const key = add2eNormalizeSpellKey(value);
-  const labels = { clerc: "Clerc", druide: "Druide", magicien: "Magicien", illusionniste: "Illusionniste" };
+  const labels = { clerc: "Clerc", druide: "Druide", magicien: "Magicien", illusionniste: "Illusionniste", monster: "Monstre" };
   return labels[key] || String(value ?? key ?? "—");
 }
 
@@ -272,6 +274,23 @@ function add2eGetSpellcastingEntries(actor) {
   return add2eMergeSpellcastingEntries(entries);
 }
 
+function add2eMonsterSpellEntry(actor) {
+  if (String(actor?.type ?? "").toLowerCase() !== "monster") return null;
+  return {
+    index: 0,
+    key: "monster",
+    label: "Monstre",
+    startsAt: 1,
+    maxSpellLevel: 0,
+    preparationSource: null,
+    notes: "Compteur explicite de sort de monstre.",
+    classItemId: null,
+    classSlug: "monster",
+    className: actor?.name ?? "Monstre",
+    sources: []
+  };
+}
+
 function add2eGetSpellListsFromItem(sort) {
   return [...new Set(
     add2eToArray(sort?.system?.spellLists)
@@ -365,6 +384,24 @@ function add2eSpellIntelligenceAccess(actor, entry, spellLevel) {
 }
 
 function add2eSpellAccessEntryDetails(actor, entry, spellLevel) {
+  if (add2eNormalizeSpellKey(entry?.key) === "monster" && String(actor?.type ?? "").toLowerCase() === "monster") {
+    const source = { ...entry };
+    const level = Number(spellLevel) || 1;
+    return {
+      ok: true,
+      details: [{
+        source,
+        progression: { ok: true, actorLevel: Number(actor?.system?.niveau) || 0, startsAt: 1, maximum: 0 },
+        requirement: { ok: true, classItem: null, spellLevel: level, requirement: null },
+        intelligence: { ok: true, applies: false, maximum: null, score: null },
+        ok: true
+      }],
+      eligibleSources: [source],
+      blockedSources: [],
+      intelligence: { ok: true, applies: false, maximum: null, score: null }
+    };
+  }
+
   const sources = Array.isArray(entry?.sources) && entry.sources.length ? entry.sources : [entry];
   const level = Number(spellLevel) || 0;
   const intelligence = add2eSpellIntelligenceAccess(actor, entry, level);
@@ -445,6 +482,20 @@ function add2eWisdomBonusSpellSlots(actor, spellLevel) {
 }
 
 function add2eSpellSlotBonusDetails(actor, entry, spellLevel) {
+  if (add2eNormalizeSpellKey(entry?.key) === "monster") {
+    return {
+      total: 0,
+      wisdom: 0,
+      effects: 0,
+      abilityScore: 0,
+      spellLevel: Number(spellLevel) || 1,
+      entryKey: "monster",
+      blocked: false,
+      access: add2eSpellAccessEntryDetails(actor, entry, spellLevel),
+      version: globalThis.ADD2E_SPELL_PREPARATION_VERSION
+    };
+  }
+
   const access = add2eSpellAccessEntryDetails(actor, entry, spellLevel);
   if (!access.ok) {
     return {
@@ -478,6 +529,7 @@ function add2eSpellSlotBonusDetails(actor, entry, spellLevel) {
 }
 
 function add2eGetSlotsForEntryLevel(actor, entry, spellLevel) {
+  if (add2eNormalizeSpellKey(entry?.key) === "monster") return 0;
   const access = add2eSpellAccessEntryDetails(actor, entry, spellLevel);
   if (!access.ok) return 0;
   let base = 0;
@@ -525,6 +577,9 @@ function add2eEntryAvailableForSpell(actor, entry, spellLevel) {
 
 function add2eGetSpellEntryForSpell(actor, sort) {
   if (!add2eIsRegularPreparableSpell(sort)) return null;
+  const monsterEntry = add2eMonsterSpellEntry(actor);
+  if (monsterEntry) return monsterEntry;
+
   const spellLevel = Number(sort?.system?.niveau) || 0;
   const spellLists = add2eGetSpellListsFromItem(sort);
   const entries = add2eGetSpellcastingEntries(actor);
@@ -535,6 +590,21 @@ function add2eGetSpellEntryForSpell(actor, sort) {
 
 function add2eCanActorUseSpell(actor, sort) {
   if (!add2eIsRegularPreparableSpell(sort)) return { ok: false, reason: "not-regular-spell", sortLists: [], entries: add2eGetSpellcastingEntries(actor), entry: null };
+
+  const monsterEntry = add2eMonsterSpellEntry(actor);
+  if (monsterEntry) {
+    return {
+      ok: true,
+      reason: "ok",
+      sortLists: ["monster"],
+      entries: [monsterEntry],
+      entry: monsterEntry,
+      actorLevel: Number(actor?.system?.niveau) || 0,
+      spellLevel: Number(sort?.system?.niveau) || 1,
+      accessRequirements: add2eSpellAccessEntryDetails(actor, monsterEntry, Number(sort?.system?.niveau) || 1)
+    };
+  }
+
   const spellLevel = Number(sort?.system?.niveau) || 0;
   const sortLists = add2eGetSpellListsFromItem(sort);
   const entries = add2eGetSpellcastingEntries(actor);
@@ -587,8 +657,9 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
     throw new Error("La ressource de mémorisation demandée est invalide.");
   }
   const actor = sort.actor ?? sort.parent ?? null;
+  const monster = key === "monster" && String(actor?.type ?? "").toLowerCase() === "monster";
   const level = Math.max(1, Number(sort.system?.niveau) || 1);
-  const maximum = actor ? add2eGetSlotsForEntryLevel(actor, entry, level) : null;
+  const maximum = monster ? null : actor ? add2eGetSlotsForEntryLevel(actor, entry, level) : null;
 
   return {
     id: `${sort.uuid ?? sort.id}:memorization:${key}`,
@@ -604,7 +675,7 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
     maximum,
     cost: Math.max(0, Number(options.cost ?? 1) || 0),
     recovery: Math.max(0, Number(options.recovery ?? 0) || 0),
-    recoveryPeriod: "preparation",
+    recoveryPeriod: monster ? "manual" : "preparation",
     source: {
       kind: "spell",
       id: String(sort.id ?? ""),
@@ -620,7 +691,7 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
     write: async nextValue => {
       const next = Math.max(0, Math.floor(Number(nextValue) || 0));
       const liveCurrent = add2eSpellStoredMemorization(sort, key);
-      if (actor && Number.isFinite(maximum)) {
+      if (!monster && actor && Number.isFinite(maximum)) {
         const currentTotal = add2eCountPreparedForEntryLevel(actor, entry, level);
         const projected = Math.max(0, currentTotal - liveCurrent + next);
         if (projected > maximum) {
@@ -628,7 +699,8 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
         }
       }
       const nextByList = add2eGetMemorizedByList(sort);
-      nextByList[key] = next;
+      if (next > 0) nextByList[key] = next;
+      else delete nextByList[key];
       await sort.update({
         "flags.add2e.memorizedByList": nextByList
       }, {
@@ -693,8 +765,12 @@ async function add2eConsumeMemorizedSpell(sort, entry, cost = 1, options = {}) {
 
 function add2eGetTotalMemorizedCount(sort) {
   if (!sort || !add2eIsRegularPreparableSpell(sort)) return 0;
+  const actor = sort.actor ?? sort.parent ?? null;
+  const monsterEntry = add2eMonsterSpellEntry(actor);
+  if (monsterEntry) return add2eGetMemorizedCountForEntry(sort, monsterEntry);
+
   const spellLists = add2eGetSpellListsFromItem(sort).map(add2eNormalizeSpellKey);
-  const entries = add2eGetSpellcastingEntries(sort.actor ?? sort.parent ?? null)
+  const entries = add2eGetSpellcastingEntries(actor)
     .filter(entry => spellLists.includes(add2eNormalizeSpellKey(entry.key)));
   return entries.reduce((sum, entry) => sum + add2eGetMemorizedCountForEntry(sort, entry), 0);
 }
@@ -707,6 +783,10 @@ function add2eCountPreparedForEntryLevel(actor, entry, spellLevel) {
     if (!add2eIsRegularPreparableSpell(sort)) continue;
     const sortLevel = Number(sort.system?.niveau) || 1;
     if (sortLevel !== level) continue;
+    if (key === "monster") {
+      total += add2eGetMemorizedCountForEntry(sort, entry);
+      continue;
+    }
     const lists = add2eGetSpellListsFromItem(sort).map(add2eNormalizeSpellKey).filter(Boolean);
     if (lists.includes(key)) total += add2eGetMemorizedCountForEntry(sort, entry);
   }
