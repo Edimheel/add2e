@@ -2,9 +2,9 @@
 // Compatible Foundry V13/V14/V15. Aucun Dialog V1.
 // Les domaines spécialisés sont appelés directement, sans wrapper de prototype.
 
-if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
+if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant le routeur de drop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-08-10-canonical-item-drop-v7";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-08-10-native-drop-handler-v8";
 const ADD2E_SPELL_DROP_PENDING = globalThis.ADD2E_SPELL_DROP_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_DROP_PENDING
   : new Set();
@@ -282,15 +282,16 @@ async function mergeDroppedAmmunition(sheet, event) {
   return merge(sheet, event);
 }
 
-globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(event, data = null) {
-  event.preventDefault?.();
-  event.stopPropagation?.();
+async function handleActorSheetDrop(sheet, event, data = null) {
+  if (!sheet?.actor) return false;
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
 
-  if (!data && await mergeDroppedAmmunition(this, event)) return false;
+  if (!data && await mergeDroppedAmmunition(sheet, event)) return false;
 
   let raw = data;
   if (!raw) {
-    try { raw = JSON.parse(event.dataTransfer?.getData("text/plain") || "{}"); }
+    try { raw = JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}"); }
     catch (_error) { return false; }
   }
   if (raw?.type !== "Item") return false;
@@ -299,24 +300,24 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
   const type = itemType(itemData);
   if (!new Set(["arme", "armure", "sort", "classe", "race", "objet"]).has(type)) return false;
 
-  if (["classe", "race"].includes(type)) return routeClassOrRaceDrop(this, itemData);
+  if (["classe", "race"].includes(type)) return routeClassOrRaceDrop(sheet, itemData);
 
   let spellCheck = null;
   let pendingKey = "";
   if (type === "sort" && typeof globalThis.add2eCanActorUseSpell === "function") {
     const source = itemData.uuid ? await fromUuid(itemData.uuid).catch(() => null) : null;
     const spellSource = source?.system ? source : { name: itemData.name, type: itemData.type, system: itemData.system, flags: itemData.flags };
-    spellCheck = globalThis.add2eCanActorUseSpell(this.actor, spellSource);
+    spellCheck = globalThis.add2eCanActorUseSpell(sheet.actor, spellSource);
     if (!spellCheck?.sortLists?.length) {
       ui.notifications.error(`Sort non migré : “${spellSource.name}” n’a pas system.spellLists.`);
       return false;
     }
     if (!spellCheck.ok) {
-      ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou préparer “${spellSource.name}”.`);
+      ui.notifications.error(`${sheet.actor.name} ne peut pas apprendre ou préparer “${spellSource.name}”.`);
       return false;
     }
     const markedItemData = markManualSpellList(itemData, spellCheck.entry);
-    pendingKey = spellDropKey(this.actor, markedItemData, spellCheck.entry);
+    pendingKey = spellDropKey(sheet.actor, markedItemData, spellCheck.entry);
     if (ADD2E_SPELL_DROP_PENDING.has(pendingKey)) {
       ui.notifications?.info?.(`Ajout de “${markedItemData.name}” en cours.`);
       return true;
@@ -326,12 +327,12 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
   }
 
   try {
-    const existing = Array.from(this.actor.items ?? []).find(item => item.name === itemData.name && itemType(item) === type) ?? null;
+    const existing = Array.from(sheet.actor.items ?? []).find(item => item.name === itemData.name && itemType(item) === type) ?? null;
     if (existing) {
       if (type === "sort" && sameSpell(existing, itemData) && spellCheck?.entry) {
-        const result = await add2eDropLearnSpellListOnExisting(this.actor, existing, spellCheck.entry);
+        const result = await add2eDropLearnSpellListOnExisting(sheet.actor, existing, spellCheck.entry);
         if (result?.handled) {
-          await finalizeSpellDrop(this, this.actor);
+          await finalizeSpellDrop(sheet, sheet.actor);
           if (result.alreadyKnown) ui.notifications?.info?.(`“${existing.name}” est déjà connu pour cette liste.`);
           return true;
         }
@@ -340,17 +341,17 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
       return false;
     }
 
-    const [created] = await this.actor.createEmbeddedDocuments("Item", [clone(itemData)], { add2eInternal: true, add2eCurrentDropName: true });
+    const [created] = await sheet.actor.createEmbeddedDocuments("Item", [clone(itemData)], { add2eInternal: true, add2eCurrentDropName: true });
     if (!created) return false;
-    await applyItemEffects(this.actor, created);
-    this._add2eRememberActiveTab?.();
-    if (type === "sort") await finalizeSpellDrop(this, this.actor);
-    else await renderDropResult(this, this.actor);
+    await applyItemEffects(sheet.actor, created);
+    sheet._add2eRememberActiveTab?.();
+    if (type === "sort") await finalizeSpellDrop(sheet, sheet.actor);
+    else await renderDropResult(sheet, sheet.actor);
     return true;
   } finally {
     if (pendingKey) ADD2E_SPELL_DROP_PENDING.delete(pendingKey);
   }
-};
+}
 
 function isStorageActor(actor) {
   if (!actor || actor.documentName !== "Actor") return false;
@@ -431,6 +432,7 @@ Hooks.on("deleteItem", (item, options = {}, userId = null) => {
   setTimeout(() => renderActorApplications(actor), 100);
 });
 
+try { globalThis.add2eHandleActorSheetDrop = handleActorSheetDrop; } catch (_error) {}
 try { globalThis.add2eBindActorSheetDropAnywhere = bindDropAnywhere; } catch (_error) {}
 try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catch (_error) {}
 try { globalThis.add2eDropBulkDelete = add2eDropBulkDelete; } catch (_error) {}
