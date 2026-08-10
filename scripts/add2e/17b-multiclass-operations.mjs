@@ -28,7 +28,6 @@ import {
   levelForClassXp,
   minXpForClassLevel,
   monoClassCleanupPayload,
-  monoClassStateFromActor,
   multiclassUpdatePayload,
   nextXpForClassLevel,
   raceCompatibleForMulticlass,
@@ -269,16 +268,31 @@ async function writeClassProgression(actor, entries, reason) {
   return updates.length;
 }
 
+function requireClassProgression(classDoc, context = "progression de classe") {
+  const state = classProgression(classDoc);
+  if (!state.hasLevel || !state.hasXp) {
+    throw new Error(`Item de classe « ${classDoc?.name ?? classDoc?.id ?? "inconnu"} » sans system.niveau/system.xp canonique (${context}).`);
+  }
+  return { level: state.level, xp: state.xp };
+}
+
+function totalClassXp(classDocs, context = "total XP") {
+  return (classDocs ?? []).reduce((total, classDoc) => total + requireClassProgression(classDoc, context).xp, 0);
+}
+
 function monoProgressionPayload(actor, classDoc, state) {
   const normalized = normalizeProgression(classDoc, state, systemRace(actor));
   const classSystem = classDoc?.system ?? {};
+  const classDetails = foundry.utils.deepClone(classSystem) ?? {};
+  delete classDetails.niveau;
+  delete classDetails.xp;
   const currentXp = minXpForClassLevel(classSystem, normalized.level);
   const nextXp = nextXpForClassLevel(classSystem, normalized.level);
   const title = classTitleForLevel(classSystem, normalized.level);
   const xpPercent = nextXp > currentXp ? Math.max(0, Math.min(100, Math.floor(((normalized.xp - currentXp) / (nextXp - currentXp)) * 100))) : 100;
   return {
     "system.classe": classDoc.name,
-    "system.details_classe": { ...(foundry.utils.deepClone(classSystem) ?? {}), name: classDoc.name, label: classDoc.system?.label || classDoc.name, slug: classSlug(classDoc), sourceItemId: classDoc.id, sourceItemUuid: classDoc.uuid },
+    "system.details_classe": { ...classDetails, name: classDoc.name, label: classDoc.system?.label || classDoc.name, slug: classSlug(classDoc), sourceItemId: classDoc.id, sourceItemUuid: classDoc.uuid },
     "system.spellcasting": foundry.utils.deepClone(classSystem.spellcasting ?? null),
     "system.niveau": normalized.level,
     "system.niveau_suggere": normalized.level,
@@ -356,9 +370,21 @@ async function syncRedistributedClassSpells(actor, entries, previousLevels, crea
   if (createdClass) await syncClassSpells(actor, createdClass, "multiclass-add-class-sync");
 }
 
+export async function refreshMonoclassSummary(actor, reason = "monoclass-item-progression-summary") {
+  if (!actor || actor.type !== "personnage") return null;
+  const docs = classItems(actor);
+  if (docs.length !== 1) return null;
+  const classDoc = docs[0];
+  const desired = normalizeProgression(classDoc, requireClassProgression(classDoc, reason), systemRace(actor));
+  await writeClassProgression(actor, [{ doc: classDoc, ...desired }], `${reason}:normalize-item`);
+  const payload = { ...monoClassCleanupPayload(), ...monoProgressionPayload(actor, classDoc, desired) };
+  await actor.update(payload, quietMutationOptions({ add2eReason: reason }));
+  return payload;
+}
+
 export async function cleanupAfterMonoclassReplace(actor, keepClassDoc, keepState = null, sheet = null) {
   if (!actor || actor.type !== "personnage" || !keepClassDoc) return false;
-  const desired = normalizeProgression(keepClassDoc, keepState ?? monoClassStateFromActor(actor, keepClassDoc), systemRace(actor));
+  const desired = normalizeProgression(keepClassDoc, keepState ?? requireClassProgression(keepClassDoc, "conservation monoclassée"), systemRace(actor));
   await writeClassProgression(actor, [{ doc: keepClassDoc, ...desired }], "multiclass-monoclass-keep-progression");
   const unwanted = classItems(actor).filter(doc => doc.id !== keepClassDoc.id);
   await purgeClassBoundContent(actor, unwanted, "multiclass-monoclass-purge");
@@ -422,7 +448,7 @@ export async function addClassAsMulticlass(actor, option, sheet = null) {
   const previousLevels = new Map();
   let totalXp = 0;
   if (existingDocs.length === 1) {
-    const initial = monoClassStateFromActor(actor, existingDocs[0]);
+    const initial = requireClassProgression(existingDocs[0], "promotion monoclassée vers multiclassage");
     const values = normalizeProgression(existingDocs[0], initial, systemRace(actor));
     previousLevels.set(String(existingDocs[0].id), values.level);
     totalXp = values.xp;
@@ -430,11 +456,9 @@ export async function addClassAsMulticlass(actor, option, sheet = null) {
   } else {
     if (!(await ensureCanonicalMulticlassState(actor))) return false;
     for (const doc of existingDocs) {
-      const state = classProgression(doc);
-      const level = Math.max(1, Math.floor(num(state.level, 1)));
-      const xp = Math.max(0, Math.floor(num(state.xp, 0)));
-      previousLevels.set(String(doc.id), level);
-      totalXp += xp;
+      const state = requireClassProgression(doc, "redistribution multiclassée");
+      previousLevels.set(String(doc.id), state.level);
+      totalXp += state.xp;
     }
   }
 
@@ -468,8 +492,8 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
   const replaced = classItems(actor).find(doc => String(doc.id) === String(option.replacedClassId) || classSlug(doc) === norm(option.replacedClassSlug));
   if (!replaced) { ui.notifications.error("Classe à remplacer introuvable dans l'acteur."); return false; }
   if (classItems(actor).some(doc => doc.id !== replaced.id && classSlug(doc) === classSlug(itemData))) { ui.notifications.warn(`${itemLabel(itemData, "Classe")} est déjà présente dans le multiclassage.`); return false; }
-  const replacedState = classProgression(replaced);
-  const inheritedXp = replacedState.hasXp ? Math.max(0, Math.floor(num(replacedState.xp, 0))) : Math.max(0, minXpForClassLevel(replaced.system ?? {}, Math.max(1, Math.floor(num(replacedState.level, 1)))));
+  const replacedState = requireClassProgression(replaced, "remplacement de classe multiclassée");
+  const inheritedXp = replacedState.xp;
   await applyRaceData(actor, option.raceData, sheet);
   await purgeClassBoundContent(actor, [replaced], "multiclass-replace-purge-class-content");
   await deleteLiveEmbeddedDocuments(actor, "Item", [replaced.id], { add2eReason: "multiclass-replace-delete-class" });
@@ -496,23 +520,22 @@ export async function applyClassAsMonoclass(actor, optionOrItemData, sheet = nul
   await applyRaceData(actor, raceData, sheet);
   const wantedSlug = classSlug(itemData);
   const existing = classItems(actor);
+  if (existing.length > 1 && !(await ensureCanonicalMulticlassState(actor))) return false;
   const existingTarget = existing.find(doc => classSlug(doc) === wantedSlug) ?? null;
   let keep = existingTarget;
-  let state = existingTarget ? canonicalClassState(actor, existingTarget) : null;
-  if (existing.length > 1 && !(await ensureCanonicalMulticlassState(actor))) return false;
+  let state = existingTarget ? requireClassProgression(existingTarget, "sélection monoclassée") : null;
   if (!keep) {
+    const inheritedXp = existing.length ? totalClassXp(existing, "création monoclassée") : 0;
     const data = cloneItemData(itemData);
     data.type = "classe";
     data.system = data.system ?? {};
-    const inheritedXp = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
     data.system.xp = inheritedXp;
     data.system.niveau = levelForClassXp(data.system, inheritedXp);
     const [created] = await actor.createEmbeddedDocuments("Item", [data], quietMutationOptions({ add2eReason: "multiclass-monoclass-create-class" }));
     if (!created) return false;
     keep = created;
-    state = canonicalClassState(actor, keep);
+    state = requireClassProgression(keep, "classe monoclassée créée");
   }
-  if (!state?.hasLevel || !state?.hasXp) state = monoClassStateFromActor(actor, keep);
   return cleanupAfterMonoclassReplace(actor, keep, state, sheet);
 }
 
