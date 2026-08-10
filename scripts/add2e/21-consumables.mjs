@@ -7,7 +7,7 @@ import {
   add2eRefundSpellComponents as add2eCoreRefundSpellComponents
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_CONSUMABLES_VERSION = "2026-08-07-direct-projectile-owner-v9";
+const ADD2E_CONSUMABLES_VERSION = "2026-08-10-canonical-ammunition-contract-v10";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -53,10 +53,6 @@ function add2eTagsOf(item) {
     ...add2eFieldArray(flags.effectTags),
     ...add2eFieldArray(flags.effecttags)
   ].map(t => String(t).trim()).filter(Boolean);
-}
-
-function add2eHasTag(item, predicate) {
-  return add2eTagsOf(item).some(predicate);
 }
 
 function add2eNumber(value, fallback = 0) {
@@ -140,17 +136,38 @@ export function add2eConsumablesSettings() {
   };
 }
 
+function add2eCanonicalTagValue(item, prefix) {
+  const wanted = `${String(prefix ?? "").trim().toLowerCase()}:`;
+  if (!wanted || wanted === ":") return "";
+  const raw = add2eTagsOf(item).find(tag => String(tag ?? "").trim().toLowerCase().startsWith(wanted));
+  if (!raw) return "";
+  return add2eSlugify(String(raw).split(":").slice(1).join(":"));
+}
+
+function add2eCanonicalAmmoSlug(item) {
+  const sys = item?.system ?? {};
+  const explicit = sys.munition_slug ?? sys.munitionSlug ?? sys.ammoSlug ?? sys.slug;
+  if (explicit) return add2eSlugify(explicit);
+  return add2eCanonicalTagValue(item, "slug");
+}
+
+function add2eCanonicalAmmoFamily(item) {
+  const sys = item?.system ?? {};
+  const explicit = sys.munition_type ?? sys.munitionType ?? sys.ammoType ?? sys.ammunitionType;
+  return explicit ? add2eSlugify(explicit) : "";
+}
+
+function add2eCanonicalIdentityKey(value) {
+  return add2eSlugify(value).replace(/_/g, "");
+}
+
 export function add2eIsAmmunition(item) {
   if (!item) return false;
   const sys = item.system ?? {};
-  const name = add2eSlugify(item?.name);
-  if (String(sys.categorie ?? "").toLowerCase() === "munition") return true;
-  if (String(sys.type ?? "").toLowerCase() === "munition") return true;
-  if (add2eHasTag(item, tag => {
-    const t = String(tag).toLowerCase();
-    return t === "munition" || t === "trait:munition" || t === "categorie:munition" || t.startsWith("munition:") || t.startsWith("projectile:");
-  })) return true;
-  return /\b(fleche|fleches|fleche_de|flèche|flèches|carreau|carreaux|trait|traits|bille|billes|pierre_de_fronde|pierres_de_fronde)\b/.test(name);
+  if (add2eSlugify(sys.type_arme) === "munition") return true;
+  if (add2eSlugify(sys.categorie) === "munition") return true;
+  if (add2eSlugify(sys.type) === "munition") return true;
+  return add2eTagsOf(item).some(tag => add2eSlugify(tag) === "type_arme_munition");
 }
 
 export function add2eIsSpellComponent(item) {
@@ -174,83 +191,39 @@ export function add2eIsSpellComponent(item) {
   return fields.some(v => v.startsWith("composant_") || v.startsWith("composant:") || v.startsWith("component_") || v.startsWith("spell_component_"));
 }
 
-function add2eWeaponFamily(arme) {
-  const sys = arme?.system ?? {};
-  const raw = sys.famille_arme ?? sys.famille ?? sys.sousType ?? sys.sous_type ?? arme?.name ?? "";
-  return Array.isArray(raw) ? raw.map(add2eSlugify) : [add2eSlugify(raw)];
+function add2eWeaponUsesAmmo(arme) {
+  return arme?.system?.utilise_munition === true;
 }
 
 export function add2eGetWeaponRequiredAmmoType(arme) {
-  const sys = arme?.system ?? {};
-  const explicit = sys.munition_requise ?? sys.munitionRequise ?? sys.ammoType ?? sys.ammunitionType;
-  if (explicit) return add2eSlugify(explicit);
-  const tag = add2eTagsOf(arme).find(t => /^munition_requise:/i.test(String(t)) || /^ammo:/i.test(String(t)));
-  if (tag) return add2eSlugify(String(tag).split(":").slice(1).join(":"));
-  const haystack = [arme?.name, sys.nom, sys.type_arme, sys.categorie, sys.sousType, sys.sous_type, ...add2eWeaponFamily(arme), ...add2eTagsOf(arme)].join(" ").toLowerCase();
-  if (/sarbacane/.test(haystack)) return "aiguille";
-  if (/fronde/.test(haystack)) return "bille";
-  if (/arquebuse|arme_a_feu|arme a feu/.test(haystack)) return "balle_arquebuse";
-  if (/arbalete|arbalète/.test(haystack)) return "carreau";
-  if (/\barc\b/.test(haystack)) return "fleche";
-  return "";
-}
-
-function add2eAmmoType(item) {
-  const sys = item?.system ?? {};
-  const explicitCandidates = [
-    sys.munitionType,
-    sys.munition_type,
-    sys.ammoType,
-    sys.ammunitionType,
-    sys.sousType,
-    sys.sous_type,
-    sys.subtype
-  ].map(add2eSlugify).filter(Boolean);
-  const generic = new Set(["munition", "munitions", "projectile", "projectiles", "consommable", "consommables"]);
-  const explicit = explicitCandidates.find(value => !generic.has(value));
-  if (explicit) return explicit;
-
-  for (const tag of add2eTagsOf(item)) {
-    const raw = String(tag ?? "");
-    if (/^(munition|projectile):/i.test(raw)) {
-      const value = add2eSlugify(raw.split(":").slice(1).join(":"));
-      if (value && !generic.has(value)) return value;
-    }
+  if (!arme || !add2eWeaponUsesAmmo(arme)) return "";
+  const required = add2eSlugify(arme.system?.munition_requise);
+  if (!required) {
+    throw new Error(`${arme.name ?? "Arme"} : utilise_munition=true mais munition_requise est absente.`);
   }
-
-  const haystack = [item?.name, sys.nom, sys.slug, sys.categorie, sys.category, ...add2eTagsOf(item)]
-    .map(add2eSlugify)
-    .filter(Boolean)
-    .join(" ");
-  if (/\baiguille(s)?\b/.test(haystack)) return "aiguille";
-  if (/\bballe(s)?_arquebuse\b|\bmunition_arquebuse\b/.test(haystack)) return "balle_arquebuse";
-  if (/\bcarreau(x)?\b|\btrait(s)?_arbalete\b/.test(haystack)) return "carreau";
-  if (/\bfleche(s)?\b/.test(haystack)) return "fleche";
-  if (/\bbille(s)?\b|\bpierre(s)?_de_fronde\b/.test(haystack)) return "bille";
-  return "";
+  return required;
 }
 
 function add2eAmmoCompatibleWithRequired(item, required, arme = null) {
-  if (!required) return false;
+  if (!add2eIsAmmunition(item) || !required) return false;
   const requiredSlug = add2eSlugify(required);
-  const ammoType = add2eAmmoType(item);
-  if (ammoType === requiredSlug) return true;
-  if (requiredSlug === "carreau" && ammoType.startsWith("carreau")) return true;
-  if (requiredSlug === "fleche" && ammoType.startsWith("fleche")) return true;
-  if (requiredSlug === "bille" && ammoType.startsWith("bille")) return true;
-  if (requiredSlug === "aiguille" && ammoType.includes("aiguille")) return true;
-  const sys = item?.system ?? {};
-  const compat = add2eAsArray(sys.compatibleArmes ?? sys.compatible_armes ?? sys.compatibleMunition ?? sys.compatible_munition).map(add2eSlugify);
-  if (compat.includes(requiredSlug)) return true;
-  const tags = add2eTagsOf(item).map(t => String(t).toLowerCase());
-  if (tags.includes(`munition:${requiredSlug}`) || tags.includes(`compatible_munition:${requiredSlug}`) || tags.includes(`compatible:${requiredSlug}`)) return true;
-  return add2eWeaponFamily(arme).some(f => tags.includes(`compatible:${f}`) || tags.includes(`compatible_arme:${f}`));
+  const ammoFamily = add2eCanonicalAmmoFamily(item);
+  const ammoSlug = add2eCanonicalAmmoSlug(item);
+  if (!ammoFamily && !ammoSlug) return false;
+
+  if (ammoFamily === requiredSlug) return true;
+  if (ammoSlug === requiredSlug || ammoSlug.startsWith(`${requiredSlug}_`)) return true;
+
+  const defaultSlug = add2eSlugify(arme?.system?.munition_par_defaut);
+  if (defaultSlug && ammoSlug && add2eCanonicalIdentityKey(defaultSlug) === add2eCanonicalIdentityKey(ammoSlug)) return true;
+  return false;
 }
 
 export function add2eGetCompatibleProjectiles(actor, arme) {
+  if (!actor || !arme) return [];
   const required = add2eGetWeaponRequiredAmmoType(arme);
-  if (!actor || !required) return [];
-  return Array.from(actor.items ?? []).filter(item => add2eIsAmmunition(item) && add2eAmmoCompatibleWithRequired(item, required, arme));
+  if (!required) return [];
+  return Array.from(actor.items ?? []).filter(item => add2eAmmoCompatibleWithRequired(item, required, arme));
 }
 
 export function add2eGetEquippedProjectileForWeapon(actor, arme) {
@@ -485,7 +458,10 @@ async function add2eConsumablesResolveDropItemData(raw) {
 }
 
 function add2eSameAmmunitionIdentity(a, b) {
-  return add2eIsAmmunition(a) && add2eIsAmmunition(b) && String(a?.type ?? "") === String(b?.type ?? "") && add2eSlugify(a?.name) === add2eSlugify(b?.name);
+  if (!add2eIsAmmunition(a) || !add2eIsAmmunition(b)) return false;
+  const aSlug = add2eCanonicalAmmoSlug(a);
+  const bSlug = add2eCanonicalAmmoSlug(b);
+  return Boolean(aSlug && bSlug && aSlug === bSlug);
 }
 
 function add2eDroppedQuantity(itemData) {
