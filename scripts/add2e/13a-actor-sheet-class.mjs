@@ -2,7 +2,7 @@
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 // Le contexte rendu utilise une vue isolée du système de l'acteur.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-08-10-native-get-data-v15";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-08-10-native-get-data-v16-object-magic";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -219,7 +219,12 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
     if (typeof prepare !== "function") {
       throw new Error("L’orchestrateur canonique ADD2E des données de feuille est indisponible.");
     }
-    return prepare(this);
+    const data = await prepare(this);
+    const prepareObjectMagic = globalThis.add2ePrepareObjectMagicSheetData;
+    if (typeof prepareObjectMagic !== "function") {
+      throw new Error("Le préparateur canonique ADD2E des objets magiques est indisponible.");
+    }
+    return prepareObjectMagic(this, data);
   }
 
   async _prepareContext(options = {}) {
