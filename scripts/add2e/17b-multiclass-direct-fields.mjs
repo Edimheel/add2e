@@ -1,6 +1,6 @@
 // ADD2E — Édition directe des Items classe
 // Un monoclasse utilise exactement le même chemin qu'un multiclassé.
-// Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
+// Compatible Foundry V13/V14/V15 — fenêtres via l’API commune uniquement.
 
 import {
   canonicalClassStates,
@@ -20,7 +20,7 @@ import {
 import { dialogAlert } from "./17b-multiclass-dialogs.mjs";
 import { ensureCanonicalMulticlassState, recalcActor } from "./17b-multiclass-operations.mjs";
 
-const VERSION = "2026-06-28-class-item-progression-direct-fields-v4";
+const VERSION = "2026-08-10-class-item-progression-direct-fields-v5";
 const CAP_NOTICE_DEDUP_MS = 750;
 const capNoticeTimes = new Map();
 
@@ -225,29 +225,6 @@ async function storeCanonicalSpellSignature(actor) {
   await actor?.setFlag?.("add2e", "autoSpellSyncLevelSignature", signature);
 }
 
-function openSpellSyncWaitDialog(actor, message) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2) return () => {};
-  let dialog = null;
-  try {
-    dialog = new DialogV2({
-      window: { title: "Synchronisation des sorts" },
-      content: `<section class="add2e-spell-sync-wait" style="min-width:330px;text-align:center;line-height:1.45;padding:8px 4px;"><i class="fas fa-circle-notch fa-spin" style="font-size:2rem;margin:8px;color:#b88924;"></i><p style="margin:8px 0 4px;font-weight:700;">${String(actor?.name ?? "Personnage")}</p><p style="margin:0;">${String(message ?? "Synchronisation des sorts en cours…")}</p></section>`,
-      buttons: [],
-      modal: true,
-      rejectClose: true,
-      close: () => false
-    }, { width: 420, height: "auto" });
-    dialog.render({ force: true });
-  } catch (error) {
-    warn("[SPELL_SYNC_WAIT_DIALOG_ERROR]", error);
-  }
-  return () => {
-    try { dialog?.close?.({ force: true }); }
-    catch (error) { warn("[SPELL_SYNC_WAIT_DIALOG_CLOSE_ERROR]", error); }
-  };
-}
-
 async function syncSpellLevel(actor, classDoc, previousLevel, appliedLevel) {
   if (!classDoc || previousLevel === appliedLevel || !automaticSpellClass(classDoc)) {
     await storeCanonicalSpellSignature(actor);
@@ -256,15 +233,10 @@ async function syncSpellLevel(actor, classDoc, previousLevel, appliedLevel) {
   const beforeCap = maxSpellLevel(classDoc, previousLevel);
   const afterCap = maxSpellLevel(classDoc, appliedLevel);
   if (appliedLevel < previousLevel) {
-    const close = openSpellSyncWaitDialog(actor, `Mise à jour des sorts de ${classDoc.name} après la baisse de niveau…`);
-    try {
-      await globalThis.add2eResetActorSpellMemorization?.(actor, "class-item-level-down");
-      await globalThis.add2ePruneActorSpellsForClassLevel?.(actor, classDoc, appliedLevel, { notify: false });
-      await storeCanonicalSpellSignature(actor);
-      return { handled: true, direction: "down", maxSpellLevel: afterCap };
-    } finally {
-      close();
-    }
+    await globalThis.add2eResetActorSpellMemorization?.(actor, "class-item-level-down");
+    await globalThis.add2ePruneActorSpellsForClassLevel?.(actor, classDoc, appliedLevel, { notify: false });
+    await storeCanonicalSpellSignature(actor);
+    return { handled: true, direction: "down", maxSpellLevel: afterCap };
   }
   if (afterCap > beforeCap) {
     await globalThis.add2eSyncActorSpellsFromClass?.(actor, classDoc, {
@@ -319,6 +291,7 @@ export async function updateDirectMulticlassField(sheet, input) {
   const actor = sheet?.actor ?? sheet?.document;
   const parsed = parseProgressionField(input);
   if (!actor || actor.type !== "personnage" || !parsed) return false;
+  if (globalThis.add2eDropProgressIsActive?.(actor) === true) return false;
   if (!(await ensureCanonicalClassItems(actor))) return false;
 
   const classDoc = classDocForField(actor, parsed);
@@ -361,9 +334,8 @@ export async function updateDirectMulticlassField(sheet, input) {
   await globalThis.add2eSyncClassProgressionSummary?.(actor, { reason: "class-item-progression-direct-field" });
 
   try {
-    if (multiple) await globalThis.add2eSyncMulticlassHp?.(actor, {
+    await globalThis.add2eRecalculateHitPoints?.(actor, {
       force: false,
-      syncCurrent: false,
       reason: "class-item-progression-direct-field"
     });
     await syncSpellLevel(actor, classDoc, previousLevel, level);
