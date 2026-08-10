@@ -7,9 +7,8 @@ import { add2eBindActorSheetSpellListeners } from "./add2e/13d-actor-sheet-liste
 import { add2eRollCharacteristicCard, add2eRollSaveCard } from "./add2e/13d-actor-sheet-listeners-rolls.mjs";
 import { getMoney, formatMoney, isAmmunition, isComponent } from "./add2e/22a-vendor-core.mjs";
 
-const PNJ_SHEET_VERSION = "2026-07-06-pnj-class-composition-v8";
+const PNJ_SHEET_VERSION = "2026-08-10-pnj-common-dialog-v9";
 const PNJ_TYPE = "pnj";
-const DialogV2 = foundry?.applications?.api?.DialogV2;
 const ActorsCollection = foundry.documents.collections.Actors;
 const CharacterSheetBase = globalThis.Add2eActorSheet;
 const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
@@ -200,63 +199,51 @@ function pnjRaceName(actor) {
 
 async function pnjChooseClassComposition(actor, data, entries, matchingEntry = null) {
   if (!entries.length) return "add";
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible pour la composition des classes du PNJ.");
+  }
 
   const incoming = String(data?.name ?? "Classe").trim() || "Classe";
   const current = entries.map(entry => entry.name).join(" / ") || "Aucune";
   const canAdd = !matchingEntry && entries.length < 3;
   const title = "Composition des classes du PNJ";
   const content = `<section class="add2e-pnj-class-composition"><p><b>${escapeHtml(actor?.name ?? "PNJ")}</b> possède actuellement : <b>${escapeHtml(current)}</b>.</p><p>Classe déposée : <b>${escapeHtml(incoming)}</b>.</p><p>${matchingEntry ? "La classe déposée est déjà présente. Tu peux conserver uniquement cette classe." : "Choisis la nouvelle composition du PNJ."}</p></section>`;
-
-  if (typeof DialogV2?.wait === "function") {
-    const buttons = [];
-    if (canAdd) {
-      buttons.push({
-        action: "add",
-        label: entries.length === 1 ? `Ajouter ${incoming} en biclasse` : `Ajouter ${incoming} en triclassage`,
-        icon: "fas fa-plus",
-        callback: () => "add"
-      });
-    }
+  const buttons = [];
+  if (canAdd) {
     buttons.push({
-      action: "replace",
-      label: `Passer en monoclasse ${incoming}`,
-      icon: "fas fa-user-shield",
-      callback: () => "replace"
+      action: "add",
+      label: entries.length === 1 ? `Ajouter ${incoming} en biclasse` : `Ajouter ${incoming} en triclassage`,
+      icon: "<i class='fas fa-plus'></i>",
+      default: true,
+      callback: () => "add"
     });
-    buttons.push({ action: "cancel", label: "Annuler", icon: "fas fa-times", callback: () => null });
-
-    const result = await DialogV2.wait({
-      window: { title },
-      content,
-      buttons,
-      modal: true,
-      rejectClose: false
-    });
-    return typeof result === "string" ? result : (result?.action ?? result?.button?.action ?? null);
   }
+  buttons.push({
+    action: "replace",
+    label: `Passer en monoclasse ${incoming}`,
+    icon: "<i class='fas fa-user-shield'></i>",
+    default: !canAdd,
+    callback: () => "replace"
+  });
+  buttons.push({
+    action: "cancel",
+    label: "Annuler",
+    icon: "<i class='fas fa-times'></i>",
+    callback: () => null
+  });
 
-  if (DialogV2?.confirm) {
-    if (canAdd) {
-      const add = await DialogV2.confirm({
-        window: { title },
-        content: `${content}<p>Ajouter <b>${escapeHtml(incoming)}</b> à la composition actuelle ?</p>`,
-        yes: { label: "Ajouter", icon: "fas fa-plus" },
-        no: { label: "Choisir monoclasse" },
-        modal: true
-      });
-      if (add) return "add";
-    }
-    const replace = await DialogV2.confirm({
-      window: { title },
-      content: `${content}<p>Remplacer la composition actuelle par <b>${escapeHtml(incoming)}</b> seul ?</p>`,
-      yes: { label: "Passer en monoclasse", icon: "fas fa-user-shield" },
-      no: { label: "Annuler" },
-      modal: true
-    });
-    return replace ? "replace" : null;
-  }
-
-  return null;
+  const result = await globalThis.add2eDialogWait({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: canAdd ? "add" : "replace",
+    add2eClasses: ["add2e-pnj-class-composition-window"],
+    window: { title },
+    content,
+    buttons,
+    modal: true,
+    rejectClose: false,
+    close: () => null
+  });
+  return typeof result === "string" ? result : null;
 }
 
 function pnjActorView(actor, system) {
