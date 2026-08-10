@@ -183,8 +183,23 @@ export function monoClassOptionsForDroppedClass(actor, classData) {
   ).map(raceData => ({ action: "monoclass", classData, raceData }));
 }
 
+function parseXpInteger(raw) {
+  if (typeof raw === "number" && Number.isFinite(raw)) return Math.max(0, Math.floor(raw));
+  const compact = String(raw ?? "").trim().replace(/[.\s,]/g, "");
+  if (!/^\d+$/.test(compact)) return NaN;
+  const value = Number(compact);
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : NaN;
+}
+
 export function parseXpRange(raw) {
-  const values = String(raw ?? "").match(/[0-9][0-9.\s]*/g)?.map(value => num(value, NaN)).filter(Number.isFinite) ?? [];
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    const value = parseXpInteger(raw);
+    return { min: value, max: null };
+  }
+  const values = String(raw ?? "")
+    .match(/[0-9][0-9.\s,]*/g)
+    ?.map(parseXpInteger)
+    .filter(Number.isFinite) ?? [];
   return { min: values[0] ?? 0, max: values[1] ?? null };
 }
 
