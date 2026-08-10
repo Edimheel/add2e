@@ -1,10 +1,10 @@
-// ADD2E — Actor sheet drop — route sûre
+// ADD2E — Actor sheet drop — route unique
 // Compatible Foundry V13/V14/V15. Aucun Dialog V1.
-// Les drops de classe/race sont délégués aux routeurs spécialisés.
+// Les domaines spécialisés sont appelés directement, sans wrapper de prototype.
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-07-16-actor-drop-current-name-v4";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-08-10-single-drop-router-v5";
 const ADD2E_SPELL_DROP_PENDING = globalThis.ADD2E_SPELL_DROP_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_DROP_PENDING
   : new Set();
@@ -321,9 +321,30 @@ function classItems(actor) {
   return Array.from(actor?.items ?? []).filter(item => itemType(item) === "classe");
 }
 
+async function routeClassOrRaceDrop(sheet, itemData) {
+  const router = globalThis.add2eRouteClassRaceDrop;
+  if (typeof router !== "function") {
+    throw new Error("Le routeur canonique ADD2E classe/race est indisponible.");
+  }
+  const routed = await router(sheet, itemData);
+  if (routed !== undefined) return routed;
+  return applyClassOrRaceDrop(sheet, itemData);
+}
+
+async function mergeDroppedAmmunition(sheet, event) {
+  const merge = globalThis.add2eTryMergeDroppedAmmunition;
+  if (typeof merge !== "function") {
+    throw new Error("Le propriétaire canonique ADD2E des piles de munitions est indisponible.");
+  }
+  return merge(sheet, event);
+}
+
 globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(event, data = null) {
   event.preventDefault?.();
   event.stopPropagation?.();
+
+  if (!data && await mergeDroppedAmmunition(this, event)) return false;
+
   let raw = data;
   if (!raw) {
     try { raw = JSON.parse(event.dataTransfer?.getData("text/plain") || "{}"); }
@@ -336,7 +357,7 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
   const type = itemType(itemData);
   if (!new Set(["arme", "armure", "sort", "classe", "race", "objet"]).has(type)) return false;
 
-  if (["classe", "race"].includes(type)) return applyClassOrRaceDrop(this, itemData);
+  if (["classe", "race"].includes(type)) return routeClassOrRaceDrop(this, itemData);
 
   let spellCheck = null;
   let pendingKey = "";
