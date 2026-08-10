@@ -1,13 +1,14 @@
-// ADD2E — Consommables : composants, munitions, récupération et piles d'armes lancées.
+// ADD2E — Consommables : munitions, récupération et piles d'armes lancées.
 // Compatible Foundry V13/V14/V15.
 // Le choix contact/lancer appartient exclusivement à la fenêtre d'attaque.
+// Les composants de sorts sont résolus exclusivement par 22e-consumables-core.mjs.
 
 import {
   add2eReserveSpellComponents as add2eCoreReserveSpellComponents,
   add2eRefundSpellComponents as add2eCoreRefundSpellComponents
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_CONSUMABLES_VERSION = "2026-08-10-canonical-ammunition-contract-v10";
+const ADD2E_CONSUMABLES_VERSION = "2026-08-10-canonical-projectile-owner-v11";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -170,27 +171,6 @@ export function add2eIsAmmunition(item) {
   return add2eTagsOf(item).some(tag => add2eSlugify(tag) === "type_arme_munition");
 }
 
-export function add2eIsSpellComponent(item) {
-  if (!item) return false;
-  const sys = item.system ?? {};
-  const fields = [
-    item.name,
-    sys.nom,
-    sys.categorie,
-    sys.category,
-    sys.sousType,
-    sys.sous_type,
-    sys.type,
-    sys.subtype,
-    sys.slug,
-    sys.composantSlug,
-    sys.componentSlug,
-    ...add2eTagsOf(item)
-  ].map(add2eSlugify).filter(Boolean);
-  if (fields.some(v => v === "composant" || v === "component" || v === "composant_sort" || v === "composants_sort" || v === "composant_de_sort" || v === "spell_component" || v === "material_component")) return true;
-  return fields.some(v => v.startsWith("composant_") || v.startsWith("composant:") || v.startsWith("component_") || v.startsWith("spell_component_"));
-}
-
 function add2eWeaponUsesAmmo(arme) {
   return arme?.system?.utilise_munition === true;
 }
@@ -343,93 +323,6 @@ export async function add2eConsumeThrownWeapon(actor, weapon, quantity = 1) {
   return { ok: true, spent, remaining };
 }
 
-function add2eCleanComponentName(value) {
-  return String(value ?? "").trim()
-    .replace(/[()\[\]{}]/g, " ")
-    .replace(/\s+/g, " ")
-    .replace(/[.!?;:]+$/g, "")
-    .replace(/^d['’]\s*/i, "")
-    .replace(/^(un|une)?\s*peu\s+de\s+/i, "")
-    .replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "")
-    .replace(/^(quelques|plusieurs)\s+/i, "")
-    .replace(/^petit morceau de\s+/i, "")
-    .replace(/^morceau de\s+/i, "")
-    .trim();
-}
-
-function add2eComponentEntry(raw, quantity = 1, consume = true) {
-  const nom = add2eCleanComponentName(raw);
-  if (!nom) return null;
-  const text = add2eSlugify(nom).replace(/[^a-z]/g, "");
-  if (["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(text)) return null;
-  return { slug: add2eSlugify(nom), nom, quantite: Math.max(1, Number(quantity) || 1), consomme: consume !== false };
-}
-
-export function add2eResolveSpellMaterialComponents(sort) {
-  const sys = sort?.system ?? {};
-  const flags = sort?.flags?.add2e ?? {};
-  const fields = [
-    sys.composants_materiels,
-    sys.composantsMateriels,
-    sys.composants_requis,
-    sys.composantsMateriel,
-    sys.composant_materiel,
-    sys.composantMateriel,
-    sys.materiel,
-    sys.matériel,
-    sys.material,
-    sys.materialComponent,
-    sys.materialComponents,
-    sys.material_components,
-    sys.requiredComponents,
-    sys.componentsRequired,
-    sys.components?.material,
-    sys.components?.materials,
-    sys.composants_materiels_objets,
-    flags.composants_requis,
-    flags.composants,
-    flags.components,
-    flags.requiredComponents
-  ];
-  const components = [];
-  const add = entry => {
-    if (entry === null || entry === undefined || entry === "") return;
-    if (Array.isArray(entry)) { for (const row of entry) add(row); return; }
-    if (typeof entry === "string") {
-      for (const part of add2eAsArray(entry)) {
-        const alternatives = String(part).replace(/[()\[\]{}]/g, " ").split(/\bou\b/gi).map(v => v.trim()).filter(Boolean);
-        if (alternatives.length > 1) {
-          const clean = alternatives.map(v => add2eComponentEntry(v)).filter(Boolean);
-          if (clean.length > 1) components.push({ slug: clean.map(v => v.slug).join("__or__"), nom: clean.map(v => v.nom).join(" ou "), quantite: 1, consomme: true, alternatives: clean });
-          else if (clean[0]) components.push(clean[0]);
-        } else {
-          const component = add2eComponentEntry(part);
-          if (component) components.push(component);
-        }
-      }
-      return;
-    }
-    if (typeof entry === "object") {
-      const alternatives = entry.alternatives ?? entry.options ?? entry.choix ?? entry.auChoix ?? entry.or;
-      if (Array.isArray(alternatives) && alternatives.length) { add(alternatives); return; }
-      const name = entry.nom ?? entry.name ?? entry.label ?? entry.item ?? entry.itemName ?? entry.component ?? entry.composant ?? entry.slug;
-      const component = add2eComponentEntry(name, entry.quantite ?? entry.quantity ?? entry.qty ?? entry.nombre ?? entry.count ?? 1, entry.consomme ?? entry.consume ?? true);
-      if (component) components.push(component);
-    }
-  };
-
-  for (const field of fields) add(field);
-  const unique = [];
-  for (const component of components.filter(component => component.slug && component.consomme !== false)) {
-    if (!unique.some(existing => existing.slug === component.slug)) unique.push(component);
-  }
-  const compText = String(sys.composantes ?? sys.components ?? "").toUpperCase();
-  if (!unique.length && /\bM\b/.test(compText)) {
-    return [{ slug: "__manual__", nom: "Composant matériel non détaillé", quantite: 0, consomme: false, manual: true }];
-  }
-  return unique;
-}
-
 export async function add2eReserveSpellComponents(actor, sort) {
   return add2eCoreReserveSpellComponents(actor, sort);
 }
@@ -508,14 +401,12 @@ const api = {
   version: ADD2E_CONSUMABLES_VERSION,
   add2eConsumablesSettings,
   add2eIsAmmunition,
-  add2eIsSpellComponent,
   add2eGetWeaponRequiredAmmoType,
   add2eGetCompatibleProjectiles,
   add2eGetEquippedProjectileForWeapon,
   add2eEquipProjectile,
   add2eEquipHybridThrownWeaponAsContact,
   add2eConsumeThrownWeapon,
-  add2eResolveSpellMaterialComponents,
   add2eReserveSpellComponents,
   add2eRefundSpellComponents,
   add2eTryMergeDroppedAmmunition,
