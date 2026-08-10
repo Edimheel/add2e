@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags canoniques
-// Version : 2026-08-10-canonical-equipment-restrictions-v11-bigbang
+// Version : 2026-08-10-canonical-equipment-restrictions-v12-reconcile-all
 // Source principale : Items "classe" embarqués sur l'acteur.
 // Schéma canonique des tags d'équipement :
 // - arme / armure / bouclier
@@ -207,27 +207,45 @@ function add2eIsWeaponItem(item) {
   return ["arme", "weapon"].includes(String(item?.type ?? "").toLowerCase());
 }
 
-function add2eGetForbiddenEquippedWeapons(actor) {
-  if (add2eActorBypassesClassEquipmentRestrictions(actor)) return [];
+function add2eIsArmorItem(item) {
+  return ["armure", "armor"].includes(String(item?.type ?? "").toLowerCase());
+}
 
+function add2eEquipmentRestrictionKind(item) {
+  if (add2eIsWeaponItem(item)) return "arme";
+  if (add2eIsArmorItem(item)) return "armure";
+  return "";
+}
+
+function add2eGetForbiddenEquippedItems(actor) {
+  if (add2eActorBypassesClassEquipmentRestrictions(actor)) return [];
+  if (!add2eGetActorClassItems(actor).length) return [];
+
+  const engine = add2eEquipmentEngine();
   const failures = [];
   for (const item of actor?.items ?? []) {
-    if (!add2eIsWeaponItem(item) || item?.system?.equipee !== true) continue;
-    const check = add2eCheckEquipmentAllowedForClass(actor, item, "arme");
-    if (!check.ok) failures.push({ item, check });
+    const kind = add2eEquipmentRestrictionKind(item);
+    if (!kind || engine.itemEquipped(item) !== true) continue;
+    const check = add2eCheckEquipmentAllowedForClass(actor, item, kind);
+    if (!check.ok) failures.push({ item, kind, check });
   }
   return failures;
 }
 
-async function add2eReconcileEquippedWeaponsForClass(actor) {
+async function add2eReconcileEquippedItemsForClass(actor) {
   if (!actor?.items || !actor?.updateEmbeddedDocuments) return { updated: [], failures: [] };
 
-  const failures = add2eGetForbiddenEquippedWeapons(actor);
+  const failures = add2eGetForbiddenEquippedItems(actor);
   const updates = failures
     .map(({ item }) => item?.id ? { _id: item.id, "system.equipee": false } : null)
     .filter(Boolean);
 
-  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates);
+  if (updates.length) {
+    await actor.updateEmbeddedDocuments("Item", updates, {
+      add2eInternal: true,
+      add2eReason: "class-equipment-reconcile"
+    });
+  }
   return { updated: updates.map(update => update._id), failures };
 }
 
@@ -238,9 +256,9 @@ function add2eGetPendingEquippedState(changes) {
   return undefined;
 }
 
-function add2eInstallWeaponClassEquipmentGuard() {
-  if (globalThis.__ADD2E_WEAPON_CLASS_EQUIPMENT_GUARD_V1) return;
-  globalThis.__ADD2E_WEAPON_CLASS_EQUIPMENT_GUARD_V1 = true;
+function add2eInstallClassEquipmentGuard() {
+  if (globalThis.__ADD2E_CLASS_EQUIPMENT_GUARD_V2) return;
+  globalThis.__ADD2E_CLASS_EQUIPMENT_GUARD_V2 = true;
 
   const queuedActors = new Set();
   const schedule = actor => {
@@ -248,7 +266,7 @@ function add2eInstallWeaponClassEquipmentGuard() {
     queuedActors.add(actor.id);
     queueMicrotask(async () => {
       try {
-        await add2eReconcileEquippedWeaponsForClass(actor);
+        await add2eReconcileEquippedItemsForClass(actor);
       } finally {
         queuedActors.delete(actor.id);
       }
@@ -256,23 +274,27 @@ function add2eInstallWeaponClassEquipmentGuard() {
   };
 
   Hooks.on("preUpdateItem", (item, changes) => {
-    if (!add2eIsWeaponItem(item) || add2eGetPendingEquippedState(changes) !== true) return;
+    if (add2eGetPendingEquippedState(changes) !== true) return;
+
+    const kind = add2eEquipmentRestrictionKind(item);
+    if (!kind) return;
 
     const actor = item.parent;
-    if (!actor || add2eActorBypassesClassEquipmentRestrictions(actor)) return;
-    const check = add2eCheckEquipmentAllowedForClass(actor, item, "arme");
+    if (!actor || add2eActorBypassesClassEquipmentRestrictions(actor) || !add2eGetActorClassItems(actor).length) return;
+    const check = add2eCheckEquipmentAllowedForClass(actor, item, kind);
     if (check.ok) return;
 
     const classLabel = check.multiclass
       ? add2eGetActorClassItems(actor).map(cls => cls.name).filter(Boolean).join(" / ")
       : check.classeLabel;
-    ui.notifications?.warn?.(`Cette arme (« ${item.name} ») est interdite pour ${classLabel || "la classe de cet acteur"}.`);
+    const equipmentLabel = kind === "arme" ? "arme" : (add2eIsShield(item) ? "bouclier" : (add2eIsHelmet(item) ? "casque" : "armure"));
+    ui.notifications?.warn?.(`Cet équipement (« ${item.name} », ${equipmentLabel}) est interdit pour ${classLabel || "la classe de cet acteur"}.`);
     return false;
   });
 
   const scheduleForRelatedItem = item => {
     const type = String(item?.type ?? "").toLowerCase();
-    if (type === "classe" || add2eIsWeaponItem(item)) schedule(item?.parent);
+    if (type === "classe" || add2eEquipmentRestrictionKind(item)) schedule(item?.parent);
   };
 
   Hooks.on("createItem", scheduleForRelatedItem);
@@ -377,7 +399,7 @@ function add2eGetThiefActivityEquipmentStatus(actor) {
   };
 }
 
-add2eInstallWeaponClassEquipmentGuard();
+add2eInstallClassEquipmentGuard();
 
 globalThis.add2eNormalizeEquipTag = add2eNormalizeEquipTag;
 globalThis.add2eToEquipArray = add2eToEquipArray;
@@ -397,5 +419,7 @@ try { globalThis.add2eIsShield = add2eIsShield; } catch (_e) {}
 try { globalThis.add2eIsHelmet = add2eIsHelmet; } catch (_e) {}
 try { globalThis.add2eCheckEquipmentAllowedForClassSystem = add2eCheckEquipmentAllowedForClassSystem; } catch (_e) {}
 try { globalThis.add2eIsWeaponItem = add2eIsWeaponItem; } catch (_e) {}
-try { globalThis.add2eGetForbiddenEquippedWeapons = add2eGetForbiddenEquippedWeapons; } catch (_e) {}
-try { globalThis.add2eReconcileEquippedWeaponsForClass = add2eReconcileEquippedWeaponsForClass; } catch (_e) {}
+try { globalThis.add2eIsArmorItem = add2eIsArmorItem; } catch (_e) {}
+try { globalThis.add2eEquipmentRestrictionKind = add2eEquipmentRestrictionKind; } catch (_e) {}
+try { globalThis.add2eGetForbiddenEquippedItems = add2eGetForbiddenEquippedItems; } catch (_e) {}
+try { globalThis.add2eReconcileEquippedItemsForClass = add2eReconcileEquippedItemsForClass; } catch (_e) {}
