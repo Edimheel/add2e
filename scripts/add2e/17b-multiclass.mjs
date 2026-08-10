@@ -27,7 +27,6 @@ import {
   replaceClassInMulticlass
 } from "./17b-multiclass-operations.mjs";
 import {
-  bindDirectMulticlassFields,
   mergeMulticlassChanges,
   updateDirectMulticlassField
 } from "./17b-multiclass-direct-fields.mjs";
@@ -189,9 +188,6 @@ Hooks.once("ready", () => {
     migrateAndRecalculate(actor).catch(error => warn("[READY_MIGRATION_ERROR]", { actor: actor.name, error }));
   }
 });
-
-Hooks.on("renderActorSheet", bindDirectMulticlassFields);
-Hooks.on("renderAdd2eActorSheet", bindDirectMulticlassFields);
 
 Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
   if (options?.add2eMulticlassInternal || options?.add2eInternal) return true;
