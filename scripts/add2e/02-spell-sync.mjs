@@ -4,7 +4,7 @@
 // Compatible Foundry V13 / V14 / V15
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-08-10-spell-sync-canonical-class-resources-v10";
+const ADD2E_SPELL_SYNC_VERSION = "2026-08-10-spell-sync-canonical-class-resources-v11";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
@@ -820,9 +820,7 @@ async function add2eResyncSelectedActorSpells(options = {}) {
 }
 
 function add2eSpellSyncInternalUpdate(options = {}) {
-  return options?.add2eInternal === true
-    || options?.add2eMulticlassInternal === true
-    || options?.add2eSpellSync === true;
+  return options?.add2eSpellSync === true;
 }
 
 function add2eSpellSyncClassLevelChange(changes = {}) {
