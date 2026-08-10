@@ -130,7 +130,7 @@ function savingThrowResolutions(actor) {
     return SAVES.map((save, index) => ({ index, label: save[1], icon: save[2], theme: save[3], targetDisplay: "—", bonus: 0, bonusDisplay: "±0", sourceLabel: "Résolveur indisponible", available: false }));
   }
   return SAVES.map((save, index) => {
-    const resolution = resolver(actor, index, { source: "action-hud-save-display", consumer: "action-hud", frontale: true });
+    const resolution = resolver(actor, index, { source: "action-hud-save-display", consumer: "action-hud" });
     const target = Number(resolution?.target);
     const bonus = Number(resolution?.bonus) || 0;
     const available = Number.isFinite(target) && target > 0;
