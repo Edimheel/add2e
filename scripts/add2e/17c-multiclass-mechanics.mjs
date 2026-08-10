@@ -5,7 +5,7 @@
 
 import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-08-10-canonical-hit-point-mutation-v13-render-batch";
+const VERSION = "2026-08-10-canonical-hit-point-mutation-v14-native-sheet-integration";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 const hitPointQueues = new Map();
@@ -733,30 +733,6 @@ function internalClassMutation(options = {}) {
     || options?.add2eSpellSync === true;
 }
 
-function installSheetPatch() {
-  const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eClassProgressionPatch === VERSION) return;
-
-  if (typeof proto.getData === "function" && !proto.__add2eOriginalClassProgressionGetData) {
-    proto.__add2eOriginalClassProgressionGetData = proto.getData;
-    proto.getData = async function add2eClassProgressionSheetData(...args) {
-      const data = await this.__add2eOriginalClassProgressionGetData.apply(this, args);
-      return applyClassProgressionToSheet(this.document ?? this.actor, data);
-    };
-  }
-
-  if (typeof proto._onRender === "function" && !proto.__add2eOriginalClassProgressionOnRender) {
-    proto.__add2eOriginalClassProgressionOnRender = proto._onRender;
-    proto._onRender = async function add2eClassProgressionOnRender(...args) {
-      const result = await this.__add2eOriginalClassProgressionOnRender.apply(this, args);
-      bindDirectClassFields(this);
-      return result;
-    };
-  }
-
-  proto.__add2eClassProgressionPatch = VERSION;
-}
-
 function responsibleReadyGM() {
   if (!game.user?.isGM) return false;
   const activeGM = game.users?.activeGM ?? Array.from(game.users ?? []).find(user => user.active && user.isGM) ?? null;
@@ -775,9 +751,7 @@ globalThis.add2eSyncClassProgressionSummary = syncClassProgressionSummary;
 globalThis.add2eEnsureCanonicalClassProgression = ensureCanonicalClassProgression;
 globalThis.add2eBindDirectMulticlassFields = bindDirectClassFields;
 
-Hooks.once("init", installSheetPatch);
 Hooks.once("ready", async () => {
-  installSheetPatch();
   if (!responsibleReadyGM()) return;
   for (const actor of game.actors?.filter(entry => entry.type === "personnage" && classes(entry).length) ?? []) {
     try {
@@ -789,7 +763,6 @@ Hooks.once("ready", async () => {
     }
   }
 });
-setTimeout(installSheetPatch, 0);
 Hooks.on("createItem", (item, options = {}) => {
   if (internalClassMutation(options)) return;
   if (String(item?.type ?? "").toLowerCase() === "classe") queue(item.parent, "create-class-item");
