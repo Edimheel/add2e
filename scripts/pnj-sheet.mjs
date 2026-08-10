@@ -7,7 +7,7 @@ import { add2eBindActorSheetSpellListeners } from "./add2e/13d-actor-sheet-liste
 import { add2eRollCharacteristicCard, add2eRollSaveCard } from "./add2e/13d-actor-sheet-listeners-rolls.mjs";
 import { getMoney, formatMoney, isAmmunition, isComponent } from "./add2e/22a-vendor-core.mjs";
 
-const PNJ_SHEET_VERSION = "2026-08-10-pnj-canonical-armor-classification-v10";
+const PNJ_SHEET_VERSION = "2026-08-10-pnj-canonical-saving-throws-v11";
 const PNJ_TYPE = "pnj";
 const ActorsCollection = foundry.documents.collections.Actors;
 const CharacterSheetBase = globalThis.Add2eActorSheet;
@@ -98,7 +98,7 @@ function pnjClassEntries(actor) {
       row,
       title: classTitle(item, level, row),
       thac0: number(row?.thac0 ?? row?.thaco, 20),
-      saves: Array.isArray(row?.savingThrows) ? row.savingThrows : (Array.isArray(row?.sauvegardes) ? row.sauvegardes : [])
+      saves: Array.isArray(row?.savingThrows) ? row.savingThrows : []
     };
   });
 }
