@@ -1,12 +1,10 @@
-// ADD2E — Actor sheet getData : orchestrateur ApplicationV2.
+// ADD2E — Actor sheet getData : orchestrateur ApplicationV2 natif.
 
 import { add2ePrepareActorSheetBaseData } from "./13b-actor-sheet-get-data-base.mjs";
 import { add2ePrepareActorSheetCombatData } from "./13b-actor-sheet-get-data-combat.mjs";
 import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spells.mjs";
 
-if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
-
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-28-canonical-familiar-effects-v6";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-08-10-native-get-data-service-v7";
 const ADD2E_HIDDEN_TECHNICAL_CLASS_RULE_KINDS = new Set(["armor_class_base", "attack_modifier"]);
 
 function add2eExceptionalStrengthValue(rawValue) {
@@ -309,12 +307,16 @@ export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
   return data.activeEffectsList;
 }
 
-globalThis.Add2eActorSheet.prototype.getData = async function getData() {
-  const data = this._add2eNativeGetData();
-  const state = add2ePrepareActorSheetBaseData({ sheet: this, data });
-  const actor = this.document ?? this.actor ?? state.actor;
+export async function add2ePrepareActorSheetData(sheet) {
+  if (!sheet || typeof sheet._add2eNativeGetData !== "function") {
+    throw new Error("La feuille ApplicationV2 ADD2E ne fournit pas son contexte natif.");
+  }
+  const data = sheet._add2eNativeGetData();
+  const state = add2ePrepareActorSheetBaseData({ sheet, data });
+  const actor = sheet.document ?? state.actor;
+  if (!actor) throw new Error("Acteur introuvable pendant la préparation de la feuille ADD2E.");
 
-  const forceEx = add2eExceptionalStrengthValue(actor?.system?.force_ex);
+  const forceEx = add2eExceptionalStrengthValue(actor.system?.force_ex);
   data.forceExCurrent = forceEx;
   data.forceExNoneSelected = forceEx === 0;
   data.forceExValues = data.canExceptionalStrength ? add2eExceptionalStrengthValues(forceEx) : [];
@@ -331,9 +333,10 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
   add2ePopulateActorSheetActiveEffectsData(actor, data);
 
   data.alignementsDisponibles = add2eSheetAllowedAlignments(state.actor, state.sys);
-  data.activeTab = this._add2eGetNativeActiveTab?.() || this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume";
-  this._add2ePreparedData = data;
+  data.activeTab = sheet._add2eGetNativeActiveTab?.() || sheet._add2eActiveTab || sheet._add2eReadStoredTab?.() || "resume";
+  sheet._add2ePreparedData = data;
   return data;
-};
+}
 
+globalThis.add2ePrepareActorSheetData = add2ePrepareActorSheetData;
 globalThis.ADD2E_ACTIVE_EFFECTS_DATA_VERSION = ADD2E_ACTIVE_EFFECTS_DATA_VERSION;
