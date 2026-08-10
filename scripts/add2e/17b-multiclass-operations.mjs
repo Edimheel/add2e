@@ -109,13 +109,30 @@ function embeddedCollection(actor, documentName) {
   return documentName === "ActiveEffect" ? actor?.effects : actor?.items;
 }
 
+function quietMutationOptions(options = {}) {
+  return {
+    ...options,
+    [INTERNAL]: true,
+    add2eInternal: true,
+    add2eMulticlassInternal: true,
+    render: false
+  };
+}
+
+function renderOperationSheet(sheet, actor) {
+  sheet?._add2eRememberActiveTab?.();
+  if (globalThis.add2eDropProgressIsActive?.(actor) === true) return;
+  sheet?.render?.(false);
+}
+
 async function deleteLiveEmbeddedDocuments(actor, documentName, ids, options = {}) {
   const requested = [...new Set((ids ?? []).map(id => String(id ?? "").trim()).filter(Boolean))];
   const collection = embeddedCollection(actor, documentName);
   const existing = requested.filter(id => collection?.has?.(id));
   if (!existing.length) return 0;
+  const quiet = quietMutationOptions(options);
   try {
-    await actor.deleteEmbeddedDocuments(documentName, existing, options);
+    await actor.deleteEmbeddedDocuments(documentName, existing, quiet);
     return existing.length;
   } catch (error) {
     if (!isMissingEmbeddedDocumentError(error)) throw error;
@@ -124,7 +141,7 @@ async function deleteLiveEmbeddedDocuments(actor, documentName, ids, options = {
   for (const id of existing) {
     if (!embeddedCollection(actor, documentName)?.has?.(id)) continue;
     try {
-      await actor.deleteEmbeddedDocuments(documentName, [id], options);
+      await actor.deleteEmbeddedDocuments(documentName, [id], quiet);
       deleted += 1;
     } catch (error) {
       if (!isMissingEmbeddedDocumentError(error)) throw error;
@@ -216,8 +233,8 @@ async function purgeClassBoundContent(actor, classDocs, reason) {
     return isLearnedArcaneSpellRemovedWithClass(item, purgeLists, retainedLists);
   }).map(item => item.id).filter(Boolean);
   const effectIds = actor.effects.filter(effect => !isManagedClassPassiveEffect(effect) && effectBelongsToRemovedClass(effect, keys)).map(effect => effect.id).filter(Boolean);
-  const effectCount = await deleteLiveEmbeddedDocuments(actor, "ActiveEffect", effectIds, { [INTERNAL]: true, add2eInternal: true, add2eReason: reason });
-  const spellCount = await deleteLiveEmbeddedDocuments(actor, "Item", spellIds, { [INTERNAL]: true, add2eInternal: true, add2eReason: reason });
+  const effectCount = await deleteLiveEmbeddedDocuments(actor, "ActiveEffect", effectIds, { add2eReason: reason });
+  const spellCount = await deleteLiveEmbeddedDocuments(actor, "Item", spellIds, { add2eReason: reason });
   return { spells: spellCount, effects: effectCount, arcaneLists: [...purgeLists] };
 }
 
@@ -248,7 +265,7 @@ async function writeClassProgression(actor, entries, reason) {
     if (update) updates.push(update);
   }
   if (!updates.length) return 0;
-  await actor.updateEmbeddedDocuments("Item", updates, { [INTERNAL]: true, add2eInternal: true, add2eReason: reason });
+  await actor.updateEmbeddedDocuments("Item", updates, quietMutationOptions({ add2eReason: reason }));
   return updates.length;
 }
 
@@ -302,7 +319,7 @@ export async function migrateLegacyMulticlassActor(actor) {
     });
     await writeClassProgression(actor, normalized, "multiclass-item-progression-migration");
     const payload = multiclassUpdatePayload(actor);
-    if (payload) await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-item-progression-summary" });
+    if (payload) await actor.update(payload, quietMutationOptions({ add2eReason: "multiclass-item-progression-summary" }));
     return { ok: true, plan, payload };
   } finally { migrationLocks.delete(actor.id); }
 }
@@ -324,7 +341,7 @@ async function syncClassSpells(actor, classDoc, reason) {
   const sync = globalThis.add2eSyncActorSpellsFromClass;
   if (typeof sync !== "function") return { handled: false, reason: "spell-sync-unavailable" };
   globalThis.add2eDropProgressUpdate?.(actor, `Synchronisation des sorts ${classDoc.name}…`, { progress: 72, detail: "Ajout des sorts manquants depuis le cache canonique, sans reconstruction globale." });
-  return sync(actor, classDoc, { mode: "missing", showWait: false, forceCacheRefresh: false, preserveMemorization: true, add2eReason: reason });
+  return sync(actor, classDoc, { mode: "missing", showWait: false, forceCacheRefresh: false, preserveMemorization: true, render: false, add2eReason: reason });
 }
 
 async function syncRedistributedClassSpells(actor, entries, previousLevels, createdClass) {
@@ -334,7 +351,7 @@ async function syncRedistributedClassSpells(actor, entries, previousLevels, crea
   });
   if (lowered.length) {
     await globalThis.add2eResetActorSpellMemorization?.(actor, "multiclass-xp-redistribution");
-    for (const entry of lowered) await globalThis.add2ePruneActorSpellsForClassLevel?.(actor, entry.doc, entry.level, { notify: false });
+    for (const entry of lowered) await globalThis.add2ePruneActorSpellsForClassLevel?.(actor, entry.doc, entry.level, { notify: false, render: false });
   }
   if (createdClass) await syncClassSpells(actor, createdClass, "multiclass-add-class-sync");
 }
@@ -345,12 +362,11 @@ export async function cleanupAfterMonoclassReplace(actor, keepClassDoc, keepStat
   await writeClassProgression(actor, [{ doc: keepClassDoc, ...desired }], "multiclass-monoclass-keep-progression");
   const unwanted = classItems(actor).filter(doc => doc.id !== keepClassDoc.id);
   await purgeClassBoundContent(actor, unwanted, "multiclass-monoclass-purge");
-  await deleteLiveEmbeddedDocuments(actor, "Item", itemIds(unwanted), { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-monoclass-delete-classes" });
+  await deleteLiveEmbeddedDocuments(actor, "Item", itemIds(unwanted), { add2eReason: "multiclass-monoclass-delete-classes" });
   const payload = { ...monoClassCleanupPayload(), ...monoProgressionPayload(actor, keepClassDoc, desired) };
-  await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-monoclass-finalize" });
+  await actor.update(payload, quietMutationOptions({ add2eReason: "multiclass-monoclass-finalize" }));
   try { await syncClassSpells(actor, keepClassDoc, "multiclass-mono-class-sync"); } catch (error) { warn("[MONO_SPELL_SYNC_ERROR]", { actor: actor.name, error }); }
-  sheet?._add2eRememberActiveTab?.();
-  sheet?.render?.(false);
+  renderOperationSheet(sheet, actor);
   return true;
 }
 
@@ -375,7 +391,7 @@ export async function applyRaceData(actor, raceData, sheet = null) {
   if (!raceData) return false;
   if (norm(itemLabel(systemRace(actor), "Race")) === norm(itemLabel(raceData, "Race"))) return true;
   if (typeof globalThis.add2eApplyRaceItemDataToActor !== "function") throw new Error("Le gestionnaire de race canonique est introuvable.");
-  await globalThis.add2eApplyRaceItemDataToActor(actor, raceData, sheet, { notify: true, reason: "multiclass-race-choice" });
+  await globalThis.add2eApplyRaceItemDataToActor(actor, raceData, sheet, { notify: true, reason: "multiclass-race-choice", render: false });
   return true;
 }
 
@@ -385,7 +401,7 @@ async function refreshMulticlassSummary(actor, reason) {
   await writeClassProgression(actor, normalized, `${reason}:normalize-items`);
   const payload = multiclassUpdatePayload(actor);
   if (!payload) return null;
-  await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: reason });
+  await actor.update(payload, quietMutationOptions({ add2eReason: reason }));
   return payload;
 }
 
@@ -398,8 +414,7 @@ export async function addClassAsMulticlass(actor, option, sheet = null) {
   if (existingDocs.some(doc => classSlug(doc) === slug)) {
     await ensureCanonicalMulticlassState(actor);
     await refreshMulticlassSummary(actor, "multiclass-resync-existing-class");
-    sheet?._add2eRememberActiveTab?.();
-    sheet?.render?.(false);
+    renderOperationSheet(sheet, actor);
     ui.notifications.info(`${itemLabel(itemData, "Classe")} est déjà présente : multiclassage recalculé.`);
     return true;
   }
@@ -431,7 +446,7 @@ export async function addClassAsMulticlass(actor, option, sheet = null) {
   const newProgression = progressionForXp(data, shares.at(-1) ?? 0, systemRace(actor));
   data.system.niveau = newProgression.level;
   data.system.xp = newProgression.xp;
-  const [created] = await actor.createEmbeddedDocuments("Item", [data], { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-add-class-create" });
+  const [created] = await actor.createEmbeddedDocuments("Item", [data], quietMutationOptions({ add2eReason: "multiclass-add-class-create" }));
   if (!created) return false;
 
   const finalDocs = [...existingDocs.map(doc => actor.items.get(doc.id) ?? doc), created];
@@ -439,8 +454,7 @@ export async function addClassAsMulticlass(actor, option, sheet = null) {
   await writeClassProgression(actor, redistributed, "multiclass-add-class-distribute-xp");
   await refreshMulticlassSummary(actor, "multiclass-add-class-finalize");
   try { await syncRedistributedClassSpells(actor, redistributed, previousLevels, created); } catch (error) { warn("[SPELL_SYNC_APPEND_ERROR]", { actor: actor.name, className: created.name, error }); }
-  sheet?._add2eRememberActiveTab?.();
-  sheet?.render?.(false);
+  renderOperationSheet(sheet, actor);
   ui.notifications.info(`Multiclassage appliqué : ${created.name} avec ${itemLabel(option.raceData, "Race")}.`);
   return true;
 }
@@ -458,7 +472,7 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
   const inheritedXp = replacedState.hasXp ? Math.max(0, Math.floor(num(replacedState.xp, 0))) : Math.max(0, minXpForClassLevel(replaced.system ?? {}, Math.max(1, Math.floor(num(replacedState.level, 1)))));
   await applyRaceData(actor, option.raceData, sheet);
   await purgeClassBoundContent(actor, [replaced], "multiclass-replace-purge-class-content");
-  await deleteLiveEmbeddedDocuments(actor, "Item", [replaced.id], { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-replace-delete-class" });
+  await deleteLiveEmbeddedDocuments(actor, "Item", [replaced.id], { add2eReason: "multiclass-replace-delete-class" });
   const data = cloneItemData(itemData);
   data.type = "classe";
   data.system = data.system ?? {};
@@ -466,12 +480,11 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
   const raceCap = classRaceMaxLevel(data, systemRace(actor));
   data.system.niveau = raceCap > 0 ? Math.min(derivedLevel, raceCap) : derivedLevel;
   data.system.xp = inheritedXp;
-  const [created] = await actor.createEmbeddedDocuments("Item", [data], { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-replace-create-class" });
+  const [created] = await actor.createEmbeddedDocuments("Item", [data], quietMutationOptions({ add2eReason: "multiclass-replace-create-class" }));
   if (!created) throw new Error("Création de la classe de remplacement impossible.");
   await refreshMulticlassSummary(actor, "multiclass-replace-finalize");
   try { await syncClassSpells(actor, created, "multiclass-replace-class-sync"); } catch (error) { warn("[SPELL_SYNC_REPLACE_ERROR]", { actor: actor.name, className: created.name, error }); }
-  sheet?._add2eRememberActiveTab?.();
-  sheet?.render?.(false);
+  renderOperationSheet(sheet, actor);
   ui.notifications.info(`Classe remplacée : ${replaced.name} → ${created.name}.`);
   return true;
 }
@@ -494,7 +507,7 @@ export async function applyClassAsMonoclass(actor, optionOrItemData, sheet = nul
     const inheritedXp = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
     data.system.xp = inheritedXp;
     data.system.niveau = levelForClassXp(data.system, inheritedXp);
-    const [created] = await actor.createEmbeddedDocuments("Item", [data], { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-monoclass-create-class" });
+    const [created] = await actor.createEmbeddedDocuments("Item", [data], quietMutationOptions({ add2eReason: "multiclass-monoclass-create-class" }));
     if (!created) return false;
     keep = created;
     state = canonicalClassState(actor, keep);
@@ -514,7 +527,7 @@ export async function applyRaceForMulticlass(actor, raceData, sheet = null) {
   if (!(await ensureCanonicalMulticlassState(actor))) return false;
   await applyRaceData(actor, raceData, sheet);
   await refreshMulticlassSummary(actor, "multiclass-race-refresh");
-  sheet?.render?.(false);
+  renderOperationSheet(sheet, actor);
   return true;
 }
 
