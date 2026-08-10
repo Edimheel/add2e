@@ -445,6 +445,22 @@ export async function ensureCanonicalMulticlassState(actor) {
   return canonicalMulticlassEntries(actor);
 }
 
+async function syncClassSpells(actor, classDoc, reason) {
+  const sync = globalThis.add2eSyncActorSpellsFromClass;
+  if (typeof sync !== "function") return { handled: false, reason: "spell-sync-unavailable" };
+  globalThis.add2eDropProgressUpdate?.(actor, `Synchronisation des sorts ${classDoc.name}…`, {
+    progress: 72,
+    detail: "Ajout des sorts manquants depuis le cache canonique, sans reconstruction globale."
+  });
+  return sync(actor, classDoc, {
+    mode: "missing",
+    showWait: false,
+    forceCacheRefresh: false,
+    preserveMemorization: true,
+    add2eReason: reason
+  });
+}
+
 export async function cleanupAfterMonoclassReplace(actor, keepClassDoc, keepState = null, sheet = null) {
   if (!actor || actor.type !== "personnage" || !keepClassDoc) return false;
   const desired = normalizeProgression(keepClassDoc, keepState ?? monoClassStateFromActor(actor, keepClassDoc), systemRace(actor));
@@ -469,7 +485,7 @@ export async function cleanupAfterMonoclassReplace(actor, keepClassDoc, keepStat
   });
 
   try {
-    await globalThis.add2eSyncActorSpellsFromClass?.(actor, keepClassDoc, { mode: "replace", showWait: true });
+    await syncClassSpells(actor, keepClassDoc, "multiclass-mono-class-sync");
   } catch (error) {
     warn("[MONO_SPELL_SYNC_ERROR]", { actor: actor.name, error });
   }
@@ -577,7 +593,7 @@ export async function addClassAsMulticlass(actor, option, sheet = null) {
 
   await refreshMulticlassSummary(actor, "multiclass-add-class-finalize");
   try {
-    await globalThis.add2eSyncActorSpellsFromClass?.(actor, created, { mode: "append", showWait: true });
+    await syncClassSpells(actor, created, "multiclass-add-class-sync");
   } catch (error) {
     warn("[SPELL_SYNC_APPEND_ERROR]", { actor: actor.name, className: created.name, error });
   }
@@ -614,6 +630,11 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
     return false;
   }
 
+  const replacedState = classProgression(replaced);
+  const inheritedXp = replacedState.hasXp
+    ? Math.max(0, Math.floor(num(replacedState.xp, 0)))
+    : Math.max(0, minXpForClassLevel(replaced.system ?? {}, Math.max(1, Math.floor(num(replacedState.level, 1)))));
+
   await applyRaceData(actor, option.raceData, sheet);
   await purgeClassBoundContent(actor, [replaced], "multiclass-replace-purge-class-content");
   await deleteLiveEmbeddedDocuments(actor, "Item", [replaced.id], {
@@ -625,8 +646,10 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
   const data = cloneItemData(itemData);
   data.type = "classe";
   data.system = data.system ?? {};
-  data.system.niveau = 1;
-  data.system.xp = minXpForClassLevel(data.system, 1);
+  const derivedLevel = levelForClassXp(data.system, inheritedXp);
+  const raceCap = classRaceMaxLevel(data, systemRace(actor));
+  data.system.niveau = raceCap > 0 ? Math.min(derivedLevel, raceCap) : derivedLevel;
+  data.system.xp = inheritedXp;
   const [created] = await actor.createEmbeddedDocuments("Item", [data], {
     [INTERNAL]: true,
     add2eInternal: true,
@@ -636,7 +659,7 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
 
   await refreshMulticlassSummary(actor, "multiclass-replace-finalize");
   try {
-    await globalThis.add2eSyncActorSpellsFromClass?.(actor, created, { mode: "append", showWait: true });
+    await syncClassSpells(actor, created, "multiclass-replace-class-sync");
   } catch (error) {
     warn("[SPELL_SYNC_REPLACE_ERROR]", { actor: actor.name, className: created.name, error });
   }
