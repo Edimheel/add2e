@@ -1,8 +1,8 @@
 // ADD2E — Consommation Baie Délicieuse / Baie Empoisonnée
 // Compatible Foundry V13/V14/V15.
-// Version : 2026-08-09-canonical-hit-points-v5
+// Version : 2026-08-10-canonical-berry-resource-v6
 
-const ADD2E_BAIE_TAG = "[ADD2E][OBJET_ONUSE][BAIE_CONSOMMATION_V5]";
+const ADD2E_BAIE_TAG = "[ADD2E][OBJET_ONUSE][BAIE_CONSOMMATION_V6]";
 
 function add2eHtmlEscape(value) {
   const div = document.createElement("div");
@@ -15,16 +15,11 @@ function add2eGetActor() {
 }
 
 function add2eReadQty(sourceItem) {
-  const candidates = [
-    sourceItem?.system?.quantite,
-    sourceItem?.system?.quantity,
-    sourceItem?.system?.charges?.value
-  ];
-  for (const value of candidates) {
-    const number = Number(value);
-    if (Number.isFinite(number)) return Math.max(0, number);
+  const value = Number(sourceItem?.system?.quantite);
+  if (!Number.isFinite(value)) {
+    throw new Error(`${sourceItem?.name ?? "Consommable"} : system.quantite canonique est absent.`);
   }
-  return 1;
+  return Math.max(0, Math.floor(value));
 }
 
 function add2eBerryResourceEngine() {
@@ -66,18 +61,14 @@ function add2eBerryResource(owner, sourceItem) {
       consumer: "baie-delicieuse-consommation",
       itemId: String(sourceItem.id ?? "")
     },
-    write: next => {
-      const update = {};
-      if (sourceItem.system?.quantite !== undefined) update["system.quantite"] = next;
-      if (sourceItem.system?.quantity !== undefined) update["system.quantity"] = next;
-      if (sourceItem.system?.charges?.value !== undefined) update["system.charges.value"] = next;
-      if (!Object.keys(update).length) update["system.quantite"] = next;
-      return sourceItem.update(update, {
+    write: next => sourceItem.update(
+      { "system.quantite": next },
+      {
         add2eInternal: true,
         add2eReason: "berry-consumption-resource",
         render: false
-      });
-    }
+      }
+    )
   };
 }
 
