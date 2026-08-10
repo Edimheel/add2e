@@ -20,7 +20,7 @@ import {
 import { dialogAlert } from "./17b-multiclass-dialogs.mjs";
 import { ensureCanonicalMulticlassState, recalcActor } from "./17b-multiclass-operations.mjs";
 
-const VERSION = "2026-08-10-class-item-progression-direct-fields-v5";
+const VERSION = "2026-08-10-class-item-progression-direct-fields-v6-render-batch";
 const CAP_NOTICE_DEDUP_MS = 750;
 const capNoticeTimes = new Map();
 
@@ -222,7 +222,16 @@ async function storeCanonicalSpellSignature(actor) {
     const slug = String(entry?.slug ?? "").trim();
     if (slug && entry.hasLevel) signature[slug] = Math.max(1, Math.floor(num(entry.level, 1)));
   }
-  await actor?.setFlag?.("add2e", "autoSpellSyncLevelSignature", signature);
+  if (!actor?.update) return;
+  await actor.update({
+    "flags.add2e.autoSpellSyncLevelSignature": signature
+  }, {
+    add2eInternal: true,
+    add2eMulticlassInternal: true,
+    add2eSpellSync: true,
+    add2eReason: "class-item-spell-signature",
+    render: false
+  });
 }
 
 async function syncSpellLevel(actor, classDoc, previousLevel, appliedLevel) {
@@ -234,7 +243,7 @@ async function syncSpellLevel(actor, classDoc, previousLevel, appliedLevel) {
   const afterCap = maxSpellLevel(classDoc, appliedLevel);
   if (appliedLevel < previousLevel) {
     await globalThis.add2eResetActorSpellMemorization?.(actor, "class-item-level-down");
-    await globalThis.add2ePruneActorSpellsForClassLevel?.(actor, classDoc, appliedLevel, { notify: false });
+    await globalThis.add2ePruneActorSpellsForClassLevel?.(actor, classDoc, appliedLevel, { notify: false, render: false });
     await storeCanonicalSpellSignature(actor);
     return { handled: true, direction: "down", maxSpellLevel: afterCap };
   }
@@ -246,6 +255,7 @@ async function syncSpellLevel(actor, classDoc, previousLevel, appliedLevel) {
       showWait: false,
       forceCacheRefresh: false,
       preserveMemorization: true,
+      render: false,
       add2eMulticlassSpellSync: true
     });
   }
@@ -282,7 +292,9 @@ async function ensureCanonicalClassItems(actor) {
   await actor.updateEmbeddedDocuments("Item", [update], {
     [INTERNAL]: true,
     add2eInternal: true,
-    add2eReason: "single-class-item-progression-migration"
+    add2eMulticlassInternal: true,
+    add2eReason: "single-class-item-progression-migration",
+    render: false
   });
   return true;
 }
@@ -326,7 +338,9 @@ export async function updateDirectMulticlassField(sheet, input) {
   await actor.updateEmbeddedDocuments("Item", [update], {
     [INTERNAL]: true,
     add2eInternal: true,
-    add2eReason: "class-item-progression-direct-field"
+    add2eMulticlassInternal: true,
+    add2eReason: "class-item-progression-direct-field",
+    render: false
   });
 
   const multiple = classItems(actor).length > 1;
