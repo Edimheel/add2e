@@ -1,7 +1,7 @@
 // ADD2E — API commune des fenêtres DialogV2.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 uniquement.
 
-const ADD2E_DIALOG_UI_VERSION = "2026-08-08-dialog-ui-v4";
+const ADD2E_DIALOG_UI_VERSION = "2026-08-10-dialog-ui-carac-roller-v5";
 globalThis.ADD2E_DIALOG_UI_VERSION = ADD2E_DIALOG_UI_VERSION;
 
 const ADD2E_DIALOG_THEMES = Object.freeze({
@@ -311,6 +311,39 @@ function ensureStyles() {
 .window-app.add2e-dialog-window input[type="checkbox"]:focus-visible {
   outline: 2px solid var(--a2e-dialog-light) !important;
   outline-offset: 2px !important;
+}
+
+/* Tirage des caractéristiques : contenu métier dans le cadre commun. */
+.application.add2e-dialog-window.add2e-carac-roller-window,
+.window-app.add2e-dialog-window.add2e-carac-roller-window {
+  width: min(600px, calc(100vw - 24px)) !important;
+  min-width: min(600px, calc(100vw - 24px)) !important;
+  max-width: min(600px, calc(100vw - 24px)) !important;
+}
+
+.add2e-carac-popup .add2e-carac-value:hover {
+  filter: brightness(1.06) !important;
+  transform: translateY(-1px) !important;
+}
+
+.add2e-carac-popup .add2e-carac-value.selected {
+  outline: 2px solid #8d1f1f !important;
+  box-shadow: 0 0 0 2px #e2c178, 0 0 10px rgba(120,40,20,.45) !important;
+}
+
+.add2e-carac-popup .add2e-carac-value.used {
+  opacity: .82 !important;
+  background: linear-gradient(180deg,#8b7b63 0%,#5f533f 100%) !important;
+  color: #fff2d0 !important;
+}
+
+.add2e-carac-popup .add2e-carac-value.used .assigned-label {
+  color: #ffe19b !important;
+}
+
+.add2e-carac-popup .add2e-class-suggestion:hover {
+  filter: brightness(1.13) !important;
+  transform: translateY(-1px) !important;
 }
 
 /* Boutique générique : contenu métier commun à tous les marchands. */
