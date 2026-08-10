@@ -18,9 +18,13 @@ import {
   minXpForClassLevel
 } from "./17b-multiclass-rules.mjs";
 import { dialogAlert } from "./17b-multiclass-dialogs.mjs";
-import { ensureCanonicalMulticlassState, recalcActor } from "./17b-multiclass-operations.mjs";
+import {
+  ensureCanonicalMulticlassState,
+  recalcActor,
+  refreshMonoclassSummary
+} from "./17b-multiclass-operations.mjs";
 
-const VERSION = "2026-08-10-class-item-progression-direct-fields-v6-render-batch";
+const VERSION = "2026-08-10-class-item-progression-direct-fields-v7-item-owner";
 const CAP_NOTICE_DEDUP_MS = 750;
 const capNoticeTimes = new Map();
 
@@ -116,7 +120,7 @@ function showLevelCapNotice(actor, classDoc, requestedLevel, cap) {
       </div>
       <div class="cap-grid">
         <div class="cap-card"><span>Classe</span><b>${esc(classDoc?.name ?? "Classe")}</b></div>
-        <div class="cap-card"><span>Race</span><b>${esc(race?.name ?? actor?.system?.race ?? "Race")}</b></div>
+        <div class="cap-card"><span>Race</span><b>${esc(race?.name ?? "Race")}</b></div>
         <div class="cap-card"><span>Niveau demandé</span><b>${esc(requestedLevel)}</b></div>
         <div class="cap-card"><span>Niveau appliqué</span><b>${esc(cap.maxLevel)}</b></div>
       </div>
@@ -142,6 +146,9 @@ function normalizedLevelFromXp(classDoc, xp, cap) {
 function alignClassItemChanges(classDoc, actor, changes = {}, options = {}, userId = null) {
   if (!classDoc || actor?.type !== "personnage" || !isExternalChange(options, userId)) return false;
   const current = classProgression(classDoc);
+  if (!current.hasLevel || !current.hasXp) {
+    throw new Error(`Item de classe « ${classDoc?.name ?? classDoc?.id ?? "inconnu"} » sans progression canonique.`);
+  }
   const currentLevel = Math.max(1, integer(current.level, 1));
   const currentXp = Math.max(0, integer(current.xp, 0));
   const rawLevel = readPath(changes, "system.niveau");
@@ -168,48 +175,13 @@ function alignClassItemChanges(classDoc, actor, changes = {}, options = {}, user
   return true;
 }
 
-function alignMonoclassActorChanges(actor, changes = {}, options = {}, userId = null) {
-  if (actor?.type !== "personnage" || !isExternalChange(options, userId)) return false;
-  const docs = classItems(actor);
-  if (docs.length !== 1) return false;
-
-  const classDoc = docs[0];
-  const currentLevel = Math.max(1, integer(actor.system?.niveau, 1));
-  const currentXp = Math.max(0, integer(actor.system?.xp, 0));
-  const rawLevel = readPath(changes, "system.niveau");
-  const rawXp = readPath(changes, "system.xp");
-  const hasLevel = rawLevel !== undefined && rawLevel !== null && rawLevel !== "";
-  const hasXp = rawXp !== undefined && rawXp !== null && rawXp !== "";
-  if (!hasLevel && !hasXp) return false;
-
-  const requestedLevel = hasLevel ? Math.max(1, integer(rawLevel, currentLevel)) : currentLevel;
-  const requestedXp = hasXp ? Math.max(0, integer(rawXp, currentXp)) : currentXp;
-  const levelChanged = hasLevel && requestedLevel !== currentLevel;
-  const xpChanged = hasXp && requestedXp !== currentXp;
-  const cap = classEffectiveLevelCap(classDoc, actorRace(actor));
-
-  if (xpChanged && !levelChanged) {
-    writePath(changes, "system.niveau", normalizedLevelFromXp(classDoc, requestedXp, cap));
-    return true;
-  }
-
-  const appliedLevel = cap.maxLevel > 0 ? Math.min(requestedLevel, cap.maxLevel) : requestedLevel;
-  writePath(changes, "system.niveau", appliedLevel);
-  writePath(changes, "system.xp", minXpForClassLevel(classDoc.system ?? {}, appliedLevel));
-  if (requestedLevel > appliedLevel) showLevelCapNotice(actor, classDoc, requestedLevel, cap);
-  return true;
-}
-
 function automaticSpellClass(classDoc) {
-  const lists = globalThis.add2eSpellSyncClassLists?.(classDoc) ?? [];
-  if (Array.isArray(lists) && lists.length) return true;
-  const slug = String(classDoc?.system?.slug ?? classDoc?.name ?? "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-  return slug === "clerc" || slug === "druide";
+  const resolver = globalThis.add2eSpellSyncClassLists;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des listes de sorts de classe est indisponible.");
+  }
+  const lists = resolver(classDoc);
+  return Array.isArray(lists) && lists.length > 0;
 }
 
 function maxSpellLevel(classDoc, level) {
@@ -273,29 +245,13 @@ export function mergeMulticlassChanges(actor, changes) {
 }
 
 async function ensureCanonicalClassItems(actor) {
-  const direct = globalThis.add2eEnsureCanonicalClassProgression;
-  if (typeof direct === "function") return direct(actor);
-  if (classItems(actor).length > 1) return !!(await ensureCanonicalMulticlassState(actor));
-
-  const classDoc = classItems(actor)[0] ?? null;
-  if (!classDoc) return false;
-  const state = classProgression(classDoc);
-  if (state.hasLevel && state.hasXp) return true;
-  const fallbackXp = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
-  const cap = classEffectiveLevelCap(classDoc, actorRace(actor));
-  const fallbackLevel = normalizedLevelFromXp(classDoc, fallbackXp, cap);
-  const update = classProgressionUpdate(classDoc, {
-    level: state.hasLevel ? state.level : fallbackLevel,
-    xp: state.hasXp ? state.xp : fallbackXp
-  });
-  if (!update) return false;
-  await actor.updateEmbeddedDocuments("Item", [update], {
-    [INTERNAL]: true,
-    add2eInternal: true,
-    add2eMulticlassInternal: true,
-    add2eReason: "single-class-item-progression-migration",
-    render: false
-  });
+  const docs = classItems(actor);
+  if (!docs.length) return false;
+  if (docs.length > 1) return !!(await ensureCanonicalMulticlassState(actor));
+  const state = classProgression(docs[0]);
+  if (!state.hasLevel || !state.hasXp) {
+    throw new Error(`Item de classe « ${docs[0]?.name ?? docs[0]?.id ?? "inconnu"} » sans system.niveau/system.xp canonique.`);
+  }
   return true;
 }
 
@@ -345,7 +301,7 @@ export async function updateDirectMulticlassField(sheet, input) {
 
   const multiple = classItems(actor).length > 1;
   if (multiple) await recalcActor(actor);
-  await globalThis.add2eSyncClassProgressionSummary?.(actor, { reason: "class-item-progression-direct-field" });
+  else await refreshMonoclassSummary(actor, "class-item-progression-direct-field");
 
   try {
     await globalThis.add2eRecalculateHitPoints?.(actor, {
@@ -382,10 +338,6 @@ export function bindDirectMulticlassFields(sheet, html) {
 
 if (!globalThis.__ADD2E_CLASS_PROGRESSION_GUARD__) {
   globalThis.__ADD2E_CLASS_PROGRESSION_GUARD__ = VERSION;
-
-  Hooks.on("preUpdateActor", (actor, changes = {}, options = {}, userId) => {
-    alignMonoclassActorChanges(actor, changes, options, userId);
-  });
 
   Hooks.on("preUpdateItem", (item, changes = {}, options = {}, userId) => {
     if (String(item?.type ?? "").toLowerCase() !== "classe") return;
