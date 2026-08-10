@@ -8,7 +8,7 @@ import {
   add2eRefundSpellComponents as add2eCoreRefundSpellComponents
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_CONSUMABLES_VERSION = "2026-08-10-canonical-projectile-owner-v11";
+const ADD2E_CONSUMABLES_VERSION = "2026-08-10-direct-drop-owner-v12";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -378,18 +378,6 @@ export async function add2eTryMergeDroppedAmmunition(sheet, event) {
   return true;
 }
 
-function add2eWrapActorSheetDropForAmmunition() {
-  if (globalThis.__ADD2E_CONSUMABLES_DROP_WRAP_V1) return;
-  const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || typeof proto._onDrop !== "function") return;
-  globalThis.__ADD2E_CONSUMABLES_DROP_WRAP_V1 = true;
-  const original = proto._onDrop;
-  proto._onDrop = async function add2eConsumablesDropWrapper(event, ...args) {
-    if (await add2eTryMergeDroppedAmmunition(this, event)) return false;
-    return original.call(this, event, ...args);
-  };
-}
-
 export async function add2eEquipHybridThrownWeaponAsContact(actor, weapon, sheet = null) {
   if (!actor || !weapon) return false;
   const action = globalThis.add2eHandleItemAction ?? globalThis.handleItemAction;
@@ -427,7 +415,6 @@ globalThis.add2eActorUsesProjectileInventory = add2eActorUsesProjectileInventory
 globalThis.add2eActorDocumentType = add2eActorDocumentType;
 
 Hooks.once("ready", () => {
-  add2eWrapActorSheetDropForAmmunition();
   game.add2e = game.add2e ?? {};
   game.add2e.consumables = { ...(game.add2e.consumables ?? {}), ...api };
   game.add2e.consumablesVersion = ADD2E_CONSUMABLES_VERSION;
