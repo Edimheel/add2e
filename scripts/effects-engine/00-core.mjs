@@ -33,12 +33,12 @@ export {
   ADD2E_ABILITY_BOUNDS
 };
 
-const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-03-canonical-magic-item-weight-v12";
+const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-10-canonical-equipment-classification-v13";
 const ADD2E_MOVEMENT_METRES_PER_RATE = 3;
 const ADD2E_GOLD_PIECES_PER_KILOGRAM = 20;
 const ADD2E_GOLD_PIECES_PER_POUND = 10;
 const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-08-02-world-encumbrance-settings-v2";
-const ADD2E_ARMOR_MOVEMENT_VERSION = "2026-08-03-canonical-magic-item-weight-v4";
+const ADD2E_ARMOR_MOVEMENT_VERSION = "2026-08-10-canonical-equipment-classification-v5";
 
 const ADD2E_ARMOR_CATEGORY_MOVEMENT_RATES = Object.freeze({
   legere: 12,
@@ -256,8 +256,25 @@ function armorIsShield(item) {
     || type === "shield"
     || category === "bouclier"
     || category === "shield"
+    || tags.has("bouclier")
+    || tags.has("shield")
     || tags.has("armure-bouclier")
     || tags.has("armor-shield");
+}
+
+function armorIsHelmet(item) {
+  const tags = armorTags(item);
+  const type = armorTypeKey(item, tags);
+  const category = armorCategoryKey(item, tags);
+  const values = new Set(["casque", "heaume", "helmet"]);
+  return values.has(type)
+    || values.has(category)
+    || tags.has("casque")
+    || tags.has("heaume")
+    || tags.has("helmet")
+    || tags.has("armure-casque")
+    || tags.has("armure-heaume")
+    || tags.has("armor-helmet");
 }
 
 function armorIsMagic(item) {
@@ -844,11 +861,35 @@ function installContextConditionExtensions(Engine) {
       }
     },
 
+    isShieldItem: {
+      configurable: true,
+      writable: true,
+      value(item) {
+        return armorIsShield(item);
+      }
+    },
+
+    isHelmetItem: {
+      configurable: true,
+      writable: true,
+      value(item) {
+        return armorIsHelmet(item);
+      }
+    },
+
     armorIsShield: {
       configurable: true,
       writable: true,
       value(item) {
         return armorIsShield(item);
+      }
+    },
+
+    armorIsHelmet: {
+      configurable: true,
+      writable: true,
+      value(item) {
+        return armorIsHelmet(item);
       }
     },
 
