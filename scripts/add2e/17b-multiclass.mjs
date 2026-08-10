@@ -44,19 +44,6 @@ function classRow(item) {
     ?? null;
 }
 
-function featureName(feature) {
-  return String(feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "").trim();
-}
-
-function featureKey(value) {
-  const raw = typeof value === "object"
-    ? value?.id ?? value?._id ?? value?.key ?? value?.slug ?? value?.skillKey ?? value?.name ?? value?.label ?? value?.title ?? value?.nom ?? ""
-    : value;
-  if (typeof globalThis.add2eNormalizeEquipTag === "function") return globalThis.add2eNormalizeEquipTag(raw);
-  return String(raw ?? "").trim().toLowerCase().normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[_\s-]+/g, "_");
-}
-
 function isFeatureActivable(feature) {
   if (!feature || typeof feature !== "object") return false;
   if (feature.activable === true) return true;
@@ -65,36 +52,8 @@ function isFeatureActivable(feature) {
   return String(feature?._add2eFeatureSource ?? "") === "activeClassFeatures";
 }
 
-function isThiefClassFeature(feature) {
-  const values = [
-    feature?._add2eClassSlug,
-    feature?._add2eClassName,
-    feature?.sourceClassSlug,
-    feature?.sourceClassName,
-    feature?.classSlug,
-    feature?.className,
-    feature?.classe,
-    feature?.class
-  ].map(featureKey).filter(Boolean);
-  return values.some(value => value === "voleur" || value.startsWith("voleur_") || value.endsWith("_voleur") || value.includes("voleur"));
-}
-
-function isThiefSkillFeature(feature) {
-  const text = `${featureKey(featureName(feature))} ${featureKey(feature?.skillKey ?? feature?.key ?? feature?.slug ?? "")}`;
-  return [
-    "faculte_de_voleur", "facultes_de_voleur", "competence_de_voleur", "competences_de_voleur",
-    "pickpocket", "faire_les_poches", "crochetage", "serrure", "piege", "desamorc",
-    "deplacement_silencieux", "silence", "dissimulation", "cacher", "ecoute", "auditiv",
-    "ouie", "entendre", "bruit", "escalade", "grimper", "lecture_langues",
-    "lecture_des_langues", "frappe_dans_le_dos", "attaque_dans_le_dos", "backstab",
-    "attaque_sournoise", "assassination", "assassinat"
-  ].some(token => text.includes(token));
-}
-
 function installClassFeatureGlobals() {
   globalThis.add2eIsFeatureActivable = isFeatureActivable;
-  globalThis.add2eIsThiefClassFeature = isThiefClassFeature;
-  globalThis.add2eIsThiefSkillFeature = isThiefSkillFeature;
 }
 
 async function ensureMonoclassItemProgression(actor, { fromActorSummary = false, reason = "monoclass-item-progression" } = {}) {
