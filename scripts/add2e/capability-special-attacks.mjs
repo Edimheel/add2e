@@ -13,7 +13,7 @@ import { add2eAttackComputeActiveAttackModifiers } from "../add2e-attack/04e-att
 import { add2eAttackComputeCharacterDisplayedCA } from "../add2e-attack/04d-attack-roll-defense.mjs";
 import { add2eAttackMeasureContactAndDistance, add2eAttackValidateRange } from "../add2e-attack/04g-attack-roll-range.mjs";
 
-export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-08-11-shared-ui-native-dispatch-v2";
+export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-08-11-canonical-target-data-v3";
 
 const SYSTEM_ID = "add2e";
 const GM_OPERATION = "ADD2E_GM_OPERATION";
@@ -21,6 +21,7 @@ const SPECIAL_ATTACK_FLAG = "capabilitySpecialAttack";
 const WINDOW_FLAG = "capabilitySpecialAttackWindow";
 const DEFERRED_FLAG = "capabilityDeferredAction";
 const TAG = "[ADD2E][CAPABILITY_SPECIAL_ATTACK]";
+const MONSTER_TERMINAL_HP_ACTOR_TYPES = new Set(["monster", "pnj"]);
 
 function diag(step, data = {}) {
   try { console.info(`${TAG}[${step}]`, { version: ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION, ...data }); }
@@ -76,83 +77,62 @@ function currentTick() {
   return Number.isFinite(tick) ? Math.max(0, Math.floor(tick)) : null;
 }
 
+function hitPointEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (
+    !engine
+    || typeof engine.readHitPoints !== "function"
+    || typeof engine.readMaximumHitPoints !== "function"
+    || typeof engine.applyHitPointDamage !== "function"
+  ) {
+    throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible.");
+  }
+  return engine;
+}
+
 function actorHp(actor) {
-  const system = actor?.system ?? {};
-  const current = number(system.pdv, system.pv, system.hp?.value, system.attributes?.hp?.value);
-  const maximum = number(
-    system.points_de_coup,
-    system.pv_max,
-    system.points_de_vie,
-    system.hp?.max,
-    system.attributes?.hp?.max,
-    system.pdv,
-    system.pv,
-    system.hp?.value,
-    system.attributes?.hp?.value
-  );
-  return { current: Number.isFinite(current) ? current : maximum, maximum };
+  const engine = hitPointEngine();
+  return {
+    current: engine.readHitPoints(actor),
+    maximum: engine.readMaximumHitPoints(actor)
+  };
+}
+
+function monsterHitDice(actor) {
+  const raw = String(actor?.system?.hitDice ?? "").trim();
+  const match = raw.match(/^(\d+(?:[.,]\d+)?)/);
+  return match ? Number(match[1].replace(",", ".")) : null;
+}
+
+function characterClassLevel(actor) {
+  const levels = Array.from(actor?.items ?? [])
+    .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
+    .map(item => Number(item?.system?.niveau))
+    .filter(level => Number.isFinite(level) && level >= 1)
+    .map(level => Math.floor(level));
+  return levels.length ? Math.max(...levels) : null;
 }
 
 function actorHitDice(actor) {
-  const system = actor?.system ?? {};
-  const candidates = [
-    system.dv,
-    system.hitDice,
-    system.hit_dice,
-    system.des_de_vie,
-    system.niveau,
-    system.level,
-    system.details?.niveau,
-    system.details?.level
-  ];
-  for (const candidate of candidates) {
-    if (typeof candidate === "number" && Number.isFinite(candidate)) return candidate;
-    const match = String(candidate ?? "").match(/\d+(?:[.,]\d+)?/);
-    if (match) return Number(match[0].replace(",", "."));
+  const type = String(actor?.type ?? "").trim().toLowerCase();
+  if (type === "monster") return monsterHitDice(actor);
+  if (type === "pnj") {
+    const level = Number(actor?.system?.niveau);
+    return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
   }
+  if (type === "personnage") return characterClassLevel(actor);
   return null;
 }
 
 function actorTags(actor) {
-  const values = [];
-  const visit = value => {
-    if (value === null || value === undefined || value === "") return;
-    if (Array.isArray(value)) return value.forEach(visit);
-    if (typeof value === "object") {
-      for (const [key, entry] of Object.entries(value)) {
-        if (entry === true) values.push(key);
-        else visit(entry);
-      }
-      return;
-    }
-    for (const entry of String(value).split(/[,;|\n]+/g)) {
-      const key = norm(entry);
-      if (key) values.push(key);
-    }
-  };
-
-  const system = actor?.system ?? {};
-  const flags = actor?.flags?.[SYSTEM_ID] ?? {};
-  visit([
-    system.tags,
-    system.effectTags,
-    system.effecttags,
-    system.type,
-    system.type_monstre,
-    system.immunites,
-    system.immunities,
-    system.resistances,
-    system.defenses,
-    system.specialDefenses,
-    system.special_defenses,
-    flags.tags,
-    flags.effectTags,
-    flags.monsterCapabilities
-  ]);
-  for (const item of actor?.items ?? []) {
-    visit([item?.system?.tags, item?.system?.effectTags, item?.flags?.[SYSTEM_ID]?.tags]);
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine || typeof engine.getContextTags !== "function") {
+    throw new Error("Le propriétaire canonique ADD2E des tags de contexte est indisponible.");
   }
-  return new Set(values);
+  const normalize = typeof engine.normalizeTag === "function"
+    ? value => engine.normalizeTag(value)
+    : norm;
+  return new Set((engine.getContextTags(actor) ?? []).map(normalize).filter(Boolean));
 }
 
 function profileFor(item) {
@@ -166,15 +146,9 @@ function profileFor(item) {
   return clone(profile);
 }
 
-function sourceLevel(actor, item, profile) {
-  const configured = number(
-    profile?.sourceLevel,
-    item?.flags?.[SYSTEM_ID]?.sourceLevel,
-    item?.system?.sourceLevel
-  );
-  if (Number.isFinite(configured) && configured > 0) return Math.floor(configured);
-  const system = actor?.system ?? {};
-  return Math.max(1, Math.floor(number(system.niveau, system.level, 1) ?? 1));
+function sourceLevel(_actor, _item, profile) {
+  const configured = Number(profile?.sourceLevel);
+  return Number.isFinite(configured) && configured >= 1 ? Math.floor(configured) : null;
 }
 
 function formatTicks(rounds) {
@@ -269,6 +243,14 @@ function validateTarget(profile, sourceActor, target) {
   }
 
   const level = sourceLevel(sourceActor, null, profile);
+  if (!Number.isFinite(level)) {
+    return {
+      ok: false,
+      code: "missing-source-level",
+      reason: "Le niveau source canonique de la capacité est absent."
+    };
+  }
+
   const hitDiceRule = restrictions.maxHitDice ?? null;
   if (hitDiceRule) {
     const multiplier = Math.max(0, Number(hitDiceRule.multiplier ?? 1) || 0);
@@ -344,12 +326,8 @@ function profileResolvesImmediately(profile) {
   ].includes(value));
 }
 
-function targetIsMonster(actor) {
-  const type = norm(actor?.type ?? actor?.system?.type ?? actor?.system?.type_monstre ?? "");
-  return type.includes("monster")
-    || type.includes("monstre")
-    || type.includes("pnj")
-    || type.includes("npc");
+function targetUsesMonsterTerminalHp(actor) {
+  return MONSTER_TERMINAL_HP_ACTOR_TYPES.has(String(actor?.type ?? "").trim().toLowerCase());
 }
 
 async function emitGmOperation(operation, payload) {
@@ -370,16 +348,15 @@ async function emitGmOperation(operation, payload) {
       });
     }
     if (operation === "applyDamage" && actor) {
-      const current = actorHp(actor).current;
       const amount = Math.abs(Number(payload.montant) || 0);
-      if (!Number.isFinite(current) || !amount) return false;
-      await actor.update({ "system.pdv": current - amount }, {
-        add2eInternal: true,
-        add2eReason: "capability-special-attack",
-        add2eDetails: payload.details
+      if (!amount) return false;
+      return hitPointEngine().applyHitPointDamage(actor, amount, {
+        reason: "capability-special-attack",
+        updateOptions: {
+          add2eInternal: true,
+          add2eDetails: payload.details
+        }
       });
-      await globalThis.add2eSyncActorVitalStatus?.(actor, { reason: "capability-special-attack" });
-      return true;
     }
   }
   game.socket?.emit?.(`system.${SYSTEM_ID}`, { type: GM_OPERATION, operation, payload });
@@ -394,7 +371,7 @@ async function applyHitPointAction({
   detailSource = "capability-special-attack"
 } = {}) {
   if (norm(action?.type) !== "set_hit_points") return { ok: false, reason: "unsupported-action" };
-  const targetValue = targetIsMonster(target)
+  const targetValue = targetUsesMonsterTerminalHp(target)
     ? Number(action?.monsterValue ?? 0)
     : Number(action?.characterValue ?? -11);
   const hp = actorHp(target).current;
@@ -419,6 +396,7 @@ async function applyHitPointAction({
 function buildDeferredEffect({ sourceActor, target, item, profile, tick }) {
   const deferred = profile?.deferredEffect ?? {};
   const level = sourceLevel(sourceActor, item, profile);
+  if (!Number.isFinite(level)) throw new Error("Le niveau source canonique de la capacité est absent.");
   const roundsPerLevel = Math.max(1, Number(deferred?.duration?.roundsPerSourceLevel ?? 1) || 1);
   const rounds = Math.max(1, Math.floor(level * roundsPerLevel));
   const expiresAtTick = tick + rounds;
@@ -710,7 +688,7 @@ async function prepareWindow({ actor, item, profile, rounds }) {
       },
       flags: {
         [SYSTEM_ID]: {
-          tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`, ...tags],
+          tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`],
           timeEngine: { managed: true, totalRounds, startTick: tick },
           roundEngine: {
             managed: true,
@@ -994,7 +972,7 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
   const level = sourceLevel(sourceActor, item, profile);
   const thac0 = resolveThac0(sourceActor, level);
   const armorClass = resolveArmorClass(target);
-  if (!Number.isFinite(thac0) || !Number.isFinite(armorClass)) {
+  if (!Number.isFinite(level) || !Number.isFinite(thac0) || !Number.isFinite(armorClass)) {
     ui.notifications?.error?.("Capacité : les données de combat nécessaires sont introuvables.");
     return false;
   }
