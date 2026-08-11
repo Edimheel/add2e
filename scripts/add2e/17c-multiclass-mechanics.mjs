@@ -5,7 +5,7 @@
 
 import { classItems as coreClassItems, classProgression, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-08-11-canonical-class-item-progression-v15";
+const VERSION = "2026-08-11-strict-class-item-progression-v16";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 const hitPointQueues = new Map();
@@ -110,7 +110,7 @@ function combinedSpellcasting(entries) {
   if (entries.length === 1) return foundry.utils.deepClone(entries[0].system?.spellcasting ?? null);
   const lists = [...new Set(entries.flatMap(entry => {
     const spellcasting = entry.system?.spellcasting;
-    return spellcasting?.enabled === true && Array.isArray(spellcasting.lists) ? spellcasting.lists : [];
+    return spellcasting?.enabled === true && Array.isArray(entry.spellcasting?.lists) ? entry.spellcasting.lists : [];
   }).filter(Boolean))];
   return lists.length ? {
     enabled: true,
@@ -250,25 +250,13 @@ function applyClassProgressionToSheet(actor, data) {
 
 async function ensureCanonicalClassProgression(actor) {
   if (!hasClasses(actor)) return false;
-  const docs = classes(actor);
-  const missing = docs.filter(item => {
+  const missing = classes(actor).filter(item => {
     const state = classProgression(item);
     return !state.hasLevel || !state.hasXp;
   });
   if (!missing.length) return true;
-
-  if (docs.length > 1) {
-    const migrate = globalThis.add2eMigrateLegacyMulticlassActor;
-    const result = typeof migrate === "function" ? await migrate(actor) : null;
-    if (result?.ok !== true) return false;
-    return docs.every(item => {
-      const state = classProgression(item);
-      return state.hasLevel && state.hasXp;
-    });
-  }
-
-  const classDoc = docs[0];
-  throw new Error(`Item de classe « ${classDoc?.name ?? classDoc?.id ?? "inconnu"} » sans system.niveau/system.xp canonique.`);
+  const names = missing.map(item => item?.name ?? item?.id ?? "inconnu").join(", ");
+  throw new Error(`Progression canonique absente sur les Items de classe : ${names}.`);
 }
 
 async function syncClassProgressionSummary(actor, { reason = "class-item-progression-summary" } = {}) {
