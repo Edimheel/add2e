@@ -13,6 +13,7 @@ import {
   multiclassEnabled,
   norm,
   num,
+  raceSlug,
   systemRace,
   warn
 } from "./17b-multiclass-core.mjs";
@@ -372,7 +373,8 @@ export function applyPayloadToSheetData(data, payload) {
 
 export async function applyRaceData(actor, raceData, sheet = null) {
   if (!raceData) return false;
-  if (norm(itemLabel(systemRace(actor), "Race")) === norm(itemLabel(raceData, "Race"))) return true;
+  const currentRace = systemRace(actor);
+  if (currentRace && raceSlug(currentRace) === raceSlug(raceData)) return true;
   if (typeof globalThis.add2eApplyRaceItemDataToActor !== "function") throw new Error("Le gestionnaire de race canonique est introuvable.");
   await globalThis.add2eApplyRaceItemDataToActor(actor, raceData, sheet, { notify: true, reason: "multiclass-race-choice", render: false });
   return true;
@@ -443,10 +445,13 @@ export async function addClassAsMulticlass(actor, option, sheet = null) {
 export async function replaceClassInMulticlass(actor, option, sheet = null) {
   const itemData = option?.classData;
   if (!actor || !itemData || !option?.replacedClassId) return false;
-  const remainingNames = classItems(actor).filter(doc => doc.id !== option.replacedClassId && classSlug(doc) !== option.replacedClassSlug).map(doc => doc.name).concat(itemLabel(itemData, "Classe"));
-  if (!raceAllowsClassSet(option.raceData, remainingNames) || !raceMatchesClassRules(option.raceData, itemData) || !classPrerequisitesOk(actor, itemData, option.raceData, { notify: true })) return false;
+  const remainingSlugs = classItems(actor)
+    .filter(doc => String(doc.id) !== String(option.replacedClassId))
+    .map(doc => classSlug(doc))
+    .concat(classSlug(itemData));
+  if (!raceAllowsClassSet(option.raceData, remainingSlugs) || !raceMatchesClassRules(option.raceData, itemData) || !classPrerequisitesOk(actor, itemData, option.raceData, { notify: true })) return false;
   if (!(await ensureCanonicalMulticlassState(actor))) return false;
-  const replaced = classItems(actor).find(doc => String(doc.id) === String(option.replacedClassId) || classSlug(doc) === norm(option.replacedClassSlug));
+  const replaced = classItems(actor).find(doc => String(doc.id) === String(option.replacedClassId)) ?? null;
   if (!replaced) { ui.notifications.error("Classe à remplacer introuvable dans l'acteur."); return false; }
   if (classItems(actor).some(doc => doc.id !== replaced.id && classSlug(doc) === classSlug(itemData))) { ui.notifications.warn(`${itemLabel(itemData, "Classe")} est déjà présente dans le multiclassage.`); return false; }
   const replacedState = requireClassProgression(replaced, "remplacement de classe multiclassée");
