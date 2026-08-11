@@ -110,7 +110,7 @@ function combinedSpellcasting(entries) {
   if (entries.length === 1) return foundry.utils.deepClone(entries[0].system?.spellcasting ?? null);
   const lists = [...new Set(entries.flatMap(entry => {
     const spellcasting = entry.system?.spellcasting;
-    return spellcasting?.enabled === true && Array.isArray(entry.spellcasting?.lists) ? entry.spellcasting.lists : [];
+    return spellcasting?.enabled === true && Array.isArray(spellcasting.lists) ? spellcasting.lists : [];
   }).filter(Boolean))];
   return lists.length ? {
     enabled: true,
