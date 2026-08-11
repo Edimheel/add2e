@@ -196,26 +196,6 @@ export function monoClassOptionsForDroppedClass(actor, classData) {
   ).map(raceData => ({ action: "monoclass", classData, raceData }));
 }
 
-function parseXpInteger(raw) {
-  if (typeof raw === "number" && Number.isFinite(raw)) return Math.max(0, Math.floor(raw));
-  const compact = String(raw ?? "").trim().replace(/[.\s,]/g, "");
-  if (!/^\d+$/.test(compact)) return NaN;
-  const value = Number(compact);
-  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : NaN;
-}
-
-export function parseXpRange(raw) {
-  if (typeof raw === "number" && Number.isFinite(raw)) {
-    const value = parseXpInteger(raw);
-    return { min: value, max: null };
-  }
-  const values = String(raw ?? "")
-    .match(/[0-9][0-9.\s,]*/g)
-    ?.map(parseXpInteger)
-    .filter(Number.isFinite) ?? [];
-  return { min: values[0] ?? 0, max: values[1] ?? null };
-}
-
 /**
  * Répartit exactement un total d'XP entre les classes d'un multiclassé.
  * Le quotient est identique pour toutes les classes et le reste entier est
@@ -229,14 +209,36 @@ export function splitMulticlassXp(totalXpValue, classCountValue) {
   return Array.from({ length: classCount }, (_entry, index) => base + (index < remainder ? 1 : 0));
 }
 
+/**
+ * Retourne les lignes de progression canoniques d'une classe.
+ * Contrat source unique : progression[].niveau entier et progression[].xp entier.
+ */
 export function progressionRows(classSystem) {
-  return (Array.isArray(classSystem?.progression) ? classSystem.progression : [])
-    .map((row, index) => {
-      const range = parseXpRange(row?.xp ?? row?.experience ?? row?.xpRange ?? row?.niveau_xp ?? "");
-      return { ...row, niveau: num(row?.niveau ?? row?.level ?? index + 1, index + 1), xpMin: range.min, xpMax: range.max };
-    })
-    .filter(row => row.niveau > 0)
-    .sort((left, right) => left.niveau - right.niveau);
+  const progression = classSystem?.progression;
+  if (!Array.isArray(progression)) return [];
+
+  const rows = progression.map((row, index) => {
+    const niveau = Number(row?.niveau);
+    const xp = Number(row?.xp);
+    if (!Number.isInteger(niveau) || niveau < 1) {
+      throw new Error(`Ligne de progression ${index + 1} sans niveau canonique.`);
+    }
+    if (!Number.isFinite(xp) || xp < 0) {
+      throw new Error(`Ligne de progression niveau ${niveau} sans seuil XP canonique.`);
+    }
+    return {
+      ...row,
+      niveau,
+      xp: Math.floor(xp),
+      xpMin: Math.floor(xp),
+      xpMax: null
+    };
+  }).sort((left, right) => left.niveau - right.niveau);
+
+  for (let index = 0; index < rows.length - 1; index += 1) {
+    rows[index].xpMax = Math.max(rows[index].xpMin, rows[index + 1].xpMin - 1);
+  }
+  return rows;
 }
 
 export function levelForClassXp(classSystem, xpValue) {
@@ -267,8 +269,8 @@ export function classTitleForLevel(classSystem, level) {
   const rowTitle = progressionRows(classSystem).find(row => Number(row.niveau) === Number(level))?.title;
   if (rowTitle) return rowTitle;
   const titles = Array.isArray(classSystem?.titlesByLevel) ? classSystem.titlesByLevel : [];
-  return titles.find(title => Number(level) >= Number(title.minLevel ?? title.niveauMin ?? 0)
-    && Number(level) <= Number(title.maxLevel ?? title.niveauMax ?? 999))?.title ?? "";
+  return titles.find(title => Number(level) >= Number(title.minLevel)
+    && Number(level) <= Number(title.maxLevel))?.title ?? "";
 }
 
 function uniqueClassDocs(docs) {
