@@ -1,7 +1,9 @@
 // ADD2E — Moine : mécanique liée à l'Item classe Moine.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_MONK_RULES_VERSION = "2026-07-10-canonical-progression-v4";
+import { classItems, classProgression, classSlug, raceItem, raceSlug } from "./17b-multiclass-core.mjs";
+
+const ADD2E_MONK_RULES_VERSION = "2026-08-11-canonical-monk-identity-v5";
 const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
 const ADD2E_MONK_UNARMED_IMG = "systems/add2e/assets/icones/armes/main-nue.webp";
 const ADD2E_MONK_GENERATED_FEATURE_SOURCE = "10-monk-rules";
@@ -43,18 +45,17 @@ function add2eMonkUniqueList(...values) {
 }
 
 function add2eMonkClassItem(actor) {
-  return Array.from(actor?.items ?? []).find(item => {
-    if (String(item?.type ?? "").toLowerCase() !== "classe") return false;
-    const system = item.system ?? {};
-    const label = add2eMonkNorm(item.name || system.slug || system.label || system.nom || system.name || "");
-    const tags = (Array.isArray(system.tags) ? system.tags : []).map(add2eMonkNorm);
-    return label === "moine" || label.includes("moine") || tags.includes("classe:moine") || tags.includes("classe_moine");
-  }) ?? null;
+  const monks = classItems(actor).filter(item => classSlug(item) === "moine");
+  if (monks.length > 1) {
+    throw new Error(`L’acteur « ${actor?.name ?? actor?.id ?? "inconnu"} » possède plusieurs Items classe Moine.`);
+  }
+  return monks[0] ?? null;
 }
 
 function add2eMonkClassLevel(item) {
-  const level = Number(item?.system?.niveau);
-  return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
+  if (!item) return null;
+  const progression = classProgression(item);
+  return progression.hasLevel ? progression.level : null;
 }
 
 function add2eGetMonkClassSystem(actor) {
@@ -67,7 +68,7 @@ function add2eGetMonkProgressionRow(actor) {
   const level = add2eMonkClassLevel(item);
   if (!item || level === null) return null;
   const progression = Array.isArray(item.system?.progression) ? item.system.progression : [];
-  return progression.find(row => Number(row?.level ?? row?.niveau) === level)
+  return progression.find(row => Number(row?.niveau ?? row?.level) === level)
     ?? progression[Math.max(0, Math.min(progression.length - 1, level - 1))]
     ?? null;
 }
@@ -117,10 +118,13 @@ function add2eMonkMoveFromEffectsEngine(actor) {
 function add2eIsMonkAutoUnarmed(item) {
   if (!item || String(item.type ?? "").toLowerCase() !== "arme") return false;
   const system = item.system ?? {};
-  const name = add2eMonkNorm(item.name);
-  return ["main_nue", "mainnue"].includes(name)
-    || (system.add2eAutoCreated === true && add2eMonkNorm(system.sourceClasse) === "moine")
-    || add2eMonkNorm(system.sourceCapacite) === "main_nue_moine";
+  const flags = item.flags?.add2e ?? {};
+  const tags = new Set(Array.isArray(system.tags) ? system.tags.map(tag => String(tag ?? "").trim()) : []);
+  const autoCreated = flags.autoCreated === true || system.add2eAutoCreated === true;
+  return autoCreated
+    && tags.has("classe:moine")
+    && tags.has("combat:mains_nues")
+    && tags.has("type_arme:main_nue");
 }
 
 function add2eMonkUnarmedImgFor(item = null) {
@@ -263,11 +267,14 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
     portee_moyenne: 0,
     portee_longue: 0,
     tags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine", "mod_carac:toucher:none", "mod_carac:degats:none"],
-    effectTags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine", "mod_carac:toucher:none", "mod_carac:degats:none"],
-    add2eAutoCreated: true,
-    sourceClasse: "moine",
-    sourceClassId: monk.id,
-    sourceCapacite: "main_nue_moine"
+    effectTags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine", "mod_carac:toucher:none", "mod_carac:degats:none"]
+  };
+  const sourceFlags = {
+    autoCreated: true,
+    sourceItemId: monk.id,
+    sourceItemUuid: monk.uuid,
+    sourceClassKey: "moine",
+    capabilityKey: "main_nue_moine"
   };
 
   const actorUpdates = {
@@ -284,7 +291,17 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
 
   if (existing.length) {
     const [first, ...duplicates] = existing;
-    await actor.updateEmbeddedDocuments("Item", [{ _id: first.id, name: "Main nue", img: add2eMonkUnarmedImgFor(first), system }], { add2eInternal: true });
+    await actor.updateEmbeddedDocuments("Item", [{
+      _id: first.id,
+      name: "Main nue",
+      img: add2eMonkUnarmedImgFor(first),
+      system,
+      "flags.add2e": sourceFlags,
+      "system.-=sourceClasse": null,
+      "system.-=sourceClassId": null,
+      "system.-=sourceCapacite": null,
+      "system.-=add2eAutoCreated": null
+    }], { add2eInternal: true });
     if (duplicates.length) await actor.deleteEmbeddedDocuments("Item", duplicates.map(item => item.id), { add2eInternal: true });
   } else {
     await actor.createEmbeddedDocuments("Item", [{
@@ -292,7 +309,7 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
       name: "Main nue",
       img: ADD2E_MONK_UNARMED_IMG,
       system,
-      flags: { add2e: { autoCreated: true, sourceClasse: "moine", sourceClassId: monk.id, sourceCapacite: "main_nue_moine" } }
+      flags: { add2e: sourceFlags }
     }], { add2eInternal: true });
   }
 
@@ -300,20 +317,16 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
 }
 
 function add2eGetRaceTagsForLevelCap(actor) {
-  const tags = new Set();
-  const push = value => { const tag = add2eMonkNorm(value); if (tag) tags.add(tag); };
-  const pushAll = value => { if (Array.isArray(value)) value.forEach(pushAll); else if (value && typeof value === "object") Object.values(value).forEach(pushAll); else push(value); };
-  for (const race of Array.from(actor?.items ?? []).filter(item => String(item.type ?? "").toLowerCase() === "race")) {
-    push(`race:${race.system?.slug || race.name}`);
-    pushAll(race.system?.tags);
-    pushAll(race.system?.identityTags);
-  }
-  return tags;
+  const race = raceItem(actor);
+  return race ? new Set([`race:${raceSlug(race)}`]) : new Set();
 }
 
 function add2eGetClassMaxLevelForActor(actor, classItemOrSystem = null) {
-  const classItem = classItemOrSystem?.type === "classe" ? classItemOrSystem : null;
-  const system = classItem?.system ?? classItemOrSystem ?? (Array.from(actor?.items ?? []).filter(item => String(item.type ?? "").toLowerCase() === "classe").length === 1 ? Array.from(actor.items).find(item => String(item.type ?? "").toLowerCase() === "classe")?.system : null);
+  const embeddedClasses = classItems(actor);
+  const classItem = classItemOrSystem?.type === "classe"
+    ? classItemOrSystem
+    : (!classItemOrSystem && embeddedClasses.length === 1 ? embeddedClasses[0] : null);
+  const system = classItem?.system ?? (classItemOrSystem && !classItemOrSystem.type ? classItemOrSystem : null);
   if (!system || typeof system !== "object") return null;
   const rows = Array.isArray(system.progression) ? system.progression : [];
   let maxLevel = rows.map((row, index) => Number(row?.niveau ?? row?.level ?? index + 1) || 0).reduce((max, value) => Math.max(max, value), 0) || null;
@@ -321,8 +334,8 @@ function add2eGetClassMaxLevelForActor(actor, classItemOrSystem = null) {
   if (rules && typeof rules === "object") {
     const tags = add2eGetRaceTagsForLevelCap(actor);
     for (const [rawTag, rule] of Object.entries(rules)) {
-      if (!tags.has(add2eMonkNorm(rawTag)) || rule?.allowed === false) continue;
-      const racial = Number(rule?.maxLevel ?? rule?.niveauMax ?? rule?.max);
+      if (!tags.has(String(rawTag ?? "").trim()) || rule?.allowed === false) continue;
+      const racial = Number(rule?.maxLevel);
       if (Number.isFinite(racial) && racial > 0) maxLevel = maxLevel ? Math.min(maxLevel, racial) : racial;
     }
   }
@@ -339,11 +352,14 @@ function add2eClampLevelToClassMax(actor, desiredLevel, classItemOrSystem = null
 
 async function add2eClampActorLevelToClassMax(actor, classItemOrSystem = null, options = {}) {
   if (!actor || actor.type !== "personnage") return null;
-  const item = classItemOrSystem?.type === "classe" ? classItemOrSystem : (Array.from(actor.items ?? []).filter(entry => String(entry.type ?? "").toLowerCase() === "classe").length === 1 ? Array.from(actor.items).find(entry => String(entry.type ?? "").toLowerCase() === "classe") : null);
+  const embeddedClasses = classItems(actor);
+  const item = classItemOrSystem?.type === "classe"
+    ? classItemOrSystem
+    : (!classItemOrSystem && embeddedClasses.length === 1 ? embeddedClasses[0] : null);
   if (!item) return null;
-  const current = Number(item.system?.niveau);
-  if (!Number.isFinite(current) || current < 1) return null;
-  const clamp = add2eClampLevelToClassMax(actor, current, item, options);
+  const progression = classProgression(item);
+  if (!progression.hasLevel) return null;
+  const clamp = add2eClampLevelToClassMax(actor, progression.level, item, options);
   if (clamp.changed) await actor.updateEmbeddedDocuments("Item", [{ _id: item.id, "system.niveau": clamp.level }], { add2eInternal: true });
   return clamp;
 }
@@ -359,15 +375,9 @@ function add2eMonkIsClassItem(item) {
 
 function add2eMonkClassUpdateRelevant(changes = {}) {
   if (!changes || typeof changes !== "object") return true;
-  return foundry.utils.hasProperty(changes, "name")
-    || foundry.utils.hasProperty(changes, "system.niveau")
-    || foundry.utils.hasProperty(changes, "system.level")
+  return foundry.utils.hasProperty(changes, "system.niveau")
     || foundry.utils.hasProperty(changes, "system.progression")
     || foundry.utils.hasProperty(changes, "system.tags")
-    || foundry.utils.hasProperty(changes, "system.slug")
-    || foundry.utils.hasProperty(changes, "system.label")
-    || foundry.utils.hasProperty(changes, "system.nom")
-    || foundry.utils.hasProperty(changes, "system.name")
     || foundry.utils.hasProperty(changes, "system.classFeatures");
 }
 
