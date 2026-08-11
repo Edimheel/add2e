@@ -26,19 +26,25 @@
         <div class="a2e-progression-overview-field a2e-progression-overview-class">
           <label>Classe</label>
           {{#if classProgression.enabled}}
-            <div class="a2e-class-badges" title="{{actor.system.classe}}" aria-label="Classes du personnage">
+            <div class="a2e-class-badges" aria-label="Classes du personnage">
               {{#each classProgression.classes as |cls|}}
                 <span class="a2e-class-badge a2e-class-badge--{{cls.slug}}">{{cls.name}}</span>
               {{/each}}
             </div>
           {{else}}
-            <input class="a2e-progression-class-input" type="text" name="system.classe" value="{{actor.system.classe}}">
+            <span class="a2e-muted">Aucune classe</span>
           {{/if}}
         </div>
 
         <div class="a2e-progression-overview-field a2e-progression-overview-race">
-          <label for="a2e-race-{{actor.id}}">Race</label>
-          <input id="a2e-race-{{actor.id}}" type="text" name="system.race" value="{{actor.system.race}}">
+          <label>Race</label>
+          {{#if raceIdentity}}
+            <div class="a2e-class-badges" aria-label="Race du personnage">
+              <span class="a2e-class-badge">{{raceIdentity.name}}</span>
+            </div>
+          {{else}}
+            <span class="a2e-muted">Aucune race</span>
+          {{/if}}
         </div>
       </div>
 
@@ -50,7 +56,7 @@
               {{#each classProgression.classes as |cls|}}
                 <input class="a2e-progression-input a2e-progression-level-input"
                        type="number"
-                       name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.level{{else}}system.niveau{{/if}}"
+                       name="add2e.classProgression.{{cls.itemId}}.level"
                        value="{{cls.level}}"
                        data-class-id="{{cls.itemId}}"
                        data-class-progression-field="level"
@@ -60,13 +66,7 @@
                 {{#unless @last}}<span class="a2e-progression-separator" aria-hidden="true">/</span>{{/unless}}
               {{/each}}
             {{else}}
-              <input class="a2e-progression-input a2e-progression-level-input"
-                     type="number"
-                     name="system.niveau"
-                     value="{{actor.system.niveau}}"
-                     min="1"
-                     step="1"
-                     title="Niveau">
+              <span class="a2e-progression-title">—</span>
             {{/if}}
           </div>
         </div>
@@ -78,7 +78,7 @@
               {{#each classProgression.classes as |cls|}}
                 <input class="a2e-progression-input a2e-progression-xp-input"
                        type="number"
-                       name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.xp{{else}}system.xp{{/if}}"
+                       name="add2e.classProgression.{{cls.itemId}}.xp"
                        value="{{cls.xp}}"
                        data-class-id="{{cls.itemId}}"
                        data-class-progression-field="xp"
@@ -88,14 +88,7 @@
                 {{#unless @last}}<span class="a2e-progression-separator" aria-hidden="true">/</span>{{/unless}}
               {{/each}}
             {{else}}
-              <input class="a2e-progression-input a2e-progression-xp-input"
-                     type="number"
-                     name="system.xp"
-                     value="{{actor.system.xp}}"
-                     min="0"
-                     step="1"
-                     title="{{actor.system.progression_xp}}">
-              <button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP">+</button>
+              <span class="a2e-progression-title">—</span>
             {{/if}}
           </div>
         </div>
@@ -111,7 +104,7 @@
                 {{#unless @last}}<span class="a2e-progression-separator" aria-hidden="true">/</span>{{/unless}}
               {{/each}}
             {{else}}
-              <span class="a2e-progression-title">{{progressionCourante.title}}</span>
+              <span class="a2e-progression-title">—</span>
             {{/if}}
           </div>
         </div>
