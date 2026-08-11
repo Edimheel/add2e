@@ -10,10 +10,10 @@ import {
   add2eGetAttackAbilityModifier
 } from "../add2e-attack/03-attack-rules.mjs";
 import { add2eAttackComputeActiveAttackModifiers } from "../add2e-attack/04e-attack-roll-modifiers.mjs";
-import { add2eAttackComputeCharacterDisplayedCA } from "../add2e-attack/04d-attack-roll-defense.mjs";
 import { add2eAttackMeasureContactAndDistance, add2eAttackValidateRange } from "../add2e-attack/04g-attack-roll-range.mjs";
+import { classItems, classProgression } from "./17b-multiclass-core.mjs";
 
-export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-08-11-canonical-target-data-v3";
+export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-08-11-canonical-combat-owners-v4";
 
 const SYSTEM_ID = "add2e";
 const GM_OPERATION = "ADD2E_GM_OPERATION";
@@ -105,11 +105,10 @@ function monsterHitDice(actor) {
 }
 
 function characterClassLevel(actor) {
-  const levels = Array.from(actor?.items ?? [])
-    .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
-    .map(item => Number(item?.system?.niveau))
-    .filter(level => Number.isFinite(level) && level >= 1)
-    .map(level => Math.floor(level));
+  const levels = classItems(actor).map(item => {
+    const progression = classProgression(item);
+    return progression.hasLevel ? progression.level : null;
+  }).filter(level => Number.isFinite(level) && level >= 1);
   return levels.length ? Math.max(...levels) : null;
 }
 
@@ -133,9 +132,7 @@ function actorTags(actor) {
 }
 
 function profileFor(item) {
-  const profile = item?.flags?.[SYSTEM_ID]?.[SPECIAL_ATTACK_FLAG]
-    ?? item?.system?.[SPECIAL_ATTACK_FLAG]
-    ?? null;
+  const profile = item?.flags?.[SYSTEM_ID]?.[SPECIAL_ATTACK_FLAG] ?? null;
   if (!profile || typeof profile !== "object") return null;
   const kind = norm(profile.kind);
   if (!["contact_deferred", "contact_immediate", "contact_special"].includes(kind)) return null;
@@ -177,50 +174,48 @@ function targetActor(token) {
     ?? null;
 }
 
-function resolveThac0(actor, level) {
-  const direct = number(actor?.system?.thac0);
-  if (Number.isFinite(direct)) return direct;
-  const classes = Array.from(actor?.items ?? [])
-    .filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-  for (const classItem of classes) {
-    const rows = Array.isArray(classItem?.system?.progression) ? classItem.system.progression : [];
-    const row = rows.find(entry => Number(entry?.niveau ?? entry?.level) === level)
-      ?? rows.slice().reverse().find(entry => Number(entry?.niveau ?? entry?.level ?? 0) <= level);
-    const value = number(row?.thac0);
-    if (Number.isFinite(value)) return value;
+function resolveThac0(actor) {
+  const type = String(actor?.type ?? "").trim().toLowerCase();
+  if (type !== "personnage") {
+    const direct = Number(actor?.system?.thac0);
+    return Number.isFinite(direct) ? direct : null;
   }
-  return null;
+
+  const classes = classItems(actor);
+  if (!classes.length) return null;
+  const values = classes.map(classItem => {
+    const progressionState = classProgression(classItem);
+    if (!progressionState.hasLevel) {
+      throw new Error(`Niveau canonique absent sur l’Item classe « ${classItem?.name ?? classItem?.id ?? "inconnu"} ».`);
+    }
+    const rows = Array.isArray(classItem?.system?.progression) ? classItem.system.progression : [];
+    const row = rows.find(entry => Number(entry?.niveau) === progressionState.level) ?? null;
+    if (!row) {
+      throw new Error(`Progression THAC0 absente pour « ${classItem?.name ?? "classe"} » au niveau ${progressionState.level}.`);
+    }
+    const value = Number(row.thac0);
+    if (!Number.isFinite(value)) {
+      throw new Error(`THAC0 canonique invalide pour « ${classItem?.name ?? "classe"} » au niveau ${progressionState.level}.`);
+    }
+    return value;
+  });
+  return Math.min(...values);
 }
 
 function resolveArmorClass(actor) {
-  const system = actor?.system ?? {};
-  if (actor?.type === "personnage") {
-    try {
-      if (typeof globalThis.Add2eEffectsEngine?.getMagicPassiveDefense === "function") {
-        const passive = globalThis.Add2eEffectsEngine.getMagicPassiveDefense(actor, {
-          source: "capability-special-attack"
-        });
-        const value = number(passive?.caTotal);
-        if (Number.isFinite(value)) return value;
-      }
-      const displayed = add2eAttackComputeCharacterDisplayedCA(actor);
-      const value = number(displayed?.caTotal);
-      if (Number.isFinite(value)) return value;
-    } catch (error) {
-      console.warn(`${TAG}[ARMOR_CLASS]`, { actor: actor?.name, error });
-    }
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine || typeof engine.resolveArmorClass !== "function") {
+    throw new Error("Le propriétaire canonique ADD2E de la classe d’armure est indisponible.");
   }
-  return number(
-    system.armorClass,
-    system.ca_total,
-    system.ca,
-    system.ac,
-    system.ca_naturel,
-    system.defense?.armorClass,
-    system.defense?.ca,
-    system.combat?.armorClass,
-    system.combat?.ca
-  );
+  const resolution = engine.resolveArmorClass(actor, {
+    source: "capability-special-attack",
+    consumer: "capability-special-attacks"
+  });
+  const value = Number(resolution?.caTotal);
+  if (!Number.isFinite(value)) {
+    throw new Error(`Classe d’armure canonique invalide pour « ${actor?.name ?? actor?.id ?? "acteur"} ».`);
+  }
+  return value;
 }
 
 function validateTarget(profile, sourceActor, target) {
@@ -685,7 +680,7 @@ async function prepareWindow({ actor, item, profile, rounds }) {
       },
       flags: {
         [SYSTEM_ID]: {
-          tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`],
+          tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`, ...[]],
           timeEngine: { managed: true, totalRounds, startTick: tick },
           roundEngine: {
             managed: true,
@@ -967,7 +962,7 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
   if (!selection) return false;
 
   const level = sourceLevel(sourceActor, item, profile);
-  const thac0 = resolveThac0(sourceActor, level);
+  const thac0 = resolveThac0(sourceActor);
   const armorClass = resolveArmorClass(target);
   if (!Number.isFinite(level) || !Number.isFinite(thac0) || !Number.isFinite(armorClass)) {
     ui.notifications?.error?.("Capacité : les données de combat nécessaires sont introuvables.");
