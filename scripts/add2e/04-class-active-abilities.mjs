@@ -1,4 +1,4 @@
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-11-canonical-class-feature-sources-v27";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-11-canonical-class-feature-schema-v28";
 const ADD2E_CLASS_FEATURE_USAGE_FLAG = "classFeatureUsage";
 
 const GENERIC_ACTIONS = new Map([
@@ -20,39 +20,31 @@ const arr = value => Array.isArray(value)
     ? Object.values(value).filter(entry => entry && typeof entry === "object")
     : []);
 
-const minLevel = feature => Number(
-  feature?.minLevel
-  ?? feature?.minimumLevel
-  ?? feature?.niveauMin
-  ?? feature?.level
-  ?? feature?.niveau
-  ?? 1
-) || 1;
+const minLevel = feature => {
+  const value = Number(feature?.minLevel);
+  if (!Number.isFinite(value) || value < 1) {
+    throw new Error(`minLevel canonique invalide pour « ${String(feature?.name ?? "Capacité").trim() || "Capacité"} ».`);
+  }
+  return Math.floor(value);
+};
 
 const maxLevel = feature => {
-  const value = feature?.maxLevel
-    ?? feature?.maximumLevel
-    ?? feature?.niveauMax
-    ?? feature?.max;
-  return value === undefined || value === null || value === "" ? 999 : (Number(value) || 999);
+  const raw = feature?.maxLevel;
+  if (raw === undefined || raw === null || raw === "") return Number.POSITIVE_INFINITY;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 1) {
+    throw new Error(`maxLevel canonique invalide pour « ${String(feature?.name ?? "Capacité").trim() || "Capacité"} ».`);
+  }
+  return Math.floor(value);
 };
 
 const nameOf = feature => String(
   feature?._add2eHudLabel
   ?? feature?.name
-  ?? feature?.label
-  ?? feature?.title
-  ?? feature?.nom
   ?? ""
 ).trim();
 
-const onUseOf = feature => String(
-  feature?.on_use
-  ?? feature?.onUse
-  ?? feature?.script
-  ?? feature?.macro
-  ?? ""
-).trim();
+const onUseOf = feature => String(feature?.on_use ?? "").trim();
 
 function onUseUrl(path) {
   const clean = String(path ?? "").trim().replace(/^\/+/, "");
@@ -405,13 +397,11 @@ function classFeatures(actor) {
   });
 }
 
-const genericKind = feature => GENERIC_ACTIONS.get(String(feature?.id ?? feature?._id ?? "").trim()) ?? null;
+const genericKind = feature => GENERIC_ACTIONS.get(String(feature?.id ?? "").trim()) ?? null;
 
 function isActivable(feature) {
   if (!feature || typeof feature !== "object") return false;
-  if (genericKind(feature) || feature.activable === true || (feature.active === true && feature.passive !== true)) return true;
-  if (feature.usageType === "classFeature" && onUseOf(feature)) return true;
-  return String(feature?._add2eFeatureSource ?? "") === "activeClassFeatures";
+  return Boolean(genericKind(feature) || feature.activable === true);
 }
 
 const featureLevel = (_actor, feature) => {
@@ -445,8 +435,7 @@ function progression(actor, classKey = null) {
   for (const system of selected) {
     if (!Array.isArray(system.progression)) continue;
     const level = system._add2eClassLevel;
-    const row = system.progression.find(entry => Number(entry?.niveau ?? entry?.level ?? 0) === level)
-      ?? system.progression[level - 1];
+    const row = system.progression.find(entry => Number(entry?.niveau) === level) ?? null;
     if (row) return row;
   }
   return null;
@@ -463,9 +452,7 @@ function thiefProgression(actor) {
   const source = thiefSource(actor);
   if (!source || !Array.isArray(source.progression)) return null;
   const level = source._add2eClassLevel;
-  const row = source.progression.find(entry => Number(entry?.niveau ?? entry?.level ?? 0) === level)
-    ?? source.progression[level - 1]
-    ?? null;
+  const row = source.progression.find(entry => Number(entry?.niveau) === level) ?? null;
   if (!row?.thiefSkills || typeof row.thiefSkills !== "object" || Array.isArray(row.thiefSkills)) return null;
   return row;
 }
@@ -484,25 +471,9 @@ function thiefTable(actor) {
 
 function thiefSkillForFeature(actor, feature) {
   if (!isThiefFeature(feature)) return null;
-  const candidates = [
-    feature?.skillKey,
-    feature?.key,
-    feature?.slug,
-    feature?.id,
-    feature?._id,
-    feature?.name,
-    feature?.label,
-    feature?.title,
-    feature?.nom
-  ].map(value => canonicalThiefKey(value)).filter(Boolean);
-  if (!candidates.length) return null;
-
-  return thiefTable(actor).find(entry => {
-    const keys = [entry?.key, entry?.label, entry?.shortLabel]
-      .map(value => canonicalThiefKey(value))
-      .filter(Boolean);
-    return keys.some(key => candidates.includes(key));
-  }) ?? null;
+  const candidate = canonicalThiefKey(feature?.skillKey);
+  if (!candidate) return null;
+  return thiefTable(actor).find(entry => canonicalThiefKey(entry?.key) === candidate) ?? null;
 }
 
 function activableFeatures(actor, { includeLocked = true } = {}) {
@@ -521,7 +492,7 @@ function activableFeatures(actor, { includeLocked = true } = {}) {
       return {
         ...feature,
         _add2eThiefSkill: skill,
-        _add2eHudLabel: `${feature.name ?? feature.label ?? "Capacité"} — ${skill.display}`
+        _add2eHudLabel: `${feature.name} — ${skill.display}`
       };
     });
 }
