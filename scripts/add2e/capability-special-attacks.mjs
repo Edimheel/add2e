@@ -680,7 +680,7 @@ async function prepareWindow({ actor, item, profile, rounds }) {
       },
       flags: {
         [SYSTEM_ID]: {
-          tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`, ...[]],
+          tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`],
           timeEngine: { managed: true, totalRounds, startTick: tick },
           roundEngine: {
             managed: true,
