@@ -2,7 +2,7 @@
 // ADD2E — Dialogue d'attaque via l'API commune ADD2E.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via dialog-ui.mjs uniquement.
 
-const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-rear-option-label-v14";
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-rear-ability-visibility-v15";
 
 globalThis.ADD2E_ATTACK_DIALOG_VERSION = ADD2E_ATTACK_DIALOG_VERSION;
 
@@ -130,7 +130,17 @@ export async function add2eAttackOpenDialogV2({ title, content, classes, default
   });
 }
 
-export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo, canUseBackstab, backstabInfo, canUseAssassination, assassinationInfo }) {
+export function add2eBuildAttackDialogContent({
+  actor,
+  arme,
+  cible,
+  backArcInfo,
+  specialOptionsVisible = false,
+  canUseBackstab,
+  backstabInfo,
+  canUseAssassination,
+  assassinationInfo
+}) {
   const attackerName = add2eAttackEscapeHtml(actor?.name ?? "Attaquant");
   const targetName = add2eAttackEscapeHtml(cible?.name ?? "Cible");
   const weaponName = add2eAttackEscapeHtml(arme?.name ?? "Arme");
@@ -140,9 +150,13 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
   const backstabMultiplier = add2eAttackEscapeHtml(backstabInfo?.multiplier ?? "");
   const assassinationScore = add2eAttackEscapeHtml(assassinationInfo?.score ?? "0");
 
-  const showBackstab = canUseBackstab === true;
-  const showAssassination = canUseAssassination === true;
-  const hasRearSpecial = showBackstab || showAssassination;
+  // L’existence d’une capacité de classe détermine sa présence dans le DOM.
+  // Les contraintes de l’action courante déterminent séparément si elle est cliquable.
+  const showBackstab = backstabInfo?.available === true;
+  const showAssassination = assassinationInfo?.available === true;
+  const backstabUsable = canUseBackstab === true;
+  const assassinationUsable = canUseAssassination === true;
+  const hasRearSpecial = specialOptionsVisible === true || showBackstab || showAssassination;
 
   const allowedZones = new Set(["front", "flank", "rear-flank", "rear"]);
   const autoZone = allowedZones.has(String(backArcInfo?.zone ?? "")) ? String(backArcInfo.zone) : "front";
@@ -167,6 +181,7 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
   const selectStyle = "box-sizing:border-box;width:100% !important;height:32px !important;border:1px solid #d5b15a !important;border-radius:6px !important;background:#fffaf0 !important;color:#24170a !important;font-weight:900 !important;padding:2px 5px !important;margin-top:4px;";
   const optionsStyle = "display:flex;flex-direction:column;gap:4px;margin-top:6px;min-width:210px;overflow:visible;";
   const checkStyle = "display:flex;align-items:center;gap:6px;width:max-content;white-space:nowrap;font-size:.82rem;font-weight:900;color:#5a3510;line-height:1.15;";
+  const checkDisabledStyle = "opacity:.55;cursor:not-allowed;";
   const checkInputStyle = "width:15px;height:15px;min-width:15px;margin:0;";
 
   return `
@@ -207,8 +222,8 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
           </select>
           ${hasRearSpecial ? `<div style="${optionsStyle}">
             <div class="add2e-rear-specials"${rearHidden} style="display:flex;flex-direction:column;gap:4px;">
-              ${showBackstab ? `<label style="${checkStyle}" title="Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}"><input type="checkbox" id="add2e-backstab" style="${checkInputStyle}"><span>Attaque sournoise / Frappe dans le dos</span></label>` : ""}
-              ${showAssassination ? `<label style="${checkStyle}" title="Assassin uniquement · Dos uniquement · ${assassinationScore}% si l’attaque touche"><input type="checkbox" id="add2e-assassinat-confirm" style="${checkInputStyle}"><span>Assassinat</span></label>` : ""}
+              ${showBackstab ? `<label style="${checkStyle}${backstabUsable ? "" : checkDisabledStyle}" title="${backstabUsable ? `Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}` : "Capacité présente mais indisponible avec cette arme ou à cette distance"}"><input type="checkbox" id="add2e-backstab"${backstabUsable ? "" : " disabled"} style="${checkInputStyle}"><span>Attaque sournoise / Frappe dans le dos</span></label>` : ""}
+              ${showAssassination ? `<label style="${checkStyle}${assassinationUsable ? "" : checkDisabledStyle}" title="${assassinationUsable ? `Assassin uniquement · Dos uniquement · ${assassinationScore}% si l’attaque touche` : "Capacité présente mais indisponible avec cette arme ou à cette distance"}"><input type="checkbox" id="add2e-assassinat-confirm"${assassinationUsable ? "" : " disabled"} style="${checkInputStyle}"><span>Assassinat</span></label>` : ""}
             </div>
           </div>` : ""}
         </div>
