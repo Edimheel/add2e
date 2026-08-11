@@ -6,7 +6,7 @@
  * feuille ou le HUD résout immédiatement la capacité.
  * Compatible Foundry V13/V14/V15 — fenêtres via l’API commune ADD2E.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-08-11-canonical-source-class-item-v4";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-08-11-canonical-special-attack-profile-v5";
 const ADD2E_PAUME_PROFILE_ID = "monk-quivering-palm";
 const ADD2E_PAUME_MIN_LEVEL = 13;
 const ADD2E_PAUME_TOUCH_WINDOW_ROUNDS = 3;
@@ -101,11 +101,11 @@ function a2ePaumeProfile(level) {
     version: ADD2E_MOINE_PAUME_MORTELLE_VERSION,
     id: ADD2E_PAUME_PROFILE_ID,
     kind: "contact_immediate",
+    trigger: "contact_reussi",
     label: "Paume mortelle",
     img: ADD2E_PAUME_IMG,
     sourceLevel: level,
     dialogTitle: "Paume mortelle",
-    resolution: { mode: "immediate" },
     attack: {
       abilityModifier: false,
       magicWeaponBonus: false,
@@ -323,9 +323,7 @@ const itemSystem = {
   proprietes: "Corps à corps, Moine, capacité préparée",
   equipee: true,
   equipped: true,
-  bonus_toucher: 0,
   bonus_hit: 0,
-  bonus_degats: 0,
   bonus_dom: 0,
   poids: 0,
   portee_courte: 0,
