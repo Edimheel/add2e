@@ -162,15 +162,25 @@
               <h2><i class="fas fa-id-card"></i> Classe / race</h2>
               <div class="a2e-panel-body a2e-small">
                 <div class="a2e-summary-pills" style="margin-bottom:8px;">
-                  <span class="a2e-summary-pill">{{actor.system.race}}</span>
-                  <span class="a2e-summary-pill">{{actor.system.classe}} niv. {{actor.system.niveau}}</span>
+                  {{#if raceIdentity}}
+                    <span class="a2e-summary-pill">{{raceIdentity.name}}</span>
+                  {{else}}
+                    <span class="a2e-summary-pill">Aucune race</span>
+                  {{/if}}
+                  {{#if classProgression.enabled}}
+                    {{#each classProgression.classes as |cls|}}
+                      <span class="a2e-summary-pill">{{cls.name}} niv. {{cls.level}}</span>
+                    {{/each}}
+                  {{else}}
+                    <span class="a2e-summary-pill">Aucune classe</span>
+                  {{/if}}
                   <span class="a2e-summary-pill">{{actor.system.alignement}}</span>
                 </div>
 
-                {{#if actor.system.details_race.capacites.length}}
+                {{#if raceIdentity.capacites.length}}
                   <h3>Race</h3>
                   <ul class="a2e-summary-simple-list">
-                    {{#each actor.system.details_race.capacites}}
+                    {{#each raceIdentity.capacites}}
                       <li>{{this}}</li>
                     {{/each}}
                   </ul>
