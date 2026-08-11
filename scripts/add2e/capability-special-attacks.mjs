@@ -129,10 +129,7 @@ function actorTags(actor) {
   if (!engine || typeof engine.getContextTags !== "function") {
     throw new Error("Le propriétaire canonique ADD2E des tags de contexte est indisponible.");
   }
-  const normalize = typeof engine.normalizeTag === "function"
-    ? value => engine.normalizeTag(value)
-    : norm;
-  return new Set((engine.getContextTags(actor) ?? []).map(normalize).filter(Boolean));
+  return new Set((engine.getContextTags(actor) ?? []).map(norm).filter(Boolean));
 }
 
 function profileFor(item) {
