@@ -13,7 +13,7 @@ import { add2eAttackComputeActiveAttackModifiers } from "../add2e-attack/04e-att
 import { add2eAttackMeasureContactAndDistance, add2eAttackValidateRange } from "../add2e-attack/04g-attack-roll-range.mjs";
 import { classItems, classProgression } from "./17b-multiclass-core.mjs";
 
-export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-08-11-canonical-combat-owners-v4";
+export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-08-11-canonical-profile-schema-v5";
 
 const SYSTEM_ID = "add2e";
 const GM_OPERATION = "ADD2E_GM_OPERATION";
@@ -61,14 +61,6 @@ function number(...values) {
     if (Number.isFinite(numeric)) return numeric;
   }
   return null;
-}
-
-function array(value) {
-  if (value === undefined || value === null || value === "") return [];
-  if (Array.isArray(value)) return value.flatMap(array);
-  if (value instanceof Set) return [...value];
-  if (typeof value?.values === "function" && typeof value !== "string") return [...value.values()];
-  return [value];
 }
 
 function currentTick() {
@@ -137,6 +129,8 @@ function profileFor(item) {
   const kind = norm(profile.kind);
   if (!["contact_deferred", "contact_immediate", "contact_special"].includes(kind)) return null;
   if (!String(profile.id ?? "").trim()) return null;
+  if (!norm(profile.trigger)) return null;
+  if (kind === "contact_immediate" && (!profile.immediateAction || typeof profile.immediateAction !== "object")) return null;
   return clone(profile);
 }
 
@@ -300,22 +294,14 @@ function validateTarget(profile, sourceActor, target) {
 }
 
 function actionForProfile(profile) {
-  return profile?.immediateAction
-    ?? profile?.action
-    ?? profile?.resolution?.action
-    ?? profile?.deferredEffect?.command?.action
-    ?? null;
+  const kind = norm(profile?.kind);
+  if (kind === "contact_immediate") return profile?.immediateAction ?? null;
+  if (kind === "contact_deferred") return profile?.deferredEffect?.command?.action ?? null;
+  return null;
 }
 
 function profileResolvesImmediately(profile) {
-  const values = [profile?.kind, profile?.mode, profile?.resolution?.mode, profile?.resolutionMode];
-  return values.map(norm).some(value => [
-    "contact_immediate",
-    "immediate",
-    "immediat",
-    "apply_immediate",
-    "resolution_immediate"
-  ].includes(value));
+  return norm(profile?.kind) === "contact_immediate";
 }
 
 function targetUsesMonsterTerminalHp(actor) {
@@ -532,27 +518,10 @@ function windowExpiresAt(effect) {
   return Number(effect?.flags?.[SYSTEM_ID]?.[WINDOW_FLAG]?.expiresAtTick ?? 0) || 0;
 }
 
-function profileTriggers(profile) {
-  const values = [
-    profile?.trigger,
-    profile?.triggers,
-    profile?.activation?.trigger,
-    profile?.activation?.triggers,
-    profile?.deferredEffect?.trigger,
-    profile?.deferredEffect?.triggers
-  ];
-  return new Set(array(values).map(norm).filter(Boolean));
-}
-
 function profileMatchesTrigger(profile, trigger = null) {
   const wanted = norm(trigger);
   if (!wanted) return true;
-  const triggers = profileTriggers(profile);
-  if (!triggers.size) return true;
-  return triggers.has(wanted)
-    || triggers.has("contact")
-    || triggers.has("contact_reussi")
-    || triggers.has("after_contact_hit");
+  return norm(profile?.trigger) === wanted;
 }
 
 function findPreparedContacts({ sourceActor, profileId = null, trigger = null } = {}) {
@@ -971,29 +940,30 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
   const combatProfile = add2eGetCombatStatProfile(item);
   const attackOptions = profile.attack ?? {};
   let abilityModifier = 0;
-  if (attackOptions.abilityModifier !== false && combatProfile?.toucherCarac) {
+  if (attackOptions.abilityModifier === true && combatProfile?.toucherCarac) {
     abilityModifier = Number(
       add2eGetAttackAbilityModifier(sourceActor, combatProfile.toucherCarac, "toucher")
     ) || 0;
   }
-  let magicalBonus = Number(item?.system?.bonus_hit ?? item?.system?.bonus_toucher ?? 0) || 0;
-  if (
-    attackOptions.magicWeaponBonus !== false
-    && typeof globalThis.Add2eEffectsEngine?.getMagicWeaponBonus === "function"
-  ) {
-    magicalBonus = Number(globalThis.Add2eEffectsEngine.getMagicWeaponBonus(item, "hit")) || 0;
+  let magicalBonus = 0;
+  if (attackOptions.magicWeaponBonus === true) {
+    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+    if (!engine || typeof engine.getMagicWeaponBonus !== "function") {
+      throw new Error("Le propriétaire canonique ADD2E des bonus d’arme magique est indisponible.");
+    }
+    magicalBonus = Number(engine.getMagicWeaponBonus(item, "hit")) || 0;
   }
   const active = add2eAttackComputeActiveAttackModifiers({
     actor: sourceActor,
     cible: target,
     combatProfile
   });
-  const effectBonus = attackOptions.effectModifiers === false
-    ? 0
-    : Number(active?.bonusToucheEffets) || 0;
-  const racialBonus = attackOptions.racialVs === false
-    ? 0
-    : Number(active?.bonusRacialVs) || 0;
+  const effectBonus = attackOptions.effectModifiers === true
+    ? Number(active?.bonusToucheEffets) || 0
+    : 0;
+  const racialBonus = attackOptions.racialVs === true
+    ? Number(active?.bonusRacialVs) || 0
+    : 0;
   const totalBonus = abilityModifier
     + magicalBonus
     + effectBonus
