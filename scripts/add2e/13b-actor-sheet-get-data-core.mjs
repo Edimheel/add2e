@@ -4,7 +4,7 @@ import { add2ePrepareActorSheetBaseData } from "./13b-actor-sheet-get-data-base.
 import { add2ePrepareActorSheetCombatData } from "./13b-actor-sheet-get-data-combat.mjs";
 import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spells.mjs";
 
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-08-10-native-get-data-service-v7";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-08-11-canonical-sheet-alignments-v8";
 const ADD2E_HIDDEN_TECHNICAL_CLASS_RULE_KINDS = new Set(["armor_class_base", "attack_modifier"]);
 
 function add2eExceptionalStrengthValue(rawValue) {
@@ -24,16 +24,16 @@ function add2eExceptionalStrengthValues(currentValue = 0) {
   });
 }
 
-function add2eSheetAllowedAlignments(actor, sys) {
-  if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getActorAllowedAlignments === "function") {
-    const fromEngine = Add2eEffectsEngine.getActorAllowedAlignments(actor);
-    if (Array.isArray(fromEngine) && fromEngine.length) return fromEngine;
+function add2eSheetAllowedAlignments(actor) {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine || typeof engine.getActorAllowedAlignments !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des alignements de classe est indisponible.");
   }
-  const fromActor = sys.alignements_autorises;
-  if (Array.isArray(fromActor) && fromActor.length) return fromActor;
-  const fromClass = sys.details_classe?.alignements_autorises;
-  if (Array.isArray(fromClass) && fromClass.length) return fromClass;
-  return [];
+  const allowed = engine.getActorAllowedAlignments(actor);
+  if (!Array.isArray(allowed) || !allowed.length) {
+    throw new Error(`Aucun alignement canonique disponible pour ${actor?.name ?? "acteur"}.`);
+  }
+  return allowed;
 }
 
 function add2eNormEffectValue(value) {
@@ -324,15 +324,13 @@ export async function add2ePrepareActorSheetData(sheet) {
   add2ePrepareActorSheetCombatData({
     actor: state.actor,
     data,
-    sys: state.sys,
-    progressionCourante: state.progressionCourante,
-    isMonk: state.isMonk
+    sys: state.sys
   });
 
   add2ePopulateActorSheetSpellData({ actor: state.actor, data, items: state.items });
   add2ePopulateActorSheetActiveEffectsData(actor, data);
 
-  data.alignementsDisponibles = add2eSheetAllowedAlignments(state.actor, state.sys);
+  data.alignementsDisponibles = add2eSheetAllowedAlignments(state.actor);
   data.activeTab = sheet._add2eGetNativeActiveTab?.() || sheet._add2eActiveTab || sheet._add2eReadStoredTab?.() || "resume";
   sheet._add2ePreparedData = data;
   return data;
