@@ -1,4 +1,4 @@
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-10-canonical-class-items-v26";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-11-canonical-class-feature-sources-v27";
 const ADD2E_CLASS_FEATURE_USAGE_FLAG = "classFeatureUsage";
 
 const GENERIC_ACTIONS = new Map([
@@ -392,6 +392,8 @@ function classFeatures(actor) {
   const seen = new Set();
   for (const system of classSystems(actor)) {
     pushFeatures(output, system.classFeatures, "classFeatures", system);
+    pushFeatures(output, system.activeClassFeatures, "activeClassFeatures", system);
+    pushFeatures(output, system.passiveClassFeatures, "passiveClassFeatures", system);
   }
 
   return output.filter(feature => {
