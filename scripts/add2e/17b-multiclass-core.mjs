@@ -2,7 +2,7 @@
 // Source de vérité : chaque Item embarqué de type "classe".
 // La définition et la progression (system.niveau / system.xp) vivent ensemble.
 
-export const MULTICLASS_VERSION = "2026-06-25-item-progression-v2";
+export const MULTICLASS_VERSION = "2026-08-11-canonical-class-tags-v3";
 export const MULTICLASS_SCHEMA = 3;
 export const INTERNAL = "add2eMulticlassInternal";
 export const TAG = "[ADD2E][MULTICLASSE]";
@@ -62,7 +62,16 @@ export function itemLabel(data, fallback = "Item") {
 
 export function classSlug(data) {
   const sys = data?.system ?? data ?? {};
-  return norm(sys.slug ?? sys.label ?? sys.nom ?? sys.name ?? data?.name ?? "classe");
+  const tags = Array.isArray(sys.tags) ? sys.tags : [];
+  const classTag = tags.map(norm).find(tag => tag.startsWith("classe_"));
+  if (!classTag) {
+    throw new Error(`Item de classe « ${data?.name ?? data?.id ?? "inconnu"} » sans tag canonique classe:*.`);
+  }
+  const slug = classTag.slice("classe_".length);
+  if (!slug) {
+    throw new Error(`Item de classe « ${data?.name ?? data?.id ?? "inconnu"} » avec tag classe:* invalide.`);
+  }
+  return slug;
 }
 
 export function classItems(actor) {
