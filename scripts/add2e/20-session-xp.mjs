@@ -1,7 +1,19 @@
 // ADD2E — XP de session — ApplicationV2
 // La progression est écrite exclusivement sur les Items classe.
 
-const VERSION = "2026-07-07-session-xp-toolbar-v7";
+import {
+  classItems as add2eCanonicalClassItems,
+  classProgression as add2eCanonicalClassProgression,
+  classSlug as add2eCanonicalClassSlug
+} from "./17b-multiclass-core.mjs";
+import {
+  classTitleForLevel as add2eClassTitleForLevel,
+  levelForClassXp as add2eLevelForClassXp,
+  nextXpForClassLevel as add2eNextXpForClassLevel,
+  splitMulticlassXp as add2eSplitMulticlassXp
+} from "./17b-multiclass-rules.mjs";
+
+const VERSION = "2026-08-11-canonical-class-progression-v8";
 const TAG = "[ADD2E][SESSION_XP]";
 const FLAG_SCOPE = "add2e";
 const FLAG_LEDGER = "sessionXpLedger";
@@ -28,31 +40,27 @@ function num(value, fallback = 0) {
 function esc(value) {
   return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-function norm(value) {
-  return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
-}
-function clone(value) { return foundry.utils.deepClone(value ?? {}); }
 function nowIso() { return new Date().toISOString(); }
-function classItems(actor) { return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe"); }
-function classSlug(item) { return norm(item?.system?.slug ?? item?.system?.label ?? item?.name ?? "classe"); }
-function classProgression(item) {
-  const level = Number(item?.system?.niveau);
-  const xp = Number(item?.system?.xp);
-  return {
-    level: Number.isFinite(level) && level >= 1 ? Math.floor(level) : null,
-    xp: Number.isFinite(xp) && xp >= 0 ? Math.floor(xp) : null
-  };
+
+function classItems(actor) {
+  return add2eCanonicalClassItems(actor);
 }
-function classXp(actor, item) {
-  const value = classProgression(item).xp;
-  return value === null ? 0 : value;
+function requireClassProgression(item, context = "XP de session") {
+  const state = add2eCanonicalClassProgression(item);
+  if (!state.hasLevel || !state.hasXp) {
+    throw new Error(`Item de classe « ${item?.name ?? item?.id ?? "inconnu"} » sans system.niveau/system.xp canonique (${context}).`);
+  }
+  return state;
 }
-function classLevel(actor, item) {
-  const value = classProgression(item).level;
-  return value === null ? 1 : value;
+function classXp(item) {
+  return requireClassProgression(item, "lecture XP").xp;
 }
-function isMulticlassActor(actor) { return actor?.type === "personnage" && classItems(actor).length > 1; }
-function totalXp(actor) { return classItems(actor).reduce((sum, item) => sum + classXp(actor, item), 0); }
+function classLevel(item) {
+  return requireClassProgression(item, "lecture niveau").level;
+}
+function totalXp(actor) {
+  return classItems(actor).reduce((sum, item) => sum + classXp(item), 0);
+}
 function hpValue(actor) { return num(actor?.system?.pdv ?? actor?.system?.pv ?? actor?.system?.hp ?? 0, 0); }
 function monsterXpValue(actor) { return Math.max(0, Math.floor(num(actor?.system?.xp ?? actor?.system?.px ?? actor?.system?.experience ?? 0, 0))); }
 
@@ -143,52 +151,22 @@ function characterRows() {
     const classes = classItems(actor).map(item => ({
       id: item.id,
       name: item.name,
-      slug: classSlug(item),
-      level: classLevel(actor, item),
-      xp: classXp(actor, item)
+      slug: add2eCanonicalClassSlug(item),
+      level: classLevel(item),
+      xp: classXp(item)
     }));
+    const owned = playerOwned(actor);
     return {
       actor,
       actorId: actor.id,
       name: actor.name,
       classes,
       multiclass: classes.length > 1,
-      xp: classes.length ? classes.reduce((sum, entry) => sum + entry.xp, 0) : Math.max(0, Math.floor(num(actor.system?.xp, 0))),
-      playerOwned: playerOwned(actor),
-      checked: playerOwned(actor)
+      xp: classes.reduce((sum, entry) => sum + entry.xp, 0),
+      playerOwned: owned,
+      checked: owned && classes.length > 0
     };
   });
-}
-function splitInteger(total, keys) {
-  const amount = Math.max(0, Math.floor(num(total, 0)));
-  const list = keys.filter(Boolean);
-  if (!list.length) return {};
-  const base = Math.floor(amount / list.length);
-  let remaining = amount - (base * list.length);
-  const output = {};
-  for (const key of list) {
-    output[key] = base + (remaining > 0 ? 1 : 0);
-    if (remaining > 0) remaining -= 1;
-  }
-  return output;
-}
-function levelForXp(item, xp) {
-  if (typeof globalThis.add2eMulticlassLevelForClassXp === "function") return Math.max(1, Math.floor(globalThis.add2eMulticlassLevelForClassXp(item.system ?? {}, xp)));
-  const rows = Array.isArray(item?.system?.progression) ? item.system.progression : [];
-  let level = 1;
-  for (const row of rows) {
-    const threshold = num(row?.xp, NaN);
-    if (Number.isFinite(threshold) && xp >= threshold) level = Math.max(level, Math.floor(num(row?.level ?? row?.niveau, level)));
-  }
-  return level;
-}
-function titleForLevel(item, level) {
-  const row = (item?.system?.progression ?? []).find(entry => Number(entry?.level ?? entry?.niveau) === level);
-  return String(row?.title ?? row?.titre ?? "");
-}
-function nextXpForLevel(item, level) {
-  const rows = (item?.system?.progression ?? []).map(row => ({ level: num(row?.level ?? row?.niveau, 0), xp: num(row?.xp, NaN) })).filter(row => row.level > level && Number.isFinite(row.xp));
-  return rows.length ? Math.min(...rows.map(row => row.xp)) : 0;
 }
 
 async function applyXpToActor(actor, amount, reason) {
@@ -196,15 +174,16 @@ async function applyXpToActor(actor, amount, reason) {
   if (!classes.length) throw new Error(`${actor.name} ne possède aucun Item classe.`);
   const gain = Math.max(0, Math.floor(num(amount, 0)));
   const before = totalXp(actor);
-  const split = splitInteger(gain, classes.map(item => item.id));
+  const shares = add2eSplitMulticlassXp(gain, classes.length);
   const updates = [];
   const breakdown = [];
-  for (const item of classes) {
-    const oldXp = classXp(actor, item);
-    const xp = oldXp + (split[item.id] ?? 0);
-    const level = levelForXp(item, xp);
+  for (const [index, item] of classes.entries()) {
+    const oldXp = classXp(item);
+    const gained = shares[index] ?? 0;
+    const xp = oldXp + gained;
+    const level = add2eLevelForClassXp(item.system ?? {}, xp);
     updates.push({ _id: item.id, "system.xp": xp, "system.niveau": level });
-    breakdown.push({ item, before: oldXp, gained: split[item.id] ?? 0, after: xp, level });
+    breakdown.push({ item, before: oldXp, gained, after: xp, level });
   }
   await actor.updateEmbeddedDocuments("Item", updates, {
     [INTERNAL]: true,
@@ -216,12 +195,12 @@ async function applyXpToActor(actor, amount, reason) {
     await globalThis.add2eRecalcMulticlassActor?.(actor);
   } else {
     const entry = breakdown[0];
-    const next = nextXpForLevel(entry.item, entry.level);
+    const next = add2eNextXpForClassLevel(entry.item.system ?? {}, entry.level);
     await actor.update({
       "system.xp": entry.after,
       "system.niveau": entry.level,
       "system.niveau_suggere": entry.level,
-      "system.titre": titleForLevel(entry.item, entry.level),
+      "system.titre": add2eClassTitleForLevel(entry.item.system ?? {}, entry.level),
       "system.xp_next": next,
       "system.xp_to_next": next ? Math.max(0, next - entry.after) : 0,
       "system.progression_xp": next ? `${entry.after.toLocaleString()} / ${next.toLocaleString()} XP` : `${entry.after.toLocaleString()} XP`
@@ -330,12 +309,33 @@ async function markSourcesApplied(selected, reason) {
   }
   await saveLedger(ledger);
 }
-function chatResult(results, distribution, data) {
-  const lines = results.map(row => {
-    const classes = row.result.classes.map(entry => `${esc(entry.item.name)} +${entry.gained.toLocaleString()} (${entry.before.toLocaleString()} → ${entry.after.toLocaleString()}, niv. ${entry.level})`).join(" ; ");
-    return `<li><b>${esc(row.actor.name)}</b> : +${row.gained.toLocaleString()} XP — ${classes}</li>`;
-  }).join("");
-  return ChatMessage.create({ content: `<section style="border:2px solid #a87924;border-radius:10px;background:#fff8df;padding:.75em;color:#2b1b0c;"><h2 style="margin:.1em 0 .45em;color:#7d331f;">Bilan XP de session</h2><p>Total réparti : <b>${distribution.total.toLocaleString()} XP</b> — Monstres ${distribution.sourceXp.toLocaleString()} XP, objectifs ${data.objectives.toLocaleString()} XP, trésors ${data.treasure.toLocaleString()} XP, bonus MJ ${data.gmBonus.toLocaleString()} XP.</p><ul>${lines}</ul></section>` });
+async function chatResult(results, distribution, data) {
+  const build = globalThis.add2eBuildChatCard;
+  const create = globalThis.add2eCreateChatCard;
+  if (typeof build !== "function" || typeof create !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
+  }
+  const rows = [
+    { label: "Total réparti", value: `${distribution.total.toLocaleString()} XP` },
+    { label: "Sources", value: `Monstres ${distribution.sourceXp.toLocaleString()} XP · objectifs ${data.objectives.toLocaleString()} XP · trésors ${data.treasure.toLocaleString()} XP · bonus MJ ${data.gmBonus.toLocaleString()} XP` },
+    ...results.map(row => ({
+      label: row.actor.name,
+      value: `+${row.gained.toLocaleString()} XP — ${row.result.classes.map(entry => `${entry.item.name} +${entry.gained.toLocaleString()} (${entry.before.toLocaleString()} → ${entry.after.toLocaleString()}, niv. ${entry.level})`).join(" ; ")}`
+    }))
+  ];
+  const options = {
+    actor: results[0]?.actor ?? null,
+    title: "Bilan XP de session",
+    icon: "fas fa-coins",
+    variant: "success",
+    source: { name: "XP de session", type: "Progression" },
+    rows,
+    message: data.reason,
+    chatData: { flags: { add2e: { sessionXp: true, version: VERSION } } }
+  };
+  const preview = build(options);
+  if (!String(preview ?? "").trim()) throw new Error("La carte de bilan XP ADD2E est vide.");
+  return create(options);
 }
 async function applySessionXp(data) {
   if (!game.user?.isGM) return ui.notifications.warn("Seul le MJ peut appliquer l’XP de session.");
