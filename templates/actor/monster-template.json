@@ -9,6 +9,7 @@
     "armorClass": 10,
     "ca_total": 10,
     "thac0": 20,
+    "points_de_coup": 1,
     "pdv": 1,
     "hitDice": "1",
     "movement": "",
