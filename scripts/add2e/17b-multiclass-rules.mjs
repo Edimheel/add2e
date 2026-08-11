@@ -268,15 +268,6 @@ function uniqueClassDocs(docs) {
   });
 }
 
-function recordForDoc(records, doc) {
-  const id = String(doc?.id ?? "");
-  const slug = classSlug(doc);
-  return (records ?? []).find(record =>
-    (id && String(record?.itemId ?? record?.id ?? "") === id)
-    || (slug && norm(record?.slug ?? record?.name) === slug)
-  ) ?? null;
-}
-
 export function canonicalStateRecord(classDoc, { level = 1, xp = 0 } = {}) {
   return {
     itemId: classDoc?.id ?? null,
@@ -288,16 +279,15 @@ export function canonicalStateRecord(classDoc, { level = 1, xp = 0 } = {}) {
   };
 }
 
-function materializeEntries(actor, { docs = classItems(actor), classStates = null, raceData = systemRace(actor) } = {}) {
+function materializeEntries(actor, { docs = classItems(actor), raceData = systemRace(actor) } = {}) {
   const entries = [];
   for (const doc of uniqueClassDocs(docs)) {
-    const stateOverride = recordForDoc(classStates, doc);
-    const stored = classProgression(doc, {
-      level: stateOverride?.level ?? 1,
-      xp: stateOverride?.xp ?? 0
-    });
-    let level = Math.max(1, Math.floor(num(stateOverride?.level ?? stored.level, 1)));
-    let xp = Math.max(0, Math.floor(num(stateOverride?.xp ?? stored.xp, 0)));
+    const stored = classProgression(doc);
+    if (!stored.hasLevel || !stored.hasXp) {
+      throw new Error(`Item de classe « ${doc?.name ?? doc?.id ?? "inconnu"} » sans system.niveau/system.xp canonique.`);
+    }
+    let level = stored.level;
+    let xp = stored.xp;
     const maxLevel = classRaceMaxLevel(doc, raceData);
     if (maxLevel > 0 && level > maxLevel) level = maxLevel;
     xp = Math.max(xp, minXpForClassLevel(doc.system ?? {}, level));
@@ -362,7 +352,6 @@ function clearLegacyClassCopies() {
 export function multiclassUpdatePayload(actor, options = {}) {
   const entries = materializeEntries(actor, {
     docs: options?.docs ?? classItems(actor),
-    classStates: options?.classStates ?? null,
     raceData: options?.raceData ?? systemRace(actor)
   });
   if (entries.length <= 1) return null;
@@ -403,88 +392,11 @@ export function monoClassCleanupPayload() {
   };
 }
 
-function hasOwnRecordValue(record, key) {
-  return record && Object.prototype.hasOwnProperty.call(record, key) && Number.isFinite(num(record[key], NaN));
-}
-
-function legacyRecordForDoc(oldRecords, doc) {
-  const id = String(doc?.id ?? "");
-  const slug = classSlug(doc);
-  const byId = oldRecords.filter(entry => id && String(entry?.itemId ?? "") === id);
-  if (byId.length === 1) return byId[0];
-  const bySlug = oldRecords.filter(entry => slug && norm(entry?.slug ?? entry?.name) === slug);
-  return bySlug.length === 1 ? bySlug[0] : null;
-}
-
-/**
- * Prépare une migration sans jamais inventer une progression pour une classe
- * dont aucune source historique ne permet l'identification certaine.
- */
-export function legacyMulticlassMigrationPlan(actor) {
-  const docs = uniqueClassDocs(classItems(actor));
-  if (docs.length <= 1) return { ok: true, entries: [] };
-
-  const system = actor?.system ?? {};
-  const oldMulti = system.multiclasse && typeof system.multiclasse === "object" ? system.multiclasse : {};
-  const oldRecords = Array.isArray(oldMulti.classes) ? oldMulti.classes.filter(entry => entry && typeof entry === "object") : [];
-  const oldXp = system.xp_par_classe && typeof system.xp_par_classe === "object" ? system.xp_par_classe : {};
-  const oldLevels = system.niveaux_par_classe && typeof system.niveaux_par_classe === "object" ? system.niveaux_par_classe : {};
-  const entries = [];
-  const unresolved = [];
-
-  for (const doc of docs) {
-    const slug = classSlug(doc);
-    const direct = classProgression(doc);
-    const record = legacyRecordForDoc(oldRecords, doc);
-    const rawXp = direct.hasXp ? direct.xp
-      : (hasOwnRecordValue(record, "xp") ? Math.max(0, Math.floor(num(record.xp, 0)))
-        : (Object.prototype.hasOwnProperty.call(oldXp, slug) ? Math.max(0, Math.floor(num(oldXp[slug], 0))) : null));
-    const rawLevel = direct.hasLevel ? direct.level
-      : (hasOwnRecordValue(record, "level") ? Math.max(1, Math.floor(num(record.level, 1)))
-        : (Object.prototype.hasOwnProperty.call(oldLevels, slug) ? Math.max(1, Math.floor(num(oldLevels[slug], 1))) : null));
-
-    if (rawXp === null && rawLevel === null) {
-      unresolved.push({ itemId: doc.id, name: doc.name, slug, reason: "progression-absente" });
-      continue;
-    }
-
-    const level = rawLevel ?? levelForClassXp(doc.system ?? {}, rawXp);
-    const xp = rawXp ?? minXpForClassLevel(doc.system ?? {}, level);
-    entries.push(canonicalStateRecord(doc, { level, xp }));
-  }
-
-  return {
-    ok: unresolved.length === 0,
-    entries,
-    unresolved,
-    source: oldRecords.length ? "multiclasse.classes" : (Object.keys(oldXp).length || Object.keys(oldLevels).length ? "legacy-maps" : "class-items")
-  };
-}
-
-/** Compatibilité lecture seule ; l'écriture des Items est faite par operations.mjs. */
-export function legacyMulticlassMigrationPayload(actor) {
-  const plan = legacyMulticlassMigrationPlan(actor);
-  return plan.ok ? multiclassUpdatePayload(actor, { classStates: plan.entries }) : null;
-}
-
-export function monoClassStateFromActor(actor, classDoc) {
-  const direct = classProgression(classDoc);
-  if (direct.hasLevel || direct.hasXp) {
-    return canonicalStateRecord(classDoc, {
-      level: direct.hasLevel ? direct.level : levelForClassXp(classDoc?.system ?? {}, direct.xp),
-      xp: direct.hasXp ? direct.xp : minXpForClassLevel(classDoc?.system ?? {}, direct.level)
-    });
-  }
-  return canonicalStateRecord(classDoc, {
-    level: Math.max(1, Math.floor(num(actor?.system?.niveau, 1))),
-    xp: Math.max(0, Math.floor(num(actor?.system?.xp, 0)))
-  });
-}
-
 export function classEntryFromItem(actor, classDoc) {
   const state = canonicalClassState(actor, classDoc);
   if (!state) return null;
-  const level = state.hasLevel ? state.level : 1;
-  const xp = state.hasXp ? state.xp : minXpForClassLevel(classDoc?.system ?? {}, level);
-  return canonicalStateRecord(classDoc, { level, xp });
+  if (!state.hasLevel || !state.hasXp) {
+    throw new Error(`Item de classe « ${classDoc?.name ?? classDoc?.id ?? "inconnu"} » sans system.niveau/system.xp canonique.`);
+  }
+  return canonicalStateRecord(classDoc, { level: state.level, xp: state.xp });
 }
