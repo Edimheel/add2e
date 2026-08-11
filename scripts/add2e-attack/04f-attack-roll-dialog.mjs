@@ -2,7 +2,7 @@
 // ADD2E — Dialogue d'attaque via l'API commune ADD2E.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via dialog-ui.mjs uniquement.
 
-const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-canonical-thief-rear-options-v9";
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-thief-rear-checkboxes-v10";
 
 globalThis.ADD2E_ATTACK_DIALOG_VERSION = ADD2E_ATTACK_DIALOG_VERSION;
 
@@ -101,8 +101,8 @@ function add2eBindAttackDialogInteractions(app, html) {
 }
 
 function add2eInstallAttackDialogBindings() {
-  if (globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V9) return;
-  globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V9 = true;
+  if (globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V10) return;
+  globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V10 = true;
   Hooks.on("renderDialogV2", add2eBindAttackDialogInteractions);
   Hooks.on("renderApplicationV2", add2eBindAttackDialogInteractions);
 }
@@ -159,8 +159,8 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
   const backstabMultiplier = add2eAttackEscapeHtml(backstabInfo?.multiplier ?? "");
   const assassinationScore = add2eAttackEscapeHtml(assassinationInfo?.score ?? "0");
 
-  const showBackstab = add2eAttackIsThiefOrAssassin(actor) && !!canUseBackstab;
-  const showAssassination = add2eAttackIsAssassin(actor) && !!canUseAssassination;
+  const showBackstab = add2eAttackIsThiefOrAssassin(actor);
+  const showAssassination = add2eAttackIsAssassin(actor);
   const hasRearSpecial = showBackstab || showAssassination;
 
   const allowedZones = new Set(["front", "flank", "rear-flank", "rear"]);
