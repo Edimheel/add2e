@@ -1,7 +1,17 @@
 // ADD2E — Domaine XP, mouvement et encombrement canoniques.
-// Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
+// Compatible Foundry V13/V14/V15 — fenêtres via l’API commune ADD2E.
 
-export const ADD2E_MOVE_XP_VERSION = "2026-08-02-canonical-armor-profile-v19";
+import {
+  classItems as add2eCanonicalClassItems,
+  classProgression as add2eCanonicalClassProgression
+} from "./17b-multiclass-core.mjs";
+import {
+  progressionRows as add2eClassProgressionRows,
+  levelForClassXp as add2eLevelForClassXp,
+  minXpForClassLevel as add2eMinXpForClassLevel
+} from "./17b-multiclass-rules.mjs";
+
+export const ADD2E_MOVE_XP_VERSION = "2026-08-11-class-item-xp-owner-v20";
 export const ADD2E_MOVE_XP_TAG = "[ADD2E][MOVE_XP]";
 export const ADD2E_MOVE_XP_INTERNAL = "add2eMoveXpInternal";
 export const ADD2E_MOVE_XP_RECALC_DELAY_MS = 140;
@@ -155,7 +165,7 @@ export function changedPath(actor, changes, path) {
 }
 
 export function classItems(actor) {
-  return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  return add2eCanonicalClassItems(actor);
 }
 
 function classItem(actor) {
@@ -171,49 +181,59 @@ export function isMulticlassActor(actor) {
   return actor?.type === "personnage" && classItems(actor).length > 1;
 }
 
-function parseXpRange(raw) {
-  const text = String(raw ?? "").trim();
-  const values = text.match(/[0-9][0-9.\s]*/g)?.map(value => num(value, NaN)).filter(Number.isFinite) ?? [];
-  return { min: values[0] ?? 0, max: values[1] ?? null, raw: text };
+function classState(item, context = "progression XP") {
+  if (!item) return null;
+  const state = add2eCanonicalClassProgression(item);
+  if (!state.hasLevel || !state.hasXp) {
+    throw new Error(`Item de classe « ${item?.name ?? item?.id ?? "inconnu"} » sans system.niveau/system.xp canonique (${context}).`);
+  }
+  return state;
 }
 
 function xpRows(actor) {
-  const cls = classItem(actor)?.system ?? actor?.system?.details_classe ?? {};
-  const progression = Array.isArray(cls.progression) ? cls.progression : [];
-  return progression.map((row, index) => {
-    const range = parseXpRange(row?.xpRange ?? row?.xp_range ?? row?.experience ?? row?.niveau_xp ?? row?.xp ?? "");
-    return {
-      ...row,
-      niveau: num(row?.niveau ?? row?.level ?? index + 1, index + 1),
-      xpMin: range.min,
-      xpMax: range.max,
-      xpLabel: range.raw
-    };
-  }).filter(row => row.niveau > 0).sort((left, right) => left.niveau - right.niveau);
+  const item = classItem(actor);
+  return item ? add2eClassProgressionRows(item.system ?? {}) : [];
 }
 
 export function minXpForLevel(actor, level = null) {
   if (isMulticlassActor(actor)) return 0;
-  const value = Math.max(1, num(level ?? actor?.system?.niveau, 1));
-  const row = xpRows(actor).find(entry => Number(entry.niveau) === value);
-  return Math.max(0, Number(row?.xpMin ?? 0) || 0);
+  const item = classItem(actor);
+  if (!item) return 0;
+  const state = classState(item, "seuil XP");
+  const value = level === null || level === undefined
+    ? state.level
+    : Math.max(1, Math.floor(num(level, state.level)));
+  return add2eMinXpForClassLevel(item.system ?? {}, value);
 }
 
 function levelForXp(actor, xpValue) {
   if (isMulticlassActor(actor)) return null;
-  const xp = Math.max(0, Math.floor(num(xpValue, 0)));
-  const rows = xpRows(actor);
-  if (!rows.length) return Math.max(1, num(actor?.system?.niveau, 1));
-  let current = rows[0];
-  for (const row of rows) if (xp >= row.xpMin) current = row;
-  return Number(current.niveau) || 1;
+  const item = classItem(actor);
+  if (!item) return null;
+  return add2eLevelForClassXp(item.system ?? {}, Math.max(0, Math.floor(num(xpValue, 0))));
 }
 
 function xpMeta(actor, levelValue, xpValue) {
-  const level = Math.max(1, num(levelValue, 1));
+  const item = classItem(actor);
+  if (!item) {
+    return {
+      xp: null,
+      level: null,
+      requiredMin: null,
+      suggestedLevel: null,
+      nextLevel: null,
+      nextXp: null,
+      xpToNext: null,
+      percent: null,
+      progressionLabel: "Aucun Item classe",
+      hasProgression: false,
+      multiclass: false
+    };
+  }
+  const level = Math.max(1, Math.floor(num(levelValue, 1)));
   const xp = Math.max(0, Math.floor(num(xpValue, 0)));
   const rows = xpRows(actor);
-  const currentMin = minXpForLevel(actor, level);
+  const currentMin = add2eMinXpForClassLevel(item.system ?? {}, level);
   const next = rows.find(row => Number(row.niveau) > level) ?? null;
   const nextXp = next ? Number(next.xpMin) || 0 : 0;
   const span = nextXp > currentMin ? nextXp - currentMin : 1;
@@ -227,12 +247,14 @@ function xpMeta(actor, levelValue, xpValue) {
     xpToNext: next ? Math.max(0, nextXp - xp) : 0,
     percent: next ? Math.max(0, Math.min(100, Math.floor(((xp - currentMin) / span) * 100))) : 100,
     progressionLabel: next ? `${xp.toLocaleString()} / ${nextXp.toLocaleString()} XP` : `${xp.toLocaleString()} XP — niveau maximum de la table`,
-    hasProgression: rows.length > 0
+    hasProgression: rows.length > 0,
+    multiclass: false
   };
 }
 
 export function computeXp(actor) {
-  if (isMulticlassActor(actor)) {
+  const classes = classItems(actor);
+  if (classes.length > 1) {
     return {
       xp: null, level: null, requiredMin: null, suggestedLevel: null, nextLevel: null,
       nextXp: null, xpToNext: null, percent: null,
@@ -241,9 +263,10 @@ export function computeXp(actor) {
       multiclass: true
     };
   }
-  const level = Math.max(1, num(actor?.system?.niveau, 1));
-  const xp = Math.max(0, Math.floor(num(actor?.system?.xp, 0)));
-  return xpMeta(actor, level, xp);
+  const item = classes[0] ?? null;
+  if (!item) return xpMeta(actor, null, null);
+  const state = classState(item, "lecture XP");
+  return xpMeta(actor, state.level, state.xp);
 }
 
 function effectsEngine() {
@@ -276,9 +299,8 @@ function canonicalResolve(actor, { domain, target, base = 0, context = {} } = {}
 
 function currentProgressionRowForClass(item) {
   if (!item) return null;
-  const level = Math.max(1, num(item.system?.niveau ?? item.system?.level, 1));
-  const progression = Array.isArray(item.system?.progression) ? item.system.progression : [];
-  return progression.find(row => Number(row?.niveau ?? row?.level) === level) ?? progression[level - 1] ?? null;
+  const state = classState(item, "mouvement de classe");
+  return add2eClassProgressionRows(item.system ?? {}).find(row => Number(row.niveau) === state.level) ?? null;
 }
 
 function directMovementMetres(system = {}) {
@@ -312,6 +334,7 @@ function naturalMovementSource(actor) {
     sources.push({ kind: "race", itemId: race.id, itemUuid: race.uuid, name: race.name, ...raceMovement });
   }
   for (const item of classItems(actor)) {
+    const state = classState(item, "mouvement naturel");
     const progressionMovement = progressionMovementMetres(currentProgressionRowForClass(item) ?? {});
     const classMovement = directMovementMetres(item.system ?? {});
     const movement = progressionMovement ?? classMovement;
@@ -321,7 +344,7 @@ function naturalMovementSource(actor) {
       itemId: item.id,
       itemUuid: item.uuid,
       name: item.name,
-      level: Math.max(1, num(item.system?.niveau ?? item.system?.level, 1)),
+      level: state.level,
       ...movement
     });
   }
@@ -1088,38 +1111,17 @@ export function movementUpdates(actor) {
   };
 }
 
-export function flatActorUpdates(actor, { mode = "auto", incoming = {} } = {}) {
+export function flatActorUpdates(actor, _options = {}) {
   const movementOnly = movementUpdates(actor);
-  if (mode === "movement" || isMulticlassActor(actor) || actor?.type !== "personnage") {
-    return { updates: movementOnly.updates, xp: computeXp(actor), movement: movementOnly.movement, multiclass: isMulticlassActor(actor) };
-  }
-  const incomingLevel = incoming["system.niveau"] !== undefined ? Math.max(1, num(incoming["system.niveau"], 1)) : Math.max(1, num(actor?.system?.niveau, 1));
-  const incomingXp = incoming["system.xp"] !== undefined ? Math.max(0, Math.floor(num(incoming["system.xp"], 0))) : Math.max(0, Math.floor(num(actor?.system?.xp, 0)));
-  let level = incomingLevel;
-  let xp = incomingXp;
-  if (mode === "level") xp = minXpForLevel(actor, level);
-  else if (mode === "xp") {
-    xp = Math.max(xp, minXpForLevel(actor, level));
-    const suggested = levelForXp(actor, xp);
-    if (game.settings.get("add2e", "xpAutoLevel") && suggested > level) level = suggested;
-  } else xp = Math.max(xp, minXpForLevel(actor, level));
-  const meta = xpMeta(actor, level, xp);
-  const currentTitle = xpRows(actor).find(row => Number(row.niveau) === level)?.title ?? actor?.system?.titre ?? "";
-  const updates = {
-    "system.xp": xp,
-    "system.niveau": level,
-    "system.progression_xp": meta.progressionLabel,
-    "system.xp_next": meta.nextXp,
-    "system.xp_to_next": meta.xpToNext,
-    "system.xp_percent": meta.percent,
-    "system.niveau_suggere": meta.suggestedLevel,
-    ...movementOnly.updates
+  return {
+    updates: movementOnly.updates,
+    xp: computeXp(actor),
+    movement: movementOnly.movement,
+    multiclass: isMulticlassActor(actor)
   };
-  if (currentTitle) updates["system.titre"] = currentTitle;
-  return { updates, xp: meta, movement: movementOnly.movement, multiclass: false };
 }
 
-export async function recalc(actor, { mode = "auto", notify = false } = {}) {
+export async function recalc(actor, { mode = "movement" } = {}) {
   if (!actor) return null;
   const result = flatActorUpdates(actor, { mode });
   const updates = changedUpdatePayload(actor, result.updates);
@@ -1127,9 +1129,6 @@ export async function recalc(actor, { mode = "auto", notify = false } = {}) {
   result.skipped = Object.keys(updates).length === 0;
   if (!result.skipped) {
     await actor.update(updates, { [ADD2E_MOVE_XP_INTERNAL]: true, add2eReason: `move-xp-recalc:${mode}`, render: false });
-  }
-  if (notify && mode === "level" && actor.type === "personnage" && !result.multiclass) {
-    ui.notifications.info(`${actor.name} : XP ajustée au niveau ${result.xp.level} (${result.xp.xp.toLocaleString()} XP).`);
   }
   return result;
 }
@@ -1158,80 +1157,71 @@ export async function awardXp(actor, amount, { reason = "Gain d'expérience", pe
   const base = Math.max(0, Math.floor(num(amount, 0)));
   const bonus = Math.max(0, Math.floor(base * (num(percentBonus, 0) / 100)));
   const total = base + bonus;
-  if (isMulticlassActor(actor)) {
-    const applyCanonical = globalThis.add2eSessionXpApplyToActor;
-    if (typeof applyCanonical !== "function") {
-      ui.notifications.error("Le moteur d’XP canonique des Items classe n’est pas chargé.");
-      return null;
-    }
-    const result = await applyCanonical(actor, total, reason);
-    const details = result?.classes?.map(entry => `${entry.item?.name ?? "Classe"} ${entry.before ?? 0} → ${entry.after ?? 0}`).join(" ; ") ?? "";
-    await createXpCard(actor, {
-      rows: [
-        { label: "Gain", value: `+${total.toLocaleString()} XP${bonus ? `, dont bonus ${bonus.toLocaleString()} XP` : ""}` },
-        { label: "Répartition", value: details || "Items classe mis à jour" }
-      ],
-      message: reason || "Progression multiclasses mise à jour.",
-      flags: { multiclass: true, total, bonus }
-    });
-    return { total, bonus, ...result };
+  const applyCanonical = globalThis.add2eSessionXpApplyToActor;
+  if (typeof applyCanonical !== "function") {
+    throw new Error("Le moteur canonique ADD2E d’XP des Items classe n’est pas chargé.");
   }
-  const before = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
-  const after = before + total;
-  const result = flatActorUpdates(actor, { mode: "xp", incoming: { "system.xp": after } });
-  const updates = changedUpdatePayload(actor, result.updates);
-  if (Object.keys(updates).length) await actor.update(updates, { add2eReason: "move-xp-award" });
-  const displayedXp = Number(updates["system.xp"] ?? result.xp.xp ?? after) || after;
-  const displayedLevel = String(updates["system.niveau"] ?? result.xp.level ?? actor.system?.niveau ?? "-");
+  const result = await applyCanonical(actor, total, reason);
+  const details = result?.classes?.map(entry => {
+    const name = entry.item?.name ?? "Classe";
+    return `${name} ${entry.before ?? 0} → ${entry.after ?? 0} XP · niv. ${entry.level ?? "-"}`;
+  }).join(" ; ") ?? "";
+  const multiclass = (result?.classes?.length ?? classItems(actor).length) > 1;
   await createXpCard(actor, {
     rows: [
       { label: "Gain", value: `+${total.toLocaleString()} XP${bonus ? `, dont bonus ${bonus.toLocaleString()} XP` : ""}` },
-      { label: "Expérience", value: `${before.toLocaleString()} → ${displayedXp.toLocaleString()} XP` },
-      { label: "Niveau actuel", value: displayedLevel }
+      { label: multiclass ? "Répartition" : "Progression", value: details || "Item classe mis à jour" }
     ],
     message: reason || "Gain d’expérience",
-    flags: { multiclass: false, total, bonus, before, after: displayedXp }
+    flags: { multiclass, total, bonus, before: result?.before ?? null, after: result?.after ?? null }
   });
-  return { before, after: displayedXp, total, bonus, ...result };
+  return { total, bonus, ...result };
 }
 
 export async function promptXp(actor) {
   if (!actor || actor.type !== "personnage") return;
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications.warn("DialogV2 indisponible : attribution d'XP annulée.");
-    return;
+  const wait = globalThis.add2eDialogWait;
+  if (typeof wait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
-  const content = [
-    "<form>",
-    '<div class="form-group"><label>XP à ajouter</label><input type="number" name="amount" value="0" step="1"></div>',
-    '<div class="form-group"><label>Bonus %</label><input type="number" name="percentBonus" value="0" step="1"></div>',
-    '<div class="form-group"><label>Motif</label><input type="text" name="reason" value="Récompense d’aventure"></div>',
-    "</form>"
-  ].join("");
-  const result = await DialogV2.wait({
+  const result = await wait({
+    add2eTheme: "success",
+    add2ePrimaryAction: "add",
+    add2eClasses: ["add2e-xp-award-dialog"],
     window: { title: `Attribuer de l'XP — ${actor.name}` },
-    content,
+    content: [
+      '<form class="add2e-xp-award-form">',
+      '<div class="form-group"><label>XP à ajouter</label><input type="number" name="amount" value="0" step="1"></div>',
+      '<div class="form-group"><label>Bonus %</label><input type="number" name="percentBonus" value="0" step="1"></div>',
+      '<div class="form-group"><label>Motif</label><input type="text" name="reason" value="Récompense d’aventure"></div>',
+      "</form>"
+    ].join(""),
     buttons: [
       {
         action: "add",
         label: "Ajouter",
+        icon: "<i class='fas fa-star'></i>",
         default: true,
-        callback: (_event, button, dialog) => {
-          const form = button?.form ?? dialog?.element?.querySelector?.("form") ?? null;
+        callback: (_event, button) => {
+          const form = button.form;
           return {
             action: "add",
-            amount: form?.elements?.amount?.value ?? form?.amount?.value ?? 0,
-            percentBonus: form?.elements?.percentBonus?.value ?? form?.percentBonus?.value ?? 0,
-            reason: form?.elements?.reason?.value ?? form?.reason?.value ?? "Récompense d'aventure"
+            amount: form.elements.amount.value,
+            percentBonus: form.elements.percentBonus.value,
+            reason: form.elements.reason.value
           };
         }
       },
-      { action: "cancel", label: "Annuler", callback: () => ({ action: "cancel" }) }
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => ({ action: "cancel" })
+      }
     ],
-    modal: true,
-    rejectClose: false,
     close: () => ({ action: "cancel" })
   });
-  if (result?.action === "add") await awardXp(actor, result.amount, { reason: result.reason, percentBonus: result.percentBonus });
+  if (result?.action === "add") {
+    await awardXp(actor, result.amount, { reason: result.reason, percentBonus: result.percentBonus });
+  }
 }
