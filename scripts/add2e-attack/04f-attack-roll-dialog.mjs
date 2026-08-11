@@ -2,7 +2,7 @@
 // ADD2E — Dialogue d'attaque via l'API commune ADD2E.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via dialog-ui.mjs uniquement.
 
-const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-rear-options-diagnostics-v12";
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-dialog-render-callback-v13";
 
 globalThis.ADD2E_ATTACK_DIALOG_VERSION = ADD2E_ATTACK_DIALOG_VERSION;
 
@@ -31,93 +31,60 @@ function add2eAttackImage(entity, fallback = "icons/svg/mystery-man.svg") {
   return add2eAttackEscapeHtml(entity?.img ?? entity?.texture?.src ?? entity?.document?.texture?.src ?? fallback);
 }
 
-function add2eAttackClassDiag(actor) {
-  return Array.from(actor?.items ?? [])
-    .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
-    .map(item => ({
-      id: item.id,
-      name: item.name,
-      niveau: item.system?.niveau ?? null,
-      tags: Array.isArray(item.system?.tags) ? [...item.system.tags] : []
-    }));
-}
+function add2eAttackRoot(...candidates) {
+  for (const candidate of candidates) {
+    const elements = [
+      candidate?.window?.content,
+      candidate?.form,
+      candidate?.element,
+      candidate?.[0],
+      candidate
+    ].filter(Boolean);
 
-function add2eAttackRoot(appOrElement) {
-  const element = appOrElement?.element ?? appOrElement?.[0] ?? appOrElement ?? null;
-  if (!element) return null;
-  if (element.matches?.(".add2e-attack-form")) return element;
-  return element.querySelector?.(".add2e-attack-form")
-    ?? element.closest?.("dialog")?.querySelector?.(".add2e-attack-form")
-    ?? element.closest?.(".application")?.querySelector?.(".add2e-attack-form")
-    ?? null;
+    for (const element of elements) {
+      if (element.matches?.(".add2e-attack-form")) return element;
+      const root = element.querySelector?.(".add2e-attack-form") ?? null;
+      if (root) return root;
+    }
+  }
+  return null;
 }
 
 function add2eApplyRearOptions(root) {
   const container = add2eAttackRoot(root) ?? root;
   const select = container?.querySelector?.("#add2e-position-zone");
-  if (!container || !select) {
-    console.warn("[ADD2E][ATTAQUE][REAR_OPTIONS][RENDER_MISSING_ROOT]", {
-      version: ADD2E_ATTACK_DIALOG_VERSION,
-      hasContainer: !!container,
-      hasPositionSelect: !!select
-    });
-    return false;
-  }
+  if (!container || !select) return false;
 
   const isRear = select.value === "rear";
-  const blocks = Array.from(container.querySelectorAll(".add2e-rear-specials"));
-  const backstabInput = container.querySelector("#add2e-backstab");
-  const assassinationInput = container.querySelector("#add2e-assassinat-confirm");
+  for (const block of container.querySelectorAll(".add2e-rear-specials")) block.hidden = !isRear;
 
-  for (const block of blocks) block.hidden = !isRear;
   if (!isRear) {
-    for (const input of container.querySelectorAll("#add2e-backstab,#add2e-assassinat-confirm")) input.checked = false;
+    for (const input of container.querySelectorAll("#add2e-backstab,#add2e-assassinat-confirm")) {
+      input.checked = false;
+    }
   }
-
-  console.log("[ADD2E][ATTAQUE][REAR_OPTIONS][RENDER]", {
-    version: ADD2E_ATTACK_DIALOG_VERSION,
-    selectedZone: select.value,
-    isRear,
-    rearBlocks: blocks.length,
-    rearBlocksHidden: blocks.map(block => !!block.hidden),
-    backstabInputPresent: !!backstabInput,
-    backstabChecked: !!backstabInput?.checked,
-    assassinationInputPresent: !!assassinationInput,
-    assassinationChecked: !!assassinationInput?.checked,
-    formHtml: container.outerHTML
-  });
-
   return true;
 }
 
-function add2eBindAttackDialogInteractions(app, html) {
-  const root = add2eAttackRoot(html) ?? add2eAttackRoot(app);
-  if (!root) {
-    console.warn("[ADD2E][ATTAQUE][REAR_OPTIONS][BIND_NO_ROOT]", {
-      version: ADD2E_ATTACK_DIALOG_VERSION,
-      appClass: app?.constructor?.name ?? null,
-      hasHtml: !!html,
-      hasAppElement: !!app?.element
-    });
-    return false;
-  }
+function add2eBindAttackDialogInteractions(dialog) {
+  const root = add2eAttackRoot(
+    dialog?.window?.content,
+    dialog?.form,
+    dialog?.element,
+    dialog
+  );
+  if (!root) return false;
 
   const position = root.querySelector("#add2e-position-zone");
-  if (position && position.dataset.add2eRearBound !== "1") {
+  if (!position) return false;
+
+  if (position.dataset.add2eRearBound !== "1") {
     position.dataset.add2eRearBound = "1";
     position.addEventListener("change", () => add2eApplyRearOptions(root));
     position.addEventListener("input", () => add2eApplyRearOptions(root));
   }
 
-  add2eApplyRearOptions(root);
-  return true;
-}
-
-function add2eInstallAttackDialogBindings() {
-  if (globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V12) return;
-  globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V12 = true;
-  Hooks.on("renderDialogV2", add2eBindAttackDialogInteractions);
-  Hooks.on("renderApplicationV2", add2eBindAttackDialogInteractions);
+  return add2eApplyRearOptions(root);
 }
 
 export async function add2eAttackOpenDialogV2({ title, content, classes, defaultAction, onOk }) {
@@ -132,6 +99,7 @@ export async function add2eAttackOpenDialogV2({ title, content, classes, default
     add2eClasses: dialogClasses,
     window: { title },
     content,
+    render: (_event, dialog) => add2eBindAttackDialogInteractions(dialog),
     buttons: [
       {
         action: "attack",
@@ -180,26 +148,6 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
   const autoZone = allowedZones.has(String(backArcInfo?.zone ?? "")) ? String(backArcInfo.zone) : "front";
   const selected = zone => autoZone === zone ? " selected" : "";
   const rearHidden = autoZone === "rear" ? "" : " hidden";
-
-  console.log("[ADD2E][ATTAQUE][REAR_OPTIONS][BUILD]", {
-    version: ADD2E_ATTACK_DIALOG_VERSION,
-    actor: actor?.name ?? null,
-    actorId: actor?.id ?? null,
-    actorType: actor?.type ?? null,
-    classes: add2eAttackClassDiag(actor),
-    weapon: arme?.name ?? null,
-    weaponId: arme?.id ?? null,
-    target: cible?.name ?? null,
-    backArcInfo,
-    autoZone,
-    canUseBackstab,
-    backstabInfo,
-    canUseAssassination,
-    assassinationInfo,
-    showBackstab,
-    showAssassination,
-    hasRearSpecial
-  });
 
   const rootStyle = "box-sizing:border-box;width:100%;max-width:640px;color:#24170a;font-family:inherit;";
   const topRowStyle = "box-sizing:border-box;display:flex;align-items:stretch;gap:6px;margin:0 0 8px 0;width:100%;";
@@ -267,5 +215,3 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
       </div>
     </form>`;
 }
-
-add2eInstallAttackDialogBindings();
