@@ -2,7 +2,7 @@
 // ADD2E — Dialogue d'attaque via l'API commune ADD2E.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via dialog-ui.mjs uniquement.
 
-const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-07-automatic-weapon-mode-dialog-v8";
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-canonical-thief-rear-options-v9";
 
 globalThis.ADD2E_ATTACK_DIALOG_VERSION = ADD2E_ATTACK_DIALOG_VERSION;
 
@@ -31,154 +31,35 @@ function add2eAttackImage(entity, fallback = "icons/svg/mystery-man.svg") {
   return add2eAttackEscapeHtml(entity?.img ?? entity?.texture?.src ?? entity?.document?.texture?.src ?? fallback);
 }
 
-function add2eAttackNormalizeText(value) {
+function add2eAttackCanonicalTag(value) {
   return String(value ?? "")
     .trim()
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, "")
-    .replace(/[\s\-]+/g, "_");
+    .replace(/\s+/g, "_");
 }
 
-function add2eAttackClassNames(actor) {
-  const details = actor?.system?.details_classe ?? {};
-  return [
-    actor?.system?.classe,
-    details?.label,
-    details?.name,
-    details?.nom,
-    details?.classe,
-    details?.slug
-  ].map(add2eAttackNormalizeText).filter(Boolean);
-}
-
-function add2eAttackEmbeddedClassNames(actor) {
-  const names = new Set(add2eAttackClassNames(actor));
+function add2eAttackClassTags(actor) {
+  const tags = new Set();
   for (const item of actor?.items ?? []) {
     if (String(item?.type ?? "").toLowerCase() !== "classe") continue;
-    const system = item.system ?? {};
-    for (const value of [item.name, system.label, system.name, system.nom, system.classe, system.slug]) {
-      const name = add2eAttackNormalizeText(value);
-      if (name) names.add(name);
+    const rawTags = Array.isArray(item?.system?.tags) ? item.system.tags : [];
+    for (const rawTag of rawTags) {
+      const tag = add2eAttackCanonicalTag(rawTag);
+      if (tag.startsWith("classe:")) tags.add(tag);
     }
   }
-  return [...names];
+  return tags;
 }
 
 function add2eAttackIsThiefOrAssassin(actor) {
-  return add2eAttackEmbeddedClassNames(actor).some(name => name.includes("voleur") || name.includes("assassin"));
+  const tags = add2eAttackClassTags(actor);
+  return tags.has("classe:voleur") || tags.has("classe:assassin");
 }
 
 function add2eAttackIsAssassin(actor) {
-  return add2eAttackEmbeddedClassNames(actor).some(name => name.includes("assassin"));
-}
-
-function add2eAttackIsBackstabKey(value) {
-  const key = add2eAttackNormalizeText(value);
-  return key === "frappe_dans_le_dos" ||
-    key === "attaque_dans_le_dos" ||
-    key === "attaque_sournoise" ||
-    key === "backstab" ||
-    key === "sneak_attack" ||
-    (key.includes("dos") && (key.includes("frappe") || key.includes("attaque"))) ||
-    (key.includes("sournoise") && key.includes("attaque"));
-}
-
-function add2eAttackFindThiefClassItem(actor) {
-  return [...(actor?.items ?? [])].find(item => {
-    if (String(item?.type ?? "").toLowerCase() !== "classe") return false;
-    const system = item.system ?? {};
-    return [item.name, system.label, system.name, system.nom, system.classe, system.slug]
-      .map(add2eAttackNormalizeText)
-      .some(name => name.includes("voleur") || name.includes("assassin"));
-  }) ?? null;
-}
-
-function add2eAttackClassLevel(actor, classItem) {
-  const levels = actor?.system?.niveaux_par_classe ?? {};
-  const system = classItem?.system ?? {};
-  const keys = [classItem?.name, system.label, system.name, system.nom, system.classe, system.slug]
-    .map(add2eAttackNormalizeText)
-    .filter(Boolean);
-
-  for (const key of keys) {
-    if (levels[key] !== undefined && levels[key] !== null && levels[key] !== "") {
-      return Math.max(1, Number(levels[key]) || 1);
-    }
-  }
-  for (const [key, value] of Object.entries(levels)) {
-    if (keys.includes(add2eAttackNormalizeText(key))) return Math.max(1, Number(value) || 1);
-  }
-  return Math.max(1, Number(classItem?.system?.niveau ?? classItem?.system?.level ?? actor?.system?.niveau ?? 1) || 1);
-}
-
-function add2eAttackGetEmbeddedBackstabSkill(actor) {
-  const classItem = add2eAttackFindThiefClassItem(actor);
-  if (!classItem) return null;
-
-  const system = classItem.system ?? {};
-  const level = add2eAttackClassLevel(actor, classItem);
-  const progression = Array.isArray(system.progression) ? system.progression : [];
-  const row = progression.find((entry, index) => Number(entry?.niveau ?? entry?.level ?? index + 1) === level) ?? null;
-  if (!row) return null;
-
-  const labels = Array.isArray(system.skillLabels)
-    ? system.skillLabels
-    : Array.isArray(system.thiefSkillOrder) ? system.thiefSkillOrder : [];
-  const values = Array.isArray(row.skills) ? row.skills : [];
-  const index = labels.findIndex(add2eAttackIsBackstabKey);
-  const structured = row.thiefSkills && typeof row.thiefSkills === "object" ? row.thiefSkills : {};
-
-  let rawValue = index >= 0 ? values[index] : undefined;
-  let label = index >= 0 ? labels[index] : "Frappe dans le dos";
-
-  if (rawValue === undefined) {
-    for (const [key, value] of Object.entries(structured)) {
-      if (!add2eAttackIsBackstabKey(key)) continue;
-      rawValue = value;
-      label = key;
-      break;
-    }
-  }
-  if (rawValue === undefined) {
-    for (const key of ["backstabMultiplier", "backstab_multiplier", "frappeDansLeDos", "frappe_dans_le_dos", "attaqueDansLeDos", "attaque_dans_le_dos", "attaqueSournoise", "attaque_sournoise"]) {
-      if (row[key] === undefined) continue;
-      rawValue = row[key];
-      break;
-    }
-  }
-
-  const multiplier = Number(rawValue) || 0;
-  if (multiplier <= 1) return null;
-  return {
-    key: "frappe_dans_le_dos",
-    label: String(label || "Frappe dans le dos"),
-    base: multiplier,
-    value: multiplier,
-    finalValue: multiplier,
-    display: `×${multiplier}`,
-    type: "multiplier",
-    canRoll: false,
-    sourceClass: classItem.name,
-    sourceClassLevel: level
-  };
-}
-
-function add2eInstallMulticlassBackstabSkillBridge() {
-  const resolver = globalThis.add2eGetActorThiefSkills;
-  if (typeof resolver !== "function" || resolver.__add2eMulticlassBackstabBridge === true) return false;
-
-  const bridged = function add2eGetActorThiefSkillsWithEmbeddedBackstab(actor, ...args) {
-    const rows = Array.isArray(resolver.call(this, actor, ...args)) ? resolver.call(this, actor, ...args) : [];
-    const embeddedBackstab = add2eAttackGetEmbeddedBackstabSkill(actor);
-    if (!embeddedBackstab) return rows;
-    return [...rows.filter(row => !add2eAttackIsBackstabKey(row?.key ?? row?.label)), embeddedBackstab];
-  };
-
-  bridged.__add2eMulticlassBackstabBridge = true;
-  bridged.__add2eMulticlassBackstabOriginal = resolver;
-  globalThis.add2eGetActorThiefSkills = bridged;
-  return true;
+  return add2eAttackClassTags(actor).has("classe:assassin");
 }
 
 function add2eAttackRoot(appOrElement) {
@@ -220,8 +101,8 @@ function add2eBindAttackDialogInteractions(app, html) {
 }
 
 function add2eInstallAttackDialogBindings() {
-  if (globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V8) return;
-  globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V8 = true;
+  if (globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V9) return;
+  globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V9 = true;
   Hooks.on("renderDialogV2", add2eBindAttackDialogInteractions);
   Hooks.on("renderApplicationV2", add2eBindAttackDialogInteractions);
 }
@@ -355,5 +236,3 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
 }
 
 add2eInstallAttackDialogBindings();
-if (game?.ready) setTimeout(add2eInstallMulticlassBackstabSkillBridge, 0);
-else Hooks.once("ready", () => setTimeout(add2eInstallMulticlassBackstabSkillBridge, 0));
