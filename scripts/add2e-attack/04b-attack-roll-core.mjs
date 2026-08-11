@@ -10,7 +10,7 @@ import {
   spendProjectileForAttack
 } from "../add2e/22a-vendor-core.mjs";
 
-export const ADD2E_ATTACK_ROLL_CORE_VERSION = "2026-08-07-canonical-projectile-path-v4";
+export const ADD2E_ATTACK_ROLL_CORE_VERSION = "2026-08-11-native-capability-dispatch-v5";
 
 globalThis.ADD2E_ATTACK_ROLL_SPLIT_VERSION = ADD2E_ATTACK_ROLL_CORE_VERSION;
 
@@ -49,6 +49,16 @@ function add2eTargetTokenFromAttackPayload(payload = {}) {
     ?? payload.cibleToken
     ?? Array.from(game.user?.targets ?? [])[0]
     ?? null;
+}
+
+async function add2eResolveCapabilitySpecialAttack(actor, weapon, payload = {}) {
+  const service = globalThis.add2eCapabilitySpecialAttack;
+  if (!service || typeof service.profileFor !== "function" || typeof service.resolveSpecialAttack !== "function") {
+    return { handled: false, result: null };
+  }
+  if (!service.profileFor(weapon)) return { handled: false, result: null };
+  const result = await service.resolveSpecialAttack({ ...payload, actor, arme: weapon });
+  return { handled: true, result };
 }
 
 function add2eProjectileWeaponForAttack(weapon, projectile) {
@@ -116,6 +126,10 @@ async function add2eAttackRollWithResolvedWeaponVfx(...args) {
   const payload = args?.[0] ?? {};
   const actor = add2eActorFromAttackPayload(payload);
   const weapon = add2eWeaponFromAttackPayload(actor, payload);
+
+  const capability = await add2eResolveCapabilitySpecialAttack(actor, weapon, payload);
+  if (capability.handled) return capability.result;
+
   const sourceToken = add2eSourceTokenFromAttackPayload(actor, payload);
   const targetTokenBeforeRoll = add2eTargetTokenFromAttackPayload(payload);
   const projectile = await add2ePrepareProjectileAttack(actor, weapon, payload);
