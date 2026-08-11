@@ -7,16 +7,7 @@ import {
 } from "../add2e-attack/03-attack-rules.mjs";
 import { add2eAttackComputeActiveAttackModifiers } from "../add2e-attack/04e-attack-roll-modifiers.mjs";
 import { add2eGetEquippedProjectileForWeapon } from "./21-consumables.mjs";
-
-function add2eSheetCombatNormalize(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
+import { classItems, classProgression } from "./17b-multiclass-core.mjs";
 
 function add2eSheetSigned(value) {
   const number = Number(value) || 0;
@@ -167,34 +158,22 @@ function add2eSheetDefenseRows(armorClass) {
   return rows;
 }
 
-function add2eSheetClassSlug(classItem) {
-  const system = classItem?.system ?? {};
-  return add2eSheetCombatNormalize(system.slug ?? system.label ?? system.nom ?? system.name ?? classItem?.name ?? "classe");
-}
+function add2eSheetClassThaco(classItem) {
+  const progressionState = classProgression(classItem);
+  if (!progressionState.hasLevel) {
+    throw new Error(`Niveau canonique absent sur l’Item classe « ${classItem?.name ?? classItem?.id ?? "inconnu"} ».`);
+  }
 
-function add2eSheetClassLevel(actor, classItem) {
-  const levels = actor?.system?.niveaux_par_classe ?? {};
-  const slug = add2eSheetClassSlug(classItem);
-  const raw = levels?.[classItem?.id]
-    ?? levels?.[slug]
-    ?? classItem?.system?.niveau
-    ?? classItem?.system?.level
-    ?? actor?.system?.niveau;
-  return Math.max(1, Math.floor(Number(raw) || 1));
-}
-
-function add2eSheetClassThaco(actor, classItem) {
-  const level = add2eSheetClassLevel(actor, classItem);
+  const level = progressionState.level;
   const progression = Array.isArray(classItem?.system?.progression) ? classItem.system.progression : [];
-  const row = progression.find(entry => Number(entry?.niveau ?? entry?.level) === level)
-    ?? progression[level - 1]
-    ?? null;
+  const row = progression.find(entry => Number(entry?.niveau) === level) ?? null;
   if (!row) {
     throw new Error(`Progression THAC0 absente pour ${classItem?.name ?? "classe"} au niveau ${level}.`);
   }
-  const thaco = Number(row.thac0 ?? row.thaco ?? row.THAC0);
+
+  const thaco = Number(row.thac0);
   if (!Number.isFinite(thaco)) {
-    throw new Error(`THAC0 invalide pour ${classItem?.name ?? "classe"} au niveau ${level}.`);
+    throw new Error(`THAC0 canonique invalide pour ${classItem?.name ?? "classe"} au niveau ${level}.`);
   }
   return thaco;
 }
@@ -202,9 +181,9 @@ function add2eSheetClassThaco(actor, classItem) {
 function add2eSheetResolveThaco(actor, transformation) {
   const transformationThaco = Number(transformation?.thac0);
   if (Number.isFinite(transformationThaco)) return transformationThaco;
-  const classes = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  const classes = classItems(actor);
   if (!classes.length) return 20;
-  return Math.min(...classes.map(classItem => add2eSheetClassThaco(actor, classItem)));
+  return Math.min(...classes.map(add2eSheetClassThaco));
 }
 
 function add2eSheetDamageData(item) {
