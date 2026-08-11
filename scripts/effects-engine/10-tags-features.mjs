@@ -22,26 +22,29 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
     addClassFeatureTagsInto(dst, raw, level = null) {
       const classLevel = Number(level);
       if (!Number.isFinite(classLevel) || classLevel < 1) return;
-      const entries = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? Object.values(raw) : []);
-      for (const feature of entries) {
+      if (!Array.isArray(raw)) return;
+      for (const feature of raw) {
         if (!this.isClassFeatureUnlocked(feature, classLevel)) continue;
-        for (const value of [
-          feature.tags, feature.tag, feature.effectTags, feature.effets,
-          feature.effects, feature.flags?.add2e?.tags
-        ]) this.addTagsInto(dst, value);
+        this.addTagsInto(dst, feature.tags);
       }
     },
 
     classFeatureMinLevel(feature) {
-      const value = Number(feature?.minLevel ?? feature?.minimumLevel ?? feature?.niveauMin ?? feature?.level ?? feature?.niveau ?? 1);
-      return Number.isFinite(value) && value > 0 ? value : 1;
+      const value = Number(feature?.minLevel);
+      if (!Number.isFinite(value) || value < 1) {
+        throw new Error(`Capacité de classe « ${feature?.name ?? "inconnue"} » sans minLevel canonique.`);
+      }
+      return Math.floor(value);
     },
 
     classFeatureMaxLevel(feature) {
-      const raw = feature?.maxLevel ?? feature?.maximumLevel ?? feature?.niveauMax ?? feature?.max;
+      const raw = feature?.maxLevel;
       if (raw === undefined || raw === null || raw === "") return null;
       const value = Number(raw);
-      return Number.isFinite(value) && value > 0 ? value : null;
+      if (!Number.isFinite(value) || value < 1) {
+        throw new Error(`Capacité de classe « ${feature?.name ?? "inconnue"} » avec maxLevel canonique invalide.`);
+      }
+      return Math.floor(value);
     },
 
     isClassFeatureUnlocked(feature, level) {
@@ -62,8 +65,11 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
     },
 
     normalizeClassFeature(feature, source = {}) {
+      const name = String(feature?.name ?? "").trim();
+      if (!name) throw new Error("Capacité de classe sans name canonique.");
       return {
         ...foundry.utils.deepClone(feature),
+        name,
         minLevel: this.classFeatureMinLevel(feature),
         maxLevel: this.classFeatureMaxLevel(feature),
         available: true,
@@ -83,8 +89,8 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       const push = (raw, level, source = {}) => {
         const classLevel = Number(level);
         if (!Number.isFinite(classLevel) || classLevel < 1) return;
-        const entries = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? Object.values(raw) : []);
-        for (const feature of entries) {
+        if (!Array.isArray(raw)) return;
+        for (const feature of raw) {
           if (!this.isClassFeatureUnlocked(feature, classLevel)) continue;
           out.push(this.normalizeClassFeature(feature, source));
         }
@@ -106,7 +112,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       const seen = new Set();
       return out.filter(feature => {
         const source = feature._add2eClassItemId ?? "classe";
-        const key = `${source}|${feature.minLevel}|${feature.name ?? feature.label ?? feature.title ?? feature.nom ?? JSON.stringify(feature.tags ?? [])}`;
+        const key = `${source}|${feature.minLevel}|${feature.name}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
@@ -132,7 +138,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
     },
 
     alignmentSlug(value) {
-      const raw = String(value ?? "")
+      const normalized = String(value ?? "")
         .trim()
         .toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -140,72 +146,31 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         .replace(/[^a-z0-9]+/g, "_")
         .replace(/_+/g, "_")
         .replace(/^_+|_+$/g, "");
-      const aliases = {
-        lb: "loyal_bon",
-        loyal_bon: "loyal_bon",
-        lawful_good: "loyal_bon",
-        ln: "loyal_neutre",
-        loyal_neutre: "loyal_neutre",
-        loyal_neutral: "loyal_neutre",
-        lawful_neutral: "loyal_neutre",
-        lm: "loyal_mauvais",
-        loyal_mauvais: "loyal_mauvais",
-        loyal_mal: "loyal_mauvais",
-        lawful_evil: "loyal_mauvais",
-        nb: "neutre_bon",
-        neutre_bon: "neutre_bon",
-        neutral_good: "neutre_bon",
-        n: "neutre_absolu",
-        neutre: "neutre_absolu",
-        neutre_absolu: "neutre_absolu",
-        neutral: "neutre_absolu",
-        true_neutral: "neutre_absolu",
-        nm: "neutre_mauvais",
-        neutre_mauvais: "neutre_mauvais",
-        neutre_mal: "neutre_mauvais",
-        neutral_evil: "neutre_mauvais",
-        cb: "chaotique_bon",
-        chaotique_bon: "chaotique_bon",
-        chaotic_good: "chaotique_bon",
-        cn: "chaotique_neutre",
-        chaotique_neutre: "chaotique_neutre",
-        chaotic_neutral: "chaotique_neutre",
-        cm: "chaotique_mauvais",
-        chaotique_mauvais: "chaotique_mauvais",
-        chaotique_mal: "chaotique_mauvais",
-        chaotic_evil: "chaotique_mauvais"
-      };
-      return aliases[raw] ?? raw;
+      return normalized === "neutre" ? "neutre_absolu" : normalized;
     },
 
     alignmentLabelForSlug(slug) {
       const normalized = this.alignmentSlug(slug);
-      const found = this.getAllAlignmentLabels().find(label => this.alignmentSlug(label) === normalized);
-      return found ?? String(slug ?? "").trim();
+      return this.getAllAlignmentLabels().find(label => this.alignmentSlug(label) === normalized) ?? "";
     },
 
     getClassAllowedAlignments(classData) {
       const system = classData?.system ?? classData ?? {};
-      const raw = system.alignements_autorises
-        ?? system.alignementsAutorises
-        ?? system.allowedAlignments
-        ?? system.allowed_alignments
-        ?? system.alignmentsAllowed
-        ?? system.alignmentAllowed
-        ?? system.alignmentRestriction?.allowed
-        ?? system.alignementRestriction?.allowed
-        ?? system.restrictions?.alignements
-        ?? system.restrictions?.alignments
-        ?? system.alignment
-        ?? [];
-      const values = this.toArray(raw).filter(value => value !== undefined && value !== null && String(value).trim() !== "");
+      const raw = system.alignements_autorises;
+      if (!Array.isArray(raw) || !raw.length) {
+        throw new Error(`Classe « ${classData?.name ?? system?.label ?? "inconnue"} » sans alignements_autorises canoniques.`);
+      }
       const seen = new Set();
       const out = [];
-      for (const value of values) {
+      for (const value of raw) {
         const slug = this.alignmentSlug(value);
-        if (!slug || seen.has(slug)) continue;
+        const label = this.alignmentLabelForSlug(slug);
+        if (!slug || !label) {
+          throw new Error(`Alignement de classe non canonique : « ${String(value ?? "")} ».`);
+        }
+        if (seen.has(slug)) continue;
         seen.add(slug);
-        out.push(this.alignmentLabelForSlug(slug));
+        out.push(label);
       }
       return out;
     },
@@ -218,33 +183,27 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       let allowed = null;
       for (const classItem of classItems) {
         const classAllowed = this.getClassAllowedAlignments(classItem);
-        const slugs = new Set((classAllowed.length ? classAllowed : all).map(value => this.alignmentSlug(value)).filter(Boolean));
+        const slugs = new Set(classAllowed.map(value => this.alignmentSlug(value)).filter(Boolean));
         if (allowed === null) allowed = slugs;
         else allowed = new Set([...allowed].filter(slug => slugs.has(slug)));
       }
 
-      const result = all.filter(label => allowed?.has?.(this.alignmentSlug(label)));
-      return result.length ? result : all;
+      return all.filter(label => allowed?.has?.(this.alignmentSlug(label)));
     },
 
     isAlignmentAllowedForClass(alignment, classData) {
       const allowed = this.getClassAllowedAlignments(classData);
-      if (!allowed.length) return true;
       const current = this.alignmentSlug(alignment);
       return !!current && allowed.some(value => this.alignmentSlug(value) === current);
     },
 
     isActorAlignmentAllowedForClass(actor, classData) {
-      const system = actor?.system ?? {};
-      const current = system.alignement ?? system.alignment ?? system.details?.alignement ?? "";
-      return this.isAlignmentAllowedForClass(current, classData);
+      return this.isAlignmentAllowedForClass(actor?.system?.alignement ?? "", classData);
     },
 
     pickClassAlignment(actor, classData, fallback = "") {
-      const system = actor?.system ?? {};
-      const current = system.alignement ?? system.alignment ?? fallback ?? "";
+      const current = actor?.system?.alignement ?? String(fallback ?? "");
       const allowed = this.getClassAllowedAlignments(classData);
-      if (!allowed.length) return current || String(fallback ?? "");
       const currentSlug = this.alignmentSlug(current);
       const currentAllowed = allowed.find(value => this.alignmentSlug(value) === currentSlug);
       if (currentAllowed) return currentAllowed;
@@ -329,7 +288,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       for (const raw of [
         system.tags, system.tag, system.effectTags, system.effets, system.effects,
         system.race, system.type, system.type_monstre, system.categorie,
-        system.alignement, system.alignment, system.details?.alignment,
+        system.alignement,
         subject.flags?.add2e?.tags, subject.flags?.add2e?.effectTags
       ]) this.addTagsInto(tags, raw);
       this.addTagsInto(tags, this.getActiveTags(subject));
@@ -381,7 +340,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
               ...rule,
               source: {
                 feature,
-                featureName: feature?.name ?? feature?.label ?? feature?.title ?? "Capacité de classe",
+                featureName: feature?.name ?? "Capacité de classe",
                 classItemId: feature?._add2eClassItemId ?? null,
                 classItemUuid: feature?._add2eClassItemUuid ?? null,
                 className: feature?._add2eClassName ?? null,
@@ -459,7 +418,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       if (any.length && !any.some(tag => actionTags.has(tag))) return false;
       if (all.length && !all.every(tag => actionTags.has(tag))) return false;
       if (notAny.length && notAny.some(tag => actionTags.has(tag))) return false;
-      if (notAll.length && notAll.every(tag => actionTags.has(tag))) return false;
+      if (notAll.length && !notAll.every(tag => actionTags.has(tag))) return false;
       return true;
     },
 
