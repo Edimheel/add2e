@@ -6,7 +6,7 @@
  * feuille ou le HUD résout immédiatement la capacité.
  * Compatible Foundry V13/V14/V15 — fenêtres via l’API commune ADD2E.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-08-07-canonical-weekly-resource-v3";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-08-11-canonical-source-class-item-v4";
 const ADD2E_PAUME_PROFILE_ID = "monk-quivering-palm";
 const ADD2E_PAUME_MIN_LEVEL = 13;
 const ADD2E_PAUME_TOUCH_WINDOW_ROUNDS = 3;
@@ -36,15 +36,6 @@ function a2ePaumeEsc(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-}
-
-function a2ePaumeClone(value) {
-  if (value === undefined || value === null) return value;
-  try { return foundry.utils.deepClone(value); }
-  catch (_error) {
-    try { return JSON.parse(JSON.stringify(value)); }
-    catch (_jsonError) { return value; }
-  }
 }
 
 function a2ePaumeServiceReady(service = globalThis.add2eCapabilitySpecialAttack) {
@@ -80,6 +71,29 @@ function a2ePaumeFeatureLevel(currentActor, currentFeature) {
     ?? currentFeature?._add2eClassLevel
   );
   return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
+}
+
+function a2ePaumeSourceClass(currentActor, currentFeature) {
+  const itemId = String(currentFeature?._add2eClassItemId ?? "").trim();
+  if (!itemId) throw new Error("Paume mortelle : ID de l’Item classe source absent du contexte de capacité.");
+  const item = currentActor?.items?.get?.(itemId) ?? null;
+  if (!item || String(item.type ?? "").toLowerCase() !== "classe") {
+    throw new Error("Paume mortelle : Item classe source introuvable sur l’acteur.");
+  }
+  const classKey = String(currentFeature?._add2eClassSlug ?? "").trim();
+  if (classKey !== "moine") {
+    throw new Error(`Paume mortelle : classe source canonique invalide (${classKey || "absente"}).`);
+  }
+  const tags = Array.isArray(item.system?.tags) ? item.system.tags.map(value => String(value ?? "").trim().toLowerCase()) : [];
+  if (!tags.includes("classe:moine")) {
+    throw new Error("Paume mortelle : l’Item classe source ne porte pas le tag canonique classe:moine.");
+  }
+  return {
+    item,
+    itemId: item.id,
+    itemUuid: item.uuid,
+    classKey
+  };
 }
 
 function a2ePaumeProfile(level) {
@@ -138,11 +152,8 @@ function a2ePaumeProfile(level) {
 }
 
 function a2ePaumeIsTemporaryItem(item) {
-  const flags = item?.flags?.add2e ?? {};
-  const profile = flags?.capabilitySpecialAttack ?? item?.system?.capabilitySpecialAttack ?? {};
-  return a2ePaumeNorm(profile?.id) === ADD2E_PAUME_PROFILE_ID
-    || a2ePaumeNorm(flags?.sourceCapacite) === "paume_mortelle"
-    || a2ePaumeNorm(item?.system?.sourceCapacite) === "paume_mortelle";
+  const profile = item?.flags?.add2e?.capabilitySpecialAttack ?? null;
+  return a2ePaumeNorm(profile?.id) === ADD2E_PAUME_PROFILE_ID;
 }
 
 function a2ePaumeTemporaryItem(currentActor) {
@@ -168,38 +179,6 @@ async function a2ePaumeDeleteItemIfPresent(currentActor, itemId, reason) {
   }
 }
 
-function a2ePaumeFeatureMatches(entry) {
-  const key = a2ePaumeNorm(`${entry?.name ?? entry?.label ?? entry?.title ?? entry?.nom ?? ""} ${entry?.on_use ?? entry?.onUse ?? entry?.script ?? ""}`);
-  return key.includes("paume_mortelle") || key.includes("paume_palpitante") || key.includes("moine_paume_mortelle");
-}
-
-async function a2ePaumeEnsureClassFeatureImage(currentActor, currentFeature = null) {
-  if (currentFeature && typeof currentFeature === "object") currentFeature.img = ADD2E_PAUME_IMG;
-  const paths = ["classFeatures", "activeClassFeatures", "activableClassFeatures", "classFeaturesActives", "capacitesActives", "capacitesActivables", "capacitesClasse"];
-  for (const classItem of Array.from(currentActor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe")) {
-    const updates = {};
-    for (const path of paths) {
-      const list = classItem.system?.[path];
-      if (!Array.isArray(list)) continue;
-      let changed = false;
-      const copy = a2ePaumeClone(list).map(entry => {
-        if (!entry || typeof entry !== "object" || !a2ePaumeFeatureMatches(entry)) return entry;
-        if (entry.img === ADD2E_PAUME_IMG) return entry;
-        changed = true;
-        return { ...entry, img: ADD2E_PAUME_IMG };
-      });
-      if (changed) updates[`system.${path}`] = copy;
-    }
-    if (Object.keys(updates).length) {
-      try {
-        await classItem.update(updates, { add2eInternal: true, add2eReason: "paume-mortelle-feature-image" });
-      } catch (error) {
-        console.warn("[ADD2E][MOINE][PAUME_MORTELLE][FEATURE_IMAGE_FAILED]", { actor: currentActor?.name, classItem: classItem.name, error });
-      }
-    }
-  }
-}
-
 function a2ePaumeCardHtml({ title, subtitle = "Capacité de classe", body = "", footer = "", img = ADD2E_PAUME_IMG } = {}) {
   return `
     <div class="add2e-chat-card add2e-card-capacite add2e-paume-mortelle-card" style="border:2px solid ${ADD2E_PAUME_COLOR};border-radius:12px;overflow:hidden;background:${ADD2E_PAUME_BG};color:#2f210d;font-family:var(--font-primary);box-shadow:0 0 0 1px rgba(80,45,20,.18);">
@@ -215,7 +194,7 @@ function a2ePaumeCardHtml({ title, subtitle = "Capacité de classe", body = "", 
     </div>`;
 }
 
-async function a2ePaumeChat(actorDocument, profile, title, body) {
+async function a2ePaumeChat(actorDocument, profile, title, body, sourceClass) {
   const buildChatCard = globalThis.add2eBuildChatCard;
   const createChatCard = globalThis.add2eCreateChatCard;
   if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
@@ -231,6 +210,9 @@ async function a2ePaumeChat(actorDocument, profile, title, body) {
     chatData: {
       flags: {
         add2e: {
+          sourceItemId: sourceClass.itemId,
+          sourceItemUuid: sourceClass.itemUuid,
+          sourceClassKey: sourceClass.classKey,
           sourceCapacite: "paume_mortelle",
           capabilityProfile: ADD2E_PAUME_PROFILE_ID,
           version: ADD2E_MOINE_PAUME_MORTELLE_VERSION,
@@ -249,8 +231,7 @@ if (!actor) {
   return false;
 }
 
-await a2ePaumeEnsureClassFeatureImage(actor, feature);
-
+const sourceClass = a2ePaumeSourceClass(actor, feature);
 const level = a2ePaumeFeatureLevel(actor, feature);
 if (level === null) {
   ui.notifications.error("Paume mortelle : niveau de Moine introuvable.");
@@ -361,9 +342,6 @@ const itemSystem = {
   ],
   effectTags: ["classe:moine", "capability:special-attack"],
   add2eAutoCreated: true,
-  sourceCapacite: "paume_mortelle",
-  sourceClasse: "moine",
-  niveauMoine: level,
   description: "Frappe préparée par la Paume mortelle. Elle ne cause aucun dégât ordinaire ; si le contact réussit contre une cible valable, la capacité prend effet immédiatement."
 };
 
@@ -375,8 +353,10 @@ const created = await actor.createEmbeddedDocuments("Item", [{
   flags: {
     add2e: {
       tags: ["classe:moine", "capability:special-attack"],
+      sourceItemId: sourceClass.itemId,
+      sourceItemUuid: sourceClass.itemUuid,
+      sourceClassKey: sourceClass.classKey,
       sourceCapacite: "paume_mortelle",
-      sourceClasse: "moine",
       sourceLevel: level,
       capabilitySpecialAttack: profile,
       capabilityTemporary: true,
@@ -410,7 +390,8 @@ await a2ePaumeChat(
   `<div><b>${a2ePaumeEsc(actor.name)}</b> concentre son énergie dans une Paume mortelle.</div>
    <div><b>Délai :</b> la frappe doit être portée dans les <b>${ADD2E_PAUME_TOUCH_WINDOW_ROUNDS} rounds</b>.</div>
    <div><b>Effet :</b> si le contact réussit contre une cible valable, la capacité prend effet immédiatement.</div>
-   <div><b>Usage :</b> tentative hebdomadaire consommée.</div>`
+   <div><b>Usage :</b> tentative hebdomadaire consommée.</div>`,
+  sourceClass
 );
 
 ui.notifications.info(`Paume mortelle prête : porte la frappe dans les ${ADD2E_PAUME_TOUCH_WINDOW_ROUNDS} rounds.`);
