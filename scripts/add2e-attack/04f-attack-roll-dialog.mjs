@@ -2,7 +2,7 @@
 // ADD2E — Dialogue d'attaque via l'API commune ADD2E.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via dialog-ui.mjs uniquement.
 
-const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-dialog-render-callback-v13";
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-rear-option-label-v14";
 
 globalThis.ADD2E_ATTACK_DIALOG_VERSION = ADD2E_ATTACK_DIALOG_VERSION;
 
@@ -207,7 +207,7 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
           </select>
           ${hasRearSpecial ? `<div style="${optionsStyle}">
             <div class="add2e-rear-specials"${rearHidden} style="display:flex;flex-direction:column;gap:4px;">
-              ${showBackstab ? `<label style="${checkStyle}" title="Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}"><input type="checkbox" id="add2e-backstab" style="${checkInputStyle}"><span>Attaque sournoise</span></label>` : ""}
+              ${showBackstab ? `<label style="${checkStyle}" title="Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}"><input type="checkbox" id="add2e-backstab" style="${checkInputStyle}"><span>Attaque sournoise / Frappe dans le dos</span></label>` : ""}
               ${showAssassination ? `<label style="${checkStyle}" title="Assassin uniquement · Dos uniquement · ${assassinationScore}% si l’attaque touche"><input type="checkbox" id="add2e-assassinat-confirm" style="${checkInputStyle}"><span>Assassinat</span></label>` : ""}
             </div>
           </div>` : ""}
