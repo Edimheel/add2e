@@ -418,7 +418,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       if (any.length && !any.some(tag => actionTags.has(tag))) return false;
       if (all.length && !all.every(tag => actionTags.has(tag))) return false;
       if (notAny.length && notAny.some(tag => actionTags.has(tag))) return false;
-      if (notAll.length && !notAll.every(tag => actionTags.has(tag))) return false;
+      if (notAll.length && notAll.every(tag => actionTags.has(tag))) return false;
       return true;
     },
 
