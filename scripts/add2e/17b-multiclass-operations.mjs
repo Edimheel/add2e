@@ -41,59 +41,47 @@ function itemIds(items) {
   return (items ?? []).map(item => item?.id).filter(Boolean);
 }
 
-function classNameKeys(classDoc) {
-  const system = classDoc?.system ?? {};
-  return [classDoc?.name, system.nom, system.name, system.label, system.slug, classSlug(classDoc)].map(norm).filter(Boolean);
-}
-
-function sourceClassKeys(classDocs) {
+function sourceDocumentKeys(documents) {
   const ids = new Set();
   const uuids = new Set();
-  const slugs = new Set();
-  const names = new Set();
-  for (const doc of classDocs ?? []) {
-    if (doc?.id) ids.add(String(doc.id));
-    if (doc?.uuid) uuids.add(String(doc.uuid));
-    const slug = classSlug(doc);
-    if (slug) slugs.add(slug);
-    for (const name of classNameKeys(doc)) names.add(name);
+  for (const document of documents ?? []) {
+    const id = String(document?.id ?? "").trim();
+    const uuid = String(document?.uuid ?? "").trim();
+    if (id) ids.add(id);
+    if (uuid) uuids.add(uuid);
   }
-  return { ids, uuids, slugs, names };
+  return { ids, uuids };
 }
 
-function itemBelongsToRemovedClass(item, keys) {
+function sourcePointerMatches(keys, { ids = [], uuids = [], origin = "" } = {}) {
+  if ((ids ?? []).some(value => {
+    const id = String(value ?? "").trim();
+    return id && keys.ids.has(id);
+  })) return true;
+  if ((uuids ?? []).some(value => {
+    const uuid = String(value ?? "").trim();
+    return uuid && keys.uuids.has(uuid);
+  })) return true;
+  const originValue = String(origin ?? "").trim();
+  if (!originValue) return false;
+  return [...keys.uuids].some(uuid => originValue === uuid || originValue.startsWith(`${uuid}.`));
+}
+
+function itemBelongsToSources(item, keys) {
   const flags = item?.flags?.add2e ?? {};
-  const sourceId = String(flags.autoGrantedByClassId ?? flags.sourceClassId ?? flags.sourceItemId ?? flags.classId ?? "");
-  const sourceSlug = norm(flags.autoGrantedByClass ?? flags.sourceClassSlug ?? flags.sourceClasse ?? flags.sourceClass ?? flags.classSlug ?? "");
-  return (sourceId && keys.ids.has(sourceId)) || (sourceSlug && keys.slugs.has(sourceSlug));
+  return sourcePointerMatches(keys, {
+    ids: [flags.autoGrantedByClassId, flags.sourceItemId],
+    uuids: [flags.sourceItemUuid]
+  });
 }
 
-function effectClassLabels(effect) {
+function effectBelongsToSources(effect, keys) {
   const flags = effect?.flags?.add2e ?? {};
-  return [effect?.name, effect?.label, flags.autoGrantedByClass, flags.sourceClassName, flags.sourceItemName, flags.sourceClass, flags.sourceClasse, flags.className, flags.classe].map(norm).filter(Boolean);
-}
-
-function effectReferencesClassName(effect, keys) {
-  const names = effectClassLabels(effect);
-  return names.some(value => keys.names.has(value) || [...keys.names].some(name => value.startsWith(`${name}_`) || value.endsWith(`_${name}`) || value.includes(`_${name}_`)));
-}
-
-function effectBelongsToRemovedClass(effect, keys) {
-  const flags = effect?.flags?.add2e ?? {};
-  const origin = String(effect?.origin ?? "");
-  const sourceId = String(flags.sourceItemId ?? flags.sourceClassId ?? flags.classId ?? flags.sourceId ?? "");
-  const sourceSlug = norm(flags.sourceClasse ?? flags.sourceClass ?? flags.classSlug ?? flags.classe ?? flags.className ?? "");
-  const sourceType = norm(flags.sourceType ?? flags.source_type ?? flags.type ?? flags.kind ?? "");
-  const exactLabel = effectClassLabels(effect).some(value => keys.names.has(value));
-  const classTaggedLabel = ["classe", "class"].includes(sourceType) && effectReferencesClassName(effect, keys);
-  const originMatches = [...keys.uuids].some(uuid => uuid && (origin === uuid || origin.startsWith(`${uuid}.`)))
-    || [...keys.ids].some(id => id && (origin.includes(`.Item.${id}.`) || origin.endsWith(`.Item.${id}`)));
-  return originMatches || (sourceId && keys.ids.has(sourceId)) || (sourceSlug && keys.slugs.has(sourceSlug)) || exactLabel || classTaggedLabel;
-}
-
-function isManagedClassPassiveEffect(effect) {
-  const flags = effect?.flags?.add2e ?? {};
-  return flags.autoClassPassiveEffect === true || flags.classPassiveFeatureEffect === true;
+  return sourcePointerMatches(keys, {
+    ids: [flags.sourceItemId, flags.sourceClassItemId],
+    uuids: [flags.sourceItemUuid],
+    origin: effect?.origin
+  });
 }
 
 function isMissingEmbeddedDocumentError(error) {
@@ -217,20 +205,39 @@ function isLearnedArcaneSpellRemovedWithClass(item, purgeLists, retainedLists) {
 }
 
 async function purgeClassBoundContent(actor, classDocs, reason) {
-  if (!actor || !classDocs?.length) return { spells: 0, effects: 0, arcaneLists: [] };
-  const keys = sourceClassKeys(classDocs);
+  if (!actor || !classDocs?.length) return { items: 0, effects: 0, arcaneLists: [] };
+  const classKeys = sourceDocumentKeys(classDocs);
+  const classIds = new Set(itemIds(classDocs).map(String));
   const { retainedLists, purgeLists } = arcaneListsToPurge(actor, classDocs);
-  const spellIds = actor.items.filter(item => {
-    if (String(item?.type ?? "").toLowerCase() !== "sort") return false;
-    const sourceBound = itemBelongsToRemovedClass(item, keys);
-    const retained = isRegularSpellItem(item) && spellStillAccessibleFromRetainedClass(item, retainedLists);
-    if (sourceBound && !retained) return true;
-    return isLearnedArcaneSpellRemovedWithClass(item, purgeLists, retainedLists);
-  }).map(item => item.id).filter(Boolean);
-  const effectIds = actor.effects.filter(effect => !isManagedClassPassiveEffect(effect) && effectBelongsToRemovedClass(effect, keys)).map(effect => effect.id).filter(Boolean);
+  const itemIdsToDelete = new Set();
+
+  for (const item of actor.items ?? []) {
+    if (!item?.id || classIds.has(String(item.id))) continue;
+    const type = String(item.type ?? "").toLowerCase();
+    const sourceBound = itemBelongsToSources(item, classKeys);
+    if (sourceBound) {
+      const retainedSharedSpell = type === "sort"
+        && isRegularSpellItem(item)
+        && spellStillAccessibleFromRetainedClass(item, retainedLists);
+      if (!retainedSharedSpell) itemIdsToDelete.add(item.id);
+    }
+    if (type === "sort" && isLearnedArcaneSpellRemovedWithClass(item, purgeLists, retainedLists)) {
+      itemIdsToDelete.add(item.id);
+    }
+  }
+
+  const dependentItems = [...itemIdsToDelete]
+    .map(id => actor.items?.get?.(id) ?? null)
+    .filter(Boolean);
+  const effectKeys = sourceDocumentKeys([...(classDocs ?? []), ...dependentItems]);
+  const effectIds = Array.from(actor.effects ?? [])
+    .filter(effect => effectBelongsToSources(effect, effectKeys))
+    .map(effect => effect.id)
+    .filter(Boolean);
+
   const effectCount = await deleteLiveEmbeddedDocuments(actor, "ActiveEffect", effectIds, { add2eReason: reason });
-  const spellCount = await deleteLiveEmbeddedDocuments(actor, "Item", spellIds, { add2eReason: reason });
-  return { spells: spellCount, effects: effectCount, arcaneLists: [...purgeLists] };
+  const itemCount = await deleteLiveEmbeddedDocuments(actor, "Item", [...itemIdsToDelete], { add2eReason: reason });
+  return { items: itemCount, effects: effectCount, arcaneLists: [...purgeLists] };
 }
 
 function normalizeProgression(classDoc, state, raceData) {
