@@ -76,18 +76,19 @@ function sectionHtml(title, tiles) {
   return `<div style="display:grid;gap:6px;"><div style="font-weight:900;color:#5b3512;text-transform:uppercase;font-size:.78rem;letter-spacing:.04em;">${esc(title)}</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:7px;">${tiles.join("\n")}</div></div>`;
 }
 
-function replacementClassNames(actor, droppedClassData, replaceSlug) {
-  return classItems(actor)
-    .filter(cls => classSlug(cls) !== replaceSlug)
-    .map(cls => cls.name)
-    .concat(itemLabel(droppedClassData, "Classe"))
-    .filter((name, index, arr) => arr.findIndex(other => norm(other) === norm(name)) === index);
+function replacementClassSlugs(actor, droppedClassData, replaceSlug) {
+  return [...new Set([
+    ...classItems(actor)
+      .filter(cls => classSlug(cls) !== replaceSlug)
+      .map(cls => classSlug(cls)),
+    classSlug(droppedClassData)
+  ])];
 }
 
 function raceCompatibleForReplacement(actor, droppedClassData, replaceSlug, raceData) {
-  const names = replacementClassNames(actor, droppedClassData, replaceSlug);
-  if (names.map(norm).filter(Boolean).length <= 1) return true;
-  return raceAllowsClassSet(raceData, names)
+  const slugs = replacementClassSlugs(actor, droppedClassData, replaceSlug);
+  if (slugs.length <= 1) return true;
+  return raceAllowsClassSet(raceData, slugs)
     && raceMatchesClassRules(raceData, droppedClassData)
     && classPrerequisitesOk(actor, droppedClassData, raceData, { notify: false });
 }
