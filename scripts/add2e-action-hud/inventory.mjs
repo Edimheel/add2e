@@ -274,6 +274,13 @@ function thiefSkillArtwork(skill) {
   if (!key) throw new Error("La clé canonique de la compétence de voleur est absente.");
   return `systems/add2e/assets/icones/capacites/${key.replaceAll("_", "-")}.webp`;
 }
+function classFeatureArtwork(actor, feature) {
+  const explicit = String(feature?.img ?? "").trim();
+  if (explicit) return explicit;
+  const classItemId = String(feature?._add2eClassItemId ?? "").trim();
+  const classItem = classItemId ? actor?.items?.get?.(classItemId) ?? null : null;
+  return classItem?.img || "icons/svg/aura.svg";
+}
 function classFeatureResourceStates(actor, feature) {
   const resolver = globalThis.add2eGetClassFeatureUsageResource;
   if (typeof resolver !== "function") {
@@ -324,6 +331,7 @@ export function featureRows(actor) {
     }
     const resource = classFeatureResourceMeta(actor, feature);
     const title = resource.available ? `Utiliser ${label}` : `${label} n’est plus disponible pour cette période`;
-    return `<div class="row compact"><div><div class="title">${esc(label)}</div><div class="meta"><span>Capacité de classe</span>${resource.html}</div></div><button type="button" class="act" data-action="use-feature" data-feature-index="${index}" title="${esc(title)}"${resource.available ? "" : " disabled aria-disabled=\"true\""}>Utiliser</button></div>`;
+    const image = classFeatureArtwork(actor, feature);
+    return `<div class="row capability-row"><button type="button" class="img-act capability-icon" data-action="use-feature" data-feature-index="${index}" title="${esc(title)}" aria-label="${esc(title)}"${resource.available ? "" : " disabled aria-disabled=\"true\""}><img src="${esc(image)}" alt="" aria-hidden="true"></button><div><div class="title">${esc(label)}</div><div class="meta"><span>Capacité de classe</span>${resource.html}</div></div></div>`;
   }).join("");
 }
