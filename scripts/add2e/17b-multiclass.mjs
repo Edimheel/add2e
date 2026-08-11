@@ -20,7 +20,6 @@ import {
 } from "./17b-multiclass-rules.mjs";
 import {
   cleanupAfterMonoclassReplace,
-  migrateLegacyMulticlassActor,
   recalcActor,
   refreshMonoclassSummary,
   replaceClassInMulticlass
@@ -55,9 +54,20 @@ function installClassFeatureGlobals() {
   globalThis.add2eIsFeatureActivable = isFeatureActivable;
 }
 
+function requireActorClassProgression(actor) {
+  const docs = classItems(actor);
+  for (const classDoc of docs) {
+    const progression = classProgression(classDoc);
+    if (!progression.hasLevel || !progression.hasXp) {
+      throw new Error(`Item de classe « ${classDoc?.name ?? classDoc?.id ?? "inconnu"} » sans system.niveau/system.xp canonique.`);
+    }
+  }
+  return docs;
+}
+
 async function syncMulticlassCombatSummary(actor, { reason = "multiclass-combat-summary" } = {}) {
   if (!multiclassEnabled(actor)) return false;
-  const rows = classItems(actor).map(item => ({ item, row: classRow(item) })).filter(entry => entry.row);
+  const rows = requireActorClassProgression(actor).map(item => ({ item, row: classRow(item) })).filter(entry => entry.row);
   if (!rows.length) return false;
   const thacos = rows.map(entry => Number(entry.row?.thac0 ?? entry.row?.thaco)).filter(Number.isFinite);
   const saves = rows.map(entry => entry.row?.savingThrows ?? entry.row?.sauvegardes ?? entry.row?.saves).filter(Array.isArray);
@@ -102,15 +112,17 @@ function readPath(changes, dottedPath) {
   return foundry.utils.getProperty(changes ?? {}, dottedPath);
 }
 
-async function migrateAndRecalculate(actor) {
+async function recalculateFromClassItems(actor) {
   if (!actor || actor.type !== "personnage") return null;
-  const count = classItems(actor).length;
-  if (count === 1) return refreshMonoclassSummary(actor, "monoclass-item-progression-summary");
-  if (count <= 1) return null;
-  const migration = await migrateLegacyMulticlassActor(actor);
-  if (migration?.ok === false) return null;
+  const docs = classItems(actor);
+  if (docs.length === 1) {
+    requireActorClassProgression(actor);
+    return refreshMonoclassSummary(actor, "monoclass-item-progression-summary");
+  }
+  if (docs.length <= 1) return null;
+  requireActorClassProgression(actor);
   const result = await recalcActor(actor);
-  await syncMulticlassCombatSummary(actor, { reason: "multiclass-migration-summary" });
+  await syncMulticlassCombatSummary(actor, { reason: "multiclass-item-progression-summary" });
   return result;
 }
 
@@ -120,7 +132,7 @@ Hooks.once("ready", () => {
   installClassFeatureGlobals();
   if (!game.user?.isGM) return;
   for (const actor of game.actors?.filter(entry => entry.type === "personnage" && classItems(entry).length) ?? []) {
-    migrateAndRecalculate(actor).catch(error => warn("[READY_MIGRATION_ERROR]", { actor: actor.name, error }));
+    recalculateFromClassItems(actor).catch(error => warn("[READY_CLASS_PROGRESSION_ERROR]", { actor: actor.name, error }));
   }
 });
 
@@ -161,7 +173,7 @@ Hooks.on("createItem", item => {
   const actor = item?.parent;
   if (actor?.documentName !== "Actor" || actor.type !== "personnage") return;
   if (String(item.type ?? "").toLowerCase() !== "classe") return;
-  setTimeout(() => migrateAndRecalculate(actor).catch(error => warn("[CREATE_CLASS_MIGRATION_ERROR]", error)), 0);
+  setTimeout(() => recalculateFromClassItems(actor).catch(error => warn("[CREATE_CLASS_PROGRESSION_ERROR]", error)), 0);
 });
 
 Hooks.on("updateItem", (item, _changes, options = {}) => {
@@ -185,7 +197,7 @@ Hooks.on("deleteItem", item => {
   if (actor?.documentName !== "Actor" || actor.type !== "personnage" || String(item.type ?? "").toLowerCase() !== "classe") return;
   setTimeout(() => {
     const remaining = classItems(actor);
-    if (remaining.length > 1) migrateAndRecalculate(actor).catch(error => warn("[DELETE_CLASS_RECALC_ERROR]", error));
+    if (remaining.length > 1) recalculateFromClassItems(actor).catch(error => warn("[DELETE_CLASS_RECALC_ERROR]", error));
     else if (remaining.length === 1) cleanupAfterMonoclassReplace(actor, remaining[0], null, actor.sheet)
       .catch(error => warn("[DELETE_CLASS_MONO_ERROR]", error));
   }, 0);
@@ -204,7 +216,6 @@ globalThis.add2eMulticlassClassRaceMaxLevel = classRaceMaxLevel;
 globalThis.add2eMulticlassDirectFieldSync = updateDirectMulticlassField;
 globalThis.add2eCleanMonoclassAfterReplace = cleanupAfterMonoclassReplace;
 globalThis.add2eReplaceClassInMulticlass = replaceClassInMulticlass;
-globalThis.add2eMigrateLegacyMulticlassActor = migrateLegacyMulticlassActor;
 globalThis.add2eSyncMulticlassCombatSummary = syncMulticlassCombatSummary;
 
 console.log("[ADD2E][MULTICLASSE][ITEM_PROGRESSION_READY]", MULTICLASS_VERSION);
