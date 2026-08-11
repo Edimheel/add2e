@@ -4,7 +4,6 @@
 
 import {
   INTERNAL,
-  canonicalClassState,
   classItems,
   classProgression,
   classProgressionUpdate,
@@ -19,12 +18,10 @@ import {
 } from "./17b-multiclass-core.mjs";
 import {
   canonicalMulticlassEntries,
-  canonicalStateRecord,
   classPrerequisitesOk,
   classRaceMaxLevel,
   classTitleForLevel,
   currentRaceOrCompatibleAlternatives,
-  legacyMulticlassMigrationPlan,
   levelForClassXp,
   minXpForClassLevel,
   monoClassCleanupPayload,
@@ -37,8 +34,6 @@ import {
 } from "./17b-multiclass-rules.mjs";
 import { dialogAlert } from "./17b-multiclass-dialogs.mjs";
 
-const migrationLocks = new Set();
-const migrationWarnings = new Set();
 const ARCANE_LEARNED_SPELL_LISTS = new Set(["magicien", "illusionniste"]);
 
 function itemIds(items) {
@@ -305,48 +300,10 @@ function monoProgressionPayload(actor, classDoc, state) {
   };
 }
 
-function migrationWarningKey(actor) { return String(actor?.uuid ?? actor?.id ?? ""); }
-
-async function notifyMigrationBlocked(actor, plan) {
-  const key = migrationWarningKey(actor);
-  if (migrationWarnings.has(key)) return;
-  migrationWarnings.add(key);
-  const names = (plan?.unresolved ?? []).map(entry => entry.name).filter(Boolean).join(", ") || "classe inconnue";
-  warn("[MIGRATION_BLOCKED]", { actor: actor?.name, unresolved: plan?.unresolved ?? [] });
-  if (game.user?.isGM) ui.notifications?.error?.(`Multiclassage non migré pour ${actor.name} : progression introuvable pour ${names}.`);
-}
-
-export async function migrateLegacyMulticlassActor(actor) {
-  if (!actor || actor.type !== "personnage" || classItems(actor).length <= 1) return null;
-  if (migrationLocks.has(actor.id)) return null;
-  migrationLocks.add(actor.id);
-  try {
-    const plan = legacyMulticlassMigrationPlan(actor);
-    if (!plan.ok) {
-      await notifyMigrationBlocked(actor, plan);
-      return { ok: false, plan };
-    }
-    const docs = classItems(actor);
-    const normalized = plan.entries.map(state => {
-      const doc = docs.find(candidate => String(candidate.id) === String(state.itemId)) ?? null;
-      return { ...state, doc, ...normalizeProgression(doc, state, systemRace(actor)) };
-    });
-    await writeClassProgression(actor, normalized, "multiclass-item-progression-migration");
-    const payload = multiclassUpdatePayload(actor);
-    if (payload) await actor.update(payload, quietMutationOptions({ add2eReason: "multiclass-item-progression-summary" }));
-    return { ok: true, plan, payload };
-  } finally { migrationLocks.delete(actor.id); }
-}
-
 export async function ensureCanonicalMulticlassState(actor) {
   if (!actor || actor.type !== "personnage" || !multiclassEnabled(actor)) return null;
-  const missing = classItems(actor).some(item => {
-    const state = canonicalClassState(actor, item);
-    return !state?.hasLevel || !state?.hasXp;
-  });
-  if (missing) {
-    const result = await migrateLegacyMulticlassActor(actor);
-    if (!result?.ok) return null;
+  for (const classDoc of classItems(actor)) {
+    requireClassProgression(classDoc, "multiclassage canonique");
   }
   return canonicalMulticlassEntries(actor);
 }
