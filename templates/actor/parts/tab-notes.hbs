@@ -3,10 +3,14 @@
           <div class="a2e-panel">
             <h2>Description de race</h2>
             <div class="a2e-panel-body a2e-small">
-              {{#if actor.system.details_race.description_longue}}
-                {{{actor.system.details_race.description_longue}}}
+              {{#if raceIdentity}}
+                {{#if raceIdentity.descriptionLongue}}
+                  {{{raceIdentity.descriptionLongue}}}
+                {{else}}
+                  {{{raceIdentity.description}}}
+                {{/if}}
               {{else}}
-                {{{actor.system.details_race.description}}}
+                <p class="a2e-muted">Aucune race.</p>
               {{/if}}
             </div>
           </div>
@@ -14,7 +18,14 @@
           <div class="a2e-panel">
             <h2>Description de classe</h2>
             <div class="a2e-panel-body a2e-small">
-              {{{actor.system.details_classe.description}}}
+              {{#if classIdentityRows.length}}
+                {{#each classIdentityRows as |cls|}}
+                  {{#if ../classProgression.isMulticlass}}<h3>{{cls.name}}</h3>{{/if}}
+                  {{{cls.description}}}
+                {{/each}}
+              {{else}}
+                <p class="a2e-muted">Aucune classe.</p>
+              {{/if}}
             </div>
           </div>
         </div>
