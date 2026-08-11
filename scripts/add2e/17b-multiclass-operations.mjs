@@ -41,6 +41,24 @@ function itemIds(items) {
   return (items ?? []).map(item => item?.id).filter(Boolean);
 }
 
+function actorHasMagicienClass(actor) {
+  return classItems(actor).some(classDoc => classSlug(classDoc) === "magicien");
+}
+
+function actorHasCanonicalFamiliar(actor) {
+  const link = actor?.flags?.add2e?.familiar ?? null;
+  return !!(link && typeof link === "object" && link.actorId && link.linkId);
+}
+
+async function cleanupFamiliarAfterClassMutation(actor, reason) {
+  if (!actor || actorHasMagicienClass(actor) || !actorHasCanonicalFamiliar(actor)) return false;
+  const dissolve = globalThis.add2eDissolveFamiliar;
+  if (typeof dissolve !== "function") {
+    throw new Error("Le gestionnaire canonique ADD2E du familier est indisponible.");
+  }
+  return dissolve(actor, { reason });
+}
+
 function sourceDocumentKeys(documents) {
   const ids = new Set();
   const uuids = new Set();
@@ -356,6 +374,7 @@ export async function cleanupAfterMonoclassReplace(actor, keepClassDoc, keepStat
   await deleteLiveEmbeddedDocuments(actor, "Item", itemIds(unwanted), { add2eReason: "multiclass-monoclass-delete-classes" });
   const payload = { ...monoClassCleanupPayload(), ...monoProgressionPayload(actor, keepClassDoc, desired) };
   await actor.update(payload, quietMutationOptions({ add2eReason: "multiclass-monoclass-finalize" }));
+  await cleanupFamiliarAfterClassMutation(actor, "multiclass-monoclass-finalize");
   try { await syncClassSpells(actor, keepClassDoc, "multiclass-mono-class-sync"); } catch (error) { warn("[MONO_SPELL_SYNC_ERROR]", { actor: actor.name, error }); }
   renderOperationSheet(sheet, actor);
   return true;
@@ -476,6 +495,7 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
   const [created] = await actor.createEmbeddedDocuments("Item", [data], quietMutationOptions({ add2eReason: "multiclass-replace-create-class" }));
   if (!created) throw new Error("Création de la classe de remplacement impossible.");
   await refreshMulticlassSummary(actor, "multiclass-replace-finalize");
+  await cleanupFamiliarAfterClassMutation(actor, "multiclass-replace-finalize");
   try { await syncClassSpells(actor, created, "multiclass-replace-class-sync"); } catch (error) { warn("[SPELL_SYNC_REPLACE_ERROR]", { actor: actor.name, className: created.name, error }); }
   renderOperationSheet(sheet, actor);
   ui.notifications.info(`Classe remplacée : ${replaced.name} → ${created.name}.`);
