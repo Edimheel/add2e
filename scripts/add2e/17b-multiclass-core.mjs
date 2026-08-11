@@ -2,7 +2,7 @@
 // Source de vérité : chaque Item embarqué de type "classe".
 // La définition et la progression (system.niveau / system.xp) vivent ensemble.
 
-export const MULTICLASS_VERSION = "2026-08-11-canonical-class-tags-v3";
+export const MULTICLASS_VERSION = "2026-08-11-canonical-race-tags-v4";
 export const MULTICLASS_SCHEMA = 3;
 export const INTERNAL = "add2eMulticlassInternal";
 export const TAG = "[ADD2E][MULTICLASSE]";
@@ -60,18 +60,27 @@ export function itemLabel(data, fallback = "Item") {
   return String(data?.name ?? sys.label ?? sys.nom ?? sys.name ?? fallback).trim() || fallback;
 }
 
-export function classSlug(data) {
+function canonicalIdentityFromTag(data, prefix, label) {
   const sys = data?.system ?? data ?? {};
   const tags = Array.isArray(sys.tags) ? sys.tags : [];
-  const classTag = tags.map(norm).find(tag => tag.startsWith("classe_"));
-  if (!classTag) {
-    throw new Error(`Item de classe « ${data?.name ?? data?.id ?? "inconnu"} » sans tag canonique classe:*.`);
+  const normalizedPrefix = `${norm(prefix)}_`;
+  const identityTag = tags.map(norm).find(tag => tag.startsWith(normalizedPrefix));
+  if (!identityTag) {
+    throw new Error(`Item ${label} « ${data?.name ?? data?.id ?? "inconnu"} » sans tag canonique ${prefix}:*.`);
   }
-  const slug = classTag.slice("classe_".length);
+  const slug = identityTag.slice(normalizedPrefix.length);
   if (!slug) {
-    throw new Error(`Item de classe « ${data?.name ?? data?.id ?? "inconnu"} » avec tag classe:* invalide.`);
+    throw new Error(`Item ${label} « ${data?.name ?? data?.id ?? "inconnu"} » avec tag ${prefix}:* invalide.`);
   }
   return slug;
+}
+
+export function classSlug(data) {
+  return canonicalIdentityFromTag(data, "classe", "de classe");
+}
+
+export function raceSlug(data) {
+  return canonicalIdentityFromTag(data, "race", "race");
 }
 
 export function classItems(actor) {
@@ -90,18 +99,17 @@ export function classItem(actor, itemOrSlug) {
 }
 
 export function raceItem(actor) {
-  return actor?.items?.find?.(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+  const contents = actor?.items?.contents ?? Array.from(actor?.items ?? []);
+  const races = contents.filter(item => String(item?.type ?? "").toLowerCase() === "race");
+  if (races.length > 1) {
+    throw new Error(`L’acteur « ${actor?.name ?? actor?.id ?? "inconnu"} » possède plusieurs Items race.`);
+  }
+  return races[0] ?? null;
 }
 
 export function systemRace(actor, override = null) {
   if (override) return override;
-  const item = raceItem(actor);
-  if (item) return item;
-  const sys = actor?.system ?? {};
-  return {
-    name: sys.race ?? sys.details_race?.label ?? sys.details_race?.name ?? "Race",
-    system: sys.details_race ?? {}
-  };
+  return raceItem(actor);
 }
 
 function exactInteger(value, minimum = 0) {
