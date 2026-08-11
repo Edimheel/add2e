@@ -69,6 +69,18 @@ function add2eSheetSavingThrowEngine() {
   return engine;
 }
 
+function add2eSheetClassEquipmentAllowed(actor, item, kind) {
+  const getClassItems = globalThis.add2eGetActorClassItems;
+  const checkEquipment = globalThis.add2eCheckEquipmentAllowedForClass;
+  if (typeof getClassItems !== "function" || typeof checkEquipment !== "function") {
+    throw new Error("Le propriétaire canonique ADD2E des restrictions d’équipement est indisponible pour la feuille.");
+  }
+  if (String(actor?.type ?? "").toLowerCase() === "monster") return true;
+  const classes = getClassItems(actor);
+  if (!Array.isArray(classes) || !classes.length) return true;
+  return checkEquipment(actor, item, kind)?.ok === true;
+}
+
 function add2eSheetSaveSourceLabel(resolution) {
   const selected = resolution?.targetResolution?.selected;
   if (selected?.kind === "class") {
@@ -256,6 +268,7 @@ function add2eSheetWeaponRows(actor, weapons, thaco, engine) {
       name: weapon.name,
       img: weapon.img,
       equipped: engine.itemEquipped(weapon),
+      classAllowed: add2eSheetClassEquipmentAllowed(actor, weapon, "arme"),
       damage: add2eSheetDisplayDamage(damageSource),
       damageSourceName: damageSource?.name ?? weapon.name,
       type: String(weapon.system?.type_degats ?? ""),
@@ -296,7 +309,7 @@ function add2eSheetWeaponRows(actor, weapons, thaco, engine) {
   });
 }
 
-function add2eSheetArmorRows(armors, armorClass, defenseRows, engine) {
+function add2eSheetArmorRows(actor, armors, armorClass, defenseRows, engine) {
   return armors.map(armor => {
     const contributions = defenseRows.filter(row => row.sourceId === String(armor.id));
     const selectedAsBase = String(armorClass?.selectedArmor?.id ?? "") === String(armor.id);
@@ -308,6 +321,7 @@ function add2eSheetArmorRows(armors, armorClass, defenseRows, engine) {
       name: armor.name,
       img: armor.img,
       equipped: engine.itemEquipped(armor),
+      classAllowed: add2eSheetClassEquipmentAllowed(actor, armor, "armure"),
       selectedAsBase,
       baseAc: Number.isFinite(baseAc) ? baseAc : "—",
       canonicalDelta: contributions.reduce((total, row) => total + Number(row.numericValue || 0), 0),
@@ -334,7 +348,7 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys }) {
   const thaco = add2eSheetResolveThaco(actor, transformation);
   const defenseRows = add2eSheetDefenseRows(armorClass);
   const weaponRows = add2eSheetWeaponRows(actor, data.listeArmes, thaco, engine);
-  const armorRows = add2eSheetArmorRows(data.listeArmures, armorClass, defenseRows, engine);
+  const armorRows = add2eSheetArmorRows(actor, data.listeArmures, armorClass, defenseRows, engine);
   const monkMartial = armorClass.monk ?? null;
 
   data.weaponRows = weaponRows;
