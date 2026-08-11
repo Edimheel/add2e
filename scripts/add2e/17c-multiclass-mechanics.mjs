@@ -3,9 +3,9 @@
 // Le calcul des PV reçoit directement un Actor et ne dépend d'aucune feuille.
 // Compatible Foundry V13/V14/V15.
 
-import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
+import { classItems as coreClassItems, classProgression, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-08-10-canonical-hit-point-mutation-v14-native-sheet-integration";
+const VERSION = "2026-08-11-canonical-class-item-progression-v15";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 const hitPointQueues = new Map();
@@ -19,7 +19,7 @@ const n = (value, fallback = 0) => {
 };
 const classes = actor => coreClassItems(actor);
 const hasClasses = actor => actor?.type === "personnage" && classes(actor).length > 0;
-const keyFor = entry => classSlug(entry?.item) || String(entry?.itemId ?? "");
+const keyFor = entry => classSlug(entry?.item);
 
 function same(left, right) {
   if (left === right) return true;
@@ -136,6 +136,20 @@ function progressionLines(entries) {
   }));
 }
 
+function classDetailsForSummary(entry) {
+  const details = foundry.utils.deepClone(entry?.system ?? {}) ?? {};
+  delete details.niveau;
+  delete details.xp;
+  return {
+    ...details,
+    name: entry?.name ?? "",
+    label: entry?.system?.label ?? entry?.name ?? "",
+    slug: entry?.slug ?? "",
+    sourceItemId: entry?.itemId ?? null,
+    sourceItemUuid: entry?.item?.uuid ?? null
+  };
+}
+
 function summaryFromEntries(actor, entries) {
   if (!entries.length) return null;
   const multi = entries.length > 1;
@@ -166,14 +180,7 @@ function summaryFromEntries(actor, entries) {
       classe: label,
       details_classe: multi
         ? { label, name: label, multiclass: true, source: "class-items" }
-        : {
-          ...foundry.utils.deepClone(entries[0].system ?? {}),
-          name: entries[0].name,
-          label: entries[0].system?.label ?? entries[0].name,
-          slug: entries[0].slug,
-          sourceItemId: entries[0].itemId,
-          sourceItemUuid: entries[0].item?.uuid
-        },
+        : classDetailsForSummary(entries[0]),
       classe_img: multi ? "" : entries[0].item?.img ?? "",
       spellcasting: combinedSpellcasting(entries),
       niveau: displayLevel,
@@ -231,7 +238,7 @@ function applySummaryToView(data, summary) {
   data.progressionCourante = progression;
   if (data.combatDefense && summary.thac0 !== null) data.combatDefense.thaco = summary.thac0;
   data.canExceptionalStrength = Number(system.force ?? 0) === 18
-    && summary.lines.some(entry => ["guerrier", "paladin", "rodeur", "ranger"].includes(entry.slug));
+    && summary.lines.some(entry => ["guerrier", "paladin", "ranger"].includes(entry.slug));
   return data;
 }
 
@@ -253,22 +260,15 @@ async function ensureCanonicalClassProgression(actor) {
   if (docs.length > 1) {
     const migrate = globalThis.add2eMigrateLegacyMulticlassActor;
     const result = typeof migrate === "function" ? await migrate(actor) : null;
-    return result?.ok === true;
+    if (result?.ok !== true) return false;
+    return docs.every(item => {
+      const state = classProgression(item);
+      return state.hasLevel && state.hasXp;
+    });
   }
 
   const classDoc = docs[0];
-  const update = classProgressionUpdate(classDoc, {
-    level: Math.max(1, Math.floor(n(actor.system?.niveau, 1))),
-    xp: Math.max(0, Math.floor(n(actor.system?.xp, 0)))
-  });
-  if (!update) return false;
-  await actor.updateEmbeddedDocuments("Item", [update], {
-    add2eInternal: true,
-    add2eMulticlassInternal: true,
-    add2eReason: "single-class-item-progression-migration",
-    render: false
-  });
-  return true;
+  throw new Error(`Item de classe « ${classDoc?.name ?? classDoc?.id ?? "inconnu"} » sans system.niveau/system.xp canonique.`);
 }
 
 async function syncClassProgressionSummary(actor, { reason = "class-item-progression-summary" } = {}) {
@@ -310,7 +310,7 @@ function hitDieFor(entry) {
 }
 
 function isWarriorEntry(entry) {
-  return ["guerrier", "paladin", "ranger", "rodeur"].includes(String(entry?.slug ?? ""));
+  return ["guerrier", "paladin", "ranger"].includes(String(entry?.slug ?? ""));
 }
 
 function constitutionHitPointBonus(actor, entries = []) {
@@ -743,7 +743,6 @@ globalThis.add2eRecalculateHitPoints = add2eRecalculateHitPoints;
 globalThis.add2eCalculateHitPointState = calculateHitPointState;
 globalThis.add2eGetLastHitPointResolution = getLastHitPointResolution;
 globalThis.add2eGetHitPointCurrentBase = actor => getHitPointCurrentBase(actor).value;
-globalThis.add2eSyncMulticlassCombatSummary = (actor, options = {}) => syncClassProgressionSummary(actor, options);
 globalThis.add2eMulticlassClassEntries = entriesFor;
 globalThis.add2eApplyMulticlassProgressionToSheet = applyClassProgressionToSheet;
 globalThis.add2eApplyClassProgressionToSheet = applyClassProgressionToSheet;
