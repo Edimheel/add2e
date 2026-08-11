@@ -1,10 +1,15 @@
 // scripts/add2e-attack/03-attack-rules.mjs
 // ADD2E — Règles et helpers de résolution d’attaque.
-// Version : 2026-08-11-canonical-thief-rear-combat-v3
+// Version : 2026-08-11-canonical-class-rear-combat-v4
 
 import {
   add2eAttackComputeCharacterDisplayedCA
 } from "./04d-attack-roll-defense.mjs";
+import {
+  classItems,
+  classProgression,
+  classSlug
+} from "../add2e/17b-multiclass-core.mjs";
 
 export function add2eNormalizeAttackTag(value) {
   let tag = String(value ?? "")
@@ -614,78 +619,81 @@ export async function add2eConsumeOneUseWeaponAfterAttack(actor, arme) {
   }
 }
 
-function add2eCanonicalClassTag(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/\s+/g, "_");
-}
-
-function add2eClassItemHasTag(item, wantedTag) {
-  const wanted = add2eCanonicalClassTag(wantedTag);
-  const tags = Array.isArray(item?.system?.tags) ? item.system.tags : [];
-  return tags.some(tag => add2eCanonicalClassTag(tag) === wanted);
-}
-
-function add2eThiefCombatClassItem(actor, { assassinOnly = false } = {}) {
-  const classItems = Array.from(actor?.items ?? [])
-    .filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-  if (assassinOnly) {
-    return classItems.find(item => add2eClassItemHasTag(item, "classe:assassin")) ?? null;
-  }
-  return classItems.find(item => add2eClassItemHasTag(item, "classe:assassin"))
-    ?? classItems.find(item => add2eClassItemHasTag(item, "classe:voleur"))
-    ?? null;
-}
-
 function add2eClassProgressionState(classItem) {
   if (!classItem) return null;
-  const level = Number(classItem?.system?.niveau);
-  if (!Number.isFinite(level) || level < 1) {
+  const slug = classSlug(classItem);
+  const progressionState = classProgression(classItem);
+  if (progressionState.hasLevel !== true) {
     throw new Error(`Niveau canonique absent sur l’Item classe « ${classItem?.name ?? classItem?.id ?? "inconnu"} ».`);
   }
-  const normalizedLevel = Math.floor(level);
+
+  const level = progressionState.level;
   const progression = Array.isArray(classItem?.system?.progression) ? classItem.system.progression : [];
-  const row = progression.find(entry => Number(entry?.niveau) === normalizedLevel) ?? null;
+  const row = progression.find(entry => Number(entry?.niveau) === level) ?? null;
   if (!row) {
-    throw new Error(`Progression canonique absente pour « ${classItem?.name ?? "classe"} » au niveau ${normalizedLevel}.`);
+    throw new Error(`Progression canonique absente pour « ${classItem?.name ?? "classe"} » au niveau ${level}.`);
   }
-  return { classItem, level: normalizedLevel, row };
+
+  return { classItem, slug, level, row };
+}
+
+function add2eRearCombatClassStates(actor) {
+  return classItems(actor)
+    .map(item => {
+      const slug = classSlug(item);
+      return slug === "voleur" || slug === "assassin"
+        ? add2eClassProgressionState(item)
+        : null;
+    })
+    .filter(Boolean);
+}
+
+function add2eBackstabCandidates(actor) {
+  return add2eRearCombatClassStates(actor)
+    .map(state => ({
+      ...state,
+      multiplier: Number(state.row?.backstabMultiplier)
+    }))
+    .filter(candidate => Number.isFinite(candidate.multiplier) && candidate.multiplier > 1);
 }
 
 export function add2eGetBackstabInfo(actor) {
-  const state = add2eClassProgressionState(add2eThiefCombatClassItem(actor));
-  if (!state) {
+  const candidates = add2eBackstabCandidates(actor);
+  if (!candidates.length) {
     return {
       available: false,
       multiplier: 1,
-      label: "Attaque sournoise",
-      source: "missing-thief-class-item",
-      level: null
+      label: "Attaque sournoise / Frappe dans le dos",
+      source: "missing-canonical-backstab-progression",
+      level: null,
+      sources: []
     };
   }
 
-  const multiplier = Number(state.row?.backstabMultiplier);
-  if (!Number.isFinite(multiplier) || multiplier <= 1) {
-    return {
-      available: false,
-      multiplier: 1,
-      label: "Attaque sournoise",
-      source: "missing-progression.backstabMultiplier",
-      level: state.level
-    };
-  }
+  const selected = candidates.reduce((best, candidate) => {
+    if (!best) return candidate;
+    if (candidate.multiplier > best.multiplier) return candidate;
+    if (candidate.multiplier < best.multiplier) return best;
+    if (candidate.slug === "voleur" && best.slug !== "voleur") return candidate;
+    return best;
+  }, null);
 
   return {
     available: true,
-    multiplier,
-    label: "Attaque sournoise",
+    multiplier: selected.multiplier,
+    label: "Attaque sournoise / Frappe dans le dos",
     source: "progression.backstabMultiplier",
-    classItemId: state.classItem.id,
-    classItemUuid: state.classItem.uuid,
-    level: state.level
+    classItemId: selected.classItem.id,
+    classItemUuid: selected.classItem.uuid,
+    classSlug: selected.slug,
+    level: selected.level,
+    sources: candidates.map(candidate => ({
+      classItemId: candidate.classItem.id,
+      classItemUuid: candidate.classItem.uuid,
+      classSlug: candidate.slug,
+      level: candidate.level,
+      multiplier: candidate.multiplier
+    }))
   };
 }
 
@@ -730,7 +738,8 @@ function add2eReadCanonicalAssassinationBase(row, targetLevel) {
 }
 
 export function add2eGetAssassinationInfo(actor, cible = null) {
-  const state = add2eClassProgressionState(add2eThiefCombatClassItem(actor, { assassinOnly: true }));
+  const assassinItem = classItems(actor).find(item => classSlug(item) === "assassin") ?? null;
+  const state = add2eClassProgressionState(assassinItem);
   const targetLevel = add2eGetAssassinationTargetLevel(cible);
   const targetBracket = add2eGetAssassinationBracketKey(targetLevel);
 
