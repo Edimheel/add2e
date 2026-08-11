@@ -244,3 +244,110 @@ function spellResourceStates(actor, spell) {
 }
 function isObjectPowerSpell(sort) { const system = sort?.system ?? {}; if (system.isPower === true || system.isObjectPower === true || system.sourceWeaponId || system.sourceItemId || system.powerIndex !== undefined) return true; try { return globalThis.add2eIsObjectMagicSpellForPreparation?.(sort) === true; } catch (_error) { return false; } }
 export function spells(actor) { return actorItems(actor).filter(item => String(item.type ?? "").toLowerCase() === "sort" && !isObjectPowerSpell(item) && preparedCount(item) > 0); }
+export function spellLevel(sort) { return Math.max(0, num(sort?.system?.niveau ?? sort?.system?.level ?? sort?.system?.niveau_sort, 0)); }
+export function spellListLabel(sort) {
+  const system = sort?.system ?? {};
+  const raw = [system.liste, system.list, system.spellList, system.classe, system.class, system.sourceClasse, system.casterClass, ...arr(system.lists), ...arr(system.listes), ...arr(system.classes)].map(value => String(value ?? "").trim()).find(Boolean) || "Mag";
+  const normalized = norm(raw);
+  if (normalized.includes("clerc") || normalized.includes("pretre") || normalized.includes("priest")) return "Clerc";
+  if (normalized.includes("druid")) return "Dru";
+  if (normalized.includes("ranger")) return "Rng";
+  if (normalized.includes("paladin")) return "Pal";
+  if (normalized.includes("mag") || normalized.includes("wizard") || normalized.includes("mage")) return "Mag";
+  return String(raw).slice(0, 6);
+}
+export function spellRows(actor, selectedGroup = null) {
+  const rows = spells(actor).sort((a, b) => String(spellListLabel(a)).localeCompare(String(spellListLabel(b))) || spellLevel(a) - spellLevel(b) || String(a.name).localeCompare(String(b.name)));
+  if (!rows.length) return { html: `<div class="empty">Aucun sort mémorisé.</div>`, selectedGroup: null };
+  const groups = new Map();
+  for (const spell of rows) { const key = `${spellListLabel(spell)}|${spellLevel(spell)}`; if (!groups.has(key)) groups.set(key, { key, label: spellListLabel(spell), level: spellLevel(spell), items: [] }); groups.get(key).items.push(spell); }
+  const list = [...groups.values()];
+  const active = groups.get(selectedGroup) ?? list[0];
+  const buttons = list.map(group => `<button type="button" class="spell-level ${group.key === active.key ? "active" : ""}" data-action="select-spell-group" data-spell-group="${esc(group.key)}">${esc(group.label)} niv. ${esc(group.level || "—")} <span>${group.items.length}</span></button>`).join("");
+  const rowsHtml = active.items.map(spell => {
+    const componentBadges = actorType(actor) === "pnj" ? "" : spellComponentBadges(actor, spell);
+    const casting = spell.system?.temps_incantation ?? spell.system?.casting_time ?? spell.system?.castingTime ?? "—";
+    const states = spellResourceStates(actor, spell);
+    const preparedStates = states.filter(state => Math.max(0, Number(state.current) || 0) > 0);
+    const available = preparedStates.length ? preparedStates.some(state => state.available !== false) : preparedCount(spell) > 0;
+    const resourceText = preparedStates.length
+      ? preparedStates.map(state => {
+          const current = Math.max(0, Number(state.current) || 0);
+          const maximum = Number.isFinite(Number(state.maximum)) ? Math.max(0, Number(state.maximum)) : "—";
+          const cost = Math.max(0, Number(state.cost) || 1);
+          const label = state.entry?.label || globalThis.add2eSpellLabel?.(state.entry?.key) || state.entry?.key || "Sort";
+          return `<span>${esc(label)} ${esc(current)}/${esc(maximum)} · coût ${esc(cost)} · ${state.available === false ? "indisponible" : "disponible"}</span>`;
+        }).join("")
+      : `<span>Mémorisé ${preparedCount(spell)}</span>`;
+    const castTitle = available ? `Lancer ${spell.name}` : `${spell.name} n’est plus mémorisé`;
+    const initiativeTitle = available ? "Choisir cette action pour l’initiative" : `${spell.name} n’est plus mémorisé`;
+    return `<div class="row initiative-row"><button type="button" class="img-act" data-action="cast-spell" data-item-id="${esc(spell.id)}" title="${esc(castTitle)}"${available ? "" : " disabled aria-disabled=\"true\""}><img src="${esc(spell.img || "icons/svg/book.svg")}" alt=""></button><div><div class="title">${esc(spell.name)}</div><div class="meta">${resourceText}<span>Incantation ${esc(casting)}</span>${componentBadges}</div></div>${declarationButton(actor, spell, "spell", { disabled: !available, title: initiativeTitle })}</div>`;
+  }).join("");
+  return { html: `<div class="spell-layout"><div class="spell-levels">${buttons}</div><div class="spell-list"><div class="spell-list-title">${esc(active.label)} niveau ${esc(active.level || "—")}</div>${rowsHtml}</div></div>`, selectedGroup: active.key };
+}
+function thiefSkillArtwork(skill) {
+  const key = String(skill?.key ?? "").trim();
+  if (!key) throw new Error("La clé canonique de la compétence de voleur est absente.");
+  return `systems/add2e/assets/icones/capacites/${key.replaceAll("_", "-")}.webp`;
+}
+function classFeatureArtwork(actor, feature) {
+  const explicit = String(feature?.img ?? "").trim();
+  if (explicit) return explicit;
+  const classItemId = String(feature?._add2eClassItemId ?? "").trim();
+  const classItem = classItemId ? actor?.items?.get?.(classItemId) ?? null : null;
+  return classItem?.img || "icons/svg/aura.svg";
+}
+function classFeatureResourceStates(actor, feature) {
+  const resolver = globalThis.add2eGetClassFeatureUsageResource;
+  if (typeof resolver !== "function") {
+    throw new Error("Le propriétaire canonique des ressources de capacités de classe est indisponible pour le HUD.");
+  }
+  const categories = Array.isArray(feature?.uses?.categories) ? feature.uses.categories.filter(Boolean) : [];
+  const usages = categories.length
+    ? categories.map(category => resolver(actor, feature, { category })).filter(Boolean)
+    : [resolver(actor, feature)].filter(Boolean);
+  if (!usages.length) return [];
+  const engine = hudResourceEngine();
+  return usages.map(usage => ({
+    ...engine.resolveResource(usage.descriptor, {
+      cost: 1,
+      consumer: "action-hud:class-feature-resource"
+    }),
+    usage
+  }));
+}
+function classFeaturePeriodLabel(period) {
+  return ({ day: "jour", week: "semaine", combat: "combat", career: "carrière", "10_years": "10 ans" })[String(period ?? "")] || String(period ?? "");
+}
+function classFeatureResourceMeta(actor, feature) {
+  const states = classFeatureResourceStates(actor, feature);
+  if (!states.length) return { states, available: true, html: '<span>À volonté</span>' };
+  const available = states.some(state => state.available !== false);
+  const html = states.map(state => {
+    const current = Math.max(0, Number(state.current) || 0);
+    const maximum = Number.isFinite(Number(state.maximum)) ? Math.max(0, Number(state.maximum)) : "—";
+    const cost = Math.max(0, Number(state.cost) || 1);
+    const category = state.usage?.category ? ` · ${state.usage.category}` : "";
+    const period = classFeaturePeriodLabel(state.usage?.period);
+    const source = state.source?.name || state.usage?.descriptor?.source?.name || "Classe";
+    return `<span>Source : ${esc(source)}${esc(category)}</span><span>${esc(current)}/${esc(maximum)} · coût ${esc(cost)}${period ? ` / ${esc(period)}` : ""} · ${state.available === false ? "indisponible" : "disponible"}</span>`;
+  }).join("");
+  return { states, available, html };
+}
+export function featureRows(actor) {
+  const rows = features(actor);
+  if (!rows.length) return `<div class="empty">Aucune capacité utilisable.</div>`;
+  return rows.map((feature, index) => {
+    const label = globalThis.add2eFeatureName?.(feature) || feature.name || feature.label || feature.nom || `Capacité ${index + 1}`;
+    const thiefSkill = feature?._add2eThiefSkill ?? null;
+    if (thiefSkill) {
+      const title = `Tester ${thiefSkill.label ?? label}`;
+      const image = thiefSkillArtwork(thiefSkill);
+      return `<div class="row capability-row"><button type="button" class="img-act capability-icon" data-action="use-feature" data-feature-index="${index}" data-skill-key="${esc(thiefSkill.key)}" title="${esc(title)}" aria-label="${esc(title)}"><img src="${esc(image)}" alt="" aria-hidden="true"></button><div><div class="title">${esc(label)}</div><div class="meta"><span>Compétence de voleur</span></div></div></div>`;
+    }
+    const resource = classFeatureResourceMeta(actor, feature);
+    const title = resource.available ? `Utiliser ${label}` : `${label} n’est plus disponible pour cette période`;
+    const image = classFeatureArtwork(actor, feature);
+    return `<div class="row capability-row"><button type="button" class="img-act capability-icon" data-action="use-feature" data-feature-index="${index}" title="${esc(title)}" aria-label="${esc(title)}"${resource.available ? "" : " disabled aria-disabled=\"true\""}><img src="${esc(image)}" alt="" aria-hidden="true"></button><div><div class="title">${esc(label)}</div><div class="meta"><span>Capacité de classe</span>${resource.html}</div></div></div>`;
+  }).join("");
+}
