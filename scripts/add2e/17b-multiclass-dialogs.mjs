@@ -219,6 +219,13 @@ export async function showClassDropChoiceDialog(actor, droppedClassData, current
     : [];
   const monoOptions = monoClassOptionsForDroppedClass(actor, droppedClassData);
 
+  const deterministicChoices = [
+    ...replacementOptions.map(option => ({ action: "replace-class", option })),
+    ...monoOptions.map(option => ({ action: "monoclass", option })),
+    ...addOptions.map(option => ({ action: "multiclass", option }))
+  ];
+  if (deterministicChoices.length === 1) return deterministicChoices[0];
+
   let checked = false;
   const markChecked = () => {
     if (checked) return false;
