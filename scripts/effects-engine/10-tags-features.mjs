@@ -1,6 +1,14 @@
 // ADD2E — Effects Engine / tags, capacités et résistances générales.
 // Les règles d'action restent génériques : aucun sort n'est nommé ici.
 
+import {
+  classItems as add2eCanonicalClassItems,
+  classProgression as add2eCanonicalClassProgression,
+  classSlug as add2eCanonicalClassSlug,
+  raceItem as add2eCanonicalRaceItem,
+  raceSlug as add2eCanonicalRaceSlug
+} from "../add2e/17b-multiclass-core.mjs";
+
 const register = (Engine, methods) => Object.defineProperties(
   Engine,
   Object.fromEntries(Object.entries(methods).map(([name, value]) => [
@@ -44,12 +52,13 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
     },
 
     getEmbeddedClassItems(actor) {
-      return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+      return add2eCanonicalClassItems(actor);
     },
 
     getEmbeddedClassLevel(item) {
-      const level = Number(item?.system?.niveau ?? item?.system?.level);
-      return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
+      if (!item) return null;
+      const progression = add2eCanonicalClassProgression(item);
+      return progression.hasLevel ? progression.level : null;
     },
 
     normalizeClassFeature(feature, source = {}) {
@@ -70,7 +79,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
     getUnlockedClassFeatures(actor) {
       if (!actor) return [];
       const out = [];
-      const classItems = this.getEmbeddedClassItems(actor);
+      const embeddedClasses = this.getEmbeddedClassItems(actor);
       const push = (raw, level, source = {}) => {
         const classLevel = Number(level);
         if (!Number.isFinite(classLevel) || classLevel < 1) return;
@@ -81,28 +90,22 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         }
       };
 
-      if (classItems.length) {
-        for (const item of classItems) {
-          const level = this.getEmbeddedClassLevel(item);
-          if (level === null) continue;
-          push(item.system?.classFeatures, level, {
-            _add2eClassItemId: item.id ?? null,
-            _add2eClassItemUuid: item.uuid ?? null,
-            _add2eClassName: item.name ?? item.system?.label ?? "Classe",
-            _add2eClassLevel: level
-          });
+      for (const item of embeddedClasses) {
+        const level = this.getEmbeddedClassLevel(item);
+        if (level === null) {
+          throw new Error(`Niveau canonique absent sur l’Item classe « ${item?.name ?? item?.id ?? "inconnu"} ».`);
         }
-      } else {
-        // Compatibilité des anciens acteurs sans Item de classe embarqué.
-        const level = this.getActorLevel(actor);
-        push(actor.system?.classFeatures, level);
-        push(actor.system?.details_classe?.classFeaturesDebloquees, level);
-        push(actor.system?.details_classe?.classFeatures, level);
+        push(item.system?.classFeatures, level, {
+          _add2eClassItemId: item.id ?? null,
+          _add2eClassItemUuid: item.uuid ?? null,
+          _add2eClassName: item.name ?? "Classe",
+          _add2eClassLevel: level
+        });
       }
 
       const seen = new Set();
       return out.filter(feature => {
-        const source = feature._add2eClassItemId ?? "legacy";
+        const source = feature._add2eClassItemId ?? "classe";
         const key = `${source}|${feature.minLevel}|${feature.name ?? feature.label ?? feature.title ?? feature.nom ?? JSON.stringify(feature.tags ?? [])}`;
         if (seen.has(key)) return false;
         seen.add(key);
@@ -193,6 +196,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         ?? system.alignementRestriction?.allowed
         ?? system.restrictions?.alignements
         ?? system.restrictions?.alignments
+        ?? system.alignment
         ?? [];
       const values = this.toArray(raw).filter(value => value !== undefined && value !== null && String(value).trim() !== "");
       const seen = new Set();
@@ -252,31 +256,15 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
     },
 
     getRaceSlug(actor) {
-      let raw = "";
-      const race = actor?.system?.race;
-      if (typeof race === "string") raw = race;
-      else if (race && typeof race === "object") raw = race.value ?? race.name ?? race.label ?? "";
-      raw = raw
-        || actor?.system?.details_race?.slug
-        || actor?.system?.details_race?.name
-        || actor?.system?.details?.race
-        || actor?.system?.race_nom
-        || actor?.items?.find(item => String(item.type).toLowerCase() === "race")?.name
-        || "";
-      return String(raw).toLowerCase().normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[’']/g, "")
-        .replace(/\s+/g, "-")
-        .trim();
+      const item = add2eCanonicalRaceItem(actor);
+      return item ? add2eCanonicalRaceSlug(item) : "";
     },
 
     getActiveTags(actor) {
       if (!actor) return [];
       const tags = [];
-      const classItems = this.getEmbeddedClassItems(actor);
-      const legacyLevel = this.getActorLevel(actor);
+      const embeddedClasses = this.getEmbeddedClassItems(actor);
 
-      this.addTagsInto(tags, this.getRacialTagsForRace(this.getRaceSlug(actor)));
       this.addTagsInto(tags, actor.flags?.add2e?.racialTags);
       this.addTagsInto(tags, actor.flags?.add2e?.classTags);
       if (actor.getFlag) {
@@ -284,18 +272,8 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         try { this.addTagsInto(tags, actor.getFlag("add2e", "classTags")); } catch {}
       }
 
-      // Les données d'acteur historiques ne sont une source qu'en l'absence
-      // d'Items classe. Dès qu'ils existent, chacun porte son niveau propre.
-      if (!classItems.length) {
-        this.addClassFeatureTagsInto(tags, actor.system?.classFeatures, legacyLevel);
-        this.addClassFeatureTagsInto(tags, actor.system?.details_classe?.classFeatures, legacyLevel);
-      }
-
       for (const effect of actor.effects ?? []) {
         if (effect.disabled) continue;
-        // Cet effet est un ancien cache des tags de classe. Les Items classe
-        // sont désormais relus directement ci-dessous afin de ne jamais
-        // conserver un déblocage calculé avec actor.system.niveau global.
         if (effect.flags?.add2e?.autoClassPassiveEffect === true) continue;
         if (effect.origin) {
           try {
@@ -330,17 +308,14 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         }
       }
 
-      const monk = classItems.find(item => this.normalizeKey(item.system?.label || item.name || "").includes("moine")
-        || this.toArray(item.system?.tags).map(tag => this.normalizeTag(tag)).includes("classe:moine"));
-
+      const monk = embeddedClasses.find(item => add2eCanonicalClassSlug(item) === "moine") ?? null;
       const monkLevel = this.getEmbeddedClassLevel(monk);
-      if (monk && monkLevel !== null) {
-        const progression = Array.isArray(monk.system?.monkProgression) && monk.system.monkProgression.length
-          ? monk.system.monkProgression
-          : (Array.isArray(monk.system?.progression) ? monk.system.progression : []);
-        const row = progression.find(entry => Number(entry?.niveau ?? entry?.level) === monkLevel)
-          ?? progression[Math.max(0, Math.min(progression.length - 1, monkLevel - 1))]
-          ?? null;
+      if (monk && monkLevel === null) {
+        throw new Error(`Niveau canonique absent sur l’Item classe Moine « ${monk?.name ?? monk?.id ?? "inconnu"} ».`);
+      }
+      if (monk) {
+        const progression = Array.isArray(monk.system?.progression) ? monk.system.progression : [];
+        const row = progression.find(entry => Number(entry?.niveau) === monkLevel) ?? null;
         this.addTagsInto(tags, row?.tags);
       }
 
@@ -410,7 +385,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
                 classItemId: feature?._add2eClassItemId ?? null,
                 classItemUuid: feature?._add2eClassItemUuid ?? null,
                 className: feature?._add2eClassName ?? null,
-                classLevel: Number(feature?._add2eClassLevel) || Number(feature?.minLevel) || null,
+                classLevel: Number(feature?._add2eClassLevel) || null,
                 actor
               }
             });
@@ -423,22 +398,18 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
     getClassProgressionEntryForPassiveRule(rule, context = {}) {
       const actor = context?.actor ?? rule?.source?.actor ?? null;
       if (!actor) return null;
-      const classItemId = rule?.source?.classItemId ?? null;
-      const classItem = classItemId
-        ? this.getEmbeddedClassItems(actor).find(item => item.id === classItemId)
-        : this.getEmbeddedClassItems(actor)[0];
-      const system = classItem?.system ?? actor.system?.details_classe ?? null;
-      if (!system) return null;
-      const level = Number(rule?.source?.classLevel ?? this.getEmbeddedClassLevel(classItem) ?? this.getActorLevel(actor));
+      const classItemId = String(rule?.source?.classItemId ?? "").trim();
+      if (!classItemId) return null;
+      const classItem = this.getEmbeddedClassItems(actor).find(item => String(item.id) === classItemId) ?? null;
+      if (!classItem) return null;
+      const progressionState = add2eCanonicalClassProgression(classItem);
+      if (!progressionState.hasLevel) return null;
+      const level = Number(rule?.source?.classLevel ?? progressionState.level);
       if (!Number.isFinite(level) || level < 1) return null;
       const source = String(rule?.progressionSource ?? rule?.progression ?? "progression").trim() || "progression";
-      const progression = Array.isArray(system?.[source]) && system[source].length
-        ? system[source]
-        : (Array.isArray(system?.progression) ? system.progression : []);
+      const progression = Array.isArray(classItem.system?.[source]) ? classItem.system[source] : [];
       if (!progression.length) return null;
-      return progression.find(entry => Number(entry?.niveau ?? entry?.level) === level)
-        ?? progression[Math.max(0, Math.min(progression.length - 1, level - 1))]
-        ?? null;
+      return progression.find(entry => Number(entry?.niveau) === level) ?? null;
     },
 
     getPassiveRuleProgressionValue(rule, context = {}) {
@@ -463,7 +434,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       const direct = this.readNumber(raw);
       if (Number.isFinite(direct)) return direct;
 
-      const classLevel = Number(rule?.source?.classLevel ?? context?.classLevel ?? context?.actorLevel ?? this.getActorLevel(context?.actor));
+      const classLevel = Number(rule?.source?.classLevel ?? context?.classLevel);
       const multiplier = Number(rule?.multiplier ?? rule?.factor ?? 1);
       const offset = Number(rule?.offset ?? 0) || 0;
 
@@ -503,7 +474,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         const kind = this.normalizeKey(rule?.kind ?? rule?.type ?? "");
         if (!["armor_class_base", "classe_armure_base", "defense_base", "ca_base"].includes(kind)) continue;
         if (!this.actionRuleScopeMatches(rule, { ...context, ruleScope: context?.ruleScope ?? "owner" })) continue;
-        const value = this.getPassiveRuleNumber(rule, { ...context, actor, actorLevel: this.getActorLevel(actor) });
+        const value = this.getPassiveRuleNumber(rule, { ...context, actor });
         if (!Number.isFinite(value)) continue;
         candidates.push({
           value,
@@ -554,7 +525,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
           if (!ability || !currentAbility || ability !== currentAbility) continue;
           value = -(Number(abilityInfo?.value) || 0);
         } else {
-          value = this.getPassiveRuleNumber(rule, { ...context, actor, actorLevel: this.getActorLevel(actor) });
+          value = this.getPassiveRuleNumber(rule, { ...context, actor });
         }
 
         if (!value) continue;
