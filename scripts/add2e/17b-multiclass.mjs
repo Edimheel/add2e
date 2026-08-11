@@ -6,9 +6,7 @@ import {
   MULTICLASS_VERSION,
   classItems,
   classProgression,
-  classProgressionUpdate,
   multiclassEnabled,
-  num,
   warn
 } from "./17b-multiclass-core.mjs";
 import {
@@ -24,6 +22,7 @@ import {
   cleanupAfterMonoclassReplace,
   migrateLegacyMulticlassActor,
   recalcActor,
+  refreshMonoclassSummary,
   replaceClassInMulticlass
 } from "./17b-multiclass-operations.mjs";
 import {
@@ -54,27 +53,6 @@ function isFeatureActivable(feature) {
 
 function installClassFeatureGlobals() {
   globalThis.add2eIsFeatureActivable = isFeatureActivable;
-}
-
-async function ensureMonoclassItemProgression(actor, { fromActorSummary = false, reason = "monoclass-item-progression" } = {}) {
-  if (!actor || actor.type !== "personnage") return false;
-  const classes = classItems(actor);
-  if (classes.length !== 1) return false;
-  const classDoc = classes[0];
-  const current = classProgression(classDoc);
-  const actorLevel = Math.max(1, Math.floor(num(actor.system?.niveau, 1)));
-  const actorXp = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
-  const level = fromActorSummary || !current.hasLevel ? actorLevel : current.level;
-  const xp = fromActorSummary || !current.hasXp ? actorXp : current.xp;
-  if (current.hasLevel && current.level === level && current.hasXp && current.xp === xp) return true;
-  const update = classProgressionUpdate(classDoc, { level, xp });
-  if (!update) return false;
-  await actor.updateEmbeddedDocuments("Item", [update], {
-    add2eInternal: true,
-    add2eMulticlassInternal: true,
-    add2eReason: reason
-  });
-  return true;
 }
 
 async function syncMulticlassCombatSummary(actor, { reason = "multiclass-combat-summary" } = {}) {
@@ -126,11 +104,9 @@ function readPath(changes, dottedPath) {
 
 async function migrateAndRecalculate(actor) {
   if (!actor || actor.type !== "personnage") return null;
-  if (classItems(actor).length === 1) {
-    await ensureMonoclassItemProgression(actor, { reason: "monoclass-item-progression-migration" });
-    return true;
-  }
-  if (classItems(actor).length <= 1) return null;
+  const count = classItems(actor).length;
+  if (count === 1) return refreshMonoclassSummary(actor, "monoclass-item-progression-summary");
+  if (count <= 1) return null;
   const migration = await migrateLegacyMulticlassActor(actor);
   if (migration?.ok === false) return null;
   const result = await recalcActor(actor);
@@ -151,7 +127,8 @@ Hooks.once("ready", () => {
 Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
   if (options?.add2eMulticlassInternal || options?.add2eInternal) return true;
   mergeMulticlassChanges(actor, changes);
-  if (!multiclassEnabled(actor)) return true;
+  const classes = classItems(actor);
+  if (!classes.length) return true;
 
   const requestedXp = readPath(changes, "system.xp");
   const requestedLevel = readPath(changes, "system.niveau");
@@ -175,18 +152,9 @@ Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
       "system.xp_to_next",
       "system.xp_percent"
     ]) removePath(changes, path);
-    ui.notifications?.warn?.("Pour un multiclassé, modifie l’XP ou le niveau directement sur la ligne de la classe concernée.");
+    ui.notifications?.warn?.("Modifie l’XP ou le niveau directement sur la ligne de la classe concernée.");
   }
   return true;
-});
-
-Hooks.on("updateActor", (actor, changes, options = {}) => {
-  if (options?.add2eMulticlassInternal || options?.add2eInternal || actor?.type !== "personnage") return;
-  if (classItems(actor).length !== 1) return;
-  const flat = foundry.utils.flattenObject(changes ?? {});
-  if (!(Object.prototype.hasOwnProperty.call(flat, "system.niveau") || Object.prototype.hasOwnProperty.call(flat, "system.xp"))) return;
-  ensureMonoclassItemProgression(actor, { fromActorSummary: true, reason: "monoclass-actor-summary-sync" })
-    .catch(error => warn("[MONO_SYNC_ERROR]", { actor: actor.name, error }));
 });
 
 Hooks.on("createItem", item => {
@@ -196,10 +164,20 @@ Hooks.on("createItem", item => {
   setTimeout(() => migrateAndRecalculate(actor).catch(error => warn("[CREATE_CLASS_MIGRATION_ERROR]", error)), 0);
 });
 
-Hooks.on("updateItem", (item, _changes, _options = {}) => {
+Hooks.on("updateItem", (item, _changes, options = {}) => {
   const actor = item?.parent;
   if (actor?.type !== "personnage" || String(item?.type ?? "").toLowerCase() !== "classe") return;
-  queueMulticlassCombatSummary(actor, "class-item-update-summary");
+  if (options?.add2eMulticlassInternal || options?.add2eInternal) return;
+  const count = classItems(actor).length;
+  if (count === 1) {
+    refreshMonoclassSummary(actor, "monoclass-class-item-update")
+      .catch(error => warn("[MONO_CLASS_ITEM_SUMMARY_ERROR]", { actor: actor.name, error }));
+    return;
+  }
+  if (count > 1) {
+    recalcActor(actor).catch(error => warn("[MULTICLASS_ITEM_SUMMARY_ERROR]", { actor: actor.name, error }));
+    queueMulticlassCombatSummary(actor, "class-item-update-summary");
+  }
 });
 
 Hooks.on("deleteItem", item => {
@@ -227,7 +205,6 @@ globalThis.add2eMulticlassDirectFieldSync = updateDirectMulticlassField;
 globalThis.add2eCleanMonoclassAfterReplace = cleanupAfterMonoclassReplace;
 globalThis.add2eReplaceClassInMulticlass = replaceClassInMulticlass;
 globalThis.add2eMigrateLegacyMulticlassActor = migrateLegacyMulticlassActor;
-globalThis.add2eEnsureMonoclassItemProgression = ensureMonoclassItemProgression;
 globalThis.add2eSyncMulticlassCombatSummary = syncMulticlassCombatSummary;
 
 console.log("[ADD2E][MULTICLASSE][ITEM_PROGRESSION_READY]", MULTICLASS_VERSION);
