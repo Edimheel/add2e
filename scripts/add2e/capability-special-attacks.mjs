@@ -70,6 +70,12 @@ function array(value) {
   return [value];
 }
 
+function currentTick() {
+  const engine = game?.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+  const tick = typeof engine?.currentTick === "function" ? Number(engine.currentTick()) : NaN;
+  return Number.isFinite(tick) ? Math.max(0, Math.floor(tick)) : null;
+}
+
 function actorHp(actor) {
   const system = actor?.system ?? {};
   const current = number(system.pdv, system.pv, system.hp?.value, system.attributes?.hp?.value);
@@ -704,7 +710,7 @@ async function prepareWindow({ actor, item, profile, rounds }) {
       },
       flags: {
         [SYSTEM_ID]: {
-          tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`],
+          tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`, ...tags],
           timeEngine: { managed: true, totalRounds, startTick: tick },
           roundEngine: {
             managed: true,
