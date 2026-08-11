@@ -1,5 +1,5 @@
 // ADD2E — Point d’entrée mouvement, encombrement et XP.
-// Les Items classe restent la seule source de progression multiclasses.
+// Les Items classe sont l’unique source de progression.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
 import {
@@ -7,19 +7,12 @@ import {
   ADD2E_MOVE_XP_TAG,
   ADD2E_MOVE_XP_INTERNAL,
   ADD2E_MOVE_XP_RECALC_DELAY_MS,
-  log,
   norm,
-  sameValue,
-  getPath,
   changedUpdatePayload,
-  changeValue,
-  changedPath,
-  isMulticlassActor,
   computeXp,
   computeMovement,
   magicMovementRules,
   movementUpdates,
-  flatActorUpdates,
   recalc,
   awardXp,
   promptXp,
@@ -589,7 +582,7 @@ function stripComputedMovementScalarsFromChanges(changes = {}) {
 function isComputedMovementWrite(options = {}) {
   if (options?.[ADD2E_MOVE_XP_INTERNAL]) return true;
   const reason = String(options?.add2eReason ?? "");
-  return reason.startsWith("move-xp-recalc:") || reason === "move-xp-award";
+  return reason.startsWith("move-xp-recalc:");
 }
 
 async function recalcMovementState(actor, reason = "document-change") {
@@ -672,14 +665,6 @@ function registerAdd2eSetting(key, data) {
 
 function registerMovementSettings() {
   const registered = [
-    registerAdd2eSetting("xpAutoLevel", {
-      name: "ADD2E — XP : niveau automatique",
-      hint: "Quand l'XP atteint un seuil, le niveau est augmenté automatiquement.",
-      scope: "world",
-      config: true,
-      type: Boolean,
-      default: true
-    }),
     registerAdd2eSetting("encumbranceEnabled", {
       name: "ADD2E — Gestion de l’encombrement",
       hint: "Applique le poids transporté aux déplacements ainsi que les pénalités d’attaque et de classe d’armure. Désactiver cette option neutralise uniquement l’encombrement ; les autres effets de mouvement restent actifs.",
@@ -844,42 +829,8 @@ function actorMovementSourceChanged(changes = {}) {
   return changesTouchPaths(changes, ACTOR_MOVEMENT_FIELDS);
 }
 
-function removeMovementUpdates(updates = {}) {
-  for (const path of ["system.mouvement", ...COMPUTED_MOVEMENT_SCALARS]) delete updates[path];
-  return updates;
-}
-
-Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
-  const computedMovementWrite = isComputedMovementWrite(options);
-  if (computedMovementWrite) stripComputedMovementScalarsFromChanges(changes);
-  if (options?.[ADD2E_MOVE_XP_INTERNAL] || options?.add2eInternal || !actor || actor.type !== "personnage") return true;
-
-  const levelChanged = changedPath(actor, changes, "system.niveau");
-  const xpChanged = changedPath(actor, changes, "system.xp");
-  const movementChanged = ["system.mouvement.base", "system.movement"]
-    .some(path => changedPath(actor, changes, path));
-  if (!levelChanged && !xpChanged && !movementChanged) return true;
-
-  if (isMulticlassActor(actor) && (levelChanged || xpChanged)) {
-    if (movementChanged) {
-      const derived = changedUpdatePayload(actor, movementUpdates(actor).updates);
-      removeMovementUpdates(derived);
-      if (Object.keys(derived).length) foundry.utils.mergeObject(changes, foundry.utils.expandObject(derived), { inplace: true });
-    }
-    return true;
-  }
-
-  const incoming = {};
-  if (levelChanged) incoming["system.niveau"] = changeValue(changes, "system.niveau");
-  if (xpChanged) incoming["system.xp"] = changeValue(changes, "system.xp");
-  const mode = levelChanged && !xpChanged ? "level" : xpChanged ? "xp" : "movement";
-  const result = flatActorUpdates(actor, { mode, incoming });
-  const derived = changedUpdatePayload(actor, result.updates);
-  removeComputedMovementScalars(derived);
-  if (actorMovementSourceChanged(changes)) removeMovementUpdates(derived);
-  if (Object.keys(derived).length) foundry.utils.mergeObject(changes, foundry.utils.expandObject(derived), { inplace: true });
-  options.add2eReason = `move-xp-preupdate:${mode}`;
-  log("[ACTOR][PREUPDATE]", { actor: actor.name, mode, multiclass: result.multiclass === true, updates: derived });
+Hooks.on("preUpdateActor", (_actor, changes, options = {}) => {
+  if (isComputedMovementWrite(options)) stripComputedMovementScalarsFromChanges(changes);
   return true;
 });
 
@@ -902,33 +853,6 @@ Hooks.on("deleteActiveEffect", (effect, options = {}) => {
   if (options?.[ADD2E_MOVE_XP_INTERNAL] || options?.add2eInternal || !effectTouchesMovement(effect)) return;
   const actor = effectActor(effect);
   if (actor?.type === "personnage") queueMovementRecalc(actor, "effect:delete");
-});
-
-Hooks.on("renderActorSheet", (sheet, html) => {
-  if (sheet?.actor?.type !== "personnage" || isMulticlassActor(sheet.actor)) return;
-  const root = html?.jquery ? html[0] : html;
-  const levelField = [...root?.querySelectorAll?.(".a2e-field") ?? []]
-    .find(field => norm(field.querySelector?.("label")?.textContent ?? "") === "niveau");
-  if (!root || root.querySelector("input[name='system.xp']") || !levelField) return;
-  const field = document.createElement("div");
-  field.className = "a2e-field a2e-xp-field";
-  field.innerHTML = `<label>XP</label><div class="a2e-xp-inline" style="display:grid;grid-template-columns:minmax(0,1fr) 31px;gap:5px;align-items:center;"><input type="number" name="system.xp" value="${Number(sheet.actor.system?.xp ?? 0)}" min="0" step="1" title="${String(sheet.actor.system?.progression_xp ?? "").replace(/"/g, "&quot;")}"><button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP" style="height:29px;min-width:31px;padding:0;">+</button></div>`;
-  levelField.insertAdjacentElement("afterend", field);
-  field.querySelector("[data-add2e-mx='xp']")?.addEventListener("click", event => {
-    event.preventDefault();
-    event.stopPropagation();
-    promptXp(sheet.actor);
-  });
-});
-
-Hooks.on("renderAdd2eActorSheet", (sheet, html) => {
-  if (sheet?.actor?.type !== "personnage" || isMulticlassActor(sheet.actor)) return;
-  const root = html?.jquery ? html[0] : html;
-  root?.querySelector?.("[data-add2e-mx='xp']")?.addEventListener("click", event => {
-    event.preventDefault();
-    event.stopPropagation();
-    promptXp(sheet.actor);
-  }, { once: true });
 });
 
 Hooks.on("createItem", (item, options = {}) => queueItemMovementRecalc(item, "createItem", {}, options));
