@@ -28,7 +28,7 @@ const ADD2E_GM_OPERATION = "ADD2E_GM_OPERATION";
 const FAMILIAR_SCOPE = "add2e";
 const FAMILIAR_FLAG = "familiar";
 const FAMILIAR_RANGE_DEFAULT = 12;
-const VERSION = "2026-08-09-gm-relay-common-chat-v15";
+const VERSION = "2026-08-11-familiar-class-cleanup-v16";
 const TAG = "[ADD2E][GM-RELAY]";
 
 const FAMILIAR_ASSETS = Object.freeze({
@@ -788,6 +788,33 @@ async function dissolveFamiliar(caster, link = familiarLink(caster), { removeEff
   }
 }
 
+async function dissolveFamiliarOperation(payload = {}) {
+  if (!isResponsibleGM()) return false;
+  const caster = await resolveActor(payload);
+  if (!caster) return false;
+  return dissolveFamiliar(caster);
+}
+
+async function requestFamiliarDissolve(caster, options = {}) {
+  if (!caster || !validFamiliarLink(familiarLink(caster))) return false;
+  if (isResponsibleGM()) return dissolveFamiliar(caster);
+  const activeGM = game.users?.activeGM ?? null;
+  if (!activeGM?.active) {
+    ui.notifications?.warn?.("Suppression du familier impossible : aucun MJ actif.");
+    return false;
+  }
+  game.socket?.emit?.(ADD2E_SOCKET, {
+    type: ADD2E_GM_OPERATION,
+    operation: "dissolveFamiliar",
+    payload: {
+      actorId: caster.id,
+      actorUuid: caster.uuid,
+      reason: String(options?.reason ?? "familiar-dissolve")
+    }
+  });
+  return true;
+}
+
 async function syncFamiliar(caster, { notify = false } = {}) {
   if (!isResponsibleGM() || !caster) return false;
   const link = familiarLink(caster);
@@ -1292,6 +1319,7 @@ function registerSocketRelays() {
     [GM_OPERATION_COMPONENT_REFUND]: handleRefundSpellComponentsOperation,
     [GM_OPERATION_COMPONENT_FINALIZE]: handleFinalizeSpellComponentsOperation,
     createFamiliar,
+    dissolveFamiliar: dissolveFamiliarOperation,
     setFamiliarFollow
   };
   game.socket.on(ADD2E_SOCKET, async data => {
@@ -1321,6 +1349,7 @@ Hooks.once("ready", () => {
 });
 
 globalThis.add2eCreateFamiliar = createFamiliar;
+globalThis.add2eDissolveFamiliar = requestFamiliarDissolve;
 globalThis.add2eUseFamiliarEffect = useFamiliarEffect;
 globalThis.add2eSyncFamiliarArtwork = async () => Promise.all(Array.from(game.actors?.contents ?? []).filter(actor => FAMILIAR_ASSETS[String(familiarLink(actor)?.key ?? "")]).map(actor => repairFamiliarArtwork(actor)));
 globalThis.add2eAttackChatRelayDebug = () => ({
