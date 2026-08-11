@@ -13,7 +13,7 @@ import {
   splitMulticlassXp as add2eSplitMulticlassXp
 } from "./17b-multiclass-rules.mjs";
 
-const VERSION = "2026-08-11-canonical-class-progression-v8";
+const VERSION = "2026-08-11-canonical-monster-xp-v9";
 const TAG = "[ADD2E][SESSION_XP]";
 const FLAG_SCOPE = "add2e";
 const FLAG_LEDGER = "sessionXpLedger";
@@ -30,7 +30,7 @@ function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
 function num(value, fallback = 0) {
   if (typeof value === "number") return Number.isFinite(value) ? value : fallback;
   if (value && typeof value === "object") {
-    for (const key of ["value", "valeur", "total", "current", "xp", "px", "niveau", "level", "pdv", "pv"]) {
+    for (const key of ["value", "valeur", "total", "current", "xp", "niveau", "level", "pdv"]) {
       if (value[key] !== undefined && value[key] !== null && typeof value[key] !== "object") return num(value[key], fallback);
     }
   }
@@ -61,8 +61,8 @@ function classLevel(item) {
 function totalXp(actor) {
   return classItems(actor).reduce((sum, item) => sum + classXp(item), 0);
 }
-function hpValue(actor) { return num(actor?.system?.pdv ?? actor?.system?.pv ?? actor?.system?.hp ?? 0, 0); }
-function monsterXpValue(actor) { return Math.max(0, Math.floor(num(actor?.system?.xp ?? actor?.system?.px ?? actor?.system?.experience ?? 0, 0))); }
+function hpValue(actor) { return num(actor?.system?.pdv, 0); }
+function monsterXpValue(actor) { return Math.max(0, Math.floor(num(actor?.system?.xp, 0))); }
 
 function currentLedger() {
   try {
@@ -448,7 +448,7 @@ Hooks.on("getSceneControlButtons", registerSessionXpSceneControl);
 Hooks.on("updateActor", (actor, changes) => {
   if (!game.user?.isGM || actor?.type !== "monster") return;
   const before = hpValue(actor);
-  const after = num(foundry.utils.getProperty(changes, "system.pdv") ?? foundry.utils.getProperty(changes, "system.pv") ?? before, before);
+  const after = num(foundry.utils.getProperty(changes, "system.pdv") ?? before, before);
   if (before > 0 && after <= 0) queueRecord(actor, { reason: "pv_zero" });
 });
 Hooks.on("deleteToken", tokenDoc => {
