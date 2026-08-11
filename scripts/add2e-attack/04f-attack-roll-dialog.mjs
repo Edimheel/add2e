@@ -2,7 +2,7 @@
 // ADD2E — Dialogue d'attaque via l'API commune ADD2E.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via dialog-ui.mjs uniquement.
 
-const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-thief-rear-checkboxes-v10";
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-canonical-rear-options-v11";
 
 globalThis.ADD2E_ATTACK_DIALOG_VERSION = ADD2E_ATTACK_DIALOG_VERSION;
 
@@ -29,37 +29,6 @@ function add2eAttackEscapeHtml(value) {
 
 function add2eAttackImage(entity, fallback = "icons/svg/mystery-man.svg") {
   return add2eAttackEscapeHtml(entity?.img ?? entity?.texture?.src ?? entity?.document?.texture?.src ?? fallback);
-}
-
-function add2eAttackCanonicalTag(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/\s+/g, "_");
-}
-
-function add2eAttackClassTags(actor) {
-  const tags = new Set();
-  for (const item of actor?.items ?? []) {
-    if (String(item?.type ?? "").toLowerCase() !== "classe") continue;
-    const rawTags = Array.isArray(item?.system?.tags) ? item.system.tags : [];
-    for (const rawTag of rawTags) {
-      const tag = add2eAttackCanonicalTag(rawTag);
-      if (tag.startsWith("classe:")) tags.add(tag);
-    }
-  }
-  return tags;
-}
-
-function add2eAttackIsThiefOrAssassin(actor) {
-  const tags = add2eAttackClassTags(actor);
-  return tags.has("classe:voleur") || tags.has("classe:assassin");
-}
-
-function add2eAttackIsAssassin(actor) {
-  return add2eAttackClassTags(actor).has("classe:assassin");
 }
 
 function add2eAttackRoot(appOrElement) {
@@ -101,8 +70,8 @@ function add2eBindAttackDialogInteractions(app, html) {
 }
 
 function add2eInstallAttackDialogBindings() {
-  if (globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V10) return;
-  globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V10 = true;
+  if (globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V11) return;
+  globalThis.__ADD2E_ATTACK_DIALOG_BINDINGS_V11 = true;
   Hooks.on("renderDialogV2", add2eBindAttackDialogInteractions);
   Hooks.on("renderApplicationV2", add2eBindAttackDialogInteractions);
 }
@@ -159,8 +128,8 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
   const backstabMultiplier = add2eAttackEscapeHtml(backstabInfo?.multiplier ?? "");
   const assassinationScore = add2eAttackEscapeHtml(assassinationInfo?.score ?? "0");
 
-  const showBackstab = add2eAttackIsThiefOrAssassin(actor);
-  const showAssassination = add2eAttackIsAssassin(actor);
+  const showBackstab = canUseBackstab === true;
+  const showAssassination = canUseAssassination === true;
   const hasRearSpecial = showBackstab || showAssassination;
 
   const allowedZones = new Set(["front", "flank", "rear-flank", "rear"]);
