@@ -1,5 +1,7 @@
 // ADD2E — Actor sheet getData : Race, Classe, capacités et équipement.
 
+import { classItems, classProgression, classSlug, raceItem, raceSlug } from "./17b-multiclass-core.mjs";
+
 function add2eThiefActivityNormalize(value) {
   return String(value ?? "")
     .trim()
@@ -65,6 +67,54 @@ function add2eBuildSummaryClassFeatures(features = []) {
   }
 
   return result;
+}
+
+function add2eSheetRaceCapabilities(system) {
+  const raw = system?.capacites;
+  if (Array.isArray(raw)) return raw.filter(value => typeof value === "string" && value.trim());
+  if (raw && typeof raw === "object") return Object.values(raw).filter(value => typeof value === "string" && value.trim());
+  return [];
+}
+
+function add2eSheetRaceIdentity(actor) {
+  const item = raceItem(actor);
+  if (!item) return null;
+  const system = item.system ?? {};
+  return {
+    itemId: item.id,
+    uuid: item.uuid,
+    slug: raceSlug(item),
+    name: String(item.name ?? ""),
+    img: String(item.img ?? ""),
+    capacites: add2eSheetRaceCapabilities(system),
+    description: String(system.description ?? ""),
+    descriptionLongue: String(system.description_longue ?? ""),
+    langues: system.langues ?? "",
+    movement: system.movement ?? 0,
+    taille: system.taille ?? "",
+    ageDebut: system["âge_debut"] ?? "",
+    esperanceVie: system["espérance_vie"] ?? "",
+    noteMd: system.note_md ?? ""
+  };
+}
+
+function add2eSheetClassIdentityRows(actor) {
+  return classItems(actor).map(item => {
+    const progression = classProgression(item);
+    if (!progression.hasLevel || !progression.hasXp) {
+      throw new Error(`Progression canonique absente sur l’Item classe « ${item.name ?? item.id} ».`);
+    }
+    return {
+      itemId: item.id,
+      uuid: item.uuid,
+      slug: classSlug(item),
+      name: String(item.name ?? ""),
+      img: String(item.img ?? ""),
+      level: progression.level,
+      xp: progression.xp,
+      description: String(item.system?.description ?? "")
+    };
+  });
 }
 
 function add2eSheetModifierValue(modifier) {
@@ -246,72 +296,40 @@ function add2eSheetCharismaSocialData(actor) {
   };
 }
 
+function add2eRequireClassFeatureApis() {
+  const api = {
+    getFeatures: globalThis.add2eGetActorClassFeatures,
+    featureLevel: globalThis.add2eFeatureActorLevel,
+    minLevel: globalThis.add2eFeatureMinLevel,
+    maxLevel: globalThis.add2eFeatureMaxLevel,
+    isActivable: globalThis.add2eIsFeatureActivable,
+    thiefTable: globalThis.add2eGetActorThiefSkillTable
+  };
+  for (const [key, value] of Object.entries(api)) {
+    if (typeof value !== "function") throw new Error(`API canonique ADD2E de capacité de classe indisponible : ${key}.`);
+  }
+  return api;
+}
+
 export function add2ePrepareActorSheetBaseData({ sheet, data }) {
   const actor = sheet.actor;
   const sys = data.actor.system;
   const items = data.actor.items ?? [];
 
-  const classItem = data.actor.items.find(i => i.type === "classe") || null;
-  if (classItem && classItem.system) {
-    sys.details_classe = foundry.utils.duplicate(classItem.system);
-    sys.classe = classItem.name;
-    sys.classe_img = classItem.img;
-    sys.spellcasting = foundry.utils.duplicate(classItem.system.spellcasting ?? null);
-  } else {
-    sys.details_classe = {};
-    sys.classe = "";
-    sys.classe_img = "";
-    sys.spellcasting = null;
-  }
+  data.classIdentityRows = add2eSheetClassIdentityRows(actor);
+  data.raceIdentity = add2eSheetRaceIdentity(actor);
 
-  const spellEntriesForDisplay = add2eGetSpellcastingEntries(data.actor);
-  data.spellLists = spellEntriesForDisplay.map(e => e.label || add2eSpellLabel(e.key));
+  const spellEntriesForDisplay = globalThis.add2eGetSpellcastingEntries?.(actor);
+  if (!Array.isArray(spellEntriesForDisplay)) {
+    throw new Error("Le résolveur canonique ADD2E des entrées d’incantation est indisponible ou invalide.");
+  }
+  if (typeof globalThis.add2eSpellLabel !== "function" || typeof globalThis.add2eGetSpellSlotPoolsByLevel !== "function") {
+    throw new Error("Les API canoniques ADD2E d’affichage des emplacements de sorts sont indisponibles.");
+  }
+  data.spellLists = spellEntriesForDisplay.map(entry => entry.label || globalThis.add2eSpellLabel(entry.key));
   data.spellcastingEntries = spellEntriesForDisplay;
-  data.spellSlotsByPool = add2eGetSpellSlotPoolsByLevel(data.actor);
-
-  let raceItem = null;
-  const raceKey = sys.race || "";
-  if (raceKey && items.some(i => i.type === "race" && i.id === raceKey)) {
-    raceItem = items.find(i => i.type === "race" && i.id === raceKey);
-  }
-  if (!raceItem && raceKey) {
-    raceItem = items.find(i => i.type === "race" && (i.name || "").toLowerCase() === raceKey.toLowerCase());
-  }
-  if (!raceItem) raceItem = items.find(i => i.type === "race") || null;
-
-  let details_race = {};
-  if (raceItem && raceItem.system) {
-    const rawCaps = raceItem.system.capacites;
-    let capacites = [];
-    if (Array.isArray(rawCaps)) capacites = rawCaps.filter(c => !!c && typeof c === "string");
-    else if (rawCaps && typeof rawCaps === "object") capacites = Object.values(rawCaps).filter(c => !!c && typeof c === "string");
-    details_race = {
-      nom: raceItem.name || "",
-      img: raceItem.img || "",
-      bonus_caracteristiques: raceItem.system.bonus_caracteristiques || {},
-      capacites,
-      description: raceItem.system.description || "",
-      langues: raceItem.system.langues || "",
-      movement: raceItem.system.movement !== undefined ? raceItem.system.movement : 0,
-      taille: raceItem.system.taille || "",
-      âge_debut: raceItem.system["âge_debut"] || "",
-      esperance_vie: raceItem.system["espérance_vie"] || "",
-      description_longue: raceItem.system.description_longue || "",
-      note_md: raceItem.system.note_md || "",
-      limites_classes: raceItem.system.limites_classes || {},
-      min_caracteristiques: raceItem.system.min_caracteristiques || {},
-      max_caracteristiques: raceItem.system.max_caracteristiques || {}
-    };
-  }
-
-  sys.details_race = details_race;
+  data.spellSlotsByPool = globalThis.add2eGetSpellSlotPoolsByLevel(actor);
   data.movement = add2eSheetMovementData(actor);
-
-  let details_classe = sys.details_classe || {};
-  details_classe.specialAbilities = Array.isArray(details_classe.specialAbilities)
-    ? details_classe.specialAbilities
-    : (details_classe.specialAbilities ? Object.values(details_classe.specialAbilities) : []);
-  sys.details_classe = details_classe;
 
   const abilityEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
   if (!abilityEngine || typeof abilityEngine.resolveAbilityDerived !== "function") {
@@ -327,43 +345,29 @@ export function add2ePrepareActorSheetBaseData({ sheet, data }) {
 
   data.canExceptionalStrength = data.abilityDerived.force?.exceptionalStrengthEligible === true;
   if (data.canExceptionalStrength && (sys.force_ex === undefined || sys.force_ex === null)) sys.force_ex = 0;
+  data.progressionCourante = null;
 
-  let niveau = Number(sys.niveau);
-  if (!Number.isInteger(niveau) || niveau < 1) niveau = 1;
-  if (Array.isArray(sys.niveau)) niveau = Number(sys.niveau.find(x => typeof x === "number" && !isNaN(x))) || 1;
-
-  const progTab = sys.details_classe?.progression || [];
-  const progressionCourante = progTab.length >= niveau ? progTab[niveau - 1] : null;
-  if (progressionCourante && typeof progressionCourante.title === "undefined") {
-    const titles = sys.details_classe?.titlesByLevel;
-    if (Array.isArray(titles) && titles.length) {
-      const t = titles.find(x => niveau >= Number(x.minLevel ?? x.niveau ?? 0) && niveau <= Number(x.maxLevel ?? x.niveau ?? 999));
-      if (t && (t.title || t.titre)) progressionCourante.title = t.title || t.titre;
-    }
-    if (typeof progressionCourante.title === "undefined") progressionCourante.title = "";
-  }
-
-  const isMonk = (sys.details_classe?.label || sys.details_classe?.nom || sys.details_classe?.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, "").includes("moine");
-  if (isMonk && progressionCourante && typeof progressionCourante.monkAC !== "undefined") sys.ca_naturel = progressionCourante.monkAC;
-  data.progressionCourante = progressionCourante;
-
-  const classFeaturesForDisplay = (typeof add2eGetActorClassFeatures === "function" ? add2eGetActorClassFeatures(actor) : [])
+  const featureApi = add2eRequireClassFeatureApis();
+  const classFeaturesForDisplay = featureApi.getFeatures(actor)
     .map((feature, index) => ({ ...feature, __featureIndex: index }))
     .filter(feature => {
-      const featureLevel = typeof add2eFeatureActorLevel === "function" ? add2eFeatureActorLevel(actor, feature) : niveau;
-      return featureLevel >= add2eFeatureMinLevel(feature) && featureLevel <= add2eFeatureMaxLevel(feature);
+      const featureLevel = Number(featureApi.featureLevel(actor, feature));
+      if (!Number.isFinite(featureLevel)) {
+        throw new Error(`Niveau canonique introuvable pour la capacité « ${feature?.name ?? feature?.key ?? "inconnue"} ».`);
+      }
+      return featureLevel >= featureApi.minLevel(feature) && featureLevel <= featureApi.maxLevel(feature);
     });
-  data.activeClassFeatures = classFeaturesForDisplay.filter(feature => typeof add2eIsFeatureActivable === "function" ? add2eIsFeatureActivable(feature) : feature.activable === true);
-  data.passiveClassFeatures = classFeaturesForDisplay.filter(feature => !(typeof add2eIsFeatureActivable === "function" ? add2eIsFeatureActivable(feature) : feature.activable === true));
+  data.activeClassFeatures = classFeaturesForDisplay.filter(feature => featureApi.isActivable(feature));
+  data.passiveClassFeatures = classFeaturesForDisplay.filter(feature => !featureApi.isActivable(feature));
   data.summaryClassFeatures = add2eBuildSummaryClassFeatures(classFeaturesForDisplay);
-  data.thiefSkillRows = typeof add2eGetActorThiefSkillTable === "function" ? add2eGetActorThiefSkillTable(actor) : [];
+  data.thiefSkillRows = featureApi.thiefTable(actor);
   data.thiefActivity = add2ePrepareThiefActivityData(actor);
 
   data.listeArmes = items.filter(item => item.type === "arme");
   data.listeArmures = items.filter(item => item.type === "armure");
   data.thiefSkills = data.thiefSkillRows;
-  data.listeObjets = items.filter(i => i.type === "objet");
+  data.listeObjets = items.filter(item => item.type === "objet");
   data.equipmentModifierSummaryByItemId = add2eSheetEquipmentModifierSummaries(abilityEngine, actor, data.listeObjets);
 
-  return { actor, sys, items, niveau, progressionCourante, isMonk };
+  return { actor, sys, items };
 }
