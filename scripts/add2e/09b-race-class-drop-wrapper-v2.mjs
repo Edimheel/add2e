@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Auto-compatibilité race / classe au drop — services
-// Version : 2026-08-10-race-class-drop-services-v10
+// Version : 2026-08-11-unique-race-auto-apply-v11
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
@@ -347,6 +347,31 @@ async function add2eEnsureCompatibleRaceForClassDrop(actor, classData, sheet) {
   if (!candidates.length) {
     ui.notifications.warn(`Aucune race compatible trouvée dans le compendium pour ${classData.name}.`);
     return { ok: false, handled: true, reason: "no-compatible-race" };
+  }
+
+  if (raciallyCompatible.length === 1) {
+    const selectedRace = candidates[0];
+    const currentRaceAlreadyValid = currentRace
+      && add2eRaceRuleAllowsClass(currentRace, classData)
+      && add2eRacePassesClassDrop(actor, classData, currentRace, alignmentCandidate);
+    if (currentRaceAlreadyValid) {
+      return {
+        ok: true,
+        handled: false,
+        selectedRace: currentRace,
+        uniqueRaceRestriction: true,
+        automaticRaceChange: false
+      };
+    }
+    await add2eApplyRaceAndClassFromChoice(actor, classData, selectedRace, sheet, alignmentCandidate);
+    return {
+      ok: true,
+      handled: true,
+      selectedRace,
+      appliedClass: true,
+      uniqueRaceRestriction: true,
+      automaticRaceChange: true
+    };
   }
 
   const selectedRace = await add2eDialogChooseClassRaceTile(actor, classData, candidates, currentRace ? "incompatible-race" : "missing-race");
