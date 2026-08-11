@@ -10,9 +10,9 @@ import {
   classSlug,
   cloneItemData,
   itemLabel,
-  norm,
   num,
   pickClassAlignment,
+  raceSlug,
   systemRace,
   warn
 } from "./17b-multiclass-core.mjs";
@@ -24,15 +24,17 @@ const MULTICLASS_CANDIDATE_PACKS = {
 const MULTICLASS_CANDIDATE_CACHE = { race: null, classe: null };
 
 function candidateKey(data) {
-  const system = data?.system ?? {};
-  return norm(data?.name ?? system.slug ?? system.label ?? system.name ?? system.nom ?? data?.id ?? "");
+  const type = String(data?.type ?? "").toLowerCase();
+  if (type === "race") return `race:${raceSlug(data)}`;
+  if (type === "classe") return `classe:${classSlug(data)}`;
+  throw new Error(`Type de candidat multiclassage invalide : ${data?.type ?? "absent"}.`);
 }
 
 function dedupeCandidates(items) {
   const seen = new Set();
   return (items ?? []).filter(item => {
     const key = candidateKey(item);
-    if (!key || seen.has(key)) return false;
+    if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
@@ -47,7 +49,7 @@ async function loadCandidatePack(type) {
       continue;
     }
     try {
-      const index = await pack.getIndex({ fields: ["name", "type", "system.slug", "system.label"] });
+      const index = await pack.getIndex({ fields: ["name", "type"] });
       for (const entry of index) {
         if (String(entry?.type ?? "").toLowerCase() !== String(type ?? "").toLowerCase()) continue;
         const document = await pack.getDocument(entry._id);
@@ -74,11 +76,19 @@ export async function preloadMulticlassCandidatePacks(type = null) {
 
 Hooks.once("ready", () => preloadMulticlassCandidatePacks().catch(error => warn("[COMPENDIUM_PRELOAD_ERROR]", error)));
 
-export function comboTokens(combo) {
-  if (Array.isArray(combo)) return combo.map(norm).filter(Boolean);
-  if (typeof combo === "string") return combo.split(/[+/;,|\n]+/).map(norm).filter(Boolean);
-  if (combo && typeof combo === "object" && Array.isArray(combo.classes)) return combo.classes.map(norm).filter(Boolean);
-  return [];
+function canonicalCombinationClassSlug(value, raceData) {
+  const slug = String(value ?? "").trim();
+  if (!/^[a-z0-9_]+$/.test(slug)) {
+    throw new Error(`Combinaison multiclassage invalide pour « ${raceData?.name ?? raceData?.id ?? "race inconnue"} » : slug de classe « ${value ?? ""} » non canonique.`);
+  }
+  return slug;
+}
+
+export function comboTokens(combo, raceData = null) {
+  if (!combo || typeof combo !== "object" || !Array.isArray(combo.classes)) {
+    throw new Error(`Combinaison multiclassage invalide pour « ${raceData?.name ?? raceData?.id ?? "race inconnue"} » : classes[] est requis.`);
+  }
+  return [...new Set(combo.classes.map(value => canonicalCombinationClassSlug(value, raceData)))];
 }
 
 /**
@@ -86,31 +96,41 @@ export function comboTokens(combo) {
  * ses sous-ensembles pendant la construction progressive du multiclassage.
  */
 export function allowedCombosFromRace(raceData) {
-  const combos = Array.isArray((raceData?.system ?? raceData ?? {}).multiclassing?.allowedCombinations)
-    ? (raceData?.system ?? raceData ?? {}).multiclassing.allowedCombinations
-    : [];
-  return combos.map(comboTokens).map(tokens => [...new Set(tokens)]).filter(tokens => tokens.length >= 2);
+  const combos = (raceData?.system ?? raceData ?? {}).multiclassing?.allowedCombinations;
+  if (combos === undefined || combos === null) return [];
+  if (!Array.isArray(combos)) {
+    throw new Error(`Item race « ${raceData?.name ?? raceData?.id ?? "inconnu"} » : system.multiclassing.allowedCombinations doit être un tableau.`);
+  }
+  return combos.map(combo => comboTokens(combo, raceData)).filter(tokens => tokens.length >= 2);
 }
 
-export function raceAllowsClassSet(raceData, names) {
-  const wanted = [...new Set((names ?? []).map(norm).filter(Boolean))];
+export function raceAllowsClassSet(raceData, classSlugs) {
+  const wanted = [...new Set((classSlugs ?? []).map(value => canonicalCombinationClassSlug(value, raceData)))];
   if (wanted.length <= 1) return true;
   return allowedCombosFromRace(raceData).some(combo => wanted.every(key => combo.includes(key)));
 }
 
+function classRaceRuleKey(raceData) {
+  return `race:${raceSlug(raceData)}`;
+}
+
 export function classRaceMaxLevel(classData, raceData) {
-  const rules = (classData?.system ?? classData ?? {}).raceRestriction?.races ?? {};
-  const raceKey = `race:${norm(itemLabel(raceData, "Race"))}`;
-  const rule = rules[raceKey] ?? rules[norm(raceKey)] ?? null;
-  const value = Number(rule?.maxLevel ?? rule?.niveauMax ?? rule?.max ?? 0);
-  return Number.isFinite(value) && value > 0 ? value : 0;
+  const rules = (classData?.system ?? classData ?? {}).raceRestriction?.races ?? null;
+  if (!rules || typeof rules !== "object" || !Object.keys(rules).length) return 0;
+  const rule = rules[classRaceRuleKey(raceData)] ?? null;
+  if (!rule || rule.allowed !== true) return 0;
+  if (rule.maxLevel === undefined || rule.maxLevel === null || rule.maxLevel === "") return 0;
+  const value = Number(rule.maxLevel);
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`Restriction raciale invalide pour « ${classData?.name ?? classData?.id ?? "classe inconnue"} » et ${classRaceRuleKey(raceData)} : maxLevel doit être positif ou null.`);
+  }
+  return Math.floor(value);
 }
 
 export function raceMatchesClassRules(raceData, classData) {
   const rules = (classData?.system ?? classData ?? {}).raceRestriction?.races ?? null;
   if (!rules || typeof rules !== "object" || !Object.keys(rules).length) return true;
-  const raceKey = `race:${norm(itemLabel(raceData, "Race"))}`;
-  return (rules[raceKey] ?? rules[norm(raceKey)] ?? null)?.allowed === true;
+  return rules[classRaceRuleKey(raceData)]?.allowed === true;
 }
 
 export function classPrerequisitesOk(actor, classData, raceData = null, options = {}) {
@@ -137,38 +157,31 @@ export function worldItemsByType(type) {
 }
 
 export function uniqueRaces(actor) {
-  const current = actor?.items?.find?.(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+  const current = systemRace(actor);
   const seen = new Set();
   return [...(current ? [cloneItemData(current)] : []), ...worldItemsByType("race")]
     .filter(Boolean)
     .filter(race => {
-      const key = norm(itemLabel(race, "Race"));
-      if (!key || seen.has(key)) return false;
+      const key = raceSlug(race);
+      if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
 }
 
 export function currentRaceOrCompatibleAlternatives(actor, predicate) {
-  const ordered = [];
-  const seen = new Set();
-  for (const race of [systemRace(actor), ...uniqueRaces(actor)]) {
-    const key = norm(itemLabel(race, "Race"));
-    if (!race || !key || seen.has(key) || !predicate(race)) continue;
-    seen.add(key);
-    ordered.push(race);
-  }
-  return ordered;
+  return uniqueRaces(actor).filter(race => predicate(race));
 }
 
-export function wantedClassNames(actor, classData = null) {
-  const names = classItems(actor).map(item => item.name);
-  if (!classData || classItems(actor).some(item => classSlug(item) === classSlug(classData))) return names;
-  return [...names, itemLabel(classData, "Classe")];
+export function wantedClassSlugs(actor, classData = null) {
+  const slugs = classItems(actor).map(item => classSlug(item));
+  if (!classData) return slugs;
+  const candidate = classSlug(classData);
+  return slugs.includes(candidate) ? slugs : [...slugs, candidate];
 }
 
 export function raceCompatibleForMulticlass(actor, classData, raceData) {
-  return raceAllowsClassSet(raceData, wantedClassNames(actor, classData))
+  return raceAllowsClassSet(raceData, wantedClassSlugs(actor, classData))
     && raceMatchesClassRules(raceData, classData)
     && classPrerequisitesOk(actor, classData, raceData, { notify: false });
 }
