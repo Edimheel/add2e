@@ -1,7 +1,7 @@
 /* ADD2E — Druide : Forme animale. ApplicationV2/DialogV2, V13/V14/V15.
  * La forme reste active jusqu'au retour volontaire ou à la suppression de son effet.
  */
-const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-07-canonical-categorized-resource-v10";
+const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-11-canonical-source-class-item-v11";
 const SCOPE = "druid-animal-form";
 const TRANSFORM_GROUP = "physical-form";
 const EQUIPPED_FIELDS = Object.freeze([
@@ -136,6 +136,29 @@ const featureLevel = (currentActor, currentFeature) => {
   return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
 };
 
+function sourceClassContext(currentActor, currentFeature) {
+  const itemId = String(currentFeature?._add2eClassItemId ?? "").trim();
+  if (!itemId) throw new Error("Forme animale : ID de l’Item classe source absent du contexte de capacité.");
+  const item = currentActor?.items?.get?.(itemId) ?? null;
+  if (!item || String(item.type ?? "").toLowerCase() !== "classe") {
+    throw new Error("Forme animale : Item classe source introuvable sur l’acteur.");
+  }
+  const classKey = String(currentFeature?._add2eClassSlug ?? "").trim();
+  if (classKey !== "druide") {
+    throw new Error(`Forme animale : classe source canonique invalide (${classKey || "absente"}).`);
+  }
+  const tags = Array.isArray(item.system?.tags) ? item.system.tags.map(value => String(value ?? "").trim().toLowerCase()) : [];
+  if (!tags.includes("classe:druide")) {
+    throw new Error("Forme animale : l’Item classe source ne porte pas le tag canonique classe:druide.");
+  }
+  return {
+    item,
+    itemId: item.id,
+    itemUuid: item.uuid,
+    classKey
+  };
+}
+
 const currentTick = () => {
   const engine = game?.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE;
   const tick = typeof engine?.currentTick === "function" ? Number(engine.currentTick()) : NaN;
@@ -231,11 +254,11 @@ function equipmentUpdates(currentActor) {
     });
 }
 
-function transformationModifiers(form) {
+function transformationModifiers(form, sourceClass) {
   const source = {
     kind: "class-feature",
-    id: `${SCOPE}:${form.key}`,
-    uuid: "",
+    id: `${sourceClass.itemId}:${SCOPE}:${form.key}`,
+    uuid: `${sourceClass.itemUuid}#${SCOPE}:${form.key}`,
     name: `Forme animale — ${form.label}`
   };
   const movementModes = form?.combat?.movementModes ?? {};
@@ -254,6 +277,9 @@ function transformationModifiers(form) {
         label: `${form.label} — ${target}`,
         producer: "capability-transformation",
         sourceKey: SCOPE,
+        classItemId: sourceClass.itemId,
+        classItemUuid: sourceClass.itemUuid,
+        classKey: sourceClass.classKey,
         formKey: form.key,
         movementMode: target,
         modes: [target],
@@ -275,6 +301,9 @@ function transformationModifiers(form) {
         label: `${form.label} — équipement absorbé par la transformation`,
         producer: "capability-transformation",
         sourceKey: SCOPE,
+        classItemId: sourceClass.itemId,
+        classItemUuid: sourceClass.itemUuid,
+        classKey: sourceClass.classKey,
         formKey: form.key,
         equipmentMerged: true
       }
@@ -283,7 +312,7 @@ function transformationModifiers(form) {
   ];
 }
 
-function naturalAttackDocuments(form) {
+function naturalAttackDocuments(form, sourceClass) {
   return form.attacks.map(attack => ({
     type: "arme",
     name: `${form.label} — ${attack.label}`,
@@ -325,14 +354,15 @@ function naturalAttackDocuments(form) {
         "forme_animale:attaque_naturelle"
       ],
       add2eAutoCreated: true,
-      sourceClasse: "druide",
       sourceCapacite: "forme_animale",
       description: `Attaque naturelle temporaire de la forme ${form.label}.`
     },
     flags: {
       add2e: {
-        tags: ["capability:transformation", "forme_animale:attaque_naturelle"],
-        sourceClasse: "druide",
+        tags: ["classe:druide", "capability:transformation", "forme_animale:attaque_naturelle"],
+        sourceItemId: sourceClass.itemId,
+        sourceItemUuid: sourceClass.itemUuid,
+        sourceClassKey: sourceClass.classKey,
         sourceCapacite: "forme_animale",
         capabilityTransformation: {
           version: ADD2E_DRUIDE_FORME_ANIMALE_VERSION,
@@ -347,16 +377,19 @@ function naturalAttackDocuments(form) {
   }));
 }
 
-function effectData(form, tick) {
+function effectData(form, tick, sourceClass) {
   return {
     name: `Forme animale — ${form.label}`,
     img: form.img,
+    origin: sourceClass.itemUuid,
     disabled: false,
     transfer: false,
     changes: [],
     flags: {
       add2e: {
-        sourceClasse: "druide",
+        sourceItemId: sourceClass.itemId,
+        sourceItemUuid: sourceClass.itemUuid,
+        sourceClassKey: sourceClass.classKey,
         sourceCapacite: "forme_animale",
         sourceType: "class-feature",
         tags: [
@@ -367,7 +400,7 @@ function effectData(form, tick) {
           `forme_animale:${form.key}`,
           `taille:${form.size}`
         ],
-        modifiers: transformationModifiers(form),
+        modifiers: transformationModifiers(form, sourceClass),
         capabilityTransformation: {
           version: ADD2E_DRUIDE_FORME_ANIMALE_VERSION,
           sourceKey: SCOPE,
@@ -426,7 +459,7 @@ async function restore(currentActor, currentEffect = effects(currentActor)[0] ??
   return result;
 }
 
-async function apply(currentActor, token, form, tick, recovery) {
+async function apply(currentActor, token, form, tick, recovery, sourceClass) {
   const applyCanonical = globalThis.add2eApplyDocumentTransformation;
   if (typeof applyCanonical !== "function") {
     throw new Error("Le moteur canonique de transformation ADD2E est indisponible.");
@@ -435,14 +468,14 @@ async function apply(currentActor, token, form, tick, recovery) {
   const result = await applyCanonical({
     actor: currentActor,
     token,
-    effectData: effectData(form, tick),
+    effectData: effectData(form, tick, sourceClass),
     group: TRANSFORM_GROUP,
     mode: form.key,
     scope: "actor",
     source: {
       kind: "class-feature",
-      id: SCOPE,
-      uuid: feature?.uuid ?? "",
+      id: `${sourceClass.itemId}:${SCOPE}`,
+      uuid: `${sourceClass.itemUuid}#${SCOPE}`,
       name: feature?.name ?? "Forme animale"
     },
     tokenUpdate: {
@@ -450,7 +483,7 @@ async function apply(currentActor, token, form, tick, recovery) {
     },
     actorUpdate: {},
     itemUpdates: equipmentUpdates(currentActor),
-    temporaryItems: naturalAttackDocuments(form)
+    temporaryItems: naturalAttackDocuments(form, sourceClass)
   });
 
   if (!result?.ok || !result.effect) {
@@ -554,6 +587,7 @@ async function chat(
   currentActor,
   title,
   body,
+  sourceClass,
   img = "icons/magic/nature/wolf-paw-glow-green.webp"
 ) {
   const build = globalThis.add2eBuildChatCard;
@@ -576,6 +610,9 @@ async function chat(
       flags: {
         add2e: {
           capabilityTransformation: true,
+          sourceItemId: sourceClass.itemId,
+          sourceItemUuid: sourceClass.itemUuid,
+          sourceClassKey: sourceClass.classKey,
           sourceCapacite: "forme_animale",
           version: ADD2E_DRUIDE_FORME_ANIMALE_VERSION
         }
@@ -591,6 +628,7 @@ if (!actor) {
   return false;
 }
 
+const sourceClass = sourceClassContext(actor, feature);
 const level = featureLevel(actor, feature);
 if (level === null) {
   ui.notifications.error("Forme animale : niveau de Druide introuvable.");
@@ -639,7 +677,7 @@ if (choice.action === "return") {
     ui.notifications.warn("Aucune forme animale active à retirer.");
     return false;
   }
-  await chat(actor, "Forme animale", `<b>${esc(actor.name)}</b> reprend sa forme normale.`);
+  await chat(actor, "Forme animale", `<b>${esc(actor.name)}</b> reprend sa forme normale.`, sourceClass);
   ui.notifications.info("Retour à la forme normale.");
   return true;
 }
@@ -671,7 +709,7 @@ const percent = die * 10;
 const recovery = Math.min(lost, Math.ceil(lost * percent / 100));
 const usage = categoryUsage(actor, feature, form.category);
 const transaction = await engine.transactResources(usage.descriptor, async () => (
-  apply(actor, selectedToken, form, tick, recovery)
+  apply(actor, selectedToken, form, tick, recovery, sourceClass)
 ), {
   reason: "druid-animal-form-use",
   consumer: "druide-forme-animale"
@@ -694,6 +732,7 @@ await chat(
   + `<b>PV rendus :</b> ${result.applied} (${percent}% des ${lost} PV perdus).<br>`
   + `<b>Attaques :</b> ${esc(form.attacks.map(attack => `${attack.label} ${attack.damage}`).join(" ; "))}.<br>`
   + "<small>La forme reste active jusqu'au retour volontaire ou à la suppression de son effet.</small>",
+  sourceClass,
   form.img
 );
 
