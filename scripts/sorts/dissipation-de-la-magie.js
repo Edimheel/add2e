@@ -1,524 +1,600 @@
-// ADD2E — onUse Clerc niveau 3 : Dissipation de la Magie
-// Version : 2026-05-05-clerc-n3-v1
-// Retour attendu par le moteur ADD2E : true = sort consommé, false = sort non consommé.
+/**
+ * ADD2E — Dissipation de la magie
+ * Runtime canonique commun Clerc / Magicien / Druide et pouvoirs d'objet équivalents.
+ * Résout les effets magiques actifs dans le cube du sort selon le Manuel :
+ * 50 % de base, +5 %/niveau supérieur, -2 %/niveau inférieur, automatique sur ses propres sorts.
+ * Compatible Foundry V13/V14/V15 — fenêtres et cartes via les API ADD2E communes.
+ */
 
-const ADD2E_SORT_CONFIG = {
-  "name": "Dissipation de la Magie",
-  "slug": "dissipation_de_la_magie",
-  "script_type": "dispel_magic",
-  "description": "Tente d’annuler ou de supprimer les effets magiques actifs dans la zone ou sur une cible. Les sorts permanents, objets magiques et effets de lanceurs plus puissants peuvent résister ou seulement être temporairement neutralisés selon les règles de dissipation.",
-  "effect_rounds": 0,
-  "effectTags": [
-    "dissipation:magie",
-    "abjuration",
-    "anti_magie"
-  ],
-  "modes": [
-    {
-      "id": "normal",
-      "label": "Dissipation de la Magie"
-    }
-  ]
-};
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][CLERC_N3]";
+const ADD2E_DISPEL_MAGIC_VERSION = "2026-08-12-canonical-dispel-magic-runtime-v1";
 
-function add2eHtmlEscape(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
-}
-
-function add2eCasterLevel(actor) {
-  return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
-}
-
-async function add2eEvalRoll(formula) {
-  return await new Roll(formula).evaluate();
-}
-
-function add2eRoundCount(expr, level) {
-  if (typeof expr === "number") return expr;
-  if (!expr) return 0;
-  const s = String(expr);
-  if (s === "level") return level;
-  if (s === "2*level") return 2 * level;
-  if (s === "5*level") return 5 * level;
-  if (s === "10*level") return 10 * level;
-  if (s === "60*level") return 60 * level;
-  if (s === "60+10*level") return 60 + (10 * level);
-  if (s === "10+level") return 10 + level;
-  if (s === "10+10*level") return 10 + (10 * level);
-  if (s === "8+1d8") return 8 + Math.ceil(Math.random() * 8);
-  return Number(s) || 0;
-}
-
-function add2eGetCasterToken() {
-  return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
-}
-
-function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user.targets ?? []);
-  if (targets.length) return targets;
-  const casterToken = add2eGetCasterToken();
-  return (fallbackCaster && casterToken) ? [casterToken] : [];
-}
-
-async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? (typeof add2eGetCasterToken === "function" ? add2eGetCasterToken() : null);
-  const casterActor = actor ?? casterToken?.actor ?? null;
-  const casterName = casterActor?.name ?? casterToken?.name ?? "Clerc";
-  const spellName = item?.name ?? title ?? "Sort divin";
-  const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
-  const targets = Array.from(game.user.targets ?? []);
-  const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
-  const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? options.regle ?? "";
-  const subtitle = options.subtitle ?? "Sort divin";
-
-  const safeCaster = add2eHtmlEscape(casterName);
-  const safeSpell = add2eHtmlEscape(spellName);
-  const safeSubtitle = add2eHtmlEscape(subtitle);
-  const safeTarget = add2eHtmlEscape(targetLabel);
-  const safeOutcome = add2eHtmlEscape(outcome);
-  const safeCasterImg = add2eHtmlEscape(casterImg);
-  const safeSpellImg = add2eHtmlEscape(spellImg);
-
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
-    content: `
-      <div class="add2e-chat-card add2e-clerc-sort"
-           style="border:1px solid #c79222;border-radius:8px;overflow:hidden;background:#fff8e6;color:#5a3b12;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#9f6b0a;color:#fff;padding:7px 9px;">
-          <img src="${safeCasterImg}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #f3d48a;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${safeCaster}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${safeSpell}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">${safeSubtitle}</div>
-          <img src="${safeSpellImg}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #f0d391;background:#fff;" />
-        </div>
-
-        <div style="padding:9px 10px 10px 10px;background:#fff8e6;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${safeTarget}</div>
-
-          <div style="border:1px solid #e0ae37;border-radius:6px;background:#fffdf5;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#1c9b4b;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${safeOutcome}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
-          </div>
-
-          ${rule ? `
-            <details style="border:1px solid #e0ae37;border-radius:5px;background:#fffdf5;padding:5px 7px;">
-              <summary style="cursor:pointer;font-weight:800;color:#6a4611;">Règle appliquée</summary>
-              <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule}</div>
-            </details>
-          ` : `
-            <details style="border:1px solid #e0ae37;border-radius:5px;background:#fffdf5;padding:5px 7px;">
-              <summary style="cursor:pointer;font-weight:800;color:#6a4611;">Règle appliquée</summary>
-              <div style="margin-top:5px;font-size:12px;line-height:1.35;">Effet du sort appliqué selon sa description et l’arbitrage du MD.</div>
-            </details>
-          `}
-        </div>
-      </div>`
+function add2eDispelMagicEmitGM(operation, payload) {
+  if (!game.socket) return false;
+  game.socket.emit("system.add2e", {
+    type: "ADD2E_GM_OPERATION",
+    operation,
+    payload: { ...(payload ?? {}), fromUserId: game.user.id, sentAt: Date.now() }
   });
+  return true;
 }
 
-async function add2eApplyTaggedEffect(targetActor, { name, img, tags, rounds = 0, description = "", changes = [] }) {
-  if (!targetActor) return false;
-  const data = {
-    name,
-    img: img || item?.img || "icons/svg/aura.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes,
-    duration: {
-      rounds: rounds || undefined,
-      startRound: game.combat?.round ?? null,
-      startTime: game.time?.worldTime ?? null,
-      combat: game.combat?.id ?? null
-    },
-    description,
-    flags: { add2e: { tags: tags ?? [] } }
+return await (async () => {
+  const escapeHtml = value => String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  const normalize = value => String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "'")
+    .replace(/[″”]/g, "\"")
+    .replace(/\s+/g, " ");
+
+  const sourceItem = (typeof sort !== "undefined" && sort?.type === "sort")
+    ? sort
+    : ((typeof item !== "undefined" && item?.type === "sort")
+      ? item
+      : ((typeof spell !== "undefined" && spell?.type === "sort")
+        ? spell
+        : ((typeof args !== "undefined" && args?.[0]?.item?.type === "sort") ? args[0].item : null)));
+
+  if (!sourceItem) {
+    ui.notifications.error("Dissipation de la magie : Item sort canonique introuvable.");
+    return false;
+  }
+
+  const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
+  if (!caster) {
+    ui.notifications.error("Dissipation de la magie : lanceur introuvable.");
+    return false;
+  }
+
+  const required = [
+    "add2eNormalizeSpellKey",
+    "add2eGetSpellListsFromItem",
+    "add2eResolveSpellDistance",
+    "add2eCanActorUseSpell",
+    "add2eDialogWait",
+    "add2eBuildChatCard",
+    "add2eCreateChatCard"
+  ];
+  const missing = required.filter(name => typeof globalThis[name] !== "function");
+  if (missing.length) {
+    ui.notifications.error(`Dissipation de la magie : API ADD2E indisponible (${missing.join(", ")}).`);
+    return false;
+  }
+
+  const spellLevel = Number(sourceItem.system?.niveau);
+  if (!Number.isInteger(spellLevel) || spellLevel < 1) {
+    ui.notifications.error("Dissipation de la magie : system.niveau canonique invalide.");
+    return false;
+  }
+
+  const lists = globalThis.add2eGetSpellListsFromItem(sourceItem)
+    .map(value => globalThis.add2eNormalizeSpellKey(value))
+    .filter(Boolean);
+  const supportedLists = [...new Set(lists.filter(value => ["clerc", "magicien", "druide"].includes(value)))];
+  if (supportedLists.length !== 1) {
+    ui.notifications.error("Dissipation de la magie : exactement une liste Clerc, Magicien ou Druide est requise.");
+    return false;
+  }
+  const listKey = supportedLists[0];
+  const listLabel = listKey === "clerc" ? "Clerc" : listKey === "druide" ? "Druide" : "Magicien";
+
+  let casterLevel = 0;
+  if (sourceItem.system?.isObjectPower === true) {
+    casterLevel = Number(sourceItem.system?.casterLevel);
+    if (!Number.isInteger(casterLevel) || casterLevel < 1) {
+      ui.notifications.error("Dissipation de la magie : casterLevel canonique absent du pouvoir d'objet magique.");
+      return false;
+    }
+  } else {
+    const access = globalThis.add2eCanActorUseSpell(caster, sourceItem);
+    if (access?.ok !== true) {
+      ui.notifications.error(`Dissipation de la magie : accès canonique refusé (${access?.reason ?? "raison inconnue"}).`);
+      return false;
+    }
+    const resolvedList = globalThis.add2eNormalizeSpellKey(access.entry?.key);
+    if (resolvedList !== listKey) {
+      ui.notifications.error(`Dissipation de la magie : liste résolue incohérente (${resolvedList || "vide"}).`);
+      return false;
+    }
+    casterLevel = Number(access.actorLevel);
+    if (!Number.isInteger(casterLevel) || casterLevel < 1) {
+      ui.notifications.error("Dissipation de la magie : niveau canonique du lanceur invalide.");
+      return false;
+    }
+  }
+
+  const casterToken = (typeof token !== "undefined" && token?.actor?.id === caster.id)
+    ? token
+    : canvas.tokens?.controlled?.find(placeable => placeable?.actor?.id === caster.id)
+      ?? caster.getActiveTokens?.()[0]
+      ?? null;
+  if (!casterToken || !canvas.scene) {
+    ui.notifications.warn("Dissipation de la magie : le lanceur doit être présent sur une scène active.");
+    return false;
+  }
+
+  const environment = await globalThis.add2eDialogWait({
+    add2eTheme: listKey === "druide" ? "druid" : (listKey === "clerc" ? "parchment" : "wizard"),
+    add2ePrimaryAction: "interieur",
+    add2eClasses: ["add2e-dissipation-context"],
+    window: { title: "Dissipation de la magie" },
+    content: `<form><p>Choisissez le contexte utilisé pour convertir la portée du sort.</p><p>La taille du cube ne change pas entre intérieur et extérieur.</p></form>`,
+    buttons: [
+      { action: "interieur", label: "Intérieur", icon: "<i class='fas fa-building'></i>", default: true, callback: () => "interieur" },
+      { action: "exterieur", label: "Extérieur", icon: "<i class='fas fa-tree'></i>", callback: () => "exterieur" },
+      { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+    ],
+    close: () => null
+  });
+  if (!environment) return false;
+
+  const canonicalText = (value, field) => {
+    if (typeof value === "string" || typeof value === "number") {
+      const text = String(value).trim();
+      if (text) return text;
+    }
+    if (value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, "valeur")) {
+      const text = String(value.valeur ?? "").trim();
+      if (text) return text;
+    }
+    throw new Error(`Dissipation de la magie : ${field} canonique invalide.`);
   };
 
+  const parseRangeInches = value => {
+    const text = canonicalText(value, "system.portee");
+    const raw = normalize(text);
+    let match = raw.match(/^(\d+(?:[.,]\d+)?)\s*(?:\"|pouces?)$/);
+    if (match) return Number(match[1].replace(",", "."));
+    match = raw.match(/^(\d+(?:[.,]\d+)?)\s*(?:\"|pouces?)\s*\/\s*niveau$/);
+    if (match) return Number(match[1].replace(",", ".")) * casterLevel;
+    throw new Error(`Dissipation de la magie : portée canonique non supportée (${text}).`);
+  };
+
+  const parseCubeInches = value => {
+    const text = canonicalText(value, "system.zone_effet");
+    const raw = normalize(text);
+    const match = raw.match(/^cube de (\d+(?:[.,]\d+)?)\s*(?:\"|pouces?) d[' ]?arete$/);
+    if (!match) throw new Error(`Dissipation de la magie : zone_effet canonique non supportée (${text}).`);
+    return Number(match[1].replace(",", "."));
+  };
+
+  const sceneMetersPerUnit = scene => {
+    const unit = String(scene?.grid?.units ?? "").trim().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const factors = new Map([
+      ["m", 1], ["metre", 1], ["metres", 1], ["meter", 1], ["meters", 1],
+      ["km", 1000], ["kilometre", 1000], ["kilometres", 1000], ["kilometer", 1000], ["kilometers", 1000],
+      ["cm", 0.01], ["centimetre", 0.01], ["centimetres", 0.01], ["centimeter", 0.01], ["centimeters", 0.01],
+      ["ft", 0.3048], ["foot", 0.3048], ["feet", 0.3048], ["pied", 0.3048], ["pieds", 0.3048],
+      ["yd", 0.9144], ["yard", 0.9144], ["yards", 0.9144]
+    ]);
+    const factor = factors.get(unit);
+    if (!(factor > 0)) throw new Error(`Dissipation de la magie : unité de scène non supportée (${scene?.grid?.units || "vide"}).`);
+    return factor;
+  };
+
+  const sceneDistance = meters => {
+    const gridDistance = Number(canvas.scene?.grid?.distance);
+    const gridSize = Number(canvas.scene?.grid?.size);
+    if (!(gridDistance > 0) || !(gridSize > 0)) throw new Error("Dissipation de la magie : grille Foundry invalide.");
+    const sceneUnits = Number(meters) / sceneMetersPerUnit(canvas.scene);
+    return { units: sceneUnits, pixels: (sceneUnits / gridDistance) * gridSize };
+  };
+
+  let rangeRule;
+  let cubeRule;
+  let rangePixels;
+  let cubePixels;
   try {
-    await targetActor.createEmbeddedDocuments("ActiveEffect", [data]);
-    return true;
-  } catch (e) {
-    console.warn(`${ADD2E_ONUSE_TAG}[EFFECT_CREATE_FAILED]`, {
-      sort: ADD2E_SORT_CONFIG.name,
-      target: targetActor.name,
-      error: e
+    const rangeInches = parseRangeInches(sourceItem.system?.portee);
+    const cubeInches = parseCubeInches(sourceItem.system?.zone_effet);
+    rangeRule = globalThis.add2eResolveSpellDistance(rangeInches, { environment, kind: "range" });
+    cubeRule = globalThis.add2eResolveSpellDistance(cubeInches, { environment, kind: "area" });
+    rangePixels = sceneDistance(rangeRule.meters).pixels;
+    cubePixels = sceneDistance(cubeRule.meters).pixels;
+  } catch (error) {
+    console.error("[ADD2E][DISPEL_MAGIC][RULES]", {
+      item: sourceItem.name,
+      portee: sourceItem.system?.portee,
+      zone_effet: sourceItem.system?.zone_effet,
+      environment,
+      error
     });
+    ui.notifications.error(error.message);
     return false;
   }
-}
 
-async function add2eRemoveTaggedEffects(targetActor, removeTags = []) {
-  if (!targetActor?.effects) return 0;
-  const normalized = removeTags.map(t => String(t).toLowerCase());
-  const toDelete = [];
-  for (const ef of targetActor.effects) {
-    const tags = (ef.flags?.add2e?.tags ?? []).map(t => String(t).toLowerCase());
-    const name = String(ef.name ?? "").toLowerCase();
-    if (normalized.some(t => tags.includes(t) || name.includes(t.replace("etat:", "")))) {
-      toDelete.push(ef.id);
-    }
-  }
-  if (!toDelete.length) return 0;
-  await targetActor.deleteEmbeddedDocuments("ActiveEffect", toDelete);
-  return toDelete.length;
-}
+  const selectedTargets = Array.from(game.user.targets ?? []).filter(entry => !!entry?.actor);
+  const destinationMode = await globalThis.add2eDialogWait({
+    add2eTheme: listKey === "druide" ? "druid" : (listKey === "clerc" ? "parchment" : "wizard"),
+    add2ePrimaryAction: selectedTargets.length === 1 ? "target" : "point",
+    add2eClasses: ["add2e-dissipation-destination"],
+    window: { title: "Dissipation de la magie — centre du cube" },
+    content: `<form><p>Choisissez le centre du cube de dissipation.</p><p>${selectedTargets.length === 1 ? `Cible actuelle : <b>${escapeHtml(selectedTargets[0].name ?? selectedTargets[0].actor?.name)}</b>.` : selectedTargets.length > 1 ? `${selectedTargets.length} cibles sont sélectionnées : gardez-en une pour centrer directement sur elle.` : "Aucune cible unique n'est sélectionnée."}</p></form>`,
+    buttons: [
+      ...(selectedTargets.length === 1 ? [{ action: "target", label: "Cible actuelle", icon: "<i class='fas fa-crosshairs'></i>", default: true, callback: () => "target" }] : []),
+      { action: "point", label: "Point sur la scène", icon: "<i class='fas fa-location-dot'></i>", default: selectedTargets.length !== 1, callback: () => "point" },
+      { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+    ],
+    close: () => null
+  });
+  if (!destinationMode) return false;
 
-async function add2eChooseMode(config) {
-  const modes = config.modes ?? [{ id: "normal", label: config.name }];
-  const needsNote = [
-    "animate_dead", "speak_dead", "ward_note", "glyph", "stone_shape",
-    "plant_growth", "create_food_water", "locate_object", "dispel_magic"
-  ].includes(config.script_type);
-
-  if (modes.length <= 1 && !needsNote) return { mode: modes[0]?.id ?? "normal" };
-
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = value => {
-      if (done) return;
-      done = true;
-      resolve(value);
-    };
-
-    let content = `<form><p><b>${add2eHtmlEscape(config.name)}</b></p>`;
-    if (needsNote) {
-      content += `<div class="form-group"><label>Note de scène / cible / paramètres</label><textarea name="note" rows="3"></textarea></div>`;
-    }
-    content += `</form>`;
-
-    const buttons = {};
-    for (const mode of modes) {
-      buttons[mode.id] = {
-        label: mode.label,
-        callback: html => finish({
-          mode: mode.id,
-          note: html?.find?.("[name='note']")?.val?.() ?? ""
-        })
+  const chooseCanvasPoint = () => {
+    ui.notifications.info("Dissipation de la magie : clique sur la scène pour placer le centre du cube. Échap ou clic droit annule.");
+    return new Promise(resolve => {
+      const stage = canvas.stage;
+      if (!stage?.on || !stage?.off) {
+        ui.notifications.error("Dissipation de la magie : sélection de point indisponible sur cette scène.");
+        resolve(null);
+        return;
+      }
+      let finished = false;
+      const finish = value => {
+        if (finished) return;
+        finished = true;
+        stage.off("pointerdown", onPointerDown);
+        window.removeEventListener("keydown", onKeyDown, true);
+        resolve(value);
       };
-    }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-
-    new Dialog({
-      title: `${config.name}`,
-      content,
-      buttons,
-      default: modes[0]?.id ?? "normal",
-      close: () => finish(null)
-    }).render(true);
-  });
-}
-
-async function add2eApplySimpleEffect(choice, config) {
-  const targets = add2eGetTargets({ fallbackCaster: true });
-  const level = add2eCasterLevel(actor);
-  const rounds = add2eRoundCount(config.effect_rounds, level);
-  const mode = choice?.mode ?? "normal";
-  const title = mode !== "normal" ? (config.modes?.find(m => m.id === mode)?.label ?? config.name) : config.name;
-
-  const tags = [
-    `sort:${config.slug}`,
-    "classe:clerc",
-    "liste:clerc",
-    "niveau:3",
-    ...(config.effectTags ?? [])
-  ];
-
-  if (mode !== "normal") tags.push(`mode:${mode}`);
-
-  for (const t of targets) {
-    await add2eApplyTaggedEffect(t.actor, {
-      name: title,
-      img: item?.img,
-      tags,
-      rounds,
-      description: `${title} lancé par ${actor?.name ?? "un clerc"}.`
+      const onKeyDown = event => {
+        if (event.key !== "Escape") return;
+        event.preventDefault?.();
+        finish(null);
+      };
+      const onPointerDown = event => {
+        const button = Number(event?.button ?? event?.nativeEvent?.button ?? event?.data?.originalEvent?.button ?? 0);
+        if (button === 2) return finish(null);
+        if (button !== 0) return;
+        event?.stopPropagation?.();
+        event?.data?.originalEvent?.preventDefault?.();
+        const point = event?.getLocalPosition?.(stage)
+          ?? event?.data?.getLocalPosition?.(stage)
+          ?? stage.toLocal?.(event?.global ?? event?.data?.global ?? null)
+          ?? null;
+        if (!Number.isFinite(Number(point?.x)) || !Number.isFinite(Number(point?.y))) return finish(null);
+        finish({ x: Number(point.x), y: Number(point.y) });
+      };
+      stage.on("pointerdown", onPointerDown);
+      window.addEventListener("keydown", onKeyDown, true);
     });
-  }
+  };
 
-  await add2eChat(title, `
-    <p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>
-    ${rounds ? `<p>Durée mécanique : ${rounds} round(s).</p>` : ""}
-    <p>${add2eHtmlEscape(config.description ?? "")}</p>
-  `);
-  return true;
-}
+  const center = destinationMode === "target"
+    ? { x: Number(selectedTargets[0].center?.x), y: Number(selectedTargets[0].center?.y) }
+    : await chooseCanvasPoint();
+  if (!center || !Number.isFinite(center.x) || !Number.isFinite(center.y)) return false;
 
-async function add2eAnimateDead(config, choice) {
-  const level = add2eCasterLevel(actor);
-  await add2eApplyTaggedEffect(actor, {
-    name: config.name,
-    img: item?.img,
-    tags: [`sort:${config.slug}`, "classe:clerc", "liste:clerc", "niveau:3", "controle:mort_vivant", `niveau_clerc:${level}`],
-    rounds: 0,
-    description: `Animation permanente jusqu’à destruction ou dissipation. Note : ${choice?.note ?? ""}`
-  });
-
-  await add2eChat(config.name, `
-    <p>Le sort anime des squelettes ou zombies à partir des restes disponibles.</p>
-    <p><b>Niveau du clerc :</b> ${level}. Le nombre exact dépend des DV des corps utilisés.</p>
-    ${choice?.note ? `<p><b>Note :</b> ${add2eHtmlEscape(choice.note)}</p>` : ""}
-    <p>Créer ou lier les acteurs Squelette/Zombie depuis le bestiaire selon la décision du MD.</p>
-  `);
-  return true;
-}
-
-async function add2eCallLightning(config) {
-  const level = add2eCasterLevel(actor);
-  const targets = add2eGetTargets({ fallbackCaster: false });
-  const formula = `${Math.min(10, 2 + level)}d8`;
-  const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({
-    speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }),
-    flavor: `${config.name} — trait de foudre`
-  });
-
-  for (const t of targets) {
-    await add2eApplyTaggedEffect(t.actor, {
-      name: `${config.name} — touché par la foudre`,
-      img: item?.img,
-      tags: [`sort:${config.slug}`, "degat:foudre", "jet_sauvegarde:demi"],
-      rounds: 1,
-      description: `Dégâts du trait : ${roll.total}. Jet de protection pour moitié.`
-    });
-  }
-
-  await add2eApplyTaggedEffect(actor, {
-    name: `${config.name} — appel actif`,
-    img: item?.img,
-    tags: [`sort:${config.slug}`, "concentration:foudre", "orage"],
-    rounds: add2eRoundCount(config.effect_rounds, level),
-    description: "Le clerc peut rappeler des traits de foudre tant que les conditions et la durée le permettent."
-  });
-
-  await add2eChat(config.name, `
-    <p>Trait de foudre : <b>${roll.total}</b> dégâts (${formula}), jet de protection pour moitié.</p>
-    ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `);
-  return true;
-}
-
-async function add2eCreateFoodWater(config) {
-  const level = add2eCasterLevel(actor);
-  const foodName = `Nourriture créée (${config.name})`;
-  const waterName = `Eau créée (${config.name})`;
-
-  const items = [
-    {
-      name: foodName,
-      type: "objet",
-      img: "icons/consumables/grains/bread-loaf-boule-rustic-brown.webp",
-      system: {
-        nom: foodName,
-        quantite: level,
-        quantity: level,
-        description: `Nourriture créée par ${config.name}. Quantité indicative : ${level} portion(s), à ajuster selon la table.`,
-        tags: ["objet:nourriture_creee", "sort:creation_nourriture_et_eau"]
-      },
-      flags: { add2e: { createdBySpell: config.name } }
-    },
-    {
-      name: waterName,
-      type: "objet",
-      img: "icons/consumables/drinks/water-jug-blue.webp",
-      system: {
-        nom: waterName,
-        quantite: level,
-        quantity: level,
-        description: `Eau créée par ${config.name}. Quantité indicative : ${level} unité(s), à ajuster selon la table.`,
-        tags: ["objet:eau_creee", "sort:creation_nourriture_et_eau"]
-      },
-      flags: { add2e: { createdBySpell: config.name } }
-    }
-  ];
-
-  await actor.createEmbeddedDocuments("Item", items);
-  await add2eChat(config.name, `<p>Nourriture et eau créées dans l’inventaire de <b>${add2eHtmlEscape(actor.name)}</b>.</p><p>Quantité indicative : ${level} unité(s) de chaque, à ajuster selon la table.</p>`);
-  return true;
-}
-
-async function add2eCureConditions(config) {
-  const targets = add2eGetTargets({ fallbackCaster: false });
-  if (!targets.length) {
-    ui.notifications.warn(`${config.name} : cible obligatoire.`);
+  const distanceFromCaster = Math.hypot(
+    center.x - Number(casterToken.center?.x ?? 0),
+    center.y - Number(casterToken.center?.y ?? 0)
+  );
+  if (distanceFromCaster > rangePixels + 0.1) {
+    ui.notifications.warn(`Dissipation de la magie : centre hors de portée (${rangeRule.inches}\").`);
     return false;
   }
 
-  let removed = 0;
-  for (const t of targets) removed += await add2eRemoveTaggedEffects(t.actor, config.removeTags ?? []);
-  await add2eChat(config.name, `
-    <p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>
-    <p>Effets retirés : <b>${removed}</b>.</p>
-    <p>${add2eHtmlEscape(config.description)}</p>
-  `);
-  return true;
-}
-
-async function add2eDispelMagic(config, choice) {
-  const level = add2eCasterLevel(actor);
-  const roll = await add2eEvalRoll("1d20");
-  await roll.toMessage({
-    speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }),
-    flavor: `${config.name} — jet indicatif de dissipation`
-  });
-  await add2eChat(config.name, `
-    <p>Jet indicatif : <b>${roll.total}</b>. Niveau du clerc : <b>${level}</b>.</p>
-    ${choice?.note ? `<p><b>Effet visé :</b> ${add2eHtmlEscape(choice.note)}</p>` : ""}
-    <p>Comparer avec le niveau du lanceur de l’effet à dissiper selon la règle de dissipation.</p>
-  `);
-  return true;
-}
-
-async function add2eContinualLight(config, choice) {
-  const targets = add2eGetTargets({ fallbackCaster: true });
-  const mode = choice?.mode ?? "normal";
-  const darkness = mode === "inverse";
-
-  for (const t of targets) {
-    if (t?.document?.update) {
-      await t.document.update({
-        light: darkness
-          ? { dim: 0, bright: 0, color: "#000000", alpha: 0.5 }
-          : { dim: 24, bright: 12, color: "#fff3a0", alpha: 0.45, animation: { type: "torch", speed: 1, intensity: 1 } }
-      });
+  try {
+    if (canvas.walls?.checkCollision && typeof Ray !== "undefined"
+      && canvas.walls.checkCollision(new Ray(casterToken.center, center), { type: "sight", mode: "any" }) === true) {
+      ui.notifications.warn("Dissipation de la magie : un obstacle bloque la ligne d'effet.");
+      return false;
     }
-    await add2eApplyTaggedEffect(t.actor, {
-      name: darkness ? "Ténèbres Continuelles" : config.name,
-      img: item?.img,
-      tags: [`sort:${config.slug}`, "classe:clerc", "liste:clerc", "niveau:3", darkness ? "etat:tenebres_continuelles" : "etat:lumiere_continuelle"],
-      rounds: 0,
-      description: darkness ? "Ténèbres magiques permanentes jusqu’à dissipation." : "Lumière magique permanente jusqu’à dissipation."
+  } catch (_error) {}
+
+  const halfCube = cubePixels / 2;
+  const pointInsideCube = point => {
+    const x = Number(point?.x);
+    const y = Number(point?.y);
+    return Number.isFinite(x) && Number.isFinite(y)
+      && Math.abs(x - center.x) <= halfCube + 0.1
+      && Math.abs(y - center.y) <= halfCube + 0.1;
+  };
+
+  const tokenInsideCube = tokenPlaceable => pointInsideCube(tokenPlaceable?.center);
+
+  const effectTags = effect => {
+    const tags = effect?.flags?.add2e?.tags ?? effect?.getFlag?.("add2e", "tags") ?? [];
+    const list = Array.isArray(tags) ? tags : String(tags ?? "").split(/[,;|]/);
+    return list.map(value => normalize(value)).filter(Boolean);
+  };
+
+  const isDissipableSpellEffect = effect => {
+    if (!effect || effect.disabled === true) return false;
+    const flags = effect.flags?.add2e ?? {};
+    const tags = effectTags(effect);
+    if (tags.some(tag => tag === "indissipable" || tag === "dissipation:impossible")) return false;
+    if (tags.some(tag => tag.startsWith("sort:") || tag === "magique" || tag === "effet:magique" || tag === "dissipable:magie")) return true;
+    if (flags.spellKey || flags.sourceItemUuid || flags.casterLevel || flags.casterUuid) return true;
+    return false;
+  };
+
+  const effectAnchorInside = effect => {
+    const payload = effect?.flags?.add2e?.lightPayload ?? null;
+    if (!payload) return false;
+    const payloadScene = String(payload.sceneId ?? "");
+    if (payloadScene && payloadScene !== String(canvas.scene.id)) return false;
+    if (payload.type === "ambient") return pointInsideCube(payload);
+    if (payload.type === "token" && payload.tokenId) {
+      const tokenPlaceable = canvas.tokens?.get?.(payload.tokenId)
+        ?? canvas.tokens?.placeables?.find(entry => entry?.id === payload.tokenId || entry?.document?.id === payload.tokenId)
+        ?? null;
+      return tokenInsideCube(tokenPlaceable);
+    }
+    return false;
+  };
+
+  const candidates = new Map();
+  const addCandidate = (ownerActor, effect, anchor = "actor") => {
+    if (!ownerActor || !isDissipableSpellEffect(effect)) return;
+    const key = `${ownerActor.uuid ?? ownerActor.id}:${effect.id}`;
+    if (!candidates.has(key)) candidates.set(key, { actor: ownerActor, effect, anchor });
+  };
+
+  for (const tokenPlaceable of canvas.tokens?.placeables ?? []) {
+    if (!tokenInsideCube(tokenPlaceable) || !tokenPlaceable?.actor) continue;
+    for (const effect of tokenPlaceable.actor.effects ?? []) addCandidate(tokenPlaceable.actor, effect, "token");
+  }
+
+  const actorsToScan = new Map();
+  for (const actorDoc of game.actors ?? []) actorsToScan.set(actorDoc.uuid ?? actorDoc.id, actorDoc);
+  for (const tokenPlaceable of canvas.tokens?.placeables ?? []) {
+    if (tokenPlaceable?.actor) actorsToScan.set(tokenPlaceable.actor.uuid ?? tokenPlaceable.actor.id, tokenPlaceable.actor);
+  }
+  for (const actorDoc of actorsToScan.values()) {
+    for (const effect of actorDoc.effects ?? []) {
+      if (effectAnchorInside(effect)) addCandidate(actorDoc, effect, "spatial-effect");
+    }
+  }
+
+  const resolveOriginDocument = async effect => {
+    const flags = effect?.flags?.add2e ?? {};
+    for (const uuid of [flags.sourceItemUuid, effect?.origin]) {
+      if (!uuid || typeof fromUuid !== "function") continue;
+      try {
+        const doc = await fromUuid(uuid);
+        if (doc) return doc;
+      } catch (_error) {}
+    }
+    return null;
+  };
+
+  const resolveEffectLevel = async candidate => {
+    const { actor: ownerActor, effect } = candidate;
+    const flags = effect.flags?.add2e ?? {};
+    const direct = [flags.casterLevel, flags.sourceCasterLevel, flags.niveauLanceur, flags.caster_level]
+      .map(Number).find(value => Number.isInteger(value) && value > 0);
+    if (direct) return { level: direct, own: String(flags.casterUuid ?? "") === String(caster.uuid ?? "") || String(flags.casterId ?? "") === String(caster.id ?? ""), origin: null };
+
+    const originDoc = await resolveOriginDocument(effect);
+    const originActor = originDoc?.actor ?? originDoc?.parent?.actor ?? (originDoc?.parent?.documentName === "Actor" ? originDoc.parent : null);
+    const own = String(originActor?.id ?? "") === String(caster.id ?? "")
+      || String(flags.casterUuid ?? "") === String(caster.uuid ?? "")
+      || String(flags.casterId ?? "") === String(caster.id ?? "");
+    if (own) return { level: casterLevel, own: true, origin: originDoc };
+
+    if (originDoc?.type === "sort" && originActor) {
+      try {
+        const access = globalThis.add2eCanActorUseSpell(originActor, originDoc);
+        const level = Number(access?.actorLevel);
+        if (access?.ok === true && Number.isInteger(level) && level > 0) return { level, own: false, origin: originDoc };
+      } catch (_error) {}
+    }
+
+    const tagged = effectTags(effect)
+      .map(tag => tag.match(/^(?:niveau_lanceur|caster_level|niveau:acteur):(\d+)$/)?.[1])
+      .filter(Boolean)
+      .map(Number)
+      .find(value => Number.isInteger(value) && value > 0);
+    if (tagged) return { level: tagged, own: false, origin: originDoc };
+
+    return { level: null, own: false, origin: originDoc, ownerActor };
+  };
+
+  const resolvedCandidates = [];
+  for (const candidate of candidates.values()) {
+    const resolved = await resolveEffectLevel(candidate);
+    resolvedCandidates.push({ ...candidate, ...resolved });
+  }
+
+  const unresolved = resolvedCandidates.filter(entry => !entry.own && !Number.isInteger(entry.level));
+  let manualLevels = {};
+  if (unresolved.length) {
+    const rows = unresolved.map((entry, index) => `
+      <div class="form-group">
+        <label>${escapeHtml(entry.effect.name ?? "Effet")} — ${escapeHtml(entry.actor.name ?? "Acteur")}</label>
+        <input type="number" min="1" step="1" name="level-${index}" placeholder="niveau du créateur" />
+      </div>`).join("");
+    const values = await globalThis.add2eDialogWait({
+      add2eTheme: "parchment",
+      add2ePrimaryAction: "resolve",
+      add2eClasses: ["add2e-dissipation-levels"],
+      window: { title: "Dissipation — niveaux manquants" },
+      content: `<form><p>Certains anciens effets ne portent pas encore le niveau de leur créateur. Renseignez uniquement les niveaux connus ; un champ vide laisse l'effet intact.</p>${rows}</form>`,
+      buttons: [
+        {
+          action: "resolve",
+          label: "Résoudre",
+          icon: "<i class='fas fa-wand-magic-sparkles'></i>",
+          default: true,
+          callback: (_event, button) => {
+            const form = button.form;
+            const result = {};
+            unresolved.forEach((_entry, index) => {
+              const raw = form?.elements?.[`level-${index}`]?.value;
+              const level = Number(raw);
+              if (Number.isInteger(level) && level > 0) result[index] = level;
+            });
+            return result;
+          }
+        },
+        { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+      ],
+      close: () => null
+    });
+    if (values === null) return false;
+    manualLevels = values ?? {};
+    unresolved.forEach((entry, index) => {
+      const level = Number(manualLevels[index]);
+      if (Number.isInteger(level) && level > 0) entry.level = level;
     });
   }
 
-  await add2eChat(darkness ? "Ténèbres Continuelles" : config.name, `<p>Effet permanent appliqué à : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}.</p>`);
-  return true;
-}
+  const cleanLinkedLight = async entry => {
+    const payload = entry.effect?.flags?.add2e?.lightPayload ?? null;
+    if (!payload) return;
+    const scene = game.scenes?.get(payload.sceneId) ?? canvas.scene;
+    if (!scene) return;
 
-async function add2ePrayer(config) {
-  const targets = add2eGetTargets({ fallbackCaster: true });
-  const rounds = add2eRoundCount(config.effect_rounds, add2eCasterLevel(actor));
+    if (payload.type === "ambient") {
+      const light = payload.lightId ? scene.lights?.get?.(payload.lightId) ?? null : null;
+      if (game.user.isGM) {
+        if (light) await light.delete();
+      } else {
+        add2eDispelMagicEmitGM("deleteAmbientLight", {
+          sceneId: scene.id,
+          lightId: light?.id ?? payload.lightId ?? null,
+          requestId: payload.requestId ?? null,
+          actorId: payload.actorId ?? entry.actor.id,
+          actorUuid: payload.actorUuid ?? entry.actor.uuid,
+          spellKey: payload.spellKey ?? entry.effect?.flags?.add2e?.spellKey ?? null,
+          x: payload.x ?? null,
+          y: payload.y ?? null
+        });
+      }
+      return;
+    }
 
-  for (const t of targets) {
-    await add2eApplyTaggedEffect(t.actor, {
-      name: config.name,
-      img: item?.img,
-      tags: [`sort:${config.slug}`, "classe:clerc", "liste:clerc", "niveau:3", "bonus:toucher:1", "bonus:degats:1", "bonus:sauvegarde:1"],
-      rounds,
-      description: "Prière : bonus de +1 aux alliés. Appliquer le malus inverse aux ennemis concernés."
+    if (payload.type === "token" && payload.tokenId) {
+      const tokenDoc = scene.tokens?.get?.(payload.tokenId) ?? null;
+      if (!tokenDoc) return;
+      const originalLight = payload.originalLight && typeof payload.originalLight === "object"
+        ? foundry.utils.deepClone(payload.originalLight)
+        : {};
+      if (game.user.isGM || tokenDoc.isOwner) await tokenDoc.update({ light: originalLight });
+      else add2eDispelMagicEmitGM("updateToken", { sceneId: scene.id, tokenId: tokenDoc.id, updateData: { light: originalLight } });
+    }
+  };
+
+  const deleteEffect = async entry => {
+    await cleanLinkedLight(entry);
+    if (game.user.isGM || entry.actor.isOwner) {
+      await entry.effect.delete();
+      return true;
+    }
+    return add2eDispelMagicEmitGM("deleteActiveEffects", {
+      actorUuid: entry.actor.uuid,
+      actorId: entry.actor.id,
+      effectIds: [entry.effect.id]
+    });
+  };
+
+  const results = [];
+  const rolls = [];
+  for (const entry of resolvedCandidates) {
+    if (!entry.own && !Number.isInteger(entry.level)) {
+      results.push({
+        name: entry.effect.name ?? "Effet magique",
+        actorName: entry.actor.name ?? "Acteur",
+        level: null,
+        chance: null,
+        roll: null,
+        success: false,
+        unresolved: true,
+        automatic: false
+      });
+      continue;
+    }
+
+    const effectLevel = entry.own ? casterLevel : entry.level;
+    const difference = casterLevel - effectLevel;
+    const rawChance = entry.own ? 100 : 50 + (difference > 0 ? difference * 5 : difference < 0 ? difference * 2 : 0);
+    const chance = Math.max(0, Math.min(100, rawChance));
+    let roll = null;
+    let total = null;
+    let success = entry.own;
+    if (!entry.own) {
+      roll = await new Roll("1d100").evaluate();
+      rolls.push(roll);
+      total = Number(roll.total);
+      success = total <= chance;
+    }
+    if (success) await deleteEffect(entry);
+    results.push({
+      name: entry.effect.name ?? "Effet magique",
+      actorName: entry.actor.name ?? "Acteur",
+      level: effectLevel,
+      chance,
+      roll: total,
+      success,
+      unresolved: false,
+      automatic: entry.own
     });
   }
 
-  await add2eChat(config.name, `
-    <p>Prière active pour ${rounds} round(s).</p>
-    <p>Les alliés reçoivent +1 ; les ennemis subissent le malus correspondant selon la zone.</p>
-  `);
+  const successes = results.filter(result => result.success).length;
+  const failures = results.filter(result => !result.success && !result.unresolved).length;
+  const unresolvedCount = results.filter(result => result.unresolved).length;
+  const resultRows = results.length
+    ? `<ul>${results.map(result => {
+        if (result.unresolved) return `<li><b>${escapeHtml(result.name)}</b> — ${escapeHtml(result.actorName)} : niveau du créateur inconnu, effet conservé.</li>`;
+        if (result.automatic) return `<li><b>${escapeHtml(result.name)}</b> — ${escapeHtml(result.actorName)} : propre sort, dissipation automatique.</li>`;
+        return `<li><b>${escapeHtml(result.name)}</b> — ${escapeHtml(result.actorName)} : d100 ${result.roll} / ${result.chance}% (niveau ${result.level}) — <b>${result.success ? "dissipé" : "résiste"}</b>.</li>`;
+      }).join("")}</ul>`
+    : "<p>Aucun effet magique actif identifiable dans le cube.</p>";
+
+  const card = {
+    actor: caster,
+    title: "Dissipation de la magie",
+    icon: "fas fa-wand-magic-sparkles",
+    variant: "spell",
+    source: { name: caster.name, img: sourceItem.img ?? caster.img, type: `${listLabel} niveau ${casterLevel}` },
+    rows: [
+      { label: "Liste", value: `${listLabel} — niveau de lanceur ${casterLevel}` },
+      { label: "Contexte", value: environment === "exterieur" ? "Extérieur" : "Intérieur" },
+      { label: "Portée", value: `${rangeRule.inches}\" = ${rangeRule.meters} m` },
+      { label: "Zone", value: `cube de ${cubeRule.inches}\" d'arête = ${cubeRule.meters} m` },
+      { label: "Effets examinés", value: String(results.length) },
+      { label: "Dissipés", value: String(successes) },
+      { label: "Résistants", value: String(failures) },
+      ...(unresolvedCount ? [{ label: "Non résolus", value: String(unresolvedCount) }] : [])
+    ],
+    message: `${caster.name} lance Dissipation de la magie.`,
+    trustedBodyHtml: `<div class="add2e-dissipation-results">${resultRows}<p>Chance : 50 % de base, +5 % par niveau du lanceur au-dessus du créateur, -2 % par niveau en dessous. Les propres sorts du lanceur sont annulés automatiquement.</p></div>`,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+      rolls,
+      flags: { add2e: {
+        chatCardType: "dissipation-de-la-magie",
+        version: ADD2E_DISPEL_MAGIC_VERSION,
+        sourceItemUuid: sourceItem.uuid ?? null,
+        listKey,
+        casterLevel,
+        spellLevel,
+        environment,
+        rangeInches: rangeRule.inches,
+        rangeMeters: rangeRule.meters,
+        cubeInches: cubeRule.inches,
+        cubeMeters: cubeRule.meters,
+        sceneId: canvas.scene.id,
+        center,
+        successes,
+        failures,
+        unresolved: unresolvedCount
+      } }
+    }
+  };
+
+  const preview = globalThis.add2eBuildChatCard(card);
+  if (!String(preview ?? "").trim()) throw new Error("Dissipation de la magie : carte ADD2E vide.");
+  await globalThis.add2eCreateChatCard(card);
+  try { await globalThis.ADD2E_PLAY_SPELL_FX?.("dissipation_de_la_magie", { casterToken, targetToken: selectedTargets[0] ?? null }); } catch (_error) {}
   return true;
-}
-
-async function add2eProtectionFire(config) {
-  const targets = add2eGetTargets({ fallbackCaster: true });
-  const level = add2eCasterLevel(actor);
-  const absorption = 12 * level;
-  for (const t of targets) {
-    await add2eApplyTaggedEffect(t.actor, {
-      name: config.name,
-      img: item?.img,
-      tags: [`sort:${config.slug}`, "classe:clerc", "liste:clerc", "niveau:3", "resistance:feu", `absorption_feu:${absorption}`],
-      rounds: 0,
-      description: `Protection contre le feu. Réserve indicative d’absorption magique : ${absorption} points.`
-    });
-  }
-  await add2eChat(config.name, `<p>Protection contre le feu appliquée. Réserve indicative : <b>${absorption}</b> points de dégâts de feu magique.</p>`);
-  return true;
-}
-
-async function add2ePyrotechnics(config, choice) {
-  const title = choice.mode === "fumee" ? "Pyrotechnie — Fumée" : "Pyrotechnie — Feux d’artifice";
-  await add2eChat(title, `
-    <p>${choice.mode === "fumee" ? "La source de feu produit une fumée épaisse gênant la vision." : "La source de feu produit un éclat lumineux susceptible d’aveugler."}</p>
-    <p>Source de feu et zone exacte à définir par le MD.</p>
-  `);
-  return true;
-}
-
-async function add2eLocateOrNote(config, choice) {
-  await add2eChat(config.name, `
-    <p>${add2eHtmlEscape(config.description ?? "")}</p>
-    ${choice?.note ? `<p><b>Note :</b> ${add2eHtmlEscape(choice.note)}</p>` : ""}
-  `);
-  return true;
-}
-
-async function add2eMagicVestment(config) {
-  const targets = add2eGetTargets({ fallbackCaster: true });
-  const level = add2eCasterLevel(actor);
-  const bonus = Math.max(1, Math.floor((level - 1) / 3) + 1);
-  const rounds = add2eRoundCount(config.effect_rounds, level);
-
-  for (const t of targets) {
-    await add2eApplyTaggedEffect(t.actor, {
-      name: config.name,
-      img: item?.img,
-      tags: [`sort:${config.slug}`, "classe:clerc", "liste:clerc", "niveau:3", `bonus_ca:${bonus}`, "armure:magique"],
-      rounds,
-      description: `Protection magique du vêtement/armure. Bonus CA indicatif : ${bonus}.`
-    });
-  }
-
-  await add2eChat(config.name, `<p>Vêtement magique appliqué : bonus CA indicatif <b>${bonus}</b>, durée ${rounds} round(s).</p>`);
-  return true;
-}
-
-const choice = await add2eChooseMode(ADD2E_SORT_CONFIG);
-if (!choice) {
-  ui.notifications.info(`${ADD2E_SORT_CONFIG.name} annulé.`);
-  return false;
-}
-
-console.log(`${ADD2E_ONUSE_TAG}[START]`, {
-  sort: ADD2E_SORT_CONFIG.name,
-  actor: actor?.name,
-  mode: choice.mode,
-  targets: Array.from(game.user.targets ?? []).map(t => t.name)
-});
-
-switch (ADD2E_SORT_CONFIG.script_type) {
-  case "animate_dead":
-    return await add2eAnimateDead(ADD2E_SORT_CONFIG, choice);
-  case "call_lightning":
-    return await add2eCallLightning(ADD2E_SORT_CONFIG);
-  case "create_food_water":
-    return await add2eCreateFoodWater(ADD2E_SORT_CONFIG);
-  case "cure_conditions":
-    return await add2eCureConditions(ADD2E_SORT_CONFIG);
-  case "dispel_magic":
-    return await add2eDispelMagic(ADD2E_SORT_CONFIG, choice);
-  case "continual_light":
-    return await add2eContinualLight(ADD2E_SORT_CONFIG, choice);
-  case "prayer":
-    return await add2ePrayer(ADD2E_SORT_CONFIG);
-  case "protection_fire":
-    return await add2eProtectionFire(ADD2E_SORT_CONFIG);
-  case "pyrotechnics":
-    return await add2ePyrotechnics(ADD2E_SORT_CONFIG, choice);
-  case "magic_vestment":
-    return await add2eMagicVestment(ADD2E_SORT_CONFIG);
-  case "locate_object":
-  case "speak_dead":
-  case "ward_note":
-  case "glyph":
-  case "stone_shape":
-  case "plant_growth":
-    return await add2eLocateOrNote(ADD2E_SORT_CONFIG, choice);
-  default:
-    return await add2eApplySimpleEffect(choice, ADD2E_SORT_CONFIG);
-}
+})();
