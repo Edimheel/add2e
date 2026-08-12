@@ -2,7 +2,7 @@
 // ADD2E — Dialogue d'attaque via l'API commune ADD2E.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via dialog-ui.mjs uniquement.
 
-const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-11-rear-ability-visibility-v15";
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-12-rear-options-diagnostics-v16";
 
 globalThis.ADD2E_ATTACK_DIALOG_VERSION = ADD2E_ATTACK_DIALOG_VERSION;
 
@@ -31,6 +31,22 @@ function add2eAttackImage(entity, fallback = "icons/svg/mystery-man.svg") {
   return add2eAttackEscapeHtml(entity?.img ?? entity?.texture?.src ?? entity?.document?.texture?.src ?? fallback);
 }
 
+function add2eRearClassDiagnostics(actor) {
+  return Array.from(actor?.items ?? [])
+    .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
+    .map(item => ({
+      id: item.id,
+      uuid: item.uuid,
+      name: item.name,
+      niveau: item?.system?.niveau ?? null,
+      tags: Array.isArray(item?.system?.tags) ? [...item.system.tags] : item?.system?.tags ?? null,
+      progressionRows: Array.isArray(item?.system?.progression) ? item.system.progression.length : 0,
+      currentProgressionRow: Array.isArray(item?.system?.progression)
+        ? item.system.progression.find(row => Number(row?.niveau) === Number(item?.system?.niveau)) ?? null
+        : null
+    }));
+}
+
 function add2eAttackRoot(...candidates) {
   for (const candidate of candidates) {
     const elements = [
@@ -53,16 +69,34 @@ function add2eAttackRoot(...candidates) {
 function add2eApplyRearOptions(root) {
   const container = add2eAttackRoot(root) ?? root;
   const select = container?.querySelector?.("#add2e-position-zone");
-  if (!container || !select) return false;
+  if (!container || !select) {
+    console.warn("[ADD2E][ATTAQUE][REAR_OPTIONS][APPLY_MISSING_ROOT_OR_POSITION]", {
+      hasContainer: !!container,
+      hasPositionSelect: !!select
+    });
+    return false;
+  }
 
   const isRear = select.value === "rear";
-  for (const block of container.querySelectorAll(".add2e-rear-specials")) block.hidden = !isRear;
+  const blocks = Array.from(container.querySelectorAll(".add2e-rear-specials"));
+  for (const block of blocks) block.hidden = !isRear;
 
   if (!isRear) {
     for (const input of container.querySelectorAll("#add2e-backstab,#add2e-assassinat-confirm")) {
       input.checked = false;
     }
   }
+
+  console.log("[ADD2E][ATTAQUE][REAR_OPTIONS][APPLY]", {
+    position: select.value,
+    isRear,
+    rearBlocks: blocks.length,
+    backstabCheckbox: !!container.querySelector("#add2e-backstab"),
+    backstabDisabled: container.querySelector("#add2e-backstab")?.disabled ?? null,
+    assassinationCheckbox: !!container.querySelector("#add2e-assassinat-confirm"),
+    assassinationDisabled: container.querySelector("#add2e-assassinat-confirm")?.disabled ?? null,
+    hiddenStates: blocks.map(block => block.hidden)
+  });
   return true;
 }
 
@@ -73,10 +107,33 @@ function add2eBindAttackDialogInteractions(dialog) {
     dialog?.element,
     dialog
   );
-  if (!root) return false;
+  if (!root) {
+    console.warn("[ADD2E][ATTAQUE][REAR_OPTIONS][RENDER_ROOT_MISSING]", {
+      dialogClass: dialog?.constructor?.name ?? null,
+      hasWindowContent: !!dialog?.window?.content,
+      hasForm: !!dialog?.form,
+      hasElement: !!dialog?.element
+    });
+    return false;
+  }
 
   const position = root.querySelector("#add2e-position-zone");
-  if (!position) return false;
+  if (!position) {
+    console.warn("[ADD2E][ATTAQUE][REAR_OPTIONS][POSITION_SELECT_MISSING]", {
+      rootClass: root.className,
+      html: root.outerHTML
+    });
+    return false;
+  }
+
+  console.log("[ADD2E][ATTAQUE][REAR_OPTIONS][RENDER]", {
+    version: ADD2E_ATTACK_DIALOG_VERSION,
+    position: position.value,
+    rearBlocks: root.querySelectorAll(".add2e-rear-specials").length,
+    backstabCheckbox: !!root.querySelector("#add2e-backstab"),
+    assassinationCheckbox: !!root.querySelector("#add2e-assassinat-confirm"),
+    formHtml: root.outerHTML
+  });
 
   if (position.dataset.add2eRearBound !== "1") {
     position.dataset.add2eRearBound = "1";
@@ -150,13 +207,29 @@ export function add2eBuildAttackDialogContent({
   const backstabMultiplier = add2eAttackEscapeHtml(backstabInfo?.multiplier ?? "");
   const assassinationScore = add2eAttackEscapeHtml(assassinationInfo?.score ?? "0");
 
-  // L’existence d’une capacité de classe détermine sa présence dans le DOM.
-  // Les contraintes de l’action courante déterminent séparément si elle est cliquable.
   const showBackstab = backstabInfo?.available === true;
   const showAssassination = assassinationInfo?.available === true;
   const backstabUsable = canUseBackstab === true;
   const assassinationUsable = canUseAssassination === true;
   const hasRearSpecial = specialOptionsVisible === true || showBackstab || showAssassination;
+
+  console.log("[ADD2E][ATTAQUE][REAR_OPTIONS][BUILD]", {
+    version: ADD2E_ATTACK_DIALOG_VERSION,
+    actor: actor?.name ?? null,
+    actorId: actor?.id ?? null,
+    weapon: arme?.name ?? null,
+    weaponId: arme?.id ?? null,
+    target: cible?.name ?? null,
+    backArcInfo,
+    specialOptionsVisible,
+    showBackstab,
+    backstabUsable,
+    backstabInfo,
+    showAssassination,
+    assassinationUsable,
+    assassinationInfo,
+    classItems: add2eRearClassDiagnostics(actor)
+  });
 
   const allowedZones = new Set(["front", "flank", "rear-flank", "rear"]);
   const autoZone = allowedZones.has(String(backArcInfo?.zone ?? "")) ? String(backArcInfo.zone) : "front";
