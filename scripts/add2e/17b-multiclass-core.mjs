@@ -2,7 +2,7 @@
 // Source de vérité : chaque Item embarqué de type "classe".
 // La définition et la progression (system.niveau / system.xp) vivent ensemble.
 
-export const MULTICLASS_VERSION = "2026-08-12-canonical-class-tags-v6";
+export const MULTICLASS_VERSION = "2026-08-12-strict-class-progression-v7";
 export const MULTICLASS_SCHEMA = 3;
 export const INTERNAL = "add2eMulticlassInternal";
 export const TAG = "[ADD2E][MULTICLASSE]";
@@ -153,15 +153,15 @@ function strictFiniteNumber(value) {
 
 /**
  * Lit exclusivement les champs de progression de l'Item classe.
- * Aucun champ de l'acteur n'est consulté ici.
+ * Aucun champ de l'acteur et aucune valeur de secours ne sont consultés ici.
  */
-export function classProgression(item, { level = 1, xp = 0 } = {}) {
+export function classProgression(item) {
   const system = item?.system ?? {};
   const itemLevel = exactInteger(system.niveau, 1);
   const itemXp = exactInteger(system.xp, 0);
   return {
-    level: itemLevel ?? Math.max(1, Math.floor(num(level, 1))),
-    xp: itemXp ?? Math.max(0, Math.floor(num(xp, 0))),
+    level: itemLevel,
+    xp: itemXp,
     hasLevel: itemLevel !== null,
     hasXp: itemXp !== null
   };
@@ -264,8 +264,19 @@ export function resolveCanonicalThac0(actor, { transformation = undefined } = {}
 export function classProgressionUpdate(item, { level, xp } = {}) {
   const update = { _id: item?.id };
   if (!update._id) return null;
-  if (level !== undefined) update["system.niveau"] = Math.max(1, Math.floor(num(level, 1)));
-  if (xp !== undefined) update["system.xp"] = Math.max(0, Math.floor(num(xp, 0)));
+
+  if (level !== undefined) {
+    const nextLevel = exactInteger(level, 1);
+    if (nextLevel === null) throw new Error(`Niveau de classe invalide : ${String(level)}.`);
+    update["system.niveau"] = nextLevel;
+  }
+
+  if (xp !== undefined) {
+    const nextXp = exactInteger(xp, 0);
+    if (nextXp === null) throw new Error(`XP de classe invalide : ${String(xp)}.`);
+    update["system.xp"] = nextXp;
+  }
+
   return update;
 }
 
@@ -278,8 +289,8 @@ export function canonicalMulticlass(actor) {
   return {
     schema: MULTICLASS_SCHEMA,
     enabled: true,
-    mode: stored?.mode === "racial" ? "racial" : "racial",
-    xpSplit: stored?.xpSplit === "equal" ? "equal" : "equal",
+    mode: "racial",
+    xpSplit: "equal",
     label: String(stored?.label ?? "")
   };
 }
@@ -306,14 +317,22 @@ export function canonicalClassStates(actor) {
   return classItems(actor).map(item => canonicalClassState(actor, item)).filter(Boolean);
 }
 
-export function canonicalClassLevel(actor, itemOrSlug, fallback = 1) {
+export function canonicalClassLevel(actor, itemOrSlug) {
   const state = canonicalClassState(actor, itemOrSlug);
-  return state?.hasLevel ? state.level : Math.max(1, Math.floor(num(fallback, 1)));
+  if (!state) return null;
+  if (!state.hasLevel) {
+    throw new Error(`Niveau canonique absent sur l’Item classe « ${state.name ?? state.itemId ?? "inconnu"} ».`);
+  }
+  return state.level;
 }
 
-export function canonicalClassXp(actor, itemOrSlug, fallback = 0) {
+export function canonicalClassXp(actor, itemOrSlug) {
   const state = canonicalClassState(actor, itemOrSlug);
-  return state?.hasXp ? state.xp : Math.max(0, Math.floor(num(fallback, 0)));
+  if (!state) return null;
+  if (!state.hasXp) {
+    throw new Error(`XP canonique absente sur l’Item classe « ${state.name ?? state.itemId ?? "inconnu"} ».`);
+  }
+  return state.xp;
 }
 
 export function multiclassEnabled(actor) {
