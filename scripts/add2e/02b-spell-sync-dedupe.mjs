@@ -1,7 +1,7 @@
 // ADD2E — Déduplication et orchestration des synchronisations de sorts.
 // Compatible Foundry V13 / V14 / V15 — ApplicationV2 / DialogV2 via l’API commune ADD2E.
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-08-12-canonical-spell-dedupe-v18";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-08-12-canonical-spell-sources-v19";
 const RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set ? globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING : new Set();
 const RECENT_SYNCS = globalThis.ADD2E_SPELL_SYNC_RECENT instanceof Map ? globalThis.ADD2E_SPELL_SYNC_RECENT : new Map();
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
@@ -178,7 +178,11 @@ async function removeLegacyMaterialFields(actor, reason = "legacy-material-clean
 function keepWeight(item) {
   const flags = item?.flags?.add2e ?? {};
   const source = String(item?._stats?.compendiumSource ?? item?.flags?.core?.sourceId ?? flags.sourceUuid ?? flags.sourceId ?? "");
-  const truth = flags.autoGrantedSpellSync === true || !!flags.autoGrantedByClassId || !!flags.autoGrantedByClass || source.includes("add2e.sorts");
+  const ownership = globalThis.add2eSpellSyncSources;
+  if (typeof ownership !== "function") {
+    throw new Error("Le résolveur canonique ADD2E de provenance des sorts est indisponible pour la déduplication.");
+  }
+  const truth = ownership(item).length > 0 || flags.manuallyLearnedSpell === true || source.includes("add2e.sorts");
   const memorized = Number(flags.memorizedCount ?? item?.system?.prepared ?? item?.system?.memorise ?? 0) || 0;
   const image = item?.img && !String(item.img).includes("icons/svg/item-bag.svg") && !String(item.img).includes("mystery-man");
   return [truth ? 0 : 1, memorized > 0 ? 0 : 1, image ? 0 : 1, Number(item?._stats?.createdTime ?? Number.MAX_SAFE_INTEGER)];
