@@ -1,7 +1,7 @@
 // ADD2E — Expansion atomique des familles de sorts.
 // Compatible Foundry V13 / V14 / V15.
 
-const ADD2E_SPELL_FAMILY_VERSION = "2026-07-02-spell-family-source-id-v14";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-08-12-canonical-spell-metadata-v15";
 const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-07-02-spell-family-source-id-v14";
 
 const SPELL_FAMILY_ACTOR_QUEUES = globalThis.ADD2E_SPELL_FAMILY_ACTOR_QUEUES instanceof Map
@@ -39,19 +39,32 @@ function asArray(value) {
   if (value == null || value === "") return [];
   if (Array.isArray(value)) return value.flatMap(asArray);
   if (typeof value === "string") return value.split(/[,;|\n]+/).map(entry => entry.trim()).filter(Boolean);
-  if (typeof value === "object") {
-    for (const key of ["spellLists", "lists", "classes", "classe", "class", "value", "values", "items"]) {
-      if (value[key] !== undefined) return asArray(value[key]);
-    }
-  }
   return [value];
 }
 
-const spellLevel = system => Number(String(system?.niveau ?? system?.niveau_sort ?? system?.spellLevel ?? system?.level ?? 0).match(/\d+/)?.[0] ?? 0) || 0;
-const spellLists = system => [...new Set([
-  "spellLists", "lists", "classes", "classe", "class", "liste", "tags", "effectTags"
-].flatMap(key => asArray(system?.[key])).map(normalize).filter(Boolean))];
-const stableSpellKey = data => `${spellLists(data?.system).sort().join("+") || "liste_inconnue"}|${spellLevel(data?.system)}|${normalize(data?.name ?? data?.system?.nom)}`;
+function spellLevel(system = {}) {
+  const level = Number(system?.niveau);
+  return Number.isInteger(level) && level >= 1 ? level : 0;
+}
+
+function spellLists(system = {}) {
+  const resolver = globalThis.add2eGetSpellListsFromItem;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des listes de sorts est indisponible pour les familles de sorts.");
+  }
+  const resolved = resolver({ system });
+  if (!Array.isArray(resolved)) {
+    throw new Error("Les listes canoniques du sort sont invalides pour l’expansion de famille.");
+  }
+  return [...new Set(resolved.filter(Boolean))];
+}
+
+const stableSpellKey = data => {
+  const name = normalize(data?.name ?? data?.system?.nom);
+  const level = spellLevel(data?.system);
+  const lists = spellLists(data?.system).sort();
+  return name && level > 0 && lists.length ? `${lists.join("+")}|${level}|${name}` : "";
+};
 const isGeneratedFamilySpell = item => item?.flags?.add2e?.spellFamily?.generated === true;
 
 function familySourceId(item) {
