@@ -1,51 +1,24 @@
 /**
  * ADD2E — Sort BÉNÉDICTION / MALÉDICTION
  * Clerc niveau 1 — Conjuration/Appel
- * Version : 2026-08-10-central-component-owner-v5
+ * Compatible Foundry V13/V14/V15.
  *
  * Contrat onUse : true = sort consommé, false = sort non consommé.
- * Chaque item lance exclusivement son propre effet : aucun choix de variante.
+ * Chaque Item de famille lance exclusivement son propre effet.
  * Les composants sont réservés, consommés et remboursés exclusivement par
  * 06-cast-spell.mjs + 22e-consumables-core.mjs.
  */
 
 const __add2eOnUseResult = await (async () => {
-  const VERSION = "2026-08-10-central-component-owner-v5";
-  console.log(`%c[ADD2E][BENEDICTION] ${VERSION}`, "color:#b88924;font-weight:bold;");
-
-  function add2eNormalize(value) {
-    return String(value ?? "")
-      .trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[’']/g, "_")
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "");
-  }
+  const VERSION = "2026-08-12-canonical-spell-family-mode-v6";
 
   function add2eResolveSpellMode(sourceItem) {
-    const modeForValue = value => {
-      const key = add2eNormalize(value);
-      if (key === "benediction" || key === "normal") return "benediction";
-      if (key === "malediction" || key === "inverse") return "malediction";
-      return null;
-    };
-
-    const candidates = [
-      sourceItem?.name,
-      sourceItem?.system?.nom,
-      sourceItem?.system?.label,
-      sourceItem?.system?.slug,
-      sourceItem?.system?.spellKey,
-      sourceItem?.system?.sortKey,
-      sourceItem?.flags?.add2e?.reversibleActorEntry?.mode,
-      sourceItem?.flags?.add2e?.spellFamily?.reversibleMode,
-      sourceItem?.flags?.add2e?.spellKey,
-      sourceItem?.flags?.add2e?.slug
-    ];
-    const modes = new Set(candidates.map(modeForValue).filter(Boolean));
-    return modes.size === 1 ? Array.from(modes)[0] : null;
+    const family = sourceItem?.flags?.add2e?.spellFamily ?? {};
+    const kind = String(family.kind ?? "").trim().toLowerCase();
+    const reversibleMode = String(family.reversibleMode ?? "").trim().toLowerCase();
+    if (kind === "base") return "benediction";
+    if (kind === "inverse" && reversibleMode === "inverse") return "malediction";
+    return null;
   }
 
   function add2eEmitGmOperation(operation, payload) {
@@ -80,18 +53,27 @@ const __add2eOnUseResult = await (async () => {
     return emitted;
   }
 
+  function add2eSceneUnitsToMeters(distance) {
+    const value = Number(distance);
+    if (!Number.isFinite(value)) return Infinity;
+    const unit = String(canvas.scene?.grid?.units ?? "m").trim().toLowerCase();
+    if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(unit)) return value * 0.3048;
+    if (["yd", "yard", "yards", "verge", "verges"].includes(unit)) return value * 0.9144;
+    if (["km", "kilometre", "kilomètre", "kilometres", "kilomètres"].includes(unit)) return value * 1000;
+    return value;
+  }
+
   function add2eDistanceMeters(tokenA, tokenB) {
     try {
-      if (!tokenA || !tokenB) return 0;
+      if (!tokenA || !tokenB) return Infinity;
       if (canvas.grid?.measurePath) {
         const result = canvas.grid.measurePath([tokenA.center, tokenB.center], { gridSpaces: true });
-        return Number(result?.distance ?? result?.gridDistance ?? result) || 0;
+        return add2eSceneUnitsToMeters(result?.distance ?? result?.gridDistance ?? result);
       }
-      const distance = canvas.grid.measureDistances([{ ray: new Ray(tokenA.center, tokenB.center) }], { gridSpaces: true })[0];
-      return Number(distance) || 0;
-    } catch (error) {
-      console.warn("[ADD2E][BENEDICTION] mesure distance impossible", error);
-      return 0;
+      const distance = canvas.grid?.measureDistances?.([{ ray: new Ray(tokenA.center, tokenB.center) }], { gridSpaces: true })?.[0];
+      return add2eSceneUnitsToMeters(distance);
+    } catch (_error) {
+      return Infinity;
     }
   }
 
@@ -183,34 +165,38 @@ const __add2eOnUseResult = await (async () => {
     ];
   }
 
-  let sourceItem = null;
-  if (typeof sort !== "undefined" && sort) sourceItem = sort;
-  else if (typeof item !== "undefined" && item) sourceItem = item;
-  else if (typeof this !== "undefined" && this?.documentName === "Item") sourceItem = this;
-  if (!sourceItem && typeof arguments !== "undefined" && arguments.length > 1 && arguments[1]?.name) sourceItem = arguments[1];
-  if (!sourceItem) {
-    ui.notifications.error("Bénédiction / Malédiction : sort introuvable.");
+  const sourceItem = (typeof sort !== "undefined" && sort)
+    || (typeof item !== "undefined" && item)
+    || (typeof spell !== "undefined" && spell)
+    || (typeof args !== "undefined" && args?.[0]?.item)
+    || null;
+  if (!sourceItem || String(sourceItem.type ?? "").toLowerCase() !== "sort") {
+    ui.notifications.error("Bénédiction / Malédiction : Item sort introuvable.");
     return false;
   }
 
   const mode = add2eResolveSpellMode(sourceItem);
   if (!mode) {
-    ui.notifications.error(`Bénédiction / Malédiction : impossible d’identifier le sort lancé (« ${sourceItem.name ?? "sans nom"} »). Le lancement est annulé pour éviter d’appliquer le mauvais effet.`);
+    ui.notifications.error("Bénédiction / Malédiction : métadonnées canoniques de famille absentes ou incohérentes.");
     return false;
   }
 
   const isCurse = mode === "malediction";
   const modeLabel = isCurse ? "Malédiction" : "Bénédiction";
   const componentName = isCurse ? "Eau maudite" : "Eau bénite";
-  const casterToken = canvas.tokens.controlled[0] ?? ((typeof token !== "undefined" && token) ? token : null);
-  if (!casterToken) {
-    ui.notifications.warn(`${modeLabel} : sélectionne le token du lanceur.`);
+  const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
+  if (!caster) {
+    ui.notifications.error(`${modeLabel} : lanceur introuvable.`);
     return false;
   }
 
-  const caster = casterToken.actor ?? ((typeof actor !== "undefined" && actor) ? actor : sourceItem.parent);
-  if (!caster) {
-    ui.notifications.error(`${modeLabel} : lanceur introuvable.`);
+  const casterToken = (typeof token !== "undefined" && token?.actor?.id === caster.id)
+    ? token
+    : canvas.tokens?.controlled?.find(placeable => placeable?.actor?.id === caster.id)
+      ?? caster.getActiveTokens?.()[0]
+      ?? null;
+  if (!casterToken) {
+    ui.notifications.warn(`${modeLabel} : sélectionne le token du lanceur.`);
     return false;
   }
 
@@ -224,8 +210,8 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  const maxRange = 18;
-  const outOfRange = targets.filter(target => add2eDistanceMeters(casterToken, target) > maxRange);
+  const maxRangeMeters = 18;
+  const outOfRange = targets.filter(target => add2eDistanceMeters(casterToken, target) > maxRangeMeters);
   if (outOfRange.length) {
     ui.notifications.warn(`${modeLabel} : cible hors de portée (${outOfRange.map(target => target.name).join(", ")}).`);
     return false;
@@ -310,6 +296,7 @@ const __add2eOnUseResult = await (async () => {
       flags: {
         add2e: {
           chatCardType: "benediction-malediction",
+          version: VERSION,
           spellKey: isCurse ? "malediction" : "benediction",
           modifierValue: bonusValue,
           durationRounds,
@@ -319,18 +306,14 @@ const __add2eOnUseResult = await (async () => {
       }
     }
   };
-  globalThis.add2eBuildChatCard(card);
+  const preview = globalThis.add2eBuildChatCard(card);
+  if (!String(preview ?? "").trim()) throw new Error("Bénédiction / Malédiction : carte de chat vide.");
   await globalThis.add2eCreateChatCard(card);
 
-  console.log("[ADD2E][benediction.js][ONUSE_RESULT]", true);
   return true;
 })();
 
 if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
-  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true/false.", {
-    script: "benediction.js",
-    result: __add2eOnUseResult
-  });
   ui.notifications?.error?.("Bénédiction : le script onUse n'a pas retourné true/false.");
   return false;
 }
