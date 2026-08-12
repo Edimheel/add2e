@@ -1,13 +1,13 @@
 // scripts/add2e/item-sheet-registration.mjs
 // ADD2E — Enregistrement strict des fiches d'items spécialisées.
-// Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
-// Version : 2026-08-04-canonical-power-source-v6
+// Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via API commune ADD2E.
+// Version : 2026-08-12-application-v2-class-registration-v7
 
 import { Add2eItemSheet } from "../add2e-item-sheet.mjs";
 globalThis.Add2eItemSheet = Add2eItemSheet;
 
 const MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
-const EDITOR_VERSION = "2026-08-04-canonical-power-source-v6";
+const EDITOR_VERSION = "2026-08-12-shared-dialog-power-editor-v7";
 const BONUS_DEFINITIONS = Object.freeze({
   attack: Object.freeze({ label: "Bonus au toucher", effectType: "attack_bonus", field: "attackBonus" }),
   damage: Object.freeze({ label: "Bonus aux dégâts", effectType: "damage_bonus", field: "damageBonus" }),
@@ -317,50 +317,49 @@ async function editCanonical(definition, current = {}) {
 }
 
 async function editEmbeddedPower(power) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications.error("DialogV2 est introuvable.");
-    return null;
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
 
   const name = String(power.name ?? "Pouvoir").trim() || "Pouvoir";
   const description = String(power.description ?? "");
   const cost = Math.max(0, Number(power.cost ?? 0) || 0);
 
-  return DialogV2.wait({
+  return globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "save",
+    add2eClasses: ["add2e-magic-power-editor-window"],
     window: { title: `Modifier — ${name}` },
-    modal: true,
-    rejectClose: false,
-    content: `<div class="add2e-dialog" style="min-width:520px;padding:10px;display:grid;gap:8px">
+    content: `<form class="add2e-magic-power-editor-form" style="min-width:520px;padding:10px;display:grid;gap:8px">
       <label>Nom affiché<input name="name" value="${esc(name)}"></label>
       <label>Coût en charges<input name="cost" type="number" min="0" step="1" value="${cost}"></label>
       <label>Description<textarea name="description" rows="6">${esc(description)}</textarea></label>
-    </div>`,
+    </form>`,
     buttons: [
       {
         action: "save",
         label: "Enregistrer",
-        icon: "fa-solid fa-check",
+        icon: "<i class='fas fa-check'></i>",
         default: true,
-        callback: (_event, button, dialog) => {
-          const root = button?.form ?? dialog?.element;
-          const nextName = String(root?.querySelector('[name="name"]')?.value ?? "").trim();
+        callback: (_event, button) => {
+          const form = button.form;
+          const nextName = String(form?.elements?.name?.value ?? "").trim();
           if (!nextName) return false;
-
           return {
             name: nextName,
-            cost: Math.max(0, Math.trunc(Number(root?.querySelector('[name="cost"]')?.value ?? 0) || 0)),
-            description: String(root?.querySelector('[name="description"]')?.value ?? "")
+            cost: Math.max(0, Math.trunc(Number(form?.elements?.cost?.value ?? 0) || 0)),
+            description: String(form?.elements?.description?.value ?? "")
           };
         }
       },
       {
         action: "cancel",
         label: "Annuler",
-        icon: "fa-solid fa-xmark",
+        icon: "<i class='fas fa-times'></i>",
         callback: () => null
       }
-    ]
+    ],
+    close: () => null
   });
 }
 
@@ -471,23 +470,14 @@ export function add2eRegisterClassItemSheet() {
     label: "ADD2E | Fiche Classe"
   };
 
-  const ItemsCollection = foundry?.documents?.collections?.Items;
-  if (ItemsCollection?.registerSheet) {
-    ItemsCollection.registerSheet("add2e", Add2eItemSheet, options);
-  }
-
   const DocumentSheetConfig = foundry?.applications?.apps?.DocumentSheetConfig;
   const ItemDocument = CONFIG?.Item?.documentClass ?? foundry?.documents?.Item;
-
-  if (DocumentSheetConfig?.registerSheet && ItemDocument) {
-    try {
-      DocumentSheetConfig.registerSheet(ItemDocument, "add2e", Add2eItemSheet, options);
-    } catch (error) {
-      console.warn("[ADD2E][SHEETS] Enregistrement de la fiche de classe impossible.", error);
-    }
+  if (!DocumentSheetConfig?.registerSheet || !ItemDocument) {
+    throw new Error("[ADD2E][SHEETS] DocumentSheetConfig/Item est indisponible pour enregistrer la feuille de classe ApplicationV2.");
   }
 
-  console.log("[ADD2E][SHEETS] Fiche Item.classe enregistrée :", Add2eItemSheet?.name);
+  DocumentSheetConfig.registerSheet(ItemDocument, "add2e", Add2eItemSheet, options);
+  console.log("[ADD2E][SHEETS] Fiche Item.classe ApplicationV2 enregistrée :", Add2eItemSheet?.name);
 }
 
 function registerHelpers() {
