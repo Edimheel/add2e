@@ -1,9 +1,9 @@
 // ADD2E — Moine : mécanique liée à l'Item classe Moine.
 // Compatible Foundry V13/V14/V15.
 
-import { classItems, classProgression, classSlug, raceItem, raceSlug } from "./17b-multiclass-core.mjs";
+import { classItems, classProgression, classProgressionRow, classSlug, raceItem, raceSlug } from "./17b-multiclass-core.mjs";
 
-const ADD2E_MONK_RULES_VERSION = "2026-08-11-canonical-monk-identity-v5";
+const ADD2E_MONK_RULES_VERSION = "2026-08-12-strict-monk-progression-v6";
 const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
 const ADD2E_MONK_UNARMED_IMG = "systems/add2e/assets/icones/armes/main-nue.webp";
 const ADD2E_MONK_GENERATED_FEATURE_SOURCE = "10-monk-rules";
@@ -65,12 +65,8 @@ function add2eGetMonkClassSystem(actor) {
 
 function add2eGetMonkProgressionRow(actor) {
   const item = add2eMonkClassItem(actor);
-  const level = add2eMonkClassLevel(item);
-  if (!item || level === null) return null;
-  const progression = Array.isArray(item.system?.progression) ? item.system.progression : [];
-  return progression.find(row => Number(row?.niveau ?? row?.level) === level)
-    ?? progression[Math.max(0, Math.min(progression.length - 1, level - 1))]
-    ?? null;
+  if (!item) return null;
+  return classProgressionRow(item).row;
 }
 
 function add2eMonkDamageParts(raw) {
@@ -329,7 +325,14 @@ function add2eGetClassMaxLevelForActor(actor, classItemOrSystem = null) {
   const system = classItem?.system ?? (classItemOrSystem && !classItemOrSystem.type ? classItemOrSystem : null);
   if (!system || typeof system !== "object") return null;
   const rows = Array.isArray(system.progression) ? system.progression : [];
-  let maxLevel = rows.map((row, index) => Number(row?.niveau ?? row?.level ?? index + 1) || 0).reduce((max, value) => Math.max(max, value), 0) || null;
+  const levels = rows.map(row => {
+    const level = Number(row?.niveau);
+    if (!Number.isInteger(level) || level < 1) {
+      throw new Error(`Ligne de progression sans niveau canonique pour « ${classItem?.name ?? system?.label ?? system?.nom ?? "classe"} ».`);
+    }
+    return level;
+  });
+  let maxLevel = levels.length ? Math.max(...levels) : null;
   const rules = system.raceRestriction?.races;
   if (rules && typeof rules === "object") {
     const tags = add2eGetRaceTagsForLevelCap(actor);
@@ -343,7 +346,10 @@ function add2eGetClassMaxLevelForActor(actor, classItemOrSystem = null) {
 }
 
 function add2eClampLevelToClassMax(actor, desiredLevel, classItemOrSystem = null, { notify = false } = {}) {
-  const requested = Math.max(1, Number.parseInt(desiredLevel, 10) || 1);
+  const requested = Number.parseInt(desiredLevel, 10);
+  if (!Number.isInteger(requested) || requested < 1) {
+    throw new Error(`Niveau demandé invalide : ${String(desiredLevel)}.`);
+  }
   const maximum = add2eGetClassMaxLevelForActor(actor, classItemOrSystem);
   const level = maximum && requested > maximum ? maximum : requested;
   if (notify && level !== requested) ui.notifications.warn(`${classItemOrSystem?.name ?? classItemOrSystem?.label ?? "Cette classe"} est limitée au niveau ${maximum}. Niveau ramené à ${maximum}.`);
@@ -358,7 +364,9 @@ async function add2eClampActorLevelToClassMax(actor, classItemOrSystem = null, o
     : (!classItemOrSystem && embeddedClasses.length === 1 ? embeddedClasses[0] : null);
   if (!item) return null;
   const progression = classProgression(item);
-  if (!progression.hasLevel) return null;
+  if (!progression.hasLevel) {
+    throw new Error(`Niveau canonique absent sur l’Item classe « ${item?.name ?? item?.id ?? "inconnu"} ».`);
+  }
   const clamp = add2eClampLevelToClassMax(actor, progression.level, item, options);
   if (clamp.changed) await actor.updateEmbeddedDocuments("Item", [{ _id: item.id, "system.niveau": clamp.level }], { add2eInternal: true });
   return clamp;
