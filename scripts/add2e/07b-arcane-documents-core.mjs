@@ -1,7 +1,7 @@
 // ADD2E — Documents arcaniques : noyau commun.
 // Compatible Foundry V13/V14/V15. ApplicationV2 / DialogV2 uniquement.
 
-export const VERSION = "2026-07-17-arcane-documents-v6";
+export const VERSION = "2026-08-12-canonical-spell-metadata-v7";
 export const ARCANE_LISTS = new Set(["magicien", "illusionniste"]);
 export const SCROLL_LISTS = new Set(["magicien", "illusionniste", "clerc", "druide"]);
 export const BOOK_NAMES = {
@@ -13,6 +13,7 @@ export const BOOK_IMAGES = {
   illusionniste: "icons/sundries/books/book-embossed-gold-blue.webp"
 };
 
+const SPELL_PACK_ID = "add2e.sorts";
 let spellIndexPromise = null;
 
 export function clone(value) {
@@ -28,8 +29,7 @@ export function norm(value) {
     .toLowerCase()
     .replace(/œ/g, "oe")
     .replace(/æ/g, "ae")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, "")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/_+/g, "_")
@@ -59,11 +59,11 @@ export function array(value) {
 }
 
 export function listKey(value) {
-  try {
-    if (typeof globalThis.add2eNormalizeSpellKey === "function") return globalThis.add2eNormalizeSpellKey(value);
-  } catch (_error) {}
-  const key = norm(value);
-  return ({ wizard: "magicien", mage: "magicien", magician: "magicien", magic_user: "magicien", illusionist: "illusionniste", cleric: "clerc", druid: "druide" })[key] ?? key;
+  const resolver = globalThis.add2eNormalizeSpellKey;
+  if (typeof resolver !== "function") {
+    throw new Error("Le normalisateur canonique ADD2E des listes de sorts est indisponible.");
+  }
+  return String(resolver(value) ?? "").trim();
 }
 
 export function listLabel(value) {
@@ -76,46 +76,35 @@ export function itemType(item) {
 }
 
 export function spellLevel(item) {
-  return Math.max(1, Number(item?.system?.niveau ?? item?.system?.level ?? item?.system?.niveau_sort ?? item?.system?.spellLevel ?? 1) || 1);
+  const level = Number(item?.system?.niveau);
+  return Number.isInteger(level) && level >= 1 ? level : 0;
 }
 
 export function spellLists(item) {
-  try {
-    if (typeof globalThis.add2eGetSpellListsFromItem === "function") {
-      return [...new Set(globalThis.add2eGetSpellListsFromItem(item).map(listKey).filter(Boolean))];
-    }
-  } catch (_error) {}
-  const system = item?.system ?? {};
-  const flags = item?.flags?.add2e ?? {};
-  return [...new Set([
-    flags.knownSpellLists,
-    flags.learnedSpellLists,
-    flags.grantedSpellLists,
-    system.spellLists,
-    system.lists,
-    system.liste,
-    system.liste_sort,
-    system.listeSort,
-    system.classe,
-    system.class
-  ].flatMap(array).map(listKey).filter(Boolean))];
+  const resolver = globalThis.add2eGetSpellListsFromItem;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des listes d’un sort est indisponible.");
+  }
+  const resolved = resolver(item);
+  if (!Array.isArray(resolved)) {
+    throw new Error(`Listes canoniques invalides pour « ${item?.name ?? "sort inconnu"} ».`);
+  }
+  return [...new Set(resolved.map(listKey).filter(Boolean))];
 }
 
 export function actorLists(actor, allowedLists = SCROLL_LISTS) {
+  const resolver = globalThis.add2eGetSpellcastingEntries;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des traditions de sorts est indisponible.");
+  }
+  const entries = resolver(actor);
+  if (!Array.isArray(entries)) {
+    throw new Error(`Traditions canoniques invalides pour « ${actor?.name ?? "acteur inconnu"} ».`);
+  }
   const result = new Set();
-  try {
-    for (const entry of globalThis.add2eGetSpellcastingEntries?.(actor) ?? []) {
-      const key = listKey(entry?.key);
-      if (allowedLists.has(key)) result.add(key);
-    }
-  } catch (_error) {}
-  for (const item of actor?.items ?? []) {
-    if (itemType(item) !== "classe") continue;
-    const system = item.system ?? {};
-    for (const value of [item.name, system.slug, system.label, system.nom, system.name]) {
-      const key = listKey(value);
-      if (allowedLists.has(key)) result.add(key);
-    }
+  for (const entry of entries) {
+    const key = listKey(entry?.key);
+    if (allowedLists.has(key)) result.add(key);
   }
   return [...result];
 }
@@ -196,7 +185,12 @@ export function sourceUuid(item) {
 export function stableSpellKey(item, list = "") {
   const existing = String(item?.flags?.add2e?.stableSpellKey ?? item?.flags?.add2e?.spellStableKey ?? "").trim();
   if (existing) return existing;
-  return `${listKey(list || spellLists(item)[0] || "sort")}|${spellLevel(item)}|${norm(item?.name)}`;
+  const level = spellLevel(item);
+  const lists = spellLists(item);
+  const selectedList = listKey(list || lists[0] || "");
+  const name = norm(item?.name);
+  if (!selectedList || !name || level < 1) return "";
+  return `${selectedList}|${level}|${name}`;
 }
 
 export function normalizeEntry(entry, fallbackList = "") {
@@ -216,16 +210,20 @@ export function normalizeEntry(entry, fallbackList = "") {
 }
 
 export function entryFromSpell(item, preferredList = "") {
+  const level = spellLevel(item);
   const allLists = spellLists(item);
-  const selected = preferredList ? allLists.filter(key => key === listKey(preferredList)) : allLists;
+  if (level < 1 || !allLists.length || !String(item?.name ?? "").trim()) return null;
+  const wantedList = preferredList ? listKey(preferredList) : "";
+  const selected = wantedList ? allLists.filter(key => key === wantedList) : allLists;
+  if (wantedList && !selected.length) return null;
   return normalizeEntry({
-    key: stableSpellKey(item, preferredList),
+    key: stableSpellKey(item, wantedList),
     name: item.name,
-    level: spellLevel(item),
+    level,
     lists: selected.length ? selected : allLists,
     sourceUuid: sourceUuid(item),
     img: item.img
-  }, preferredList);
+  }, wantedList);
 }
 
 export function documentEntries(item) {
@@ -262,36 +260,35 @@ function packEntries(index) {
 async function buildSpellIndex() {
   if (spellIndexPromise) return spellIndexPromise;
   spellIndexPromise = (async () => {
-    const packs = [];
-    const seen = new Set();
-    for (const id of ["add2e.sorts", "world.sorts"]) {
-      const pack = game.packs?.get?.(id);
-      if (pack?.documentName !== "Item") continue;
-      packs.push(pack);
-      seen.add(pack.collection);
-    }
-    for (const pack of game.packs?.values?.() ?? []) {
-      const label = norm(`${pack?.collection ?? ""} ${pack?.metadata?.label ?? ""}`);
-      if (pack?.documentName !== "Item" || seen.has(pack.collection) || (!label.includes("sort") && !label.includes("spell"))) continue;
-      packs.push(pack);
-      seen.add(pack.collection);
-    }
     const byName = new Map();
-    for (const pack of packs) {
-      let index;
-      try {
-        index = await pack.getIndex({ fields: ["name", "type", "system.niveau", "system.level", "system.spellLists", "system.liste", "system.classe"] });
-      } catch (_error) {
-        index = await pack.getIndex();
+    const pack = game.packs?.get?.(SPELL_PACK_ID);
+    if (!pack || pack.documentName !== "Item") return { byName };
+
+    let index;
+    try {
+      index = await pack.getIndex({ fields: ["name", "type", "system.niveau", "system.spellLists"] });
+    } catch (_error) {
+      index = await pack.getIndex();
+    }
+
+    for (const entry of packEntries(index)) {
+      if (itemType(entry) !== "sort") continue;
+      const level = spellLevel(entry);
+      const lists = spellLists(entry);
+      if (level < 1 || !lists.length) {
+        console.warn("[ADD2E][ARCANE_DOCUMENTS][INVALID_COMPENDIUM_SPELL]", {
+          name: entry?.name,
+          id: entry?._id,
+          level,
+          lists
+        });
+        continue;
       }
-      for (const entry of packEntries(index)) {
-        if (itemType(entry) !== "sort") continue;
-        const candidate = { pack, id: entry._id, name: entry.name, level: spellLevel(entry), lists: spellLists(entry) };
-        const key = norm(entry.name);
-        const bucket = byName.get(key) ?? [];
-        bucket.push(candidate);
-        byName.set(key, bucket);
-      }
+      const candidate = { pack, id: entry._id, name: entry.name, level, lists };
+      const key = norm(entry.name);
+      const bucket = byName.get(key) ?? [];
+      bucket.push(candidate);
+      byName.set(key, bucket);
     }
     return { byName };
   })();
@@ -301,17 +298,30 @@ async function buildSpellIndex() {
 export async function resolveSpell(entry) {
   const normalized = normalizeEntry(entry);
   if (!normalized) return null;
-  if (normalized.sourceUuid.startsWith("Compendium.") && typeof fromUuid === "function") {
+  const allowedPrefix = `Compendium.${SPELL_PACK_ID}.`;
+  if (normalized.sourceUuid.startsWith(allowedPrefix) && typeof fromUuid === "function") {
     try {
       const document = await fromUuid(normalized.sourceUuid);
       if (document?.documentName === "Item" && itemType(document) === "sort") return document;
     } catch (_error) {}
   }
+
   const index = await buildSpellIndex();
-  const candidates = index.byName.get(norm(normalized.name)) ?? [];
-  let selected = candidates.find(candidate => candidate.level === normalized.level && (!normalized.lists.length || normalized.lists.some(list => candidate.lists.includes(list)))) ?? null;
-  selected ??= candidates.find(candidate => candidate.level === normalized.level) ?? candidates[0] ?? null;
-  return selected ? selected.pack.getDocument(selected.id) : null;
+  const candidates = (index.byName.get(norm(normalized.name)) ?? [])
+    .filter(candidate => candidate.level === normalized.level)
+    .filter(candidate => !normalized.lists.length || normalized.lists.some(list => candidate.lists.includes(list)));
+  if (!candidates.length) return null;
+
+  const ordered = [...candidates].sort((left, right) => String(left.id).localeCompare(String(right.id), "fr"));
+  if (ordered.length > 1) {
+    console.warn("[ADD2E][ARCANE_DOCUMENTS][DUPLICATE_CANONICAL_SPELL]", {
+      name: normalized.name,
+      level: normalized.level,
+      lists: normalized.lists,
+      matches: ordered.map(candidate => candidate.id)
+    });
+  }
+  return ordered[0].pack.getDocument(ordered[0].id);
 }
 
 export async function resolveSpellByName(name) {
