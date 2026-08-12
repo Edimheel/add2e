@@ -1,168 +1,410 @@
-// ADD2E — onUse Magicien : Ténèbres sur 5 mètres
-// Version : 2026-05-05-magicien-n1-9-v2
-// Retour attendu : true = sort consommé, false = sort non consommé.
+/**
+ * ADD2E — Ténèbres sur 5 mètres (Magicien)
+ * Globe d'obscurité totale temporaire, statique, basé sur l'Item lancé.
+ * Compatible Foundry V13/V14/V15 — fenêtres via l'API ADD2E commune.
+ */
 
-const ADD2E_SORT_CONFIG = {
-  "name": "Ténèbres sur 5 mètres",
-  "slug": "tenebres_sur_5_metres",
-  "level": 2,
-  "kind": "utility",
-  "description": "Ténèbres sur 5 mètres produit un effet utilitaire de magicien. Le script conserve la structure ADD2E, affiche un message de chat et crée un suivi si nécessaire.",
-  "dice": null,
-  "modes": [
-    {
-      "id": "normal",
-      "label": "Ténèbres sur 5 mètres"
-    }
-  ]
+const ADD2E_WIZARD_DARKNESS_VERSION = "2026-08-12-wizard-darkness-area-runtime-v1";
+const ADD2E_WIZARD_DARKNESS_RUNTIME = "wizard-darkness-area";
+
+function add2eWizardDarknessEmitGM(operation, payload) {
+  if (!game.socket) return false;
+  game.socket.emit("system.add2e", {
+    type: "ADD2E_GM_OPERATION",
+    operation,
+    payload: { ...(payload ?? {}), fromUserId: game.user.id, sentAt: Date.now() }
+  });
+  return true;
+}
+
+globalThis.ADD2E_WIZARD_DARKNESS_FIND_AMBIENT = payload => {
+  if (!payload) return null;
+  const scene = game.scenes?.get(payload.sceneId) ?? canvas.scene;
+  if (!scene) return null;
+  if (payload.lightId) {
+    const light = scene.lights?.get(payload.lightId) ?? null;
+    if (light) return light;
+  }
+  if (payload.requestId) {
+    return scene.lights?.find(light =>
+      light.flags?.add2e?.requestId === payload.requestId
+      || light.getFlag?.("add2e", "requestId") === payload.requestId
+    ) ?? null;
+  }
+  return null;
 };
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN]";
 
-function add2eHtmlEscape(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
-}
+globalThis.ADD2E_WIZARD_DARKNESS_DELETE_AMBIENT = async payload => {
+  if (!payload || payload.type !== "ambient") return;
+  const scene = game.scenes?.get(payload.sceneId) ?? canvas.scene;
+  if (!scene) return;
+  const light = globalThis.ADD2E_WIZARD_DARKNESS_FIND_AMBIENT(payload);
+  if (game.user.isGM) {
+    if (light) await light.delete();
+    return;
+  }
+  add2eWizardDarknessEmitGM("deleteAmbientLight", {
+    sceneId: scene.id,
+    lightId: light?.id ?? payload.lightId ?? null,
+    requestId: payload.requestId ?? null,
+    actorId: payload.actorId ?? null,
+    actorUuid: payload.actorUuid ?? null,
+    spellKey: "tenebres_sur_5_metres",
+    x: payload.x ?? null,
+    y: payload.y ?? null
+  });
+};
 
-function add2eCasterLevel(actor) {
-  return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
-}
-
-async function add2eEvalRoll(formula) {
-  return await new Roll(formula).evaluate();
-}
-
-function add2eDamageFormula(raw, level) {
-  const s = String(raw || "1d6");
-  if (s === "leveld3") return `${Math.max(1, level)}d3`;
-  if (s === "leveld4+level") return `${Math.max(1, level)}d4+${level}`;
-  if (s === "leveld6") return `${Math.max(1, Math.min(10, level))}d6`;
-  if (s === "1d8+level") return `1d8+${level}`;
-  if (s === "1d6+level") return `1d6+${level}`;
-  if (s === "special" || s === "variable") return "1d20";
-  return s;
-}
-
-function add2eRoundCount(level) {
-  return Math.max(1, level);
-}
-
-function add2eGetCasterToken() {
-  return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
-}
-
-function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user.targets ?? []);
-  if (targets.length) return targets;
-  const casterToken = add2eGetCasterToken();
-  return (fallbackCaster && casterToken) ? [casterToken] : [];
-}
-
-async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? add2eGetCasterToken();
-  const casterActor = actor ?? casterToken?.actor ?? null;
-  const casterName = casterActor?.name ?? casterToken?.name ?? "Magicien";
-  const spellName = item?.name ?? title ?? "Sort de magicien";
-  const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
-  const targets = Array.from(game.user.targets ?? []);
-  const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
-  const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? "";
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
-    content: `
-      <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-          <img src="${add2eHtmlEscape(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${add2eHtmlEscape(casterName)}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(spellName)}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Sort profane</div>
-          <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
-        </div>
-        <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${add2eHtmlEscape(targetLabel)}</div>
-          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eHtmlEscape(outcome)}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
-          </div>
-          <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Règle appliquée</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule || "Effet du sort appliqué selon sa description et l’arbitrage du MD."}</div>
-          </details>
-        </div>
-      </div>`
+if (globalThis.ADD2E_WIZARD_DARKNESS_HOOKS_VERSION !== ADD2E_WIZARD_DARKNESS_VERSION) {
+  globalThis.ADD2E_WIZARD_DARKNESS_HOOKS_VERSION = ADD2E_WIZARD_DARKNESS_VERSION;
+  const cleanup = async effect => {
+    const flags = effect?.flags?.add2e ?? {};
+    if (flags.runtime !== ADD2E_WIZARD_DARKNESS_RUNTIME) return;
+    const payload = flags.lightPayload ?? null;
+    if (payload?.type === "ambient") await globalThis.ADD2E_WIZARD_DARKNESS_DELETE_AMBIENT(payload);
+  };
+  Hooks.on("deleteActiveEffect", cleanup);
+  Hooks.on("updateActiveEffect", async (effect, changes) => {
+    if (changes?.disabled === true) await cleanup(effect);
   });
 }
 
-async function add2eApplyEffect(targetActor, name, tags, rounds = 0) {
-  if (!targetActor) return false;
-  await targetActor.createEmbeddedDocuments("ActiveEffect", [{
-    name,
-    img: item?.img || "icons/svg/aura.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes: [],
-    duration: { rounds: rounds || undefined, startRound: game.combat?.round ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
-    description: ADD2E_SORT_CONFIG.description,
-    flags: { add2e: { tags } }
-  }]);
-  return true;
-}
+return await (async () => {
+  const spellName = "Ténèbres sur 5 mètres";
+  const spellKey = "tenebres_sur_5_metres";
+  const sourceItem = (typeof sort !== "undefined" && sort?.type === "sort")
+    ? sort
+    : ((typeof item !== "undefined" && item?.type === "sort")
+      ? item
+      : ((typeof spell !== "undefined" && spell?.type === "sort")
+        ? spell
+        : ((typeof args !== "undefined" && args?.[0]?.item?.type === "sort") ? args[0].item : null)));
+  if (!sourceItem) {
+    ui.notifications.error(`${spellName} : Item sort canonique introuvable.`);
+    return false;
+  }
 
-async function add2eAskNote(config) {
-  const needsNote = ["note","summon","summon_note","movement","terrain","utility","detection"].includes(config.kind) || (config.modes?.length > 1);
-  if (!needsNote) return { mode: "normal", note: "" };
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = v => { if (!done) { done = true; resolve(v); } };
-    const buttons = {};
-    for (const m of config.modes ?? [{id:"normal",label:config.name}]) {
-      buttons[m.id] = { label: m.label, callback: html => finish({ mode:m.id, note: html.find("[name='note']").val() ?? "" }) };
+  const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
+  if (!caster) {
+    ui.notifications.error(`${spellName} : lanceur introuvable.`);
+    return false;
+  }
+
+  const required = [
+    "add2eNormalizeSpellKey", "add2eGetSpellListsFromItem", "add2eResolveSpellDistance",
+    "add2eCanActorUseSpell", "add2eDialogWait", "add2eBuildChatCard", "add2eCreateChatCard"
+  ];
+  const missing = required.filter(name => typeof globalThis[name] !== "function");
+  if (missing.length) {
+    ui.notifications.error(`${spellName} : API ADD2E indisponible (${missing.join(", ")}).`);
+    return false;
+  }
+
+  const spellLevel = Number(sourceItem.system?.niveau);
+  if (!Number.isInteger(spellLevel) || spellLevel < 1) {
+    ui.notifications.error(`${spellName} : system.niveau canonique invalide.`);
+    return false;
+  }
+  const lists = globalThis.add2eGetSpellListsFromItem(sourceItem)
+    .map(value => globalThis.add2eNormalizeSpellKey(value)).filter(Boolean);
+  const uniqueLists = [...new Set(lists)];
+  if (uniqueLists.length !== 1 || uniqueLists[0] !== "magicien") {
+    ui.notifications.error(`${spellName} : ce runtime est réservé à la liste Magicien.`);
+    return false;
+  }
+
+  let casterLevel = 0;
+  if (sourceItem.system?.isObjectPower === true) {
+    casterLevel = Number(sourceItem.system?.casterLevel);
+    if (!Number.isInteger(casterLevel) || casterLevel < 1) {
+      ui.notifications.error(`${spellName} : casterLevel canonique absent du pouvoir d'objet magique.`);
+      return false;
     }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-    new Dialog({
-      title: config.name,
-      content: `<form><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></form>`,
-      buttons,
-      default: Object.keys(buttons)[0],
-      close: () => finish(null)
-    }).render(true);
+  } else {
+    const access = globalThis.add2eCanActorUseSpell(caster, sourceItem);
+    if (access?.ok !== true) {
+      ui.notifications.error(`${spellName} : accès canonique refusé (${access?.reason ?? "raison inconnue"}).`);
+      return false;
+    }
+    if (globalThis.add2eNormalizeSpellKey(access.entry?.key) !== "magicien") {
+      ui.notifications.error(`${spellName} : liste résolue incohérente.`);
+      return false;
+    }
+    casterLevel = Number(access.actorLevel);
+    if (!Number.isInteger(casterLevel) || casterLevel < 1) {
+      ui.notifications.error(`${spellName} : niveau canonique du lanceur invalide.`);
+      return false;
+    }
+  }
+
+  const casterToken = (typeof token !== "undefined" && token?.actor?.id === caster.id)
+    ? token
+    : canvas.tokens?.controlled?.find(placeable => placeable?.actor?.id === caster.id)
+      ?? caster.getActiveTokens?.()[0]
+      ?? null;
+  if (!casterToken || !canvas.scene) {
+    ui.notifications.warn(`${spellName} : le lanceur doit être présent sur une scène active.`);
+    return false;
+  }
+
+  const environment = await globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "interieur",
+    add2eClasses: ["add2e-tenebres-5m-context"],
+    window: { title: spellName },
+    content: `<form><p>Choisissez le contexte de portée.</p><p>Le rayon de la zone reste celui indiqué par le sort.</p></form>`,
+    buttons: [
+      { action: "interieur", label: "Intérieur", icon: "<i class='fas fa-building'></i>", default: true, callback: () => "interieur" },
+      { action: "exterieur", label: "Extérieur", icon: "<i class='fas fa-tree'></i>", callback: () => "exterieur" },
+      { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+    ], close: () => null
   });
-}
+  if (!environment) return false;
 
-const choice = await add2eAskNote(ADD2E_SORT_CONFIG);
-if (!choice) return false;
+  const normalizeText = value => String(value ?? "").trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[″”]/g, "\"").replace(/\s+/g, " ");
+  const canonicalText = (value, field) => {
+    if (typeof value === "string" || typeof value === "number") {
+      const text = String(value).trim();
+      if (text) return text;
+    }
+    if (value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, "valeur")) {
+      const text = String(value.valeur ?? "").trim();
+      if (text) return text;
+    }
+    throw new Error(`${spellName} : ${field} canonique invalide.`);
+  };
 
-const level = add2eCasterLevel(actor);
-const targets = add2eGetTargets({ fallbackCaster: ADD2E_SORT_CONFIG.kind !== "damage" });
-const baseTags = [`sort:${ADD2E_SORT_CONFIG.slug}`, "classe:magicien", "liste:magicien", `niveau:${ADD2E_SORT_CONFIG.level}`, `type:${ADD2E_SORT_CONFIG.kind}`];
+  const parseRangeInches = value => {
+    const text = canonicalText(value, "system.portee");
+    const normalized = normalizeText(text);
+    let match = normalized.match(/^(\d+(?:[.,]\d+)?)\s*(?:\"|pouces?)\/niveau$/);
+    if (match) return Number(match[1].replace(",", ".")) * casterLevel;
+    match = normalized.match(/^(\d+(?:[.,]\d+)?)\s*(?:\"|pouces?)$/);
+    if (match) return Number(match[1].replace(",", "."));
+    throw new Error(`${spellName} : portée canonique non supportée (${text}).`);
+  };
 
-console.log(`${ADD2E_ONUSE_TAG}[START]`, { sort: ADD2E_SORT_CONFIG.name, actor: actor?.name, level, targets: targets.map(t => t.name), mode: choice.mode });
+  const parseRadiusMeters = value => {
+    const text = canonicalText(value, "system.zone_effet");
+    const match = normalizeText(text).match(/^sphere de (\d+(?:[.,]\d+)?)\s*(?:m|metres?) de rayon$/);
+    if (!match) throw new Error(`${spellName} : zone_effet canonique non supportée (${text}).`);
+    return Number(match[1].replace(",", "."));
+  };
 
-if (ADD2E_SORT_CONFIG.kind === "damage") {
-  const formula = add2eDamageFormula(ADD2E_SORT_CONFIG.dice, level);
-  const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }), flavor: ADD2E_SORT_CONFIG.name });
-  await add2eChat(ADD2E_SORT_CONFIG.name, `
-    <p>Jet indicatif : <b>${roll.total}</b> (${formula})</p>
-    ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `, null, { outcome: "EFFET OFFENSIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
+  const parseDurationRounds = value => {
+    const text = canonicalText(value, "system.duree");
+    const normalized = normalizeText(text);
+    let match = normalized.match(/^(\d+(?:[.,]\d+)?) tours? \+ (\d+(?:[.,]\d+)?) rounds?\/niveau$/);
+    if (match) {
+      return Math.round((Number(match[1].replace(",", ".")) * 10)
+        + (Number(match[2].replace(",", ".")) * casterLevel));
+    }
+    match = normalized.match(/^(\d+(?:[.,]\d+)?) rounds? \+ (\d+(?:[.,]\d+)?) rounds?\/niveau$/);
+    if (match) {
+      return Math.round(Number(match[1].replace(",", "."))
+        + (Number(match[2].replace(",", ".")) * casterLevel));
+    }
+    throw new Error(`${spellName} : durée canonique non supportée (${text}).`);
+  };
+
+  const sceneMetersPerUnit = scene => {
+    const unit = String(scene?.grid?.units ?? "").trim().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const factors = new Map([
+      ["m", 1], ["metre", 1], ["metres", 1], ["meter", 1], ["meters", 1],
+      ["km", 1000], ["cm", 0.01],
+      ["ft", 0.3048], ["foot", 0.3048], ["feet", 0.3048], ["pied", 0.3048], ["pieds", 0.3048],
+      ["yd", 0.9144], ["yard", 0.9144], ["yards", 0.9144]
+    ]);
+    const factor = factors.get(unit);
+    if (!(factor > 0)) throw new Error(`${spellName} : unité de scène non supportée (${scene?.grid?.units || "vide"}).`);
+    return factor;
+  };
+  const sceneDistance = meters => {
+    const gridDistance = Number(canvas.scene?.grid?.distance);
+    const gridSize = Number(canvas.scene?.grid?.size);
+    if (!(gridDistance > 0) || !(gridSize > 0)) throw new Error(`${spellName} : grille Foundry invalide.`);
+    const units = Number(meters) / sceneMetersPerUnit(canvas.scene);
+    return { units, pixels: (units / gridDistance) * gridSize };
+  };
+
+  let rangeRule;
+  let radiusMeters;
+  let rangePixels;
+  let radiusUnits;
+  let durationRounds;
+  try {
+    rangeRule = globalThis.add2eResolveSpellDistance(parseRangeInches(sourceItem.system?.portee), { environment, kind: "range" });
+    radiusMeters = parseRadiusMeters(sourceItem.system?.zone_effet);
+    durationRounds = parseDurationRounds(sourceItem.system?.duree);
+    rangePixels = sceneDistance(rangeRule.meters).pixels;
+    radiusUnits = sceneDistance(radiusMeters).units;
+    if (!(durationRounds > 0)) throw new Error(`${spellName} : durée résolue invalide.`);
+  } catch (error) {
+    console.error("[ADD2E][TENEBRES_5M][RULES]", { item: sourceItem.name, error });
+    ui.notifications.error(error.message);
+    return false;
+  }
+
+  const durationData = rounds => {
+    const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+    return time?.durationData?.(rounds) ?? {
+      rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null,
+      startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null
+    };
+  };
+
+  const choosePoint = () => {
+    ui.notifications.info(`${spellName} : clique sur la scène pour placer le centre du globe. Échap ou clic droit annule.`);
+    return new Promise(resolve => {
+      const stage = canvas.stage;
+      if (!stage?.on || !stage?.off) return resolve(null);
+      let done = false;
+      const finish = value => {
+        if (done) return;
+        done = true;
+        stage.off("pointerdown", onPointer);
+        window.removeEventListener("keydown", onKey, true);
+        resolve(value);
+      };
+      const onKey = event => {
+        if (event.key !== "Escape") return;
+        event.preventDefault?.();
+        finish(null);
+      };
+      const onPointer = event => {
+        const button = Number(event?.button ?? event?.nativeEvent?.button ?? event?.data?.originalEvent?.button ?? 0);
+        if (button === 2) return finish(null);
+        if (button !== 0) return;
+        event?.stopPropagation?.();
+        event?.data?.originalEvent?.preventDefault?.();
+        const point = event?.getLocalPosition?.(stage)
+          ?? event?.data?.getLocalPosition?.(stage)
+          ?? stage.toLocal?.(event?.global ?? event?.data?.global ?? null)
+          ?? null;
+        if (!Number.isFinite(Number(point?.x)) || !Number.isFinite(Number(point?.y))) return finish(null);
+        finish({ x: Number(point.x), y: Number(point.y) });
+      };
+      stage.on("pointerdown", onPointer);
+      window.addEventListener("keydown", onKey, true);
+    });
+  };
+
+  const point = await choosePoint();
+  if (!point) return false;
+  const distancePixels = Math.hypot(point.x - casterToken.center.x, point.y - casterToken.center.y);
+  if (distancePixels > rangePixels + 0.1) {
+    ui.notifications.warn(`${spellName} : point hors de portée.`);
+    return false;
+  }
+  try {
+    if (canvas.walls?.checkCollision && typeof Ray !== "undefined"
+      && canvas.walls.checkCollision(new Ray(casterToken.center, point), { type: "sight", mode: "any" }) === true) {
+      ui.notifications.warn(`${spellName} : un obstacle bloque la ligne d'effet.`);
+      return false;
+    }
+  } catch (_error) {}
+
+  const darknessConfig = {
+    dim: radiusUnits, bright: 0, angle: 360, color: "#000000", alpha: 1,
+    coloration: 1, luminosity: -1, attenuation: 0.5,
+    animation: { type: null, speed: 5, intensity: 5, reverse: false }
+  };
+  const requestId = foundry.utils.randomID();
+  const ambientFlags = { add2e: {
+    runtime: ADD2E_WIZARD_DARKNESS_RUNTIME, spellKey, requestId,
+    actorId: caster.id, actorUuid: caster.uuid, sourceItemUuid: sourceItem.uuid ?? null,
+    interactionTags: ["obscurite:totale", "bloque:infravision", "bloque:ultravision", "annule:lumiere", "suspend:lumiere_eternelle"]
+  } };
+
+  let lightId = null;
+  if (game.user.isGM) {
+    const created = await canvas.scene.createEmbeddedDocuments("AmbientLight", [{
+      x: point.x, y: point.y, rotation: 0, walls: true, vision: true, config: darknessConfig, flags: ambientFlags
+    }]);
+    lightId = created?.[0]?.id ?? null;
+    if (!lightId) return false;
+  } else {
+    const sent = add2eWizardDarknessEmitGM("createAmbientLight", {
+      sceneId: canvas.scene.id, x: point.x, y: point.y, rotation: 0, walls: true, vision: true,
+      dim: darknessConfig.dim, bright: 0, angle: 360, color: darknessConfig.color, alpha: darknessConfig.alpha,
+      coloration: darknessConfig.coloration, luminosity: darknessConfig.luminosity,
+      attenuation: darknessConfig.attenuation, animation: darknessConfig.animation, flags: ambientFlags
+    });
+    if (!sent) return false;
+  }
+
+  const lightPayload = {
+    type: "ambient", sceneId: canvas.scene.id, lightId, requestId,
+    actorId: caster.id, actorUuid: caster.uuid, spellKey, x: point.x, y: point.y
+  };
+  const effectData = {
+    name: `${spellName} : zone`,
+    img: sourceItem.img || "icons/magic/unholy/projectile-smoke-black.webp",
+    origin: sourceItem.uuid ?? null,
+    disabled: false, transfer: false,
+    duration: durationData(durationRounds),
+    description: "Obscurité totale : infravision et ultravision sont inefficaces dans la zone.",
+    flags: { add2e: {
+      runtime: ADD2E_WIZARD_DARKNESS_RUNTIME, spellName, spellKey,
+      sourceItemUuid: sourceItem.uuid ?? null, casterId: caster.id, casterUuid: caster.uuid,
+      casterLevel, spellLevel, listKey: "magicien", environment,
+      rangeMeters: rangeRule.meters, radiusMeters, durationRounds, lightPayload,
+      tags: [
+        `sort:${spellKey}`, "liste:magicien", `niveau:${spellLevel}`, "tenebres", "obscurite:totale",
+        "bloque:infravision", "bloque:ultravision", "ambient_light", "annule:lumiere", "suspend:lumiere_eternelle"
+      ],
+      version: ADD2E_WIZARD_DARKNESS_VERSION
+    } },
+    changes: []
+  };
+
+  let effectCreated = false;
+  if (game.user.isGM || caster.isOwner) {
+    const created = await caster.createEmbeddedDocuments("ActiveEffect", [effectData]);
+    effectCreated = Boolean(created?.[0]);
+  } else {
+    effectCreated = add2eWizardDarknessEmitGM("createActiveEffect", { actorUuid: caster.uuid, actorId: caster.id, effectData });
+  }
+  if (!effectCreated) {
+    await globalThis.ADD2E_WIZARD_DARKNESS_DELETE_AMBIENT(lightPayload);
+    return false;
+  }
+
+  const card = {
+    actor: caster,
+    title: spellName,
+    icon: "fas fa-moon",
+    variant: "spell",
+    source: { name: caster.name, img: sourceItem.img ?? caster.img, type: `Magicien niveau ${casterLevel}` },
+    rows: [
+      { label: "Liste", value: `Magicien — niveau de lanceur ${casterLevel}` },
+      { label: "Contexte", value: environment === "exterieur" ? "Extérieur" : "Intérieur" },
+      { label: "Portée", value: `${rangeRule.inches}\" = ${rangeRule.meters} m` },
+      { label: "Zone", value: `sphère de ${radiusMeters} m de rayon` },
+      { label: "Durée", value: `${durationRounds} rounds` },
+      { label: "Jet de protection", value: "Aucun" },
+      { label: "Résultat", value: "Globe d'obscurité totale créé" }
+    ],
+    message: `${caster.name} lance ${spellName}.`,
+    trustedBodyHtml: `<div class="add2e-tenebres-5m-results"><p>Infravision et ultravision sont inefficaces. Le sort dissipe Lumière et suspend temporairement Lumière éternelle selon les règles d'interaction de la famille.</p></div>`,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+      flags: { add2e: {
+        chatCardType: "tenebres-sur-5-metres", version: ADD2E_WIZARD_DARKNESS_VERSION,
+        spellKey, sourceItemUuid: sourceItem.uuid ?? null, casterLevel, spellLevel,
+        listKey: "magicien", environment, rangeMeters: rangeRule.meters, radiusMeters,
+        durationRounds, requestId, sceneId: canvas.scene.id, lightId
+      } }
+    }
+  };
+  const preview = globalThis.add2eBuildChatCard(card);
+  if (!String(preview ?? "").trim()) {
+    await globalThis.ADD2E_WIZARD_DARKNESS_DELETE_AMBIENT(lightPayload);
+    throw new Error(`${spellName} : carte ADD2E vide.`);
+  }
+  await globalThis.add2eCreateChatCard(card);
+  try { await globalThis.ADD2E_PLAY_SPELL_FX?.(spellKey, { casterToken, targetToken: null }); } catch (_error) {}
   return true;
-}
-
-if (["condition","protection"].includes(ADD2E_SORT_CONFIG.kind)) {
-  for (const t of targets) await add2eApplyEffect(t.actor, ADD2E_SORT_CONFIG.name, baseTags, add2eRoundCount(level));
-  await add2eChat(ADD2E_SORT_CONFIG.name, `<p>Effet actif appliqué à : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>`, null, { outcome: "EFFET ACTIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
-}
-
-await add2eChat(ADD2E_SORT_CONFIG.name, `
-  <p>${add2eHtmlEscape(ADD2E_SORT_CONFIG.description)}</p>
-  ${choice.note ? `<p>Note : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-`, null, { outcome: ADD2E_SORT_CONFIG.name.toUpperCase(), rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-return true;
+})();
