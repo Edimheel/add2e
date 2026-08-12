@@ -48,14 +48,13 @@ function actorKnownEntries(actor, list) {
 }
 
 function spellbookOwnerUuid(book) {
-  const data = arcaneData(book);
-  return String(data.ownerActorUuid ?? book?.flags?.add2e?.ownerActorUuid ?? "").trim();
+  return String(arcaneData(book).ownerActorUuid ?? "").trim();
 }
 
 function isCanonicalPersonalBook(actor, book, list = "") {
   if (!actor || !book || !isSpellbook(book)) return false;
   const data = arcaneData(book);
-  const wantedList = listKey(list || data.ownerList || book?.flags?.add2e?.ownerSpellList);
+  const wantedList = listKey(list || data.ownerList);
   return data.personal === true
     && ARCANE_LISTS.has(wantedList)
     && listKey(data.ownerList) === wantedList
@@ -70,8 +69,7 @@ function personalBook(actor, list) {
 async function externalizeForeignPersonalBook(actor, book, { reason = "ownership-normalization" } = {}) {
   if (!actor || !book || !isSpellbook(book)) return false;
   const current = arcaneData(book);
-  const flaggedPersonal = current.personal === true || book.flags?.add2e?.personalSpellbook === true;
-  if (!flaggedPersonal || isCanonicalPersonalBook(actor, book)) return false;
+  if (current.personal !== true || isCanonicalPersonalBook(actor, book)) return false;
   const next = {
     ...clone(current),
     schema: 1,
@@ -84,9 +82,6 @@ async function externalizeForeignPersonalBook(actor, book, { reason = "ownership
     "system.arcaneDocument": next,
     "system.magique": true,
     "system.consommable": false,
-    "flags.add2e.arcaneDocumentKind": "spellbook",
-    "flags.add2e.personalSpellbook": false,
-    "flags.add2e.ownerActorUuid": "",
     "flags.add2e.spellbookOwnershipNormalized": true,
     "flags.add2e.spellbookOwnershipReason": reason,
     "flags.add2e.spellbookOwnershipNormalizedAt": new Date().toISOString()
@@ -129,10 +124,6 @@ async function ensurePersonalBook(actor, list) {
       effects: [],
       flags: {
         add2e: {
-          arcaneDocumentKind: "spellbook",
-          personalSpellbook: true,
-          ownerActorUuid: actor.uuid,
-          ownerSpellList: wantedList,
           generatedBy: VERSION
         }
       }
@@ -156,10 +147,6 @@ async function ensurePersonalBook(actor, list) {
       name: expectedName,
       "system.nom": expectedName,
       "system.arcaneDocument": next,
-      "flags.add2e.arcaneDocumentKind": "spellbook",
-      "flags.add2e.personalSpellbook": true,
-      "flags.add2e.ownerActorUuid": actor.uuid,
-      "flags.add2e.ownerSpellList": wantedList,
       "flags.add2e.generatedBy": VERSION
     }, { add2eInternal: true, add2eArcaneSync: true, render: false });
   }
@@ -218,7 +205,7 @@ export async function detachPersonalSpellbooks(actor, { reason = "loot-death" } 
     let detached = 0;
     for (const book of Array.from(actor.items).filter(isSpellbook)) {
       const current = arcaneData(book);
-      if (current.personal !== true && book.flags?.add2e?.personalSpellbook !== true) continue;
+      if (current.personal !== true) continue;
       const next = {
         ...clone(current),
         schema: 1,
@@ -231,9 +218,6 @@ export async function detachPersonalSpellbooks(actor, { reason = "loot-death" } 
         "system.arcaneDocument": next,
         "system.magique": true,
         "system.consommable": false,
-        "flags.add2e.arcaneDocumentKind": "spellbook",
-        "flags.add2e.personalSpellbook": false,
-        "flags.add2e.ownerActorUuid": "",
         "flags.add2e.detachedForLoot": true,
         "flags.add2e.detachedForLootReason": reason,
         "flags.add2e.detachedForLootAt": new Date().toISOString()
