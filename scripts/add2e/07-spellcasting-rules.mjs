@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Spellcasting par Items classe
-// Version : 2026-08-10-unified-spell-memorization-v7
+// Version : 2026-08-12-canonical-class-progression-v8
 // Les Items classe sont l’unique source de niveau et de listes de sorts des PJ.
 // Les profils dérivés canoniques sont l’unique source Intelligence/Sagesse.
 // Les emplacements sont lus exclusivement depuis spellcasting.preparationSource.
@@ -8,7 +8,9 @@
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-10-unified-spell-memorization-v7";
+import { classItems, classProgression, classProgressionRow, classSlug } from "./17b-multiclass-core.mjs";
+
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-12-canonical-class-progression-v8";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -108,17 +110,19 @@ function add2eSpellResourceEngine() {
 }
 
 function add2eSpellClassItems(actor) {
-  return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  return classItems(actor);
 }
 
 function add2eSpellClassSlug(classDoc) {
-  const system = classDoc?.system ?? {};
-  return add2eSpellSlug(system.slug ?? system.label ?? classDoc?.name ?? "classe");
+  return classSlug(classDoc);
 }
 
 function add2eSpellClassLevelFromItem(classDoc) {
-  const level = Number(classDoc?.system?.niveau);
-  return Number.isFinite(level) && level >= 1 ? Math.floor(level) : 0;
+  const progression = classProgression(classDoc);
+  if (!progression.hasLevel) {
+    throw new Error(`Niveau canonique absent sur l’Item classe « ${classDoc?.name ?? classDoc?.id ?? "inconnu"} ».`);
+  }
+  return progression.level;
 }
 
 function add2eResolveSpellClassItem(actor, source = null) {
@@ -171,11 +175,8 @@ function add2eGetActorClassItemForSpellcasting(actor) {
 
 function add2eGetProgressionRowForActor(actor, entry = null) {
   const classDoc = entry ? add2eSpellClassForEntry(actor, entry) : add2eGetActorClassItemForSpellcasting(actor);
-  if (!classDoc) return {};
-  const level = add2eSpellClassLevel(actor, classDoc);
-  if (level < 1) return {};
-  const progression = Array.isArray(classDoc.system?.progression) ? classDoc.system.progression : [];
-  return progression.find(row => Number(row?.niveau) === level) ?? {};
+  if (!classDoc) return null;
+  return classProgressionRow(classDoc).row;
 }
 
 function add2eCanonicalPreparationSource(value, ownerLabel = "Classe") {
@@ -189,7 +190,7 @@ function add2eCanonicalPreparationSource(value, ownerLabel = "Classe") {
 }
 
 function add2eEntriesFromCasting(casting, classDoc = null) {
-  const classSlug = classDoc ? add2eSpellClassSlug(classDoc) : null;
+  const classSlugValue = classDoc ? add2eSpellClassSlug(classDoc) : null;
   const className = classDoc?.name ?? null;
   const classItemId = classDoc?.id ?? null;
   const rawEntries = Array.isArray(casting?.entries) ? casting.entries : null;
@@ -207,7 +208,7 @@ function add2eEntriesFromCasting(casting, classDoc = null) {
         preparationSource: `progression.${add2eCanonicalPreparationSource(entry?.preparationSource, `${className ?? "Classe"}/${key}`)}`,
         notes: entry?.notes || "",
         classItemId,
-        classSlug,
+        classSlug: classSlugValue,
         className
       };
     });
@@ -225,7 +226,7 @@ function add2eEntriesFromCasting(casting, classDoc = null) {
     preparationSource,
     notes: casting?.notes || "",
     classItemId,
-    classSlug,
+    classSlug: classSlugValue,
     className
   }));
 }
