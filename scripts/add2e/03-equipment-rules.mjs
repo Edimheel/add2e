@@ -1,6 +1,8 @@
+import { classItems as canonicalClassItems } from "./17b-multiclass-core.mjs";
+
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags canoniques
-// Version : 2026-08-10-canonical-equipment-restrictions-v12-reconcile-all
+// Version : 2026-08-12-canonical-class-items-v13
 // Source principale : Items "classe" embarqués sur l'acteur.
 // Schéma canonique des tags d'équipement :
 // - arme / armure / bouclier
@@ -66,7 +68,7 @@ function add2ePushEquipTags(target, raw) {
 }
 
 function add2eGetActorClassItems(actor) {
-  return actor?.items?.filter?.(i => String(i?.type ?? "").toLowerCase() === "classe") ?? [];
+  return canonicalClassItems(actor);
 }
 
 function add2eActorIsMulticlass(actor) {
