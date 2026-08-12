@@ -4,7 +4,9 @@
 // Compatible Foundry V13 / V14 / V15
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-08-10-spell-sync-canonical-class-resources-v11";
+import { classItems, classProgression, classSlug } from "./17b-multiclass-core.mjs";
+
+const ADD2E_SPELL_SYNC_VERSION = "2026-08-12-canonical-class-identity-v12";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
@@ -163,17 +165,15 @@ function add2eSpellSyncSanitizeData(data) {
 }
 
 function add2eSpellSyncClassItems(actor) {
-  return actor?.items?.filter?.(item => String(item?.type ?? "").toLowerCase() === "classe") ?? [];
+  return classItems(actor);
 }
 
 function add2eSpellSyncClassSlug(classItem) {
-  const system = classItem?.system ?? {};
-  return add2eSpellSyncNormalize(system.slug ?? system.label ?? classItem?.name ?? "classe");
+  return classSlug(classItem);
 }
 
 function add2eSpellSyncClassIdentityForItem(classItem) {
-  const system = classItem?.system ?? {};
-  return add2eSpellSyncClassIdentity(system.slug ?? system.label ?? classItem?.name ?? "classe");
+  return classSlug(classItem);
 }
 
 function add2eSpellSyncRangerDruidEntry(classItem) {
@@ -246,23 +246,13 @@ function add2eSpellSyncIsCompendiumOwnedActorSpell(item) {
   return flags.autoGrantedSpellSync === true || !!flags.autoGrantedByClassId || !!flags.autoGrantedByClass || source.includes("add2e.sorts");
 }
 
-function add2eSpellSyncClassSourceNames(classItem) {
-  const system = classItem?.system ?? {};
-  return new Set([
-    classItem?.name,
-    system.slug,
-    system.label
-  ].map(add2eSpellSyncNormalize).filter(Boolean));
-}
-
 function add2eSpellSyncSpellBelongsToClass(item, classItem) {
   const flags = item?.flags?.add2e ?? {};
   const classId = String(classItem?.id ?? "");
   const sourceId = String(flags.autoGrantedByClassId ?? flags.sourceClassId ?? "");
   if (classId && sourceId === classId) return true;
-  const sourceNames = add2eSpellSyncClassSourceNames(classItem);
-  const sourceName = add2eSpellSyncNormalize(flags.autoGrantedByClass ?? flags.classSlug ?? "");
-  return !!sourceName && sourceNames.has(sourceName);
+  const sourceSlug = add2eSpellSyncClassIdentity(flags.classSlug ?? "");
+  return !!sourceSlug && sourceSlug === add2eSpellSyncClassSlug(classItem);
 }
 
 function add2eSpellSyncExistingKeys(actor, cache = null, options = {}) {
@@ -288,9 +278,11 @@ function add2eSpellSyncMemorizationSnapshot(item) {
 function add2eSpellSyncLevelSignature(actor) {
   const signature = {};
   for (const classItem of add2eSpellSyncClassItems(actor)) {
-    const level = Number(classItem?.system?.niveau);
-    if (!Number.isFinite(level) || level < 0) continue;
-    signature[String(classItem.id)] = Math.floor(level);
+    const progression = classProgression(classItem);
+    if (!progression.hasLevel) {
+      throw new Error(`Niveau canonique absent sur l’Item classe « ${classItem?.name ?? classItem?.id ?? "inconnu"} ».`);
+    }
+    signature[String(classItem.id)] = progression.level;
   }
   return signature;
 }
@@ -689,6 +681,7 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
       const grantedLists = add2eSpellSyncUnionLists(classLists);
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedByClass", classItem.name);
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedByClassId", classItem.id);
+      foundry.utils.setProperty(data, "flags.add2e.classSlug", add2eSpellSyncClassSlug(classItem));
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedSpellSync", true);
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedSpellLists", grantedLists);
       foundry.utils.setProperty(data, "flags.add2e.grantedSpellLists", grantedLists);
