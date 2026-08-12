@@ -78,7 +78,8 @@ export function add2eToDropArray(value) {
 }
 
 export function add2eRaceTagsFromDataSafe(raceData) {
-  const system = raceData?.system ?? {};
+  if (!raceData) return [];
+  const system = raceData.system ?? {};
   const slug = raceSlug(raceData);
   const tags = [
     ...add2eToDropArray(system.tags),
