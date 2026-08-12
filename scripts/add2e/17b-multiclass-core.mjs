@@ -2,7 +2,7 @@
 // Source de vérité : chaque Item embarqué de type "classe".
 // La définition et la progression (system.niveau / system.xp) vivent ensemble.
 
-export const MULTICLASS_VERSION = "2026-08-11-canonical-race-tags-v4";
+export const MULTICLASS_VERSION = "2026-08-12-canonical-thac0-v5";
 export const MULTICLASS_SCHEMA = 3;
 export const INTERNAL = "add2eMulticlassInternal";
 export const TAG = "[ADD2E][MULTICLASSE]";
@@ -119,6 +119,12 @@ function exactInteger(value, minimum = 0) {
   return integer >= minimum ? integer : null;
 }
 
+function strictFiniteNumber(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 /**
  * Lit exclusivement les champs de progression de l'Item classe.
  * Aucun champ de l'acteur n'est consulté ici.
@@ -132,6 +138,100 @@ export function classProgression(item, { level = 1, xp = 0 } = {}) {
     xp: itemXp ?? Math.max(0, Math.floor(num(xp, 0))),
     hasLevel: itemLevel !== null,
     hasXp: itemXp !== null
+  };
+}
+
+/**
+ * Retourne strictement la ligne de progression correspondant au system.niveau
+ * de l'Item classe. Aucun accès par index de tableau n'est autorisé.
+ */
+export function classProgressionRow(item) {
+  const state = classProgression(item);
+  if (!state.hasLevel) {
+    throw new Error(`Niveau canonique absent sur l’Item classe « ${item?.name ?? item?.id ?? "inconnu"} ».`);
+  }
+
+  const progression = Array.isArray(item?.system?.progression) ? item.system.progression : [];
+  const row = progression.find(entry => Number(entry?.niveau) === state.level) ?? null;
+  if (!row) {
+    throw new Error(`Progression canonique absente pour « ${item?.name ?? "classe"} » au niveau ${state.level}.`);
+  }
+
+  return {
+    item,
+    level: state.level,
+    row
+  };
+}
+
+export function canonicalClassThac0(item) {
+  const progression = classProgressionRow(item);
+  const thac0 = strictFiniteNumber(progression.row?.thac0);
+  if (thac0 === null) {
+    throw new Error(`THAC0 canonique invalide pour ${item?.name ?? "classe"} au niveau ${progression.level}.`);
+  }
+
+  return {
+    value: thac0,
+    itemId: item?.id ?? null,
+    itemUuid: item?.uuid ?? null,
+    className: item?.name ?? itemLabel(item, "Classe"),
+    classSlug: classSlug(item),
+    level: progression.level
+  };
+}
+
+/**
+ * Résolution canonique unique du THAC0.
+ * - transformation : priorité absolue si elle fournit un THAC0 ;
+ * - personnage : progression de chaque Item classe, meilleur THAC0 en multiclassage ;
+ * - autres acteurs : system.thac0 uniquement.
+ */
+export function resolveCanonicalThac0(actor, { transformation = undefined } = {}) {
+  if (!actor) throw new Error("Acteur absent pour la résolution canonique du THAC0.");
+
+  const transformationProfile = transformation === undefined
+    ? globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null
+    : transformation;
+  const transformationThac0 = strictFiniteNumber(transformationProfile?.thac0);
+  if (transformationThac0 !== null) {
+    return {
+      value: transformationThac0,
+      source: "transformation.thac0",
+      transformation: transformationProfile,
+      selectedClass: null,
+      classes: []
+    };
+  }
+
+  if (String(actor?.type ?? "").toLowerCase() === "personnage") {
+    const classes = classItems(actor);
+    if (!classes.length) {
+      throw new Error(`${actor?.name ?? "Personnage"} : aucun Item classe canonique pour résoudre le THAC0.`);
+    }
+
+    const resolutions = classes.map(canonicalClassThac0);
+    const selected = resolutions.reduce((best, current) => current.value < best.value ? current : best);
+    return {
+      value: selected.value,
+      source: "class.progression.thac0",
+      transformation: null,
+      selectedClass: selected,
+      classes: resolutions
+    };
+  }
+
+  const actorThac0 = strictFiniteNumber(actor?.system?.thac0);
+  if (actorThac0 === null) {
+    throw new Error(`${actor?.name ?? "Acteur"} : THAC0 canonique absent dans system.thac0.`);
+  }
+
+  return {
+    value: actorThac0,
+    source: "actor.system.thac0",
+    transformation: null,
+    selectedClass: null,
+    classes: []
   };
 }
 
@@ -212,4 +312,6 @@ try {
   globalThis.add2eCanonicalClassLevel = canonicalClassLevel;
   globalThis.add2eCanonicalClassXp = canonicalClassXp;
   globalThis.add2eClassProgression = classProgression;
+  globalThis.add2eClassProgressionRow = classProgressionRow;
+  globalThis.add2eResolveCanonicalThac0 = resolveCanonicalThac0;
 } catch (_error) {}
