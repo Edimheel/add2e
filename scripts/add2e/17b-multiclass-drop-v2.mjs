@@ -6,7 +6,7 @@ import { currentRaceOrCompatibleAlternatives, raceCompatibleForMulticlass, world
 import { showClassDropChoiceDialog } from "./17b-multiclass-dialogs.mjs";
 import { addClassAsMulticlass, applyClassAsMonoclass, applyRaceForMulticlass, replaceClassInMulticlass } from "./17b-multiclass-operations.mjs";
 
-const ADD2E_DROP_PROGRESS_VERSION = "2026-08-10-direct-class-race-router-v6";
+const ADD2E_DROP_PROGRESS_VERSION = "2026-08-12-canonical-spell-ownership-v7";
 const DROP_PROGRESS = globalThis.ADD2E_DROP_PROGRESS instanceof Map ? globalThis.ADD2E_DROP_PROGRESS : new Map();
 globalThis.ADD2E_DROP_PROGRESS = DROP_PROGRESS;
 globalThis.ADD2E_DROP_PROGRESS_VERSION = ADD2E_DROP_PROGRESS_VERSION;
@@ -181,11 +181,14 @@ async function ensureFirstClassSpells(actor) {
   const classDoc = docs[0];
   const lists = globalThis.add2eSpellSyncClassLists?.(classDoc) ?? [];
   if (!Array.isArray(lists) || !lists.length) return false;
-  const hasOwned = actor.items?.some?.(item =>
-    String(item?.type ?? "").toLowerCase() === "sort"
-    && (String(item?.flags?.add2e?.autoGrantedByClassId ?? "") === String(classDoc.id)
-      || String(item?.flags?.add2e?.autoGrantedByClass ?? "") === String(classDoc.name))
-  ) === true;
+  const classKey = classSlug(classDoc);
+  const hasOwned = actor.items?.some?.(item => {
+    if (String(item?.type ?? "").toLowerCase() !== "sort") return false;
+    const flags = item?.flags?.add2e ?? {};
+    const sourceId = String(flags.autoGrantedByClassId ?? flags.sourceClassId ?? "");
+    if (sourceId && sourceId === String(classDoc.id)) return true;
+    return String(flags.classSlug ?? "") === classKey;
+  }) === true;
   if (hasOwned) return true;
   const sync = globalThis.add2eSyncActorSpellsFromClass;
   if (typeof sync !== "function") throw new Error("Synchroniseur automatique de sorts introuvable.");
