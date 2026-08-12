@@ -5,7 +5,7 @@
  * Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via l'API ADD2E commune.
  */
 
-const ADD2E_LUMIERE_VERSION = "2026-08-12-canonical-light-runtime-v5";
+const ADD2E_LUMIERE_VERSION = "2026-08-12-canonical-light-runtime-v6";
 
 function add2eLumiereEmitGMOperation(operation, payload) {
   if (!game.socket) return false;
@@ -467,6 +467,40 @@ const __add2eOnUseResult = await (async () => {
     });
   };
 
+  const chooseCreatureTarget = async () => {
+    const selected = Array.from(game.user.targets ?? []).filter(target => !!target?.actor);
+    if (selected.length > 1) {
+      ui.notifications.warn(`${spellName} : garde une seule créature ciblée.`);
+      return null;
+    }
+    if (selected.length === 1) return selected[0];
+
+    ui.notifications.info(`${spellName} : cible une créature avec le ciblage Foundry. Échap annule.`);
+    return new Promise(resolve => {
+      let finished = false;
+      let hookId = null;
+      const finish = target => {
+        if (finished) return;
+        finished = true;
+        if (hookId !== null) Hooks.off("targetToken", hookId);
+        window.removeEventListener("keydown", onKeyDown, true);
+        resolve(target);
+      };
+      const onKeyDown = event => {
+        if (event.key !== "Escape") return;
+        event.preventDefault?.();
+        finish(null);
+      };
+      const onTargetToken = (user, target, targeted) => {
+        if (user?.id !== game.user?.id || targeted !== true || !target?.actor) return;
+        finish(target);
+      };
+
+      hookId = Hooks.on("targetToken", onTargetToken);
+      window.addEventListener("keydown", onKeyDown, true);
+    });
+  };
+
   const magicResistance = targetActor => {
     const engine = globalThis.ADD2E_EFFECTS;
     if (!engine || typeof engine.checkResistanceDetails !== "function") {
@@ -695,14 +729,55 @@ const __add2eOnUseResult = await (async () => {
     return { x: target.x + ((dx / length) * offset), y: target.y + ((dy / length) * offset) };
   };
 
-  const targets = Array.from(game.user.targets ?? []).filter(target => !!target?.actor);
-  if (targets.length > 1) {
-    ui.notifications.warn(`${spellName} : sélectionne une seule cible ou aucune pour un point sur la scène.`);
-    return false;
+  const selectedTargets = Array.from(game.user.targets ?? []).filter(target => !!target?.actor);
+  const selectedTargetLabel = selectedTargets.length === 1
+    ? `Cible actuelle : ${escapeHtml(selectedTargets[0].name ?? selectedTargets[0].actor?.name ?? "créature")}.`
+    : selectedTargets.length > 1
+      ? `${selectedTargets.length} cibles sont actuellement sélectionnées.`
+      : "Aucune créature n'est actuellement ciblée.";
+
+  const destinationMode = await globalThis.add2eDialogWait({
+    add2eTheme: listKey === "clerc" ? "parchment" : "wizard",
+    add2ePrimaryAction: "creature",
+    add2eClasses: ["add2e-lumiere-destination"],
+    window: { title: `${spellName} — destination` },
+    content: `
+      <form class="add2e-lumiere-destination-form">
+        <p>Choisissez la destination du sort.</p>
+        <p>${selectedTargetLabel}</p>
+      </form>`,
+    buttons: [
+      {
+        action: "creature",
+        label: "Créature",
+        icon: "<i class='fas fa-crosshairs'></i>",
+        default: true,
+        callback: () => "creature"
+      },
+      {
+        action: "point",
+        label: "Point sur la scène",
+        icon: "<i class='fas fa-location-dot'></i>",
+        callback: () => "point"
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
+      }
+    ],
+    close: () => null
+  });
+  if (!destinationMode) return false;
+
+  let targetToken = null;
+  if (destinationMode === "creature") {
+    targetToken = await chooseCreatureTarget();
+    if (!targetToken) return false;
   }
 
   const config = lightConfiguration();
-  const targetToken = targets[0] ?? null;
   const targetActor = targetToken?.actor ?? null;
   const destinationLabel = targetToken?.name ?? "Point choisi sur la scène";
   const details = [];
@@ -897,10 +972,3 @@ const __add2eOnUseResult = await (async () => {
 
   return true;
 })();
-
-if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
-  ui.notifications?.error?.("Lumière / Ténèbres : le script onUse n'a pas retourné true/false.");
-  return false;
-}
-
-return __add2eOnUseResult;
