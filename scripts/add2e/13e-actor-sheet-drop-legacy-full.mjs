@@ -392,6 +392,7 @@ Hooks.on("createItem", async (item, options = {}, userId = null) => {
   const magic = isMagicItem(item);
   const currentTrueName = String(item.system?.nom ?? item.system?.nom_reel ?? item.system?.trueName ?? "").trim();
   const wantedName = droppedName || (storage ? currentTrueName : "");
+  const hasDropCurrentName = item.flags?.add2e?.dropCurrentName !== undefined;
   const update = {};
 
   if (wantedName && String(item.name ?? "").trim() !== wantedName) update.name = wantedName;
@@ -401,16 +402,21 @@ Hooks.on("createItem", async (item, options = {}, userId = null) => {
     if (item.system?.identified !== true) update["system.identified"] = true;
     if (item.flags?.add2e?.identified !== true) update["flags.add2e.identified"] = true;
   }
-  if (item.flags?.add2e?.dropCurrentName !== undefined) update["flags.add2e.-=dropCurrentName"] = null;
 
+  let changed = false;
   if (Object.keys(update).length) {
     await item.update(update, {
       add2eInternal: true,
       add2eReason: storage ? "storage-item-identification" : "restore-current-drop-name",
       render: false
     });
-    renderActorApplications(actor);
+    changed = true;
   }
+  if (hasDropCurrentName) {
+    await item.unsetFlag("add2e", "dropCurrentName");
+    changed = true;
+  }
+  if (changed) renderActorApplications(actor);
 });
 
 Hooks.on("deleteItem", (item, options = {}, userId = null) => {
