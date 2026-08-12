@@ -6,7 +6,7 @@
 
 import { classItems, classProgression, classSlug } from "./17b-multiclass-core.mjs";
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-08-12-canonical-class-identity-v12";
+const ADD2E_SPELL_SYNC_VERSION = "2026-08-12-remove-class-name-ownership-v13";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
@@ -148,6 +148,7 @@ function add2eSpellSyncPrepareCompendiumData(data) {
   clean.flags.add2e ??= {};
   delete clean.flags.add2e.memorizedCount;
   delete clean.flags.add2e.memorizedByList;
+  delete clean.flags.add2e.autoGrantedByClass;
 
   if (!Array.isArray(clean.system.composants_materiels)) clean.system.composants_materiels = [];
   if (!Array.isArray(clean.system.spellLists)) clean.system.spellLists = [];
@@ -243,7 +244,7 @@ function add2eSpellSyncCacheKeySet(cache) {
 function add2eSpellSyncIsCompendiumOwnedActorSpell(item) {
   const flags = item?.flags?.add2e ?? {};
   const source = String(item?._stats?.compendiumSource ?? item?.flags?.core?.sourceId ?? flags.sourceUuid ?? flags.sourceId ?? "");
-  return flags.autoGrantedSpellSync === true || !!flags.autoGrantedByClassId || !!flags.autoGrantedByClass || source.includes("add2e.sorts");
+  return flags.autoGrantedSpellSync === true || !!flags.autoGrantedByClassId || source.includes("add2e.sorts");
 }
 
 function add2eSpellSyncSpellBelongsToClass(item, classItem) {
@@ -679,7 +680,6 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
       delete data._id;
       data.folder = null;
       const grantedLists = add2eSpellSyncUnionLists(classLists);
-      foundry.utils.setProperty(data, "flags.add2e.autoGrantedByClass", classItem.name);
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedByClassId", classItem.id);
       foundry.utils.setProperty(data, "flags.add2e.classSlug", add2eSpellSyncClassSlug(classItem));
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedSpellSync", true);
