@@ -44,8 +44,9 @@ import {
 import {
   add2eCreateAttackChatCards
 } from "./04i-attack-roll-chat-card.mjs";
+import { resolveCanonicalThac0 } from "../add2e/17b-multiclass-core.mjs";
 
-const ADD2E_ATTACK_VERSION = "2026-08-08-canonical-ammunition-consumption-v9";
+const ADD2E_ATTACK_VERSION = "2026-08-12-canonical-thac0-v10";
 const ADD2E_ATTACK_SNAPSHOT_VERSION = "2026-07-24-attack-resolution-snapshot-v1";
 const ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS = 1500;
 
@@ -361,35 +362,17 @@ async function add2eResolveAttackActionGate({ actor, cible, sourceToken, targetT
 }
 
 function add2eResolveAttackThac0(actor) {
-  const system = actor.system || {};
-  const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null;
-  const transformationThac0 = add2eReadStrictNumber(transformation?.thac0);
-  if (transformationThac0 !== null) return transformationThac0;
-
-  if (actor.type === "personnage") {
-    const classItem = actor.items?.find(item => item.type === "classe");
-    const level = Number(system.niveau) || 1;
-    const progression = Array.isArray(classItem?.system?.progression) ? classItem.system.progression[level - 1] : null;
-    if (progression?.thac0 !== undefined && progression?.thac0 !== null && progression?.thac0 !== "") {
-      const thac0 = add2eReadStrictNumber(progression.thac0);
-      if (thac0 !== null) return thac0;
-      ui.notifications.error(`${actor.name} : progression de classe invalide, thac0 non numérique au niveau ${level}.`);
-      console.error("[ADD2E][ATTAQUE][THAC0][INVALID_CLASS_PROGRESSION]", { actor: actor.name, classItem: classItem?.name, level, value: progression.thac0 });
-      return null;
-    }
-
-    const thac0 = add2eReadStrictNumber(system.thac0);
-    if (thac0 !== null) return thac0;
-    ui.notifications.error(`${actor.name} : THAC0 absent. Corrige system.thac0 ou la progression de classe.`);
-    console.error("[ADD2E][ATTAQUE][THAC0][MISSING_PERSONNAGE]", { actor: actor.name, classItem: classItem?.name });
+  try {
+    return resolveCanonicalThac0(actor).value;
+  } catch (error) {
+    ui.notifications?.error?.(error?.message ?? `${actor?.name ?? "Acteur"} : THAC0 canonique invalide.`);
+    console.error("[ADD2E][ATTAQUE][THAC0][CANONICAL_RESOLUTION_ERROR]", {
+      actor: actor?.name,
+      actorId: actor?.id,
+      error
+    });
     return null;
   }
-
-  const thac0 = add2eReadStrictNumber(system.thac0);
-  if (thac0 !== null) return thac0;
-  ui.notifications.error(`${actor.name} : THAC0 monstre absent. Corrige le JSON du monstre : system.thac0.`);
-  console.error("[ADD2E][ATTAQUE][THAC0][MISSING_MONSTER]", { actor: actor.name });
-  return null;
 }
 
 function add2eResolveTargetArmorClass({ cible, actor, arme, isTouchAttack }) {
