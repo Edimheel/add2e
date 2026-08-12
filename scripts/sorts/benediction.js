@@ -10,7 +10,7 @@
  */
 
 const __add2eOnUseResult = await (async () => {
-  const VERSION = "2026-08-12-canonical-spell-family-mode-v6";
+  const VERSION = "2026-08-12-canonical-spell-family-mode-v7";
 
   function add2eResolveSpellMode(sourceItem) {
     const family = sourceItem?.flags?.add2e?.spellFamily ?? {};
@@ -18,6 +18,7 @@ const __add2eOnUseResult = await (async () => {
     const reversibleMode = String(family.reversibleMode ?? "").trim().toLowerCase();
     if (kind === "base") return "benediction";
     if (kind === "inverse" && reversibleMode === "inverse") return "malediction";
+    if (sourceItem?.system?.isObjectPower === true) return "benediction";
     return null;
   }
 
