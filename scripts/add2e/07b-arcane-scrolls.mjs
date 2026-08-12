@@ -24,8 +24,9 @@ import {
   resolveSpell,
   resolveSpellByName
 } from "./07b-arcane-documents-core.mjs";
+import { classSlug } from "./17b-multiclass-core.mjs";
 
-const ADD2E_SCROLL_SCRIBING_VERSION = "2026-07-26-scroll-scribing-v1";
+const ADD2E_SCROLL_SCRIBING_VERSION = "2026-08-12-canonical-class-identity-v2";
 const ADD2E_SCROLL_SCRIBE_CLASSES = new Set(["clerc", "druide", "magicien", "illusionniste"]);
 const ADD2E_SCROLL_MATERIALS = Object.freeze({
   papyrus: Object.freeze({ key: "papyrus", label: "Papyrus", minimumCostPoPerSheet: 2, failureModifier: 5 }),
@@ -84,14 +85,22 @@ export async function hydrateScroll(item) {
 }
 
 function sourceClassDocument(actor, source) {
-  const id = String(source?.classItemId ?? source?.sourceClassId ?? source?.itemId ?? "").trim();
-  return id ? actor?.items?.get?.(id) ?? null : null;
+  const id = String(source?.classItemId ?? "").trim();
+  if (!id) return null;
+  const classDoc = actor?.items?.get?.(id) ?? null;
+  return classDoc && itemType(classDoc) === "classe" ? classDoc : null;
 }
 
 function sourceClassKey(actor, source) {
   const classDoc = sourceClassDocument(actor, source);
-  const raw = norm(source?.classSlug ?? classDoc?.system?.slug ?? classDoc?.system?.label ?? classDoc?.system?.nom ?? classDoc?.name ?? "");
-  return ADD2E_SCROLL_SCRIBE_CLASSES.has(raw) ? raw : "";
+  if (!classDoc) return "";
+  const sourceSlug = String(source?.classSlug ?? "").trim();
+  if (!sourceSlug) return "";
+  const canonicalSlug = classSlug(classDoc);
+  if (!canonicalSlug || canonicalSlug !== sourceSlug) {
+    throw new Error(`Identité canonique incohérente pour la classe « ${classDoc.name ?? classDoc.id} » : ${sourceSlug || "slug absent"} ≠ ${canonicalSlug || "slug introuvable"}.`);
+  }
+  return ADD2E_SCROLL_SCRIBE_CLASSES.has(canonicalSlug) ? canonicalSlug : "";
 }
 
 function sourceClassLevel(actor, source) {
@@ -105,11 +114,15 @@ function scrollScribingProfiles(actor) {
   if (typeof globalThis.add2eGetSpellcastingEntries !== "function") {
     throw new Error("Le résolveur canonique des listes de sorts est indisponible.");
   }
+  const entries = globalThis.add2eGetSpellcastingEntries(actor);
+  if (!Array.isArray(entries)) {
+    throw new Error(`Les traditions canoniques sont invalides pour « ${actor?.name ?? "acteur"} ».`);
+  }
   const byList = new Map();
-  for (const entry of globalThis.add2eGetSpellcastingEntries(actor) ?? []) {
+  for (const entry of entries) {
     const list = listKey(entry?.key);
     if (!SCROLL_LISTS.has(list)) continue;
-    const sources = Array.isArray(entry?.sources) && entry.sources.length ? entry.sources : [entry];
+    const sources = Array.isArray(entry?.sources) ? entry.sources : [];
     for (const source of sources) {
       const classKey = sourceClassKey(actor, source);
       if (!classKey) continue;
