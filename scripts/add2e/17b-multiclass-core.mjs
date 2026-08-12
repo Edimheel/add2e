@@ -2,7 +2,7 @@
 // Source de vérité : chaque Item embarqué de type "classe".
 // La définition et la progression (system.niveau / system.xp) vivent ensemble.
 
-export const MULTICLASS_VERSION = "2026-08-12-canonical-thac0-v5";
+export const MULTICLASS_VERSION = "2026-08-12-canonical-class-tags-v6";
 export const MULTICLASS_SCHEMA = 3;
 export const INTERNAL = "add2eMulticlassInternal";
 export const TAG = "[ADD2E][MULTICLASSE]";
@@ -60,23 +60,49 @@ export function itemLabel(data, fallback = "Item") {
   return String(data?.name ?? sys.label ?? sys.nom ?? sys.name ?? fallback).trim() || fallback;
 }
 
-function canonicalIdentityFromTag(data, prefix, label) {
+function canonicalTaggedSlugs(data, prefix) {
   const sys = data?.system ?? data ?? {};
   const tags = Array.isArray(sys.tags) ? sys.tags : [];
   const normalizedPrefix = `${norm(prefix)}_`;
-  const identityTag = tags.map(norm).find(tag => tag.startsWith(normalizedPrefix));
-  if (!identityTag) {
+  return [...new Set(tags
+    .map(norm)
+    .filter(tag => tag.startsWith(normalizedPrefix))
+    .map(tag => tag.slice(normalizedPrefix.length))
+    .filter(Boolean))];
+}
+
+function canonicalIdentityFromTag(data, prefix, label) {
+  const slugs = canonicalTaggedSlugs(data, prefix);
+  if (!slugs.length) {
     throw new Error(`Item ${label} « ${data?.name ?? data?.id ?? "inconnu"} » sans tag canonique ${prefix}:*.`);
   }
-  const slug = identityTag.slice(normalizedPrefix.length);
-  if (!slug) {
-    throw new Error(`Item ${label} « ${data?.name ?? data?.id ?? "inconnu"} » avec tag ${prefix}:* invalide.`);
-  }
-  return slug;
+  return slugs[0];
+}
+
+function classKeySlug(value) {
+  const normalized = norm(value);
+  return normalized.startsWith("classe_") ? normalized.slice("classe_".length) : normalized;
 }
 
 export function classSlug(data) {
   return canonicalIdentityFromTag(data, "classe", "de classe");
+}
+
+export function classSlugs(data) {
+  const slugs = canonicalTaggedSlugs(data, "classe");
+  if (!slugs.length) {
+    throw new Error(`Item de classe « ${data?.name ?? data?.id ?? "inconnu"} » sans tag canonique classe:*.`);
+  }
+  return slugs;
+}
+
+export function classTags(data) {
+  return classSlugs(data).map(slug => `classe:${slug}`);
+}
+
+export function classMatches(data, classKey) {
+  const wanted = classKeySlug(classKey);
+  return !!wanted && classSlugs(data).includes(wanted);
 }
 
 export function raceSlug(data) {
@@ -91,7 +117,7 @@ export function classItems(actor) {
 export function classItem(actor, itemOrSlug) {
   if (!actor) return null;
   const itemId = typeof itemOrSlug === "object" ? String(itemOrSlug?.id ?? "") : "";
-  const slug = typeof itemOrSlug === "object" ? classSlug(itemOrSlug) : norm(itemOrSlug);
+  const slug = typeof itemOrSlug === "object" ? classSlug(itemOrSlug) : classKeySlug(itemOrSlug);
   return classItems(actor).find(item =>
     (itemId && String(item.id ?? "") === itemId)
     || (slug && classSlug(item) === slug)
@@ -313,5 +339,7 @@ try {
   globalThis.add2eCanonicalClassXp = canonicalClassXp;
   globalThis.add2eClassProgression = classProgression;
   globalThis.add2eClassProgressionRow = classProgressionRow;
+  globalThis.add2eClassTags = classTags;
+  globalThis.add2eClassMatches = classMatches;
   globalThis.add2eResolveCanonicalThac0 = resolveCanonicalThac0;
 } catch (_error) {}
