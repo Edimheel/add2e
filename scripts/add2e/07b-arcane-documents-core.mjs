@@ -1,7 +1,7 @@
 // ADD2E — Documents arcaniques : noyau commun.
 // Compatible Foundry V13/V14/V15. ApplicationV2 / DialogV2 uniquement.
 
-export const VERSION = "2026-08-12-canonical-spell-metadata-v7";
+export const VERSION = "2026-08-12-canonical-arcane-identity-v8";
 export const ARCANE_LISTS = new Set(["magicien", "illusionniste"]);
 export const SCROLL_LISTS = new Set(["magicien", "illusionniste", "clerc", "druide"]);
 export const BOOK_NAMES = {
@@ -139,37 +139,15 @@ export function arcaneData(item) {
 }
 
 export function arcaneKind(item) {
-  return String(arcaneData(item).kind ?? item?.flags?.add2e?.arcaneDocumentKind ?? "").trim().toLowerCase();
-}
-
-export function containerList(item) {
-  const document = arcaneData(item);
-  for (const value of [document.ownerList, document.spellList, item?.flags?.add2e?.ownerSpellList, item?.flags?.add2e?.arcaneSpellList]) {
-    const key = listKey(value);
-    if (SCROLL_LISTS.has(key)) return key;
-  }
-  const text = norm(`${item?.name ?? ""} ${item?.system?.sousType ?? item?.system?.sous_type ?? ""}`);
-  if (text.includes("illusionniste")) return "illusionniste";
-  if (text.includes("magicien")) return "magicien";
-  if (text.includes("clerc")) return "clerc";
-  if (text.includes("druide")) return "druide";
-  return "";
+  return String(arcaneData(item).kind ?? "").trim().toLowerCase();
 }
 
 export function isSpellbook(item) {
-  if (itemType(item) !== "objet") return false;
-  if (arcaneKind(item) === "spellbook") return true;
-  const subtype = norm(item?.system?.sousType ?? item?.system?.sous_type);
-  const name = norm(item?.name);
-  return subtype.includes("livre_de_sorts") || name.startsWith("livre_de_sorts");
+  return itemType(item) === "objet" && arcaneKind(item) === "spellbook";
 }
 
 export function isScroll(item) {
-  if (itemType(item) !== "objet") return false;
-  if (arcaneKind(item) === "spell-scroll") return true;
-  const subtype = norm(item?.system?.sousType ?? item?.system?.sous_type);
-  const name = norm(item?.name);
-  return subtype.includes("parchemin_de_sort") || name.startsWith("parchemin");
+  return itemType(item) === "objet" && arcaneKind(item) === "spell-scroll";
 }
 
 export function itemQuantity(item) {
@@ -228,7 +206,7 @@ export function entryFromSpell(item, preferredList = "") {
 
 export function documentEntries(item) {
   const document = arcaneData(item);
-  const fallbackList = listKey(document.ownerList ?? document.spellList ?? containerList(item) ?? "");
+  const fallbackList = listKey(document.ownerList ?? document.spellList ?? "");
   const source = Array.isArray(document.spells) ? document.spells : document.spell ? [document.spell] : Array.isArray(item?.system?.sorts) ? item.system.sorts : [];
   const seen = new Set();
   const entries = [];
