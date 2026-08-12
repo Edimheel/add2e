@@ -1,15 +1,14 @@
 /**
  * ADD2E — Injonction
  * Clerc niveau 1 — Enchantement/Charme
- * Compatible Foundry V13/V14/V15 — DialogV2 et sauvegardes canoniques.
+ * Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via l’API commune ADD2E.
  * Contrat onUse : true = consommé ; false = non consommé.
  */
 
 const __add2eOnUseResult = await (async () => {
-  const VERSION = "2026-08-05-chat-card-layout-v7";
-  const DialogV2 = foundry.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications.error("Injonction : DialogV2 indisponible.");
+  const VERSION = "2026-08-12-canonical-injonction-v8";
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    ui.notifications.error("Injonction : l’API de fenêtre ADD2E est indisponible.");
     return false;
   }
   if (typeof globalThis.add2eRollSavingThrow !== "function") {
@@ -128,17 +127,19 @@ const __add2eOnUseResult = await (async () => {
     "undead"
   ].includes(tag)) || norm(target.system?.type ?? "").includes("mort_vivant");
 
-  const commandDialog = await DialogV2.wait({
+  const commandDialog = await globalThis.add2eDialogWait({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "cast",
+    add2eClasses: ["add2e-injonction-dialog"],
     window: { title: "Lancement : Injonction" },
-    position: { width: 360 },
-    add2eTheme: "cleric",
-    add2eImg: sourceItem.img || "systems/add2e/assets/icones/sorts/injonction.webp",
+    modal: true,
+    rejectClose: false,
     content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:7px;"><div class="form-group"><label style="font-weight:bold;">Ordre :</label><select name="preset" style="width:100%;"><option value="Arrête">Arrête</option><option value="Fuis">Fuis</option><option value="Reviens">Reviens</option><option value="Donne">Donne</option><option value="Meurs">Meurs</option></select></div><div class="form-group"><label>Autre ordre <small>(facultatif, un mot)</small> :</label><input type="text" name="commandWord" maxlength="24" placeholder="Remplace la liste" style="width:100%;"></div><div style="font-size:.84em;border-top:1px solid currentColor;padding-top:5px;">Les morts-vivants sont insensibles. INT 13+ ou au moins 6 DV/niveaux donne droit à un jet de protection.</div></form>`,
     buttons: [
       {
         action: "cast",
         label: "Lancer",
-        icon: "fa-solid fa-gavel",
+        icon: "<i class='fas fa-gavel'></i>",
         default: true,
         callback: (_event, button) => {
           const form = button.form;
@@ -150,11 +151,11 @@ const __add2eOnUseResult = await (async () => {
       {
         action: "cancel",
         label: "Annuler",
-        icon: "fa-solid fa-xmark",
+        icon: "<i class='fas fa-times'></i>",
         callback: () => null
       }
     ],
-    rejectClose: false
+    close: () => null
   });
   if (!commandDialog) return false;
 
@@ -170,49 +171,43 @@ const __add2eOnUseResult = await (async () => {
   }
 
   const specialNoEffect = commandKey === ("sui" + "cide");
-  const readNumber = value => {
+  const readPrimaryNumber = value => {
     if (typeof value === "number" && Number.isFinite(value)) return value;
-    const values = String(value ?? "")
-      .match(/\d+(?:[.,]\d+)?/g)
-      ?.map(entry => Number(entry.replace(",", ".")))
-      .filter(Number.isFinite)
-      ?? [];
-    return values.length ? Math.max(...values) : NaN;
+    const match = String(value ?? "").match(/\d+(?:[.,]\d+)?/);
+    return match ? Number(match[0].replace(",", ".")) : NaN;
   };
 
   const effectsEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
-  const resolvedIntelligence = typeof effectsEngine?.resolveAbility === "function"
-    ? Number(effectsEngine.resolveAbility(target, "intelligence", {
-        type: "save",
-        source: "spell:injonction"
-      })?.total)
-    : NaN;
-  const intelligence = Number.isFinite(resolvedIntelligence)
-    ? resolvedIntelligence
-    : readNumber(
-        target.system?.intelligence
-          ?? target.system?.caracteristiques?.intelligence
-          ?? target.system?.abilities?.int?.value
-      );
-  const hitDice = (() => {
-    const system = target.system ?? {};
-    for (const candidate of [
-      system.dv,
-      system.hitDice,
-      system.hit_dice,
-      system.des_de_vie,
-      system.niveau,
-      system.level,
-      system.details?.niveau,
-      system.details?.level
-    ]) {
-      const value = readNumber(candidate);
-      if (Number.isFinite(value)) return value;
+  if (!effectsEngine || typeof effectsEngine.resolveAbility !== "function") {
+    ui.notifications.error("Injonction : le résolveur canonique des caractéristiques est indisponible.");
+    return false;
+  }
+  const intelligence = Number(effectsEngine.resolveAbility(target, "intelligence", {
+    type: "save",
+    source: "spell:injonction"
+  })?.total);
+
+  const creatureLevel = (() => {
+    const actorType = norm(target.type);
+    if (actorType === "monster") return readPrimaryNumber(target.system?.hitDice);
+    if (actorType === "pnj") {
+      const level = Number(target.system?.niveau);
+      return Number.isInteger(level) && level >= 1 ? level : NaN;
+    }
+    if (actorType === "personnage") {
+      const resolver = globalThis.add2eGetActorClassSystems;
+      if (typeof resolver !== "function") {
+        throw new Error("Injonction : le résolveur canonique des classes est indisponible pour la cible.");
+      }
+      const levels = (resolver(target) ?? [])
+        .map(system => Number(system?._add2eClassLevel))
+        .filter(level => Number.isInteger(level) && level >= 1);
+      return levels.length ? Math.max(...levels) : NaN;
     }
     return NaN;
   })();
   const requiresSave = (Number.isFinite(intelligence) && intelligence >= 13)
-    || (Number.isFinite(hitDice) && hitDice >= 6);
+    || (Number.isFinite(creatureLevel) && creatureLevel >= 6);
 
   let save = {
     required: requiresSave,
