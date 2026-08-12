@@ -1,4 +1,13 @@
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-11-canonical-class-feature-schema-v28";
+import {
+  classItems,
+  classMatches,
+  classProgression,
+  classProgressionRow,
+  classSlug,
+  classTags
+} from "./17b-multiclass-core.mjs";
+
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-08-12-canonical-class-core-v29";
 const ADD2E_CLASS_FEATURE_USAGE_FLAG = "classFeatureUsage";
 
 const GENERIC_ACTIONS = new Map([
@@ -89,31 +98,6 @@ function keyOf(value) {
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
 }
-
-function canonicalClassTag(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/\s+/g, "_");
-}
-
-function classTags(system = {}) {
-  const raw = Array.isArray(system?.tags) ? system.tags : [];
-  return [...new Set(raw.map(canonicalClassTag).filter(tag => tag.startsWith("classe:")))];
-}
-
-function classTagForKey(value) {
-  const raw = canonicalClassTag(value);
-  if (!raw) return "";
-  return raw.startsWith("classe:") ? raw : `classe:${raw.replace(/^classe_/, "")}`;
-}
-
-const classLevel = item => {
-  const value = Number(item?.system?.niveau);
-  return Number.isFinite(value) && value >= 1 ? Math.floor(value) : null;
-};
 
 class Add2eClassFeatureUsageAbort extends Error {
   constructor() {
@@ -342,27 +326,21 @@ function canonicalThiefKey(value) {
 }
 
 function classSystems(actor) {
-  return Array.from(actor?.items ?? [])
-    .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
-    .map(item => {
-      const level = classLevel(item);
-      if (level === null) return null;
-      const system = clone(item.system ?? {});
-      const tags = classTags(system);
-      if (!tags.length) {
-        throw new Error(`Item de classe « ${item.name ?? item.id} » sans tag canonique classe:*.`);
-      }
-      const primaryTag = tags[0];
-      return {
-        ...system,
-        _add2eClassSlug: primaryTag.slice("classe:".length),
-        _add2eClassTags: tags,
-        _add2eClassName: item.name || "Classe",
-        _add2eClassLevel: level,
-        _add2eClassItemId: item.id
-      };
-    })
-    .filter(Boolean);
+  return classItems(actor).map(item => {
+    const progressionState = classProgression(item);
+    if (!progressionState.hasLevel) {
+      throw new Error(`Niveau canonique absent sur l’Item classe « ${item?.name ?? item?.id ?? "inconnu"} ».`);
+    }
+    const system = clone(item.system ?? {});
+    return {
+      ...system,
+      _add2eClassSlug: classSlug(item),
+      _add2eClassTags: classTags(item),
+      _add2eClassName: item.name || "Classe",
+      _add2eClassLevel: progressionState.level,
+      _add2eClassItemId: item.id
+    };
+  });
 }
 
 function pushFeatures(output, value, source, system) {
@@ -425,19 +403,11 @@ function isThiefFeature(feature) {
 }
 
 function progression(actor, classKey = null) {
-  const systems = classSystems(actor);
-  const wantedTag = classKey === null || classKey === undefined || classKey === ""
-    ? ""
-    : classTagForKey(classKey);
-  const selected = wantedTag
-    ? systems.filter(system => system._add2eClassTags.includes(wantedTag))
-    : systems;
-  for (const system of selected) {
-    if (!Array.isArray(system.progression)) continue;
-    const level = system._add2eClassLevel;
-    const row = system.progression.find(entry => Number(entry?.niveau) === level) ?? null;
-    if (row) return row;
-  }
+  const items = classItems(actor);
+  const selected = classKey === null || classKey === undefined || classKey === ""
+    ? items
+    : items.filter(item => classMatches(item, classKey));
+  for (const item of selected) return classProgressionRow(item).row;
   return null;
 }
 
@@ -450,9 +420,10 @@ function thiefSource(actor) {
 
 function thiefProgression(actor) {
   const source = thiefSource(actor);
-  if (!source || !Array.isArray(source.progression)) return null;
-  const level = source._add2eClassLevel;
-  const row = source.progression.find(entry => Number(entry?.niveau) === level) ?? null;
+  const itemId = String(source?._add2eClassItemId ?? "").trim();
+  const item = itemId ? actor?.items?.get?.(itemId) : null;
+  if (!item) return null;
+  const row = classProgressionRow(item).row;
   if (!row?.thiefSkills || typeof row.thiefSkills !== "object" || Array.isArray(row.thiefSkills)) return null;
   return row;
 }
