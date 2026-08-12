@@ -208,7 +208,24 @@ function add2eBuildDisplayVirtualObjectPowerSort(actor, itemSource, power, index
   return sort;
 }
 
+function add2eMagicItemSuppressionEffect(item) {
+  const actor = item?.actor ?? (item?.parent?.documentName === "Actor" ? item.parent : null);
+  const itemId = String(item?.id ?? "");
+  const itemUuid = String(item?.uuid ?? "");
+  if (!actor || (!itemId && !itemUuid)) return null;
+
+  return Array.from(actor.effects ?? []).find(effect => {
+    if (!effect || effect.disabled === true) return false;
+    const suppression = effect.flags?.add2e?.magicItemSuppression ?? effect.getFlag?.("add2e", "magicItemSuppression") ?? null;
+    if (!suppression || suppression.active !== true) return false;
+    const suppressedId = String(suppression.itemId ?? "");
+    const suppressedUuid = String(suppression.itemUuid ?? "");
+    return (itemId && suppressedId === itemId) || (itemUuid && suppressedUuid === itemUuid);
+  }) ?? null;
+}
+
 export function add2eMagicItemPowerUsable(item) {
+  if (add2eMagicItemSuppressionEffect(item)) return false;
   if (add2eMagicItemEquippedOrUsableRuntime(item)) return true;
   const system = item?.system ?? {};
   return [system.equipee, system.equipped, system.estEquipee, system.worn, system.portee]
@@ -238,6 +255,11 @@ export function add2eMagicObjectConfiguredPowerEntries(item) {
 }
 
 async function add2eExecuteObjectMagicPowerGuarded(actor, itemSource, power, index, sheet = null) {
+  const suppression = add2eMagicItemSuppressionEffect(itemSource);
+  if (suppression) {
+    ui.notifications?.warn?.(`${itemSource?.name ?? "L’objet magique"} est temporairement neutralisé par Dissipation de la magie.`);
+    return false;
+  }
   if (!add2eMagicItemPowerUsable(itemSource)) {
     ui.notifications?.warn?.(`${itemSource?.name ?? "L’objet magique"} doit être équipé pour utiliser ce pouvoir.`);
     return false;
