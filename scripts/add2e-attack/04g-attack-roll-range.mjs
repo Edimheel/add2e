@@ -1,7 +1,7 @@
 // scripts/add2e-attack/04g-attack-roll-range.mjs
 // ADD2E — Portée, distance et contact pour les attaques.
 
-export const ADD2E_ATTACK_RANGE_VERSION = "2026-08-07-automatic-contact-range-v3";
+export const ADD2E_ATTACK_RANGE_VERSION = "2026-08-12-canonical-range-fields-v4";
 
 function add2eAttackRangeNormalize(value) {
   return String(value ?? "").trim().toLowerCase()
@@ -10,12 +10,14 @@ function add2eAttackRangeNormalize(value) {
     .replace(/_+/g, "_").replace(/^_+|_+$/g, "");
 }
 
-function add2eAttackRangeNumber(system, ...keys) {
-  for (const key of keys) {
-    const value = Number(system?.[key]);
-    if (Number.isFinite(value) && value > 0) return value;
+function add2eAttackCanonicalRangeNumber(system, key) {
+  const raw = system?.[key];
+  if (raw === undefined || raw === null || raw === "") return 0;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`Portée canonique invalide : system.${key}=${String(raw)}.`);
   }
-  return 0;
+  return value;
 }
 
 function add2eAttackRangeRuleArray(raw) {
@@ -113,20 +115,11 @@ function add2eAttackApplyMagicRangeRules(arme, base) {
 function add2eAttackRangeValues(arme) {
   const system = arme?.system ?? {};
   const base = {
-    courte: add2eAttackRangeNumber(system, "portee_courte", "porteeCourte", "portee_short", "porteeShort", "short_range", "shortRange"),
-    moyenne: add2eAttackRangeNumber(system, "portee_moyenne", "porteeMoyenne", "portee_medium", "porteeMedium", "medium_range", "mediumRange"),
-    longue: add2eAttackRangeNumber(system, "portee_longue", "porteeLongue", "portee_long", "porteeLong", "long_range", "longRange")
+    courte: add2eAttackCanonicalRangeNumber(system, "portee_courte"),
+    moyenne: add2eAttackCanonicalRangeNumber(system, "portee_moyenne"),
+    longue: add2eAttackCanonicalRangeNumber(system, "portee_longue")
   };
-  const resolved = add2eAttackApplyMagicRangeRules(arme, base);
-
-  // Le profil d'attaque existant lit les clés canoniques après la validation
-  // de portée. La normalisation reste locale à l'attaque et ne modifie pas
-  // le document Item ni le compendium.
-  if (resolved.courte > 0 && !(Number(system.portee_courte) > 0)) system.portee_courte = resolved.courte;
-  if (resolved.moyenne > 0 && !(Number(system.portee_moyenne) > 0)) system.portee_moyenne = resolved.moyenne;
-  if (resolved.longue > 0 && !(Number(system.portee_longue) > 0)) system.portee_longue = resolved.longue;
-
-  return resolved;
+  return add2eAttackApplyMagicRangeRules(arme, base);
 }
 
 export function add2eAttackMeasureContactAndDistance({ srcToken, cibleToken, measureDistance }) {
