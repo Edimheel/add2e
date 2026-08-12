@@ -5,7 +5,7 @@
  * Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via l'API ADD2E commune.
  */
 
-const ADD2E_LUMIERE_VERSION = "2026-08-12-canonical-light-runtime-v6";
+const ADD2E_LUMIERE_VERSION = "2026-08-12-canonical-light-runtime-v7";
 
 function add2eLumiereEmitGMOperation(operation, payload) {
   if (!game.socket) return false;
@@ -546,18 +546,73 @@ return await (async () => {
     };
   };
 
-  const effectTags = destination => [
+  const faceModifiers = () => {
+    const sourceId = String(sourceItem.id ?? sourceItem.uuid ?? `spell:${spellKey}`);
+    const source = {
+      kind: "spell",
+      id: sourceId,
+      uuid: String(sourceItem.uuid ?? ""),
+      name: spellName
+    };
+    const metadata = label => ({
+      label,
+      producer: "spell:lumiere",
+      spellKey,
+      facePenalty: true
+    });
+    return [
+      {
+        id: `${sourceId}:lumiere-face:attack`,
+        domain: "attack",
+        target: "toucher",
+        operation: "add",
+        value: -4,
+        priority: 100,
+        stacking: { mode: "unique-source", group: "lumiere-face:attack" },
+        conditions: {},
+        source,
+        metadata: metadata("Lumière sur le visage — attaques")
+      },
+      {
+        id: `${sourceId}:lumiere-face:save`,
+        domain: "save",
+        target: "all",
+        operation: "add",
+        value: -4,
+        priority: 100,
+        stacking: { mode: "unique-source", group: "lumiere-face:save" },
+        conditions: {},
+        source,
+        metadata: metadata("Lumière sur le visage — sauvegardes")
+      },
+      {
+        id: `${sourceId}:lumiere-face:armor-class`,
+        domain: "armor-class",
+        target: "total",
+        operation: "add",
+        value: 4,
+        priority: 100,
+        stacking: { mode: "unique-source", group: "lumiere-face:armor-class" },
+        conditions: {},
+        source,
+        metadata: metadata("Lumière sur le visage — classe d'armure")
+      }
+    ];
+  };
+
+  const effectTags = (destination, facePenalty = false) => [
     `sort:${spellKey}`,
     `liste:${listKey}`,
     `niveau:${spellLevel}`,
     `etat:${spellKey}`,
     `mode:${spellKey}`,
     `lumiere_destination:${destination}`,
+    ...(facePenalty ? ["lumiere:visage_yeux"] : []),
     "duree:round",
     destination === "point" || destination === "derriere" ? "ambient_light" : "illumination:token"
   ];
 
-  const timeFlags = ({ targetActor = null, destination, payload, tags }) => {
+  const timeFlags = ({ targetActor = null, destination, payload, tags, facePenalty = false }) => {
     const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
     const endMessage = `${spellName} de {actor} prend fin.`;
     const extra = {
@@ -576,6 +631,7 @@ return await (async () => {
       targetId: targetActor?.id ?? null,
       targetUuid: targetActor?.uuid ?? null,
       destination,
+      facePenalty,
       tags,
       lightPayload: payload,
       version: ADD2E_LUMIERE_VERSION
@@ -588,8 +644,14 @@ return await (async () => {
     };
   };
 
-  const effectData = ({ targetActor = null, destination, payload }) => {
-    const tags = effectTags(destination);
+  const effectData = ({ targetActor = null, destination, payload, facePenalty = false }) => {
+    const tags = effectTags(destination, facePenalty);
+    const add2eFlags = {
+      ...timeFlags({ targetActor, destination, payload, tags, facePenalty }),
+      lightPayload: payload,
+      tags
+    };
+    if (facePenalty) add2eFlags.modifiers = faceModifiers();
     return {
       name: destination === "point" || destination === "derriere" ? `${spellName} : zone` : spellName,
       img: sourceItem.img || (isDarkness ? "icons/magic/unholy/projectile-smoke-black.webp" : "icons/svg/light.svg"),
@@ -597,14 +659,10 @@ return await (async () => {
       disabled: false,
       transfer: false,
       duration: durationData(durationRounds),
-      description: `${spellName} maintient son effet pendant ${durationRounds} rounds.`,
-      flags: {
-        add2e: {
-          ...timeFlags({ targetActor, destination, payload, tags }),
-          lightPayload: payload,
-          tags
-        }
-      },
+      description: facePenalty
+        ? `${spellName} maintient son effet pendant ${durationRounds} rounds. Visage/yeux : -4 aux attaques et sauvegardes, CA +4 (malus).`
+        : `${spellName} maintient son effet pendant ${durationRounds} rounds.`,
+      flags: { add2e: add2eFlags },
       changes: []
     };
   };
@@ -777,15 +835,57 @@ return await (async () => {
     if (!targetToken) return false;
   }
 
+  let creaturePlacement = "corps";
+  if (targetToken && !isDarkness) {
+    creaturePlacement = await globalThis.add2eDialogWait({
+      add2eTheme: listKey === "clerc" ? "parchment" : "wizard",
+      add2ePrimaryAction: "corps",
+      add2eClasses: ["add2e-lumiere-creature-placement"],
+      window: { title: `${spellName} — ${targetToken.name ?? targetToken.actor?.name ?? "créature"}` },
+      content: `
+        <form class="add2e-lumiere-creature-placement-form">
+          <p>Où placez-vous la lumière sur la créature ?</p>
+          <p>Sur le visage ou les yeux, la lumière impose -4 aux attaques et sauvegardes et dégrade la CA de 4 si elle reste sur la cible.</p>
+        </form>`,
+      buttons: [
+        {
+          action: "corps",
+          label: "Corps",
+          icon: "<i class='fas fa-user'></i>",
+          default: true,
+          callback: () => "corps"
+        },
+        {
+          action: "visage",
+          label: "Visage / yeux",
+          icon: "<i class='fas fa-eye'></i>",
+          callback: () => "visage"
+        },
+        {
+          action: "cancel",
+          label: "Annuler",
+          icon: "<i class='fas fa-times'></i>",
+          callback: () => null
+        }
+      ],
+      close: () => null
+    });
+    if (!creaturePlacement) return false;
+  }
+
   const config = lightConfiguration();
   const targetActor = targetToken?.actor ?? null;
-  const destinationLabel = targetToken?.name ?? "Point choisi sur la scène";
+  const faceRequested = !isDarkness && targetToken && creaturePlacement === "visage";
+  const destinationLabel = targetToken
+    ? `${targetToken.name ?? targetActor?.name ?? "Créature"}${faceRequested ? " — visage / yeux" : ""}`
+    : "Point choisi sur la scène";
   const details = [];
   let anchorActor = caster;
   let anchorEffect = null;
   let outcome = "";
   let saveResult = null;
   let resistanceResult = null;
+  let facePenaltyApplied = false;
 
   if (!targetToken) {
     const point = await chooseCanvasPoint();
@@ -883,9 +983,20 @@ return await (async () => {
         ui.notifications.error(`${spellName} : impossible de modifier la lumière de la cible.`);
         return false;
       }
+      facePenaltyApplied = faceRequested;
       anchorActor = targetActor;
-      anchorEffect = effectData({ targetActor, destination: "token", payload: tokenPayload });
-      outcome = isDarkness ? "Ténèbres appliquées à la cible" : "Lumière appliquée à la cible";
+      anchorEffect = effectData({
+        targetActor,
+        destination: "token",
+        payload: tokenPayload,
+        facePenalty: facePenaltyApplied
+      });
+      if (facePenaltyApplied) {
+        details.push("Visage / yeux : -4 aux attaques, -4 aux sauvegardes, CA +4 (malus).");
+        outcome = "Lumière appliquée au visage — pénalités d'éblouissement actives";
+      } else {
+        outcome = isDarkness ? "Ténèbres appliquées à la cible" : "Lumière appliquée à la cible";
+      }
     }
   }
 
@@ -904,6 +1015,7 @@ return await (async () => {
     { label: "Zone", value: `sphère de ${radiusRule.inches}\" de rayon = ${radiusRule.meters} m` },
     { label: "Durée", value: `${durationRounds} rounds` },
     { label: "Destination", value: destinationLabel },
+    ...(targetToken && !isDarkness ? [{ label: "Placement", value: creaturePlacement === "visage" ? "Visage / yeux" : "Corps" }] : []),
     { label: "Résultat", value: outcome || "Effet appliqué" }
   ];
 
@@ -912,7 +1024,7 @@ return await (async () => {
     : "";
   const ruleHtml = isDarkness
     ? "La forme inverse du sort de Clerc crée les ténèbres dans les mêmes conditions que Lumière, pendant la moitié de sa durée."
-    : "Sur une créature, la résistance à la magie s'applique puis un jet de protection est autorisé ; en cas de réussite, la zone est créée derrière la cible.";
+    : "Sur une créature, la résistance à la magie s'applique puis un jet de protection est autorisé ; en cas de réussite, la zone est créée derrière la cible. Si la lumière reste sur le visage ou les yeux, la cible subit -4 aux attaques et sauvegardes et sa CA est dégradée de 4.";
 
   const card = {
     actor: caster,
@@ -928,7 +1040,7 @@ return await (async () => {
       name: targetToken.name ?? targetActor.name,
       img: targetActor.img,
       type: "Cible du sort",
-      meta: ""
+      meta: faceRequested ? "Visage / yeux" : ""
     } : null,
     rows,
     message: `${caster.name} lance ${spellName}.`,
@@ -954,6 +1066,8 @@ return await (async () => {
           durationRounds,
           targetActorUuid: targetActor?.uuid ?? null,
           targetTokenId: targetToken?.id ?? null,
+          creaturePlacement: targetToken && !isDarkness ? creaturePlacement : null,
+          facePenaltyApplied,
           resistance: resistanceResult,
           saveSuccess: saveResult?.success ?? null,
           outcome
