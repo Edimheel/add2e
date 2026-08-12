@@ -148,12 +148,6 @@ function scrollLearningSource(scroll, entry) {
         ownerList: Array.from(entry?.lists ?? [])[0] ?? "",
         spells: [entry]
       }
-    },
-    flags: {
-      add2e: {
-        arcaneDocumentKind: "spellbook",
-        personalSpellbook: false
-      }
     }
   };
 }
