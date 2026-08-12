@@ -3,6 +3,7 @@
 // Contrat onUse : true = sort consommé ; false = sort non consommé.
 
 const __add2eSanctuaryResult = await (async () => {
+  const VERSION = "2026-08-12-canonical-sanctuary-v4";
   const CONFIG = Object.freeze({
     name: "Sanctuaire",
     slug: "sanctuaire",
@@ -32,12 +33,10 @@ const __add2eSanctuaryResult = await (async () => {
     ]
   });
 
-  const esc = value => String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    ui.notifications?.error?.("Sanctuaire : les constructeurs communs de cartes ADD2E sont indisponibles.");
+    return false;
+  }
 
   const normalize = value => String(value ?? "")
     .trim()
@@ -48,9 +47,11 @@ const __add2eSanctuaryResult = await (async () => {
     .replace(/[^a-z0-9:]+/g, "_")
     .replace(/^_+|_+$/g, "");
 
-  const chatStyle = () => CONST.CHAT_MESSAGE_STYLES
-    ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
-    : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+  const createCard = async options => {
+    const preview = globalThis.add2eBuildChatCard(options);
+    if (!String(preview ?? "").trim()) throw new Error("Sanctuaire : carte de chat vide.");
+    return globalThis.add2eCreateChatCard(options);
+  };
 
   const actionEvent = typeof args !== "undefined" ? args?.[0] ?? null : null;
   if (actionEvent?.add2eMode === CONFIG.actionGate.onUseMode) {
@@ -66,51 +67,53 @@ const __add2eSanctuaryResult = await (async () => {
     if (!attacker || !targetActor) return false;
 
     const casterName = effectFlags.casterName ?? "Clerc";
-    const casterImg = effectFlags.casterImg ?? "icons/svg/mystery-man.svg";
     const spellImg = effectFlags.sourceSpellImg ?? CONFIG.icon;
     const targetName = targetToken?.name ?? targetActor.name ?? "Cible";
     const saveText = save?.canRoll
       ? `${save.total} / ${save.threshold}${save.bonus ? ` (${save.bonus >= 0 ? "+" : ""}${save.bonus})` : ""}`
       : "indisponible";
-    const title = allowed ? "SANCTUAIRE FRANCHI" : "ATTAQUE BLOQUÉE PAR SANCTUAIRE";
-    const accent = allowed ? "#2f8f46" : "#b33a2e";
     const conclusion = allowed
       ? `${attacker.name} réussit son jet de protection et peut attaquer ${targetName}.`
       : `${attacker.name} échoue à son jet de protection et doit ignorer ${targetName}.`;
-    const ruleText = allowed
-      ? "La sauvegarde contre les sorts est réussie : l’attaque ciblée est autorisée."
-      : "La sauvegarde contre les sorts est échouée : l’attaque ciblée est annulée. Les effets de zone ne sont pas arrêtés par cette protection.";
 
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: attacker, token: action.sourceToken ?? null }),
-      content: `
-        <div class="add2e-chat-card add2e-spell-card add2e-spell-card-clerc add2e-sanctuary-resolution" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,#fffaf0,#fff7df);border:1.5px solid #e2bc63;overflow:hidden;padding:0;font-family:var(--font-primary);">
-          <div style="background:linear-gradient(90deg,#6f4b12,#b88924);padding:8px 12px;color:#fff;display:flex;align-items:center;gap:10px;border-bottom:2px solid #8a611d;">
-            <img src="${esc(casterImg)}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
-            <div style="line-height:1.2;flex:1;">
-              <div style="font-weight:bold;font-size:1.05em;">${esc(casterName)}</div>
-              <div style="font-size:.85em;opacity:.95;">a protégé <b>${esc(targetName)}</b> par Sanctuaire</div>
-            </div>
-            <div style="text-align:right;font-size:.78em;opacity:.95;">Sort divin</div>
-            <img src="${esc(spellImg)}" style="width:32px;height:32px;border-radius:4px;background:#fff;object-fit:cover;">
-          </div>
-          <div style="padding:10px;color:#6f4b12;">
-            <div style="text-align:center;border:1px solid ${accent};border-radius:7px;padding:8px;background:#fffdf7;color:${accent};font-weight:900;">${title}</div>
-            <table style="width:100%;border-collapse:collapse;margin-top:7px;font-size:.9em;">
-              <tbody>
-                <tr><td style="padding:4px 6px;"><b>Attaquant</b></td><td style="padding:4px 6px;text-align:right;">${esc(attacker.name)}</td></tr>
-                <tr><td style="padding:4px 6px;"><b>Cible protégée</b></td><td style="padding:4px 6px;text-align:right;">${esc(targetName)}</td></tr>
-                <tr><td style="padding:4px 6px;"><b>Jet de protection contre les sorts</b></td><td style="padding:4px 6px;text-align:right;">${esc(saveText)}</td></tr>
-              </tbody>
-            </table>
-            <div style="margin-top:7px;padding:7px 8px;border-left:4px solid ${accent};background:#fffdf7;border-radius:4px;font-size:.88em;line-height:1.35;">${esc(conclusion)}</div>
-            <details style="margin-top:8px;background:#fffdf5;border:1px solid #e2bc63;border-radius:6px;">
-              <summary style="cursor:pointer;color:#6f4b12;font-weight:600;padding:6px;">Règle appliquée</summary>
-              <div style="padding:8px;font-size:.85em;line-height:1.45;">${esc(ruleText)}</div>
-            </details>
-          </div>
-        </div>`,
-      ...chatStyle()
+    await createCard({
+      actor: attacker,
+      title: allowed ? "Sanctuaire franchi" : "Attaque bloquée par Sanctuaire",
+      icon: "fas fa-shield-halved",
+      variant: allowed ? "success" : "failure",
+      source: {
+        name: casterName,
+        img: spellImg,
+        type: "Sanctuaire",
+        meta: `Protège ${targetName}`
+      },
+      target: {
+        name: attacker.name,
+        img: attacker.img,
+        type: "Attaquant",
+        meta: ""
+      },
+      rows: [
+        { label: "Cible protégée", value: targetName },
+        { label: "Jet de protection contre les sorts", value: saveText },
+        { label: "Résultat", value: allowed ? "Attaque autorisée" : "Attaque annulée" }
+      ],
+      message: conclusion,
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: attacker, token: action.sourceToken ?? null }),
+        flags: {
+          add2e: {
+            chatCardType: "sanctuary-gate",
+            version: VERSION,
+            allowed,
+            attackerUuid: attacker.uuid,
+            targetActorUuid: targetActor.uuid,
+            saveTotal: save?.total ?? null,
+            saveThreshold: save?.threshold ?? null,
+            saveBonus: save?.bonus ?? 0
+          }
+        }
+      }
     });
     return true;
   }
@@ -146,27 +149,27 @@ const __add2eSanctuaryResult = await (async () => {
     return false;
   }
 
-  const classItems = [...(caster.items ?? [])].filter(entry => String(entry?.type ?? "").toLowerCase() === "classe");
-  const cleric = classItems.find(entry => {
-    const values = [entry.name, entry.system?.nom, entry.system?.label, entry.system?.slug, entry.system?.tags, entry.flags?.add2e?.tags]
-      .flatMap(value => Array.isArray(value) ? value : [value])
-      .map(normalize);
-    return values.some(value => value === "clerc" || value.includes("classe:clerc") || value.includes("clerc"));
-  });
-  const level = [
-    cleric?.system?.niveau,
-    cleric?.system?.level,
-    cleric?.system?.details?.niveau,
-    cleric?.system?.details?.level,
-    caster.system?.details_classe?.clerc?.niveau,
-    caster.system?.details_classe?.clerc?.level,
-    caster.system?.classes?.clerc?.niveau,
-    caster.system?.classes?.clerc?.level,
-    caster.system?.multiclass?.clerc?.niveau,
-    caster.system?.multiclass?.clerc?.level,
-    caster.system?.niveau,
-    caster.system?.level
-  ].map(Number).find(value => Number.isFinite(value) && value > 0) ?? 1;
+  const resolveCasterLevel = () => {
+    if (sourceItem.system?.isObjectPower === true) {
+      const explicit = Number(sourceItem.system?.casterLevel);
+      if (!Number.isInteger(explicit) || explicit < 1) {
+        throw new Error("Sanctuaire : niveau de lanceur explicite absent du pouvoir d’objet magique.");
+      }
+      return explicit;
+    }
+    const resolver = globalThis.add2eCanActorUseSpell;
+    if (typeof resolver !== "function") {
+      throw new Error("Sanctuaire : le résolveur canonique de lancement des sorts est indisponible.");
+    }
+    const access = resolver(caster, sourceItem);
+    const actorLevel = Number(access?.actorLevel);
+    if (access?.ok !== true || !Number.isInteger(actorLevel) || actorLevel < 1) {
+      throw new Error(`Sanctuaire : niveau canonique du lanceur indisponible${access?.reason ? ` (${access.reason})` : ""}.`);
+    }
+    return actorLevel;
+  };
+
+  const level = resolveCasterLevel();
 
   const selectedTargets = Array.from(game.user?.targets ?? []);
   if (selectedTargets.length !== 1 || !selectedTargets[0]?.actor) {
@@ -310,24 +313,42 @@ const __add2eSanctuaryResult = await (async () => {
     await globalThis.ADD2E_PLAY_SPELL_FX?.(CONFIG.slug, { casterToken, targetToken });
   } catch {}
 
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
-    content: `
-      <div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,#fffaf0,#fff7df);border:1.5px solid #e2bc63;overflow:hidden;padding:0;font-family:var(--font-primary);">
-        <div style="background:linear-gradient(90deg,#6f4b12,#b88924);padding:8px 12px;color:#fff;display:flex;align-items:center;gap:10px;border-bottom:2px solid #8a611d;">
-          <img src="${esc(casterImg)}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
-          <div style="line-height:1.2;flex:1;"><div style="font-weight:bold;font-size:1.05em;">${esc(caster.name)}</div><div style="font-size:.85em;opacity:.95;">lance <b>${esc(sourceItem.name ?? CONFIG.name)}</b></div></div>
-          <div style="text-align:right;font-size:.78em;opacity:.95;">Sort divin</div>
-          <img src="${esc(spellImg)}" style="width:32px;height:32px;border-radius:4px;background:#fff;object-fit:cover;">
-        </div>
-        <div style="padding:10px;color:#6f4b12;">
-          <div style="margin-bottom:7px;font-size:.95em;"><b>Cible :</b> ${esc(targetToken.name ?? targetActor.name)}</div>
-          <div style="text-align:center;border:1px solid #e2bc63;border-radius:7px;padding:8px;background:#fffdf7;"><b style="color:#2f8f46;">SANCTUAIRE APPLIQUÉ</b><div style="margin-top:4px;font-size:.9em;"><b>Durée :</b> ${rounds} rounds · <b>Portée :</b> toucher · <b>JS :</b> aucun</div></div>
-          <div style="margin-top:7px;padding:7px 8px;border-left:4px solid #2f8f46;background:#f0faf2;border-radius:4px;font-size:.88em;line-height:1.35;">Toute créature qui tente d’attaquer la cible doit réussir un jet de protection contre les sorts. Le bénéficiaire ne peut accomplir aucune action offensive.</div>
-          <details style="margin-top:8px;background:#fffdf5;border:1px solid #e2bc63;border-radius:6px;"><summary style="cursor:pointer;color:#6f4b12;font-weight:600;padding:6px;">Règle appliquée</summary><div style="padding:8px;font-size:.85em;line-height:1.45;">En cas d’échec au jet, l’attaquant doit ignorer la cible. Les effets de zone, tels qu’une boule de feu ou une tempête de glace, ne sont pas arrêtés par Sanctuaire.</div></details>
-        </div>
-      </div>`,
-    ...chatStyle()
+  await createCard({
+    actor: caster,
+    title: sourceItem.name ?? CONFIG.name,
+    icon: "fas fa-shield-halved",
+    variant: "success",
+    source: {
+      name: caster.name,
+      img: spellImg,
+      type: "Sort divin",
+      meta: `Niveau de lanceur ${level}`
+    },
+    target: {
+      name: targetToken.name ?? targetActor.name,
+      img: targetActor.img,
+      type: "Cible protégée",
+      meta: ""
+    },
+    rows: [
+      { label: "Durée", value: `${rounds} rounds` },
+      { label: "Portée", value: "Toucher" },
+      { label: "Jet de protection", value: "Aucun au lancement" }
+    ],
+    message: "Toute créature qui tente d’attaquer la cible doit réussir un jet de protection contre les sorts. Le bénéficiaire ne peut accomplir aucune action offensive.",
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+      flags: {
+        add2e: {
+          chatCardType: "sanctuary-cast",
+          version: VERSION,
+          sourceItemUuid: sourceItem.uuid,
+          casterLevel: level,
+          targetActorUuid: targetActor.uuid,
+          durationRounds: rounds
+        }
+      }
+    }
   });
 
   return true;
