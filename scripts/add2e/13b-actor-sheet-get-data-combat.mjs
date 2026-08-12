@@ -7,7 +7,7 @@ import {
 } from "../add2e-attack/03-attack-rules.mjs";
 import { add2eAttackComputeActiveAttackModifiers } from "../add2e-attack/04e-attack-roll-modifiers.mjs";
 import { add2eGetEquippedProjectileForWeapon } from "./21-consumables.mjs";
-import { classItems, classProgression } from "./17b-multiclass-core.mjs";
+import { resolveCanonicalThac0 } from "./17b-multiclass-core.mjs";
 
 function add2eSheetSigned(value) {
   const number = Number(value) || 0;
@@ -170,32 +170,8 @@ function add2eSheetDefenseRows(armorClass) {
   return rows;
 }
 
-function add2eSheetClassThaco(classItem) {
-  const progressionState = classProgression(classItem);
-  if (!progressionState.hasLevel) {
-    throw new Error(`Niveau canonique absent sur l’Item classe « ${classItem?.name ?? classItem?.id ?? "inconnu"} ».`);
-  }
-
-  const level = progressionState.level;
-  const progression = Array.isArray(classItem?.system?.progression) ? classItem.system.progression : [];
-  const row = progression.find(entry => Number(entry?.niveau) === level) ?? null;
-  if (!row) {
-    throw new Error(`Progression THAC0 absente pour ${classItem?.name ?? "classe"} au niveau ${level}.`);
-  }
-
-  const thaco = Number(row.thac0);
-  if (!Number.isFinite(thaco)) {
-    throw new Error(`THAC0 canonique invalide pour ${classItem?.name ?? "classe"} au niveau ${level}.`);
-  }
-  return thaco;
-}
-
 function add2eSheetResolveThaco(actor, transformation) {
-  const transformationThaco = Number(transformation?.thac0);
-  if (Number.isFinite(transformationThaco)) return transformationThaco;
-  const classes = classItems(actor);
-  if (!classes.length) return 20;
-  return Math.min(...classes.map(add2eSheetClassThaco));
+  return resolveCanonicalThac0(actor, { transformation }).value;
 }
 
 function add2eSheetDamageData(item) {
