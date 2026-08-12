@@ -7,9 +7,17 @@ export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
   };
 
   const sorts = items.filter(i => i.type === "sort" && !add2eIsObjectPowerRow(i));
+  const add2eSpellItemLevel = (sort) => {
+    const level = Number(sort?.system?.niveau);
+    if (!Number.isInteger(level) || level < 1) {
+      throw new Error(`Niveau canonique system.niveau invalide pour le sort « ${sort?.name ?? sort?.id ?? "inconnu"} ».`);
+    }
+    return level;
+  };
+
   const sortsParNiveau = {};
   for (const sort of sorts) {
-    const niv = Number(sort.system.niveau) || 1;
+    const niv = add2eSpellItemLevel(sort);
     if (!sortsParNiveau[niv]) sortsParNiveau[niv] = [];
     sortsParNiveau[niv].push(sort);
   }
@@ -47,9 +55,14 @@ export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
   data.sortsMemorizedByLevel = sortsMemorizedByLevel;
   data.spellPoolsByLevel = spellPoolsByLevel;
 
-  const add2eActorLevelForSpells = Math.max(1, Number(actor.system?.niveau ?? 1) || 1);
   const add2eSpellEntriesForHbs = add2eGetSpellcastingEntries(actor);
-  const add2eSpellItemLevel = (sort) => Number(sort?.system?.niveau ?? sort?.system?.level ?? 1) || 1;
+  if (!Array.isArray(add2eSpellEntriesForHbs)) {
+    throw new Error(`Le résolveur canonique des traditions de sorts a renvoyé une valeur invalide pour « ${actor?.name ?? "acteur"} ».`);
+  }
+  if (typeof globalThis.add2eGetSpellAccessEntryDetails !== "function") {
+    throw new Error("Le résolveur canonique d’accès aux sorts est indisponible pour la feuille.");
+  }
+
   const add2eEntryLabelForHbs = (entry) => entry?.label || add2eSpellLabel(entry?.key);
   const add2eEntryKeyForHbs = (entry) => add2eNormalizeSpellKey(entry?.key);
   const add2eStableSpellNameForHbs = (value) => String(value ?? "")
@@ -60,11 +73,12 @@ export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
   const add2eStableSpellKeyForHbs = (sort, spellLevel, spellLists = []) => {
-    const configured = String(sort?.flags?.add2e?.stableSpellKey ?? sort?.flags?.add2e?.spellStableKey ?? "").trim();
+    const configured = String(sort?.flags?.add2e?.stableSpellKey ?? "").trim();
     if (configured) return configured;
-    const name = add2eStableSpellNameForHbs(sort?.name ?? sort?.system?.nom ?? "");
-    const lists = [...new Set((spellLists ?? []).map(add2eNormalizeSpellKey).filter(Boolean))].sort().join("+") || "liste_inconnue";
-    return name ? `${lists}|${Number(spellLevel) || add2eSpellItemLevel(sort)}|${name}` : "";
+    const name = add2eStableSpellNameForHbs(sort?.name ?? "");
+    const level = Number(spellLevel);
+    const lists = [...new Set((spellLists ?? []).map(add2eNormalizeSpellKey).filter(Boolean))].sort().join("+");
+    return name && Number.isInteger(level) && level >= 1 && lists ? `${lists}|${level}|${name}` : "";
   };
 
   const add2eMaxSpellLevelFromEntries = add2eSpellEntriesForHbs.reduce((max, entry) => Math.max(max, Number(entry?.maxSpellLevel ?? 0) || 0), 0);
@@ -205,9 +219,9 @@ export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
     const spellLists = add2eGetSpellListsFromItem(sort);
     const allowedEntries = add2eSpellEntriesForHbs.filter(entry => {
       const key = add2eEntryKeyForHbs(entry);
-      const startsAt = Number(entry?.startsAt ?? 1) || 1;
-      const maxSpellLevel = Number(entry?.maxSpellLevel ?? 0) || 0;
-      return spellLists.includes(key) && add2eActorLevelForSpells >= startsAt && (!maxSpellLevel || spellLevel <= maxSpellLevel);
+      if (!spellLists.includes(key)) return false;
+      const access = globalThis.add2eGetSpellAccessEntryDetails(actor, entry, spellLevel);
+      return access?.ok === true;
     });
 
     const matchingLabels = add2eSpellEntriesForHbs.filter(entry => spellLists.includes(add2eEntryKeyForHbs(entry))).map(add2eEntryLabelForHbs);
