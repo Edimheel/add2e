@@ -5,7 +5,7 @@
  * Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via l'API ADD2E commune.
  */
 
-const ADD2E_LUMIERE_VERSION = "2026-08-12-canonical-light-runtime-v4";
+const ADD2E_LUMIERE_VERSION = "2026-08-12-canonical-light-runtime-v5";
 
 function add2eLumiereEmitGMOperation(operation, payload) {
   if (!game.socket) return false;
@@ -142,8 +142,7 @@ const __add2eOnUseResult = await (async () => {
 
   if (typeof globalThis.add2eNormalizeSpellKey !== "function"
     || typeof globalThis.add2eGetSpellListsFromItem !== "function"
-    || typeof globalThis.add2eResolveSpellDistance !== "function"
-    || typeof globalThis.add2eSceneDistance !== "function") {
+    || typeof globalThis.add2eResolveSpellDistance !== "function") {
     ui.notifications.error("Lumière / Ténèbres : règles canoniques de sorts ou de distance ADD2E indisponibles.");
     return false;
   }
@@ -331,6 +330,40 @@ const __add2eOnUseResult = await (async () => {
     throw new Error(`${spellName} : durée canonique non supportée (${text}).`);
   };
 
+  const sceneMetersPerUnit = scene => {
+    const unit = String(scene?.grid?.units ?? "").trim().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const factors = new Map([
+      ["m", 1], ["metre", 1], ["metres", 1], ["meter", 1], ["meters", 1],
+      ["km", 1000], ["kilometre", 1000], ["kilometres", 1000], ["kilometer", 1000], ["kilometers", 1000],
+      ["cm", 0.01], ["centimetre", 0.01], ["centimetres", 0.01], ["centimeter", 0.01], ["centimeters", 0.01],
+      ["ft", 0.3048], ["foot", 0.3048], ["feet", 0.3048], ["pied", 0.3048], ["pieds", 0.3048],
+      ["yd", 0.9144], ["yard", 0.9144], ["yards", 0.9144]
+    ]);
+    const factor = factors.get(unit);
+    if (!(factor > 0)) {
+      throw new Error(`${spellName} : unité de distance de scène non supportée (${scene?.grid?.units || "vide"}).`);
+    }
+    return factor;
+  };
+
+  const sceneDistanceFromMeters = (scene, meters) => {
+    const distanceMeters = Number(meters);
+    const gridDistance = Number(scene?.grid?.distance);
+    const gridSize = Number(scene?.grid?.size);
+    if (!Number.isFinite(distanceMeters) || distanceMeters < 0) {
+      throw new Error(`${spellName} : distance canonique invalide (${String(meters)} m).`);
+    }
+    if (!(gridDistance > 0) || !(gridSize > 0)) {
+      throw new Error(`${spellName} : configuration de grille Foundry invalide.`);
+    }
+    const sceneDistance = distanceMeters / sceneMetersPerUnit(scene);
+    return {
+      radiusSceneDistance: sceneDistance,
+      radiusPixels: (sceneDistance / gridDistance) * gridSize
+    };
+  };
+
   let rangeRule;
   let radiusRule;
   let rangeScene;
@@ -341,8 +374,8 @@ const __add2eOnUseResult = await (async () => {
     const radiusInches = parseRadiusInches(sourceItem.system?.zone_effet);
     rangeRule = globalThis.add2eResolveSpellDistance(rangeInches, { environment, kind: "range" });
     radiusRule = globalThis.add2eResolveSpellDistance(radiusInches, { environment, kind: "area" });
-    rangeScene = globalThis.add2eSceneDistance({ scene: canvas.scene, distance: rangeRule.meters, unit: "m", measure: "radius" });
-    radiusScene = globalThis.add2eSceneDistance({ scene: canvas.scene, distance: radiusRule.meters, unit: "m", measure: "radius" });
+    rangeScene = sceneDistanceFromMeters(canvas.scene, rangeRule.meters);
+    radiusScene = sceneDistanceFromMeters(canvas.scene, radiusRule.meters);
     const baseRounds = parseDurationRounds(sourceItem.system?.duree);
     durationRounds = isDarkness ? Math.floor(baseRounds / 2) : baseRounds;
     if (!(rangeScene?.radiusPixels >= 0) || !(radiusScene?.radiusSceneDistance >= 0) || durationRounds < 1) {
