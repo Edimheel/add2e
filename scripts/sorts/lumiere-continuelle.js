@@ -1,13 +1,13 @@
 /**
  * ADD2E — Lumière éternelle / Ténèbres éternelles (Clerc)
- * Runtime canonique spécifique au sort réversible de Clerc niveau 3.
- * Les valeurs de portée et de zone proviennent exclusivement de l'Item sort lancé.
- * Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via l'API ADD2E commune.
+ * Runtime canonique du sort réversible de Clerc niveau 3.
+ * Compatible Foundry V13/V14/V15 — fenêtres via l'API ADD2E commune.
  */
 
-const ADD2E_ETERNAL_LIGHT_VERSION = "2026-08-12-canonical-eternal-light-runtime-v1";
+const ADD2E_ETERNAL_LIGHT_VERSION = "2026-08-12-canonical-eternal-light-runtime-v2";
+const ADD2E_ETERNAL_LIGHT_RUNTIME = "cleric-eternal-light";
 
-function add2eEternalLightEmitGMOperation(operation, payload) {
+function add2eEternalLightEmitGM(operation, payload) {
   if (!game.socket) return false;
   game.socket.emit("system.add2e", {
     type: "ADD2E_GM_OPERATION",
@@ -21,20 +21,16 @@ globalThis.ADD2E_ETERNAL_LIGHT_FIND_AMBIENT = payload => {
   if (!payload) return null;
   const scene = game.scenes?.get(payload.sceneId) ?? canvas.scene;
   if (!scene) return null;
-
   if (payload.lightId) {
-    const byId = scene.lights?.get(payload.lightId) ?? null;
-    if (byId) return byId;
+    const light = scene.lights?.get(payload.lightId) ?? null;
+    if (light) return light;
   }
-
   if (payload.requestId) {
-    const byRequest = scene.lights?.find(light =>
+    return scene.lights?.find(light =>
       light.flags?.add2e?.requestId === payload.requestId
       || light.getFlag?.("add2e", "requestId") === payload.requestId
     ) ?? null;
-    if (byRequest) return byRequest;
   }
-
   return null;
 };
 
@@ -43,13 +39,11 @@ globalThis.ADD2E_ETERNAL_LIGHT_DELETE_AMBIENT = async payload => {
   const scene = game.scenes?.get(payload.sceneId) ?? canvas.scene;
   if (!scene) return;
   const light = globalThis.ADD2E_ETERNAL_LIGHT_FIND_AMBIENT(payload);
-
   if (game.user.isGM) {
     if (light) await light.delete();
     return;
   }
-
-  add2eEternalLightEmitGMOperation("deleteAmbientLight", {
+  add2eEternalLightEmitGM("deleteAmbientLight", {
     sceneId: scene.id,
     lightId: light?.id ?? payload.lightId ?? null,
     requestId: payload.requestId ?? null,
@@ -61,22 +55,19 @@ globalThis.ADD2E_ETERNAL_LIGHT_DELETE_AMBIENT = async payload => {
   });
 };
 
-globalThis.ADD2E_ETERNAL_LIGHT_RESTORE_TOKEN_LIGHT = async payload => {
+globalThis.ADD2E_ETERNAL_LIGHT_RESTORE_TOKEN = async payload => {
   if (!payload || payload.type !== "token") return;
   const scene = game.scenes?.get(payload.sceneId) ?? canvas.scene;
   const tokenDoc = scene?.tokens?.get(payload.tokenId) ?? null;
   if (!tokenDoc) return;
-
   const originalLight = payload.originalLight && typeof payload.originalLight === "object"
     ? foundry.utils.deepClone(payload.originalLight)
     : {};
-
   if (game.user.isGM || tokenDoc.isOwner) {
     await tokenDoc.update({ light: originalLight });
     return;
   }
-
-  add2eEternalLightEmitGMOperation("updateToken", {
+  add2eEternalLightEmitGM("updateToken", {
     sceneId: scene.id,
     tokenId: tokenDoc.id,
     updateData: { light: originalLight }
@@ -85,14 +76,13 @@ globalThis.ADD2E_ETERNAL_LIGHT_RESTORE_TOKEN_LIGHT = async payload => {
 
 if (globalThis.ADD2E_ETERNAL_LIGHT_HOOKS_VERSION !== ADD2E_ETERNAL_LIGHT_VERSION) {
   globalThis.ADD2E_ETERNAL_LIGHT_HOOKS_VERSION = ADD2E_ETERNAL_LIGHT_VERSION;
-
   const cleanup = async effect => {
-    const payload = effect?.flags?.add2e?.lightPayload ?? effect?.getFlag?.("add2e", "lightPayload");
-    if (!payload) return;
-    if (payload.type === "ambient") await globalThis.ADD2E_ETERNAL_LIGHT_DELETE_AMBIENT(payload);
-    if (payload.type === "token") await globalThis.ADD2E_ETERNAL_LIGHT_RESTORE_TOKEN_LIGHT(payload);
+    const flags = effect?.flags?.add2e ?? {};
+    if (flags.runtime !== ADD2E_ETERNAL_LIGHT_RUNTIME) return;
+    const payload = flags.lightPayload ?? null;
+    if (payload?.type === "ambient") await globalThis.ADD2E_ETERNAL_LIGHT_DELETE_AMBIENT(payload);
+    if (payload?.type === "token") await globalThis.ADD2E_ETERNAL_LIGHT_RESTORE_TOKEN(payload);
   };
-
   Hooks.on("deleteActiveEffect", cleanup);
   Hooks.on("updateActiveEffect", async (effect, changes) => {
     if (changes?.disabled === true) await cleanup(effect);
@@ -101,11 +91,8 @@ if (globalThis.ADD2E_ETERNAL_LIGHT_HOOKS_VERSION !== ADD2E_ETERNAL_LIGHT_VERSION
 
 return await (async () => {
   const escapeHtml = value => String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 
   const sourceItem = (typeof sort !== "undefined" && sort?.type === "sort")
     ? sort
@@ -125,18 +112,13 @@ return await (async () => {
     return false;
   }
 
-  if (typeof globalThis.add2eNormalizeSpellKey !== "function"
-    || typeof globalThis.add2eGetSpellListsFromItem !== "function"
-    || typeof globalThis.add2eResolveSpellDistance !== "function") {
-    ui.notifications.error("Lumière éternelle / Ténèbres éternelles : règles canoniques de sorts ou de distance ADD2E indisponibles.");
-    return false;
-  }
-  if (typeof globalThis.add2eDialogWait !== "function") {
-    ui.notifications.error("L'API de fenêtre ADD2E est indisponible.");
-    return false;
-  }
-  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
-    ui.notifications.error("Lumière éternelle / Ténèbres éternelles : constructeurs communs de cartes ADD2E indisponibles.");
+  const required = [
+    "add2eNormalizeSpellKey", "add2eGetSpellListsFromItem", "add2eResolveSpellDistance",
+    "add2eCanActorUseSpell", "add2eDialogWait", "add2eBuildChatCard", "add2eCreateChatCard"
+  ];
+  const missing = required.filter(name => typeof globalThis[name] !== "function");
+  if (missing.length) {
+    ui.notifications.error(`Lumière éternelle / Ténèbres éternelles : API ADD2E indisponible (${missing.join(", ")}).`);
     return false;
   }
 
@@ -145,7 +127,7 @@ return await (async () => {
     ? "base"
     : String(familyKindRaw).trim().toLowerCase();
   if (!["base", "inverse"].includes(familyKind)) {
-    ui.notifications.error(`Lumière éternelle / Ténèbres éternelles : spellFamily.kind canonique invalide (${String(familyKindRaw)}).`);
+    ui.notifications.error(`Lumière éternelle / Ténèbres éternelles : spellFamily.kind invalide (${String(familyKindRaw)}).`);
     return false;
   }
 
@@ -159,67 +141,46 @@ return await (async () => {
     return false;
   }
 
-  const spellLists = globalThis.add2eGetSpellListsFromItem(sourceItem);
-  if (!Array.isArray(spellLists) || !spellLists.length) {
-    ui.notifications.error(`${spellName} : system.spellLists canonique invalide.`);
+  const lists = globalThis.add2eGetSpellListsFromItem(sourceItem)
+    .map(value => globalThis.add2eNormalizeSpellKey(value)).filter(Boolean);
+  const uniqueLists = [...new Set(lists)];
+  if (uniqueLists.length !== 1 || uniqueLists[0] !== "clerc") {
+    ui.notifications.error(`${spellName} : ce runtime est réservé à la liste Clerc.`);
     return false;
   }
 
-  const resolveCastingProfile = () => {
-    if (sourceItem.system?.isObjectPower === true) {
-      const casterLevel = Number(sourceItem.system?.casterLevel);
-      if (!Number.isInteger(casterLevel) || casterLevel < 1) {
-        throw new Error(`${spellName} : casterLevel canonique absent du pouvoir d'objet magique.`);
-      }
-      const supportedLists = spellLists
-        .map(value => globalThis.add2eNormalizeSpellKey(value))
-        .filter(value => value === "clerc");
-      const uniqueLists = [...new Set(supportedLists)];
-      if (uniqueLists.length !== 1) {
-        throw new Error(`${spellName} : ce runtime attend exactement la liste canonique Clerc.`);
-      }
-      return { casterLevel, listKey: "clerc", access: null };
+  let casterLevel = 0;
+  if (sourceItem.system?.isObjectPower === true) {
+    casterLevel = Number(sourceItem.system?.casterLevel);
+    if (!Number.isInteger(casterLevel) || casterLevel < 1) {
+      ui.notifications.error(`${spellName} : casterLevel canonique absent du pouvoir d'objet magique.`);
+      return false;
     }
-
-    if (typeof globalThis.add2eCanActorUseSpell !== "function") {
-      throw new Error(`${spellName} : résolveur canonique d'accès aux sorts indisponible.`);
-    }
+  } else {
     const access = globalThis.add2eCanActorUseSpell(caster, sourceItem);
     if (access?.ok !== true) {
-      throw new Error(`${spellName} : accès canonique au sort refusé (${access?.reason ?? "raison inconnue"}).`);
+      ui.notifications.error(`${spellName} : accès canonique refusé (${access?.reason ?? "raison inconnue"}).`);
+      return false;
     }
-    const casterLevel = Number(access.actorLevel);
+    const resolvedList = globalThis.add2eNormalizeSpellKey(access.entry?.key);
+    if (resolvedList !== "clerc") {
+      ui.notifications.error(`${spellName} : liste résolue incohérente (${resolvedList || "vide"}).`);
+      return false;
+    }
+    casterLevel = Number(access.actorLevel);
     if (!Number.isInteger(casterLevel) || casterLevel < 1) {
-      throw new Error(`${spellName} : niveau canonique du lanceur invalide.`);
+      ui.notifications.error(`${spellName} : niveau canonique du lanceur invalide.`);
+      return false;
     }
-    const listKey = globalThis.add2eNormalizeSpellKey(access.entry?.key);
-    if (listKey !== "clerc") {
-      throw new Error(`${spellName} : ce runtime est réservé au sort réversible de Clerc.`);
-    }
-    return { casterLevel, listKey, access };
-  };
-
-  let casting;
-  try {
-    casting = resolveCastingProfile();
-  } catch (error) {
-    console.error("[ADD2E][LUMIERE_ETERNELLE][CASTING_PROFILE]", { actor: caster.name, spell: sourceItem.name, error });
-    ui.notifications.error(error.message);
-    return false;
   }
 
-  const { casterLevel, listKey } = casting;
   const casterToken = (typeof token !== "undefined" && token?.actor?.id === caster.id)
     ? token
     : canvas.tokens?.controlled?.find(placeable => placeable?.actor?.id === caster.id)
       ?? caster.getActiveTokens?.()[0]
       ?? null;
-  if (!casterToken) {
-    ui.notifications.warn(`${spellName} : le lanceur doit être présent sur la scène.`);
-    return false;
-  }
-  if (!canvas.scene) {
-    ui.notifications.warn(`${spellName} : aucune scène active.`);
+  if (!casterToken || !canvas.scene) {
+    ui.notifications.warn(`${spellName} : le lanceur doit être présent sur une scène active.`);
     return false;
   }
 
@@ -228,36 +189,18 @@ return await (async () => {
     add2ePrimaryAction: "interieur",
     add2eClasses: ["add2e-lumiere-eternelle-context"],
     window: { title: spellName },
-    content: `
-      <form class="add2e-lumiere-eternelle-context-form">
-        <p>Choisissez le contexte de portée pour ce lancement.</p>
-        <p>La zone d'effet conserve ses dimensions normales dans les deux contextes.</p>
-      </form>`,
+    content: `<form><p>Choisissez le contexte de portée.</p><p>La zone d'effet conserve ses dimensions normales.</p></form>`,
     buttons: [
-      {
-        action: "interieur",
-        label: "Intérieur",
-        icon: "<i class='fas fa-building'></i>",
-        default: true,
-        callback: () => "interieur"
-      },
-      {
-        action: "exterieur",
-        label: "Extérieur",
-        icon: "<i class='fas fa-tree'></i>",
-        callback: () => "exterieur"
-      },
-      {
-        action: "cancel",
-        label: "Annuler",
-        icon: "<i class='fas fa-times'></i>",
-        callback: () => null
-      }
+      { action: "interieur", label: "Intérieur", icon: "<i class='fas fa-building'></i>", default: true, callback: () => "interieur" },
+      { action: "exterieur", label: "Extérieur", icon: "<i class='fas fa-tree'></i>", callback: () => "exterieur" },
+      { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
     ],
     close: () => null
   });
   if (!environment) return false;
 
+  const normalizeText = value => String(value ?? "").trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[″”]/g, "\"").replace(/\s+/g, " ");
   const canonicalText = (value, field) => {
     if (typeof value === "string" || typeof value === "number") {
       const text = String(value).trim();
@@ -269,37 +212,15 @@ return await (async () => {
     }
     throw new Error(`${spellName} : ${field} canonique invalide.`);
   };
-
-  const normalizeRuleText = value => String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "'")
-    .replace(/[″”]/g, "\"")
-    .replace(/\s+/g, " ");
-
-  const parseRangeInches = value => {
-    const text = canonicalText(value, "system.portee");
-    const normalized = normalizeRuleText(text);
-    const match = normalized.match(/^(\d+(?:[.,]\d+)?)\s*(?:\"|pouces?)$/);
-    if (!match) throw new Error(`${spellName} : portée canonique non supportée (${text}).`);
+  const parseInches = (value, field, radius = false) => {
+    const text = canonicalText(value, field);
+    const normalized = normalizeText(text);
+    const pattern = radius
+      ? /^sphere de (\d+(?:[.,]\d+)?)\s*(?:\"|pouces?) de rayon$/
+      : /^(\d+(?:[.,]\d+)?)\s*(?:\"|pouces?)$/;
+    const match = normalized.match(pattern);
+    if (!match) throw new Error(`${spellName} : ${field} non supporté (${text}).`);
     return Number(match[1].replace(",", "."));
-  };
-
-  const parseRadiusInches = value => {
-    const text = canonicalText(value, "system.zone_effet");
-    const normalized = normalizeRuleText(text);
-    const match = normalized.match(/^sphere de (\d+(?:[.,]\d+)?)\s*(?:\"|pouces?) de rayon$/);
-    if (!match) throw new Error(`${spellName} : zone_effet canonique non supportée (${text}).`);
-    return Number(match[1].replace(",", "."));
-  };
-
-  const assertPermanentDuration = value => {
-    const text = canonicalText(value, "system.duree");
-    const normalized = normalizeRuleText(text);
-    if (!["permanente", "permanent"].includes(normalized)) {
-      throw new Error(`${spellName} : durée canonique non supportée (${text}).`);
-    }
   };
 
   const sceneMetersPerUnit = scene => {
@@ -307,204 +228,157 @@ return await (async () => {
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const factors = new Map([
       ["m", 1], ["metre", 1], ["metres", 1], ["meter", 1], ["meters", 1],
-      ["km", 1000], ["kilometre", 1000], ["kilometres", 1000], ["kilometer", 1000], ["kilometers", 1000],
-      ["cm", 0.01], ["centimetre", 0.01], ["centimetres", 0.01], ["centimeter", 0.01], ["centimeters", 0.01],
+      ["km", 1000], ["cm", 0.01],
       ["ft", 0.3048], ["foot", 0.3048], ["feet", 0.3048], ["pied", 0.3048], ["pieds", 0.3048],
       ["yd", 0.9144], ["yard", 0.9144], ["yards", 0.9144]
     ]);
     const factor = factors.get(unit);
-    if (!(factor > 0)) {
-      throw new Error(`${spellName} : unité de distance de scène non supportée (${scene?.grid?.units || "vide"}).`);
-    }
+    if (!(factor > 0)) throw new Error(`${spellName} : unité de scène non supportée (${scene?.grid?.units || "vide"}).`);
     return factor;
   };
-
-  const sceneDistanceFromMeters = (scene, meters) => {
-    const distanceMeters = Number(meters);
-    const gridDistance = Number(scene?.grid?.distance);
-    const gridSize = Number(scene?.grid?.size);
-    if (!Number.isFinite(distanceMeters) || distanceMeters < 0) {
-      throw new Error(`${spellName} : distance canonique invalide (${String(meters)} m).`);
+  const sceneDistance = meters => {
+    const value = Number(meters);
+    const gridDistance = Number(canvas.scene?.grid?.distance);
+    const gridSize = Number(canvas.scene?.grid?.size);
+    if (!Number.isFinite(value) || value < 0 || !(gridDistance > 0) || !(gridSize > 0)) {
+      throw new Error(`${spellName} : configuration de distance de scène invalide.`);
     }
-    if (!(gridDistance > 0) || !(gridSize > 0)) {
-      throw new Error(`${spellName} : configuration de grille Foundry invalide.`);
-    }
-    const sceneDistance = distanceMeters / sceneMetersPerUnit(scene);
-    return {
-      radiusSceneDistance: sceneDistance,
-      radiusPixels: (sceneDistance / gridDistance) * gridSize
-    };
+    const units = value / sceneMetersPerUnit(canvas.scene);
+    return { units, pixels: (units / gridDistance) * gridSize };
   };
 
   let rangeRule;
   let radiusRule;
-  let rangeScene;
-  let radiusScene;
+  let rangePixels;
+  let radiusUnits;
   try {
-    const rangeInches = parseRangeInches(sourceItem.system?.portee);
-    const radiusInches = parseRadiusInches(sourceItem.system?.zone_effet);
-    assertPermanentDuration(sourceItem.system?.duree);
-    rangeRule = globalThis.add2eResolveSpellDistance(rangeInches, { environment, kind: "range" });
-    radiusRule = globalThis.add2eResolveSpellDistance(radiusInches, { environment, kind: "area" });
-    rangeScene = sceneDistanceFromMeters(canvas.scene, rangeRule.meters);
-    radiusScene = sceneDistanceFromMeters(canvas.scene, radiusRule.meters);
-    if (!(rangeScene?.radiusPixels >= 0) || !(radiusScene?.radiusSceneDistance >= 0)) {
-      throw new Error(`${spellName} : résolution de portée ou de zone invalide.`);
+    const duration = canonicalText(sourceItem.system?.duree, "system.duree");
+    if (!["permanent", "permanente"].includes(normalizeText(duration))) {
+      throw new Error(`${spellName} : durée non supportée (${duration}).`);
     }
+    rangeRule = globalThis.add2eResolveSpellDistance(parseInches(sourceItem.system?.portee, "system.portee"), { environment, kind: "range" });
+    radiusRule = globalThis.add2eResolveSpellDistance(parseInches(sourceItem.system?.zone_effet, "system.zone_effet", true), { environment, kind: "area" });
+    rangePixels = sceneDistance(rangeRule.meters).pixels;
+    radiusUnits = sceneDistance(radiusRule.meters).units;
   } catch (error) {
-    console.error("[ADD2E][LUMIERE_ETERNELLE][RULES]", {
-      spell: sourceItem.name,
-      portee: sourceItem.system?.portee,
-      zone_effet: sourceItem.system?.zone_effet,
-      duree: sourceItem.system?.duree,
-      environment,
-      error
-    });
+    console.error("[ADD2E][LUMIERE_ETERNELLE_CLERC][RULES]", { item: sourceItem.name, error });
     ui.notifications.error(error.message);
     return false;
   }
 
-  const withinRange = point => {
-    const from = casterToken.center;
-    const distancePixels = Math.hypot(Number(point?.x ?? 0) - Number(from?.x ?? 0), Number(point?.y ?? 0) - Number(from?.y ?? 0));
-    return distancePixels <= Number(rangeScene.radiusPixels) + 0.1;
-  };
-
-  const hasBlockingWall = (from, to) => {
+  const inRange = point => Math.hypot(
+    Number(point?.x ?? 0) - Number(casterToken.center?.x ?? 0),
+    Number(point?.y ?? 0) - Number(casterToken.center?.y ?? 0)
+  ) <= rangePixels + 0.1;
+  const blocked = (from, to) => {
     try {
-      if (!canvas.walls?.checkCollision || typeof Ray === "undefined") return false;
-      return canvas.walls.checkCollision(new Ray(from, to), { type: "sight", mode: "any" }) === true;
-    } catch (_error) {
-      return false;
-    }
+      return Boolean(canvas.walls?.checkCollision && typeof Ray !== "undefined"
+        && canvas.walls.checkCollision(new Ray(from, to), { type: "sight", mode: "any" }) === true);
+    } catch (_error) { return false; }
   };
 
-  const chooseCanvasPoint = () => {
-    ui.notifications.info(`${spellName} : clique sur la scène pour choisir le point d'effet. Échap ou clic droit annule.`);
+  const choosePoint = () => {
+    ui.notifications.info(`${spellName} : clique sur la scène. Échap ou clic droit annule.`);
     return new Promise(resolve => {
       const stage = canvas.stage;
-      if (!stage?.on || !stage?.off) {
-        ui.notifications.error(`${spellName} : sélection de point indisponible sur cette scène.`);
-        resolve(null);
-        return;
-      }
-
-      let finished = false;
-      const finish = point => {
-        if (finished) return;
-        finished = true;
-        stage.off("pointerdown", onPointerDown);
-        window.removeEventListener("keydown", onKeyDown, true);
-        resolve(point);
+      if (!stage?.on || !stage?.off) return resolve(null);
+      let done = false;
+      const finish = value => {
+        if (done) return;
+        done = true;
+        stage.off("pointerdown", onPointer);
+        window.removeEventListener("keydown", onKey, true);
+        resolve(value);
       };
-      const onKeyDown = event => {
-        if (event.key === "Escape") {
-          event.preventDefault?.();
-          finish(null);
-        }
+      const onKey = event => {
+        if (event.key !== "Escape") return;
+        event.preventDefault?.();
+        finish(null);
       };
-      const onPointerDown = event => {
+      const onPointer = event => {
         const button = Number(event?.button ?? event?.nativeEvent?.button ?? event?.data?.originalEvent?.button ?? 0);
         if (button === 2) return finish(null);
         if (button !== 0) return;
-
         event?.stopPropagation?.();
         event?.data?.originalEvent?.preventDefault?.();
         const point = event?.getLocalPosition?.(stage)
           ?? event?.data?.getLocalPosition?.(stage)
           ?? stage.toLocal?.(event?.global ?? event?.data?.global ?? null)
           ?? null;
-        if (!point || !Number.isFinite(Number(point.x)) || !Number.isFinite(Number(point.y))) {
-          ui.notifications.warn(`${spellName} : position de la scène illisible.`);
-          return finish(null);
-        }
+        if (!Number.isFinite(Number(point?.x)) || !Number.isFinite(Number(point?.y))) return finish(null);
         finish({ x: Number(point.x), y: Number(point.y) });
       };
-
-      stage.on("pointerdown", onPointerDown);
-      window.addEventListener("keydown", onKeyDown, true);
+      stage.on("pointerdown", onPointer);
+      window.addEventListener("keydown", onKey, true);
     });
   };
 
-  const chooseCreatureTarget = async () => {
-    const selected = Array.from(game.user.targets ?? []).filter(target => !!target?.actor);
+  const chooseTarget = async () => {
+    const selected = Array.from(game.user.targets ?? []).filter(entry => !!entry?.actor);
     if (selected.length > 1) {
       ui.notifications.warn(`${spellName} : garde une seule créature ciblée.`);
       return null;
     }
     if (selected.length === 1) return selected[0];
-
     ui.notifications.info(`${spellName} : cible une créature avec le ciblage Foundry. Échap annule.`);
     return new Promise(resolve => {
-      let finished = false;
+      let done = false;
       let hookId = null;
-      const finish = target => {
-        if (finished) return;
-        finished = true;
+      const finish = value => {
+        if (done) return;
+        done = true;
         if (hookId !== null) Hooks.off("targetToken", hookId);
-        window.removeEventListener("keydown", onKeyDown, true);
-        resolve(target);
+        window.removeEventListener("keydown", onKey, true);
+        resolve(value);
       };
-      const onKeyDown = event => {
+      const onKey = event => {
         if (event.key !== "Escape") return;
         event.preventDefault?.();
         finish(null);
       };
-      const onTargetToken = (user, target, targeted) => {
-        if (user?.id !== game.user?.id || targeted !== true || !target?.actor) return;
-        finish(target);
-      };
-
-      hookId = Hooks.on("targetToken", onTargetToken);
-      window.addEventListener("keydown", onKeyDown, true);
+      hookId = Hooks.on("targetToken", (user, target, targeted) => {
+        if (user?.id === game.user?.id && targeted === true && target?.actor) finish(target);
+      });
+      window.addEventListener("keydown", onKey, true);
     });
   };
 
-  const chooseCarriedObject = async bearerActor => {
-    const candidates = Array.from(bearerActor?.items ?? [])
-      .filter(entry => entry?.type !== "sort")
+  const chooseObject = async bearerActor => {
+    const candidates = Array.from(bearerActor?.items ?? []).filter(entry => entry?.type !== "sort")
       .sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? ""), "fr"));
     if (!candidates.length) {
       ui.notifications.warn(`${spellName} : ${bearerActor?.name ?? "la cible"} ne porte aucun objet sélectionnable.`);
       return null;
     }
-
-    const optionsHtml = candidates
-      .map(entry => `<option value="${escapeHtml(entry.id)}">${escapeHtml(entry.name)}</option>`)
-      .join("");
-
-    const itemId = await globalThis.add2eDialogWait({
+    const options = candidates.map(entry => `<option value="${escapeHtml(entry.id)}">${escapeHtml(entry.name)}</option>`).join("");
+    const id = await globalThis.add2eDialogWait({
       add2eTheme: "parchment",
       add2ePrimaryAction: "select",
       add2eClasses: ["add2e-lumiere-eternelle-object"],
       window: { title: `${spellName} — objet porté` },
-      content: `
-        <form class="add2e-lumiere-eternelle-object-form">
-          <p>Choisissez l'objet porté par <b>${escapeHtml(bearerActor.name)}</b>.</p>
-          <div class="form-group">
-            <label>Objet</label>
-            <select name="itemId">${optionsHtml}</select>
-          </div>
-        </form>`,
+      content: `<form><p>Choisissez l'objet porté par <b>${escapeHtml(bearerActor.name)}</b>.</p><select name="itemId">${options}</select></form>`,
       buttons: [
-        {
-          action: "select",
-          label: "Choisir",
-          icon: "<i class='fas fa-hand-holding'></i>",
-          default: true,
-          callback: (_event, button) => button.form?.elements?.itemId?.value ?? null
-        },
-        {
-          action: "cancel",
-          label: "Annuler",
-          icon: "<i class='fas fa-times'></i>",
-          callback: () => null
-        }
-      ],
-      close: () => null
+        { action: "select", label: "Choisir", icon: "<i class='fas fa-hand-holding'></i>", default: true, callback: (_event, button) => button.form?.elements?.itemId?.value ?? null },
+        { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+      ], close: () => null
     });
-    if (!itemId) return null;
-    return bearerActor.items?.get?.(itemId) ?? candidates.find(entry => entry.id === itemId) ?? null;
+    return id ? (bearerActor.items?.get?.(id) ?? candidates.find(entry => entry.id === id) ?? null) : null;
+  };
+
+  const choosePlacement = async () => {
+    if (isDarkness) return "body";
+    return globalThis.add2eDialogWait({
+      add2eTheme: "parchment",
+      add2ePrimaryAction: "body",
+      add2eClasses: ["add2e-lumiere-eternelle-placement"],
+      window: { title: "Lumière éternelle — emplacement" },
+      content: `<form><p>Où placez-vous la lumière sur la créature ?</p><p>L'aveuglement ne s'applique que si la lumière couvre les organes visuels.</p></form>`,
+      buttons: [
+        { action: "body", label: "Corps", icon: "<i class='fas fa-person'></i>", default: true, callback: () => "body" },
+        { action: "eyes", label: "Visage / yeux", icon: "<i class='fas fa-eye'></i>", callback: () => "eyes" },
+        { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+      ], close: () => null
+    });
   };
 
   const magicResistance = targetActor => {
@@ -513,61 +387,61 @@ return await (async () => {
       throw new Error(`${spellName} : résolveur canonique de résistance magique indisponible.`);
     }
     const result = engine.checkResistanceDetails(targetActor, "magie", { chat: false });
-    if (!result?.found) return { applicable: false, resisted: false, chance: 0, roll: null, source: "" };
-    return {
-      applicable: true,
-      resisted: result.resiste === true,
-      chance: Number(result.pct) || 0,
-      roll: Number(result.jet) || null,
-      source: result.tag ?? "resistance:magie"
-    };
+    if (!result?.found) return { applicable: false, resisted: false, chance: 0, roll: null };
+    return { applicable: true, resisted: result.resiste === true, chance: Number(result.pct) || 0, roll: Number(result.jet) || null };
   };
 
-  const lightConfiguration = () => {
-    const radius = Number(radiusScene.radiusSceneDistance);
-    if (isDarkness) {
-      return {
-        dim: radius,
-        bright: 0,
-        angle: 360,
-        color: "#000000",
-        alpha: 1,
-        coloration: 1,
-        luminosity: -1,
-        attenuation: 0.5,
-        animation: { type: null, speed: 5, intensity: 5, reverse: false }
-      };
+  const lightConfig = isDarkness
+    ? { dim: radiusUnits, bright: 0, angle: 360, color: "#000000", alpha: 1, coloration: 1, luminosity: -1, attenuation: 0.5, animation: { type: null, speed: 5, intensity: 5, reverse: false } }
+    : { dim: radiusUnits, bright: radiusUnits, angle: 360, color: "#fffbd0", alpha: 0.55, coloration: 1, luminosity: 0.75, attenuation: 0.35, animation: { type: null, speed: 5, intensity: 5, reverse: false } };
+
+  const updateToken = async tokenDoc => {
+    if (game.user.isGM || tokenDoc.isOwner) {
+      await tokenDoc.update({ light: lightConfig });
+      return true;
     }
-    return {
-      dim: radius,
-      bright: radius,
-      angle: 360,
-      color: "#fffbd0",
-      alpha: 0.55,
-      coloration: 1,
-      luminosity: 0.75,
-      attenuation: 0.35,
-      animation: { type: null, speed: 5, intensity: 5, reverse: false }
-    };
+    return add2eEternalLightEmitGM("updateToken", {
+      sceneId: tokenDoc.parent?.id ?? canvas.scene.id,
+      tokenId: tokenDoc.id,
+      updateData: { light: lightConfig }
+    });
   };
 
-  const effectTags = ({ destination, blinded = false, objectItem = null }) => [
-    `sort:${spellKey}`,
-    "liste:clerc",
-    `niveau:${spellLevel}`,
-    `etat:${spellKey}`,
-    "famille:lumiere_eternelle",
-    isDarkness ? "tenebres:eternelles" : "lumiere:eternelle",
-    "permanent",
-    `lumiere_destination:${destination}`,
-    ...(blinded ? ["etat:cecite", "aveugle", "lumiere:aveuglement"] : []),
-    ...(objectItem ? [`objet:${globalThis.add2eNormalizeSpellKey(objectItem.name)}`] : []),
-    destination === "point" || destination === "derriere" ? "ambient_light" : "illumination:token"
-  ];
+  const createAmbient = async (point, destination) => {
+    const requestId = foundry.utils.randomID();
+    const flags = { add2e: {
+      familyKey: "lumiere_eternelle", spellKey, runtime: ADD2E_ETERNAL_LIGHT_RUNTIME,
+      requestId, destination, actorId: caster.id, actorUuid: caster.uuid, sourceItemUuid: sourceItem.uuid ?? null
+    } };
+    let lightId = null;
+    if (game.user.isGM) {
+      const created = await canvas.scene.createEmbeddedDocuments("AmbientLight", [{
+        x: point.x, y: point.y, rotation: 0, walls: true, vision: isDarkness, config: lightConfig, flags
+      }]);
+      lightId = created?.[0]?.id ?? null;
+      if (!lightId) return null;
+    } else {
+      const sent = add2eEternalLightEmitGM("createAmbientLight", {
+        sceneId: canvas.scene.id, x: point.x, y: point.y, rotation: 0, walls: true, vision: isDarkness,
+        dim: lightConfig.dim, bright: lightConfig.bright, angle: lightConfig.angle, color: lightConfig.color,
+        alpha: lightConfig.alpha, coloration: lightConfig.coloration, luminosity: lightConfig.luminosity,
+        attenuation: lightConfig.attenuation, animation: lightConfig.animation, flags
+      });
+      if (!sent) return null;
+    }
+    return { type: "ambient", sceneId: canvas.scene.id, lightId, requestId, actorId: caster.id, actorUuid: caster.uuid, spellKey, x: point.x, y: point.y };
+  };
 
-  const effectData = ({ targetActor = null, destination, payload, blinded = false, objectItem = null }) => {
-    const tags = effectTags({ destination, blinded, objectItem });
-    return {
+  const createEffect = async (actorDoc, { destination, payload, targetActor = null, objectItem = null, blinded = false, placement = null }) => {
+    const tags = [
+      `sort:${spellKey}`, "liste:clerc", `niveau:${spellLevel}`, `etat:${spellKey}`, "famille:lumiere_eternelle",
+      isDarkness ? "tenebres:eternelles" : "lumiere:eternelle", "permanent", `lumiere_destination:${destination}`,
+      ...(placement ? [`lumiere_emplacement:${placement}`] : []),
+      ...(blinded ? ["etat:cecite", "aveugle", "lumiere:aveuglement"] : []),
+      ...(objectItem ? [`objet:${globalThis.add2eNormalizeSpellKey(objectItem.name)}`] : []),
+      destination === "point" || destination === "derriere" ? "ambient_light" : "illumination:token"
+    ];
+    const data = {
       name: destination === "point" || destination === "derriere" ? `${spellName} : zone` : spellName,
       img: sourceItem.img || (isDarkness ? "icons/magic/unholy/projectile-smoke-black.webp" : "icons/svg/light.svg"),
       origin: sourceItem.uuid ?? null,
@@ -575,334 +449,127 @@ return await (async () => {
       transfer: false,
       duration: { startTime: game.time?.worldTime ?? null },
       description: blinded
-        ? `${spellName} est permanent jusqu'à annulation ou dissipation. La cible est aveuglée.`
+        ? `${spellName} est permanent ; la lumière placée sur les organes visuels aveugle la cible.`
         : `${spellName} est permanent jusqu'à annulation ou dissipation.`,
-      flags: {
-        add2e: {
-          permanent: true,
-          spellName,
-          spellKey,
-          familyKind,
-          familyKey: "lumiere_eternelle",
-          sourceItemUuid: sourceItem.uuid ?? null,
-          casterId: caster.id,
-          casterUuid: caster.uuid,
-          casterLevel,
-          spellLevel,
-          listKey,
-          environment,
-          rangeMeters: rangeRule.meters,
-          radiusMeters: radiusRule.meters,
-          targetId: targetActor?.id ?? null,
-          targetUuid: targetActor?.uuid ?? null,
-          destination,
-          blinded,
-          objectItemId: objectItem?.id ?? null,
-          objectItemUuid: objectItem?.uuid ?? null,
-          objectItemName: objectItem?.name ?? null,
-          lightPayload: payload,
-          tags,
-          version: ADD2E_ETERNAL_LIGHT_VERSION
-        }
-      },
+      flags: { add2e: {
+        permanent: true, runtime: ADD2E_ETERNAL_LIGHT_RUNTIME, spellName, spellKey, familyKey: "lumiere_eternelle", familyKind,
+        sourceItemUuid: sourceItem.uuid ?? null, casterId: caster.id, casterUuid: caster.uuid, casterLevel, spellLevel,
+        listKey: "clerc", environment, rangeMeters: rangeRule.meters, radiusMeters: radiusRule.meters,
+        destination, placement, blinded, targetId: targetActor?.id ?? null, targetUuid: targetActor?.uuid ?? null,
+        objectItemId: objectItem?.id ?? null, objectItemUuid: objectItem?.uuid ?? null, objectItemName: objectItem?.name ?? null,
+        lightPayload: payload, tags, version: ADD2E_ETERNAL_LIGHT_VERSION
+      } },
       changes: []
     };
-  };
-
-  const updateTokenLight = async (tokenDoc, config) => {
-    if (!tokenDoc) return false;
-    const updateData = { light: config };
-    if (game.user.isGM || tokenDoc.isOwner) {
-      await tokenDoc.update(updateData);
-      return true;
-    }
-    return add2eEternalLightEmitGMOperation("updateToken", {
-      sceneId: tokenDoc.parent?.id ?? canvas.scene?.id ?? null,
-      tokenId: tokenDoc.id,
-      updateData
-    });
-  };
-
-  const createAmbient = async (point, config, destination) => {
-    const scene = canvas.scene;
-    if (!scene) return { ok: false, payload: null };
-
-    const requestId = foundry.utils.randomID();
-    const flags = {
-      add2e: {
-        spellName,
-        spellKey,
-        familyKey: "lumiere_eternelle",
-        actorId: caster.id,
-        actorUuid: caster.uuid,
-        requestId,
-        destination,
-        fromUserId: game.user.id
-      }
-    };
-    const ambientData = {
-      x: point.x,
-      y: point.y,
-      rotation: 0,
-      walls: true,
-      vision: isDarkness,
-      config,
-      flags
-    };
-
-    let lightId = null;
-    if (game.user.isGM) {
-      const created = await scene.createEmbeddedDocuments("AmbientLight", [ambientData]);
-      lightId = created?.[0]?.id ?? null;
-      if (!lightId) return { ok: false, payload: null };
-    } else {
-      const sent = add2eEternalLightEmitGMOperation("createAmbientLight", {
-        sceneId: scene.id,
-        x: point.x,
-        y: point.y,
-        rotation: 0,
-        walls: true,
-        vision: isDarkness,
-        dim: config.dim,
-        bright: config.bright,
-        angle: config.angle,
-        color: config.color,
-        alpha: config.alpha,
-        coloration: config.coloration,
-        luminosity: config.luminosity,
-        attenuation: config.attenuation,
-        animation: config.animation,
-        flags
-      });
-      if (!sent) return { ok: false, payload: null };
-    }
-
-    return {
-      ok: true,
-      payload: {
-        type: "ambient",
-        sceneId: scene.id,
-        lightId,
-        requestId,
-        actorId: caster.id,
-        actorUuid: caster.uuid,
-        spellKey,
-        x: point.x,
-        y: point.y
-      }
-    };
-  };
-
-  const trackedTokenEffectIds = (actorDoc, tokenId) => Array.from(actorDoc?.effects ?? [])
-    .filter(effect => {
-      const payload = effect?.flags?.add2e?.lightPayload ?? effect?.getFlag?.("add2e", "lightPayload");
-      const familyKey = effect?.flags?.add2e?.familyKey ?? effect?.getFlag?.("add2e", "familyKey");
-      return familyKey === "lumiere_eternelle" && payload?.type === "token" && payload?.tokenId === tokenId;
-    })
-    .map(effect => effect.id)
-    .filter(Boolean);
-
-  const createTrackedEffect = async (actorDoc, data, tokenId = null) => {
-    if (!actorDoc) return false;
-    const previousIds = tokenId ? trackedTokenEffectIds(actorDoc, tokenId) : [];
-
     if (game.user.isGM || actorDoc.isOwner) {
-      if (previousIds.length) {
-        for (const effectId of previousIds) {
-          const previous = actorDoc.effects?.get?.(effectId) ?? null;
-          const payload = previous?.flags?.add2e?.lightPayload ?? previous?.getFlag?.("add2e", "lightPayload");
-          if (payload?.type === "token") await globalThis.ADD2E_ETERNAL_LIGHT_RESTORE_TOKEN_LIGHT(payload);
-        }
-        await actorDoc.deleteEmbeddedDocuments("ActiveEffect", previousIds);
-      }
-      await actorDoc.createEmbeddedDocuments("ActiveEffect", [data]);
-      return true;
+      const created = await actorDoc.createEmbeddedDocuments("ActiveEffect", [data]);
+      return Boolean(created?.[0]);
     }
-
-    return add2eEternalLightEmitGMOperation("createActiveEffect", {
-      actorUuid: actorDoc.uuid,
-      actorId: actorDoc.id,
-      effectData: data,
-      removeEffectIds: previousIds
-    });
+    return add2eEternalLightEmitGM("createActiveEffect", { actorUuid: actorDoc.uuid, actorId: actorDoc.id, effectData: data });
   };
 
-  const pointBehindTarget = targetToken => {
+  const pointBehind = targetToken => {
     const origin = casterToken.center;
     const target = targetToken.center;
     const dx = Number(target.x) - Number(origin.x);
     const dy = Number(target.y) - Number(origin.y);
     const length = Math.hypot(dx, dy) || 1;
-    const behind = sceneDistanceFromMeters(canvas.scene, 0.3).radiusPixels;
+    const behindPixels = sceneDistance(0.3).pixels;
     const halfToken = Math.max(Number(targetToken.w ?? 0), Number(targetToken.h ?? 0)) / 2;
-    const offset = halfToken + behind;
-    return { x: target.x + ((dx / length) * offset), y: target.y + ((dy / length) * offset) };
+    const offset = halfToken + behindPixels;
+    return { x: target.x + (dx / length) * offset, y: target.y + (dy / length) * offset };
   };
 
-  const selectedTargets = Array.from(game.user.targets ?? []).filter(target => !!target?.actor);
-  const selectedTargetLabel = selectedTargets.length === 1
-    ? `Cible actuelle : ${escapeHtml(selectedTargets[0].name ?? selectedTargets[0].actor?.name ?? "créature")}.`
-    : selectedTargets.length > 1
-      ? `${selectedTargets.length} cibles sont actuellement sélectionnées.`
-      : "Aucune créature n'est actuellement ciblée.";
-
-  const destinationMode = await globalThis.add2eDialogWait({
+  const selectedTargets = Array.from(game.user.targets ?? []).filter(entry => !!entry?.actor);
+  const destination = await globalThis.add2eDialogWait({
     add2eTheme: "parchment",
     add2ePrimaryAction: "creature",
     add2eClasses: ["add2e-lumiere-eternelle-destination"],
     window: { title: `${spellName} — destination` },
-    content: `
-      <form class="add2e-lumiere-eternelle-destination-form">
-        <p>Choisissez la destination du sort.</p>
-        <p>${selectedTargetLabel}</p>
-        <p>« Objet porté » utilise l'inventaire du lanceur, ou celui de l'unique créature actuellement ciblée.</p>
-      </form>`,
+    content: `<form><p>Choisissez la destination du sort.</p><p>${selectedTargets.length === 1 ? `Cible actuelle : ${escapeHtml(selectedTargets[0].name ?? selectedTargets[0].actor?.name)}.` : selectedTargets.length > 1 ? `${selectedTargets.length} cibles sont sélectionnées.` : "Aucune créature n'est ciblée."}</p></form>`,
     buttons: [
-      {
-        action: "creature",
-        label: "Créature",
-        icon: "<i class='fas fa-crosshairs'></i>",
-        default: true,
-        callback: () => "creature"
-      },
-      {
-        action: "object",
-        label: "Objet porté",
-        icon: "<i class='fas fa-hand-holding'></i>",
-        callback: () => "object"
-      },
-      {
-        action: "point",
-        label: "Point sur la scène",
-        icon: "<i class='fas fa-location-dot'></i>",
-        callback: () => "point"
-      },
-      {
-        action: "cancel",
-        label: "Annuler",
-        icon: "<i class='fas fa-times'></i>",
-        callback: () => null
-      }
-    ],
-    close: () => null
+      { action: "creature", label: "Créature", icon: "<i class='fas fa-crosshairs'></i>", default: true, callback: () => "creature" },
+      { action: "object", label: "Objet porté", icon: "<i class='fas fa-hand-holding'></i>", callback: () => "object" },
+      { action: "point", label: "Point sur la scène", icon: "<i class='fas fa-location-dot'></i>", callback: () => "point" },
+      { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+    ], close: () => null
   });
-  if (!destinationMode) return false;
+  if (!destination) return false;
 
-  const config = lightConfiguration();
   const details = [];
   let targetToken = null;
   let targetActor = null;
   let objectItem = null;
-  let anchorActor = caster;
-  let anchorEffect = null;
+  let placement = null;
+  let blinded = false;
+  let resistance = null;
+  let saveResult = null;
   let destinationLabel = "";
   let outcome = "";
-  let saveResult = null;
-  let resistanceResult = null;
-  let blinded = false;
 
-  if (destinationMode === "point") {
-    const point = await chooseCanvasPoint();
+  if (destination === "point") {
+    const point = await choosePoint();
     if (!point) return false;
-    if (!withinRange(point)) {
-      ui.notifications.warn(`${spellName} : le point est hors de portée (${rangeRule.inches}\").`);
+    if (!inRange(point) || blocked(casterToken.center, point)) {
+      ui.notifications.warn(`${spellName} : point hors de portée ou masqué par un obstacle.`);
       return false;
     }
-    if (hasBlockingWall(casterToken.center, point)) {
-      ui.notifications.warn(`${spellName} : un obstacle bloque la ligne d'effet.`);
+    const payload = await createAmbient(point, "point");
+    if (!payload) return false;
+    if (!await createEffect(caster, { destination: "point", payload })) {
+      await globalThis.ADD2E_ETERNAL_LIGHT_DELETE_AMBIENT(payload);
       return false;
     }
-
-    const ambient = await createAmbient(point, config, "point");
-    if (!ambient.ok) {
-      ui.notifications.error(`${spellName} : impossible de créer la zone.`);
-      return false;
-    }
-    anchorEffect = effectData({ destination: "point", payload: ambient.payload });
     destinationLabel = "Point choisi sur la scène";
     outcome = isDarkness ? "Zone de ténèbres éternelles créée" : "Zone de lumière éternelle créée";
   }
 
-  if (destinationMode === "object") {
+  if (destination === "object") {
     if (selectedTargets.length > 1) {
       ui.notifications.warn(`${spellName} : garde au plus une créature ciblée pour choisir un objet porté.`);
       return false;
     }
     targetToken = selectedTargets[0] ?? casterToken;
-    targetActor = targetToken.actor ?? null;
-    if (!targetActor) {
-      ui.notifications.warn(`${spellName} : porteur de l'objet introuvable.`);
+    targetActor = targetToken?.actor ?? null;
+    if (!targetActor || !inRange(targetToken.center) || blocked(casterToken.center, targetToken.center)) {
+      ui.notifications.warn(`${spellName} : porteur de l'objet invalide, hors de portée ou masqué par un obstacle.`);
       return false;
     }
-    if (!withinRange(targetToken.center)) {
-      ui.notifications.warn(`${spellName} : le porteur de l'objet est hors de portée (${rangeRule.inches}\").`);
-      return false;
-    }
-    if (hasBlockingWall(casterToken.center, targetToken.center)) {
-      ui.notifications.warn(`${spellName} : un obstacle bloque la ligne d'effet.`);
-      return false;
-    }
-
-    objectItem = await chooseCarriedObject(targetActor);
+    objectItem = await chooseObject(targetActor);
     if (!objectItem) return false;
-
-    const tokenPayload = {
-      type: "token",
-      sceneId: targetToken.document?.parent?.id ?? canvas.scene?.id ?? null,
-      tokenId: targetToken.id,
-      actorId: targetActor.id,
-      actorUuid: targetActor.uuid,
-      spellKey,
-      objectItemId: objectItem.id,
-      objectItemUuid: objectItem.uuid ?? null,
-      objectItemName: objectItem.name,
+    const payload = {
+      type: "token", sceneId: targetToken.document?.parent?.id ?? canvas.scene.id, tokenId: targetToken.id,
+      actorId: targetActor.id, actorUuid: targetActor.uuid, spellKey,
+      objectItemId: objectItem.id, objectItemUuid: objectItem.uuid ?? null, objectItemName: objectItem.name,
       originalLight: foundry.utils.deepClone(targetToken.document?.light ?? {})
     };
-
-    const updated = await updateTokenLight(targetToken.document, config);
-    if (!updated) {
-      ui.notifications.error(`${spellName} : impossible de modifier la lumière du porteur.`);
+    if (!await updateToken(targetToken.document)) return false;
+    if (!await createEffect(targetActor, { destination: "object", payload, targetActor, objectItem })) {
+      await globalThis.ADD2E_ETERNAL_LIGHT_RESTORE_TOKEN(payload);
       return false;
     }
-    anchorActor = targetActor;
-    anchorEffect = effectData({ targetActor, destination: "object", payload: tokenPayload, objectItem });
     destinationLabel = `${objectItem.name} — porté par ${targetToken.name ?? targetActor.name}`;
     outcome = isDarkness ? "Ténèbres éternelles liées à l'objet" : "Lumière éternelle liée à l'objet";
   }
 
-  if (destinationMode === "creature") {
-    targetToken = await chooseCreatureTarget();
+  if (destination === "creature") {
+    targetToken = await chooseTarget();
     if (!targetToken) return false;
     targetActor = targetToken.actor ?? null;
-    if (!targetActor) return false;
-
-    if (!withinRange(targetToken.center)) {
-      ui.notifications.warn(`${spellName} : cible hors de portée (${rangeRule.inches}\").`);
-      return false;
-    }
-    if (hasBlockingWall(casterToken.center, targetToken.center)) {
-      ui.notifications.warn(`${spellName} : un obstacle bloque la ligne d'effet.`);
+    if (!targetActor || !inRange(targetToken.center) || blocked(casterToken.center, targetToken.center)) {
+      ui.notifications.warn(`${spellName} : cible invalide, hors de portée ou masquée par un obstacle.`);
       return false;
     }
 
-    const sameToken = targetToken.id === casterToken.id;
-    const sameActor = targetActor.id === caster.id;
-    const needsDefense = !sameToken && !sameActor;
+    placement = await choosePlacement();
+    if (!placement) return false;
 
+    const needsDefense = targetToken.id !== casterToken.id && targetActor.id !== caster.id;
     if (needsDefense) {
-      try {
-        resistanceResult = magicResistance(targetActor);
-      } catch (error) {
-        console.error("[ADD2E][LUMIERE_ETERNELLE][MAGIC_RESISTANCE]", { target: targetActor.name, error });
-        ui.notifications.error(error.message);
-        return false;
-      }
-      if (resistanceResult.applicable) {
-        details.push(`Résistance magique : ${resistanceResult.roll}/${resistanceResult.chance}% — ${resistanceResult.resisted ? "réussie" : "échouée"}`);
-      }
-      if (resistanceResult.resisted) {
-        outcome = "Résistance magique réussie — aucun effet";
-      }
+      try { resistance = magicResistance(targetActor); }
+      catch (error) { ui.notifications.error(error.message); return false; }
+      if (resistance.applicable) details.push(`Résistance magique : ${resistance.roll}/${resistance.chance}% — ${resistance.resisted ? "réussie" : "échouée"}`);
+      if (resistance.resisted) outcome = "Résistance magique réussie — aucun effet";
     }
 
     if (!outcome && needsDefense) {
@@ -911,149 +578,84 @@ return await (async () => {
         return false;
       }
       saveResult = await globalThis.add2eRollSavingThrow(targetActor, "sorts", {
-        source: `spell:${spellKey}`,
-        sourceItem,
-        caster,
-        targetToken,
-        createChat: false,
-        showDice: true
+        source: `spell:${spellKey}`, sourceItem, caster, targetToken, createChat: false, showDice: true
       });
-      if (!saveResult?.ok) {
-        ui.notifications.error(`${spellName} : jet de sauvegarde indisponible pour ${targetToken.name ?? targetActor.name}.`);
-        return false;
-      }
+      if (!saveResult?.ok) return false;
       details.push(`Jet de protection : ${saveResult.d20}${saveResult.bonus ? `${saveResult.bonus >= 0 ? "+" : ""}${saveResult.bonus}` : ""} = ${saveResult.total} / ${saveResult.target} — ${saveResult.success ? "réussi" : "raté"}`);
     }
 
     if (!outcome && saveResult?.success === true) {
-      const point = pointBehindTarget(targetToken);
-      const ambient = await createAmbient(point, config, "derriere");
-      if (!ambient.ok) {
-        ui.notifications.error(`${spellName} : impossible de créer la zone 30 cm derrière la cible.`);
+      const point = pointBehind(targetToken);
+      const payload = await createAmbient(point, "derriere");
+      if (!payload) return false;
+      if (!await createEffect(caster, { destination: "derriere", payload, targetActor, placement })) {
+        await globalThis.ADD2E_ETERNAL_LIGHT_DELETE_AMBIENT(payload);
         return false;
       }
-      anchorActor = caster;
-      anchorEffect = effectData({ targetActor, destination: "derriere", payload: ambient.payload });
       destinationLabel = `${targetToken.name ?? targetActor.name} — 30 cm derrière`;
-      outcome = "Jet de protection réussi — effet créé 30 cm derrière la cible";
+      outcome = `Jet de protection réussi — ${isDarkness ? "ténèbres" : "lumière"} créée 30 cm derrière`;
     }
 
     if (!outcome) {
-      const tokenPayload = {
-        type: "token",
-        sceneId: targetToken.document?.parent?.id ?? canvas.scene?.id ?? null,
-        tokenId: targetToken.id,
-        actorId: targetActor.id,
-        actorUuid: targetActor.uuid,
-        spellKey,
+      const payload = {
+        type: "token", sceneId: targetToken.document?.parent?.id ?? canvas.scene.id, tokenId: targetToken.id,
+        actorId: targetActor.id, actorUuid: targetActor.uuid, spellKey,
         originalLight: foundry.utils.deepClone(targetToken.document?.light ?? {})
       };
-      const updated = await updateTokenLight(targetToken.document, config);
-      if (!updated) {
-        ui.notifications.error(`${spellName} : impossible de modifier la lumière de la cible.`);
+      if (!await updateToken(targetToken.document)) return false;
+      blinded = !isDarkness && placement === "eyes";
+      if (!await createEffect(targetActor, { destination: "token", payload, targetActor, blinded, placement })) {
+        await globalThis.ADD2E_ETERNAL_LIGHT_RESTORE_TOKEN(payload);
         return false;
       }
-      blinded = !isDarkness;
-      anchorActor = targetActor;
-      anchorEffect = effectData({ targetActor, destination: "token", payload: tokenPayload, blinded });
       destinationLabel = targetToken.name ?? targetActor.name;
-      if (blinded) {
-        details.push("La cible est aveuglée jusqu'à annulation de la lumière ou dissipation de la magie.");
-        outcome = "Lumière éternelle appliquée — cible aveuglée";
-      } else {
-        outcome = "Ténèbres éternelles appliquées à la cible";
-      }
+      outcome = blinded
+        ? "Lumière éternelle appliquée — cible aveuglée"
+        : `${spellName} appliqué${isDarkness ? "es" : "e"} à la créature`;
+      if (blinded) details.push("La lumière placée sur les organes visuels aveugle la cible.");
     }
   }
-
-  if (anchorEffect) {
-    const trackedTokenId = anchorEffect.flags?.add2e?.lightPayload?.type === "token"
-      ? anchorEffect.flags.add2e.lightPayload.tokenId
-      : null;
-    const created = await createTrackedEffect(anchorActor, anchorEffect, trackedTokenId);
-    if (!created) {
-      ui.notifications.error(`${spellName} : l'effet actif n'a pas pu être créé.`);
-      return false;
-    }
-  }
-
-  const rows = [
-    { label: "Liste", value: `Clerc — niveau de lanceur ${casterLevel}` },
-    { label: "Contexte", value: environment === "exterieur" ? "Extérieur" : "Intérieur" },
-    { label: "Portée", value: `${rangeRule.inches}\" = ${rangeRule.meters} m` },
-    { label: "Zone", value: `sphère de ${radiusRule.inches}\" de rayon = ${radiusRule.meters} m` },
-    { label: "Durée", value: "Permanente" },
-    { label: "Destination", value: destinationLabel || "Créature" },
-    ...(objectItem ? [{ label: "Objet", value: objectItem.name }] : []),
-    { label: "Résultat", value: outcome || "Effet appliqué" }
-  ];
-
-  const detailsHtml = details.length
-    ? `<ul>${details.map(detail => `<li>${escapeHtml(detail)}</li>`).join("")}</ul>`
-    : "";
-  const ruleHtml = isDarkness
-    ? "Ténèbres éternelles est la forme inverse du sort de Clerc et crée une obscurité totale permanente jusqu'à annulation ou dissipation."
-    : "Lumière éternelle produit une lumière très vive permanente. Sur une créature, une sauvegarde réussie place la lumière 30 cm derrière la cible ; un échec l'aveugle.";
 
   const card = {
     actor: caster,
     title: spellName,
     icon: isDarkness ? "fas fa-moon" : "fas fa-sun",
     variant: "spell",
-    source: {
-      name: caster.name,
-      img: sourceItem.img ?? caster.img,
-      type: `Clerc niveau ${casterLevel}`
-    },
+    source: { name: caster.name, img: sourceItem.img ?? caster.img, type: `Clerc niveau ${casterLevel}` },
     target: targetActor ? {
-      name: targetToken?.name ?? targetActor.name,
-      img: targetActor.img,
-      type: destinationMode === "object" ? "Porteur de l'objet" : "Cible du sort",
-      meta: objectItem?.name ?? ""
+      name: targetToken?.name ?? targetActor.name, img: targetActor.img,
+      type: destination === "object" ? "Porteur de l'objet" : "Cible du sort", meta: objectItem?.name ?? ""
     } : null,
-    rows,
+    rows: [
+      { label: "Liste", value: `Clerc — niveau de lanceur ${casterLevel}` },
+      { label: "Contexte", value: environment === "exterieur" ? "Extérieur" : "Intérieur" },
+      { label: "Portée", value: `${rangeRule.inches}\" = ${rangeRule.meters} m` },
+      { label: "Zone", value: `sphère de ${radiusRule.inches}\" de rayon = ${radiusRule.meters} m` },
+      { label: "Durée", value: "Permanente" },
+      { label: "Destination", value: destinationLabel || destination },
+      ...(!isDarkness && placement ? [{ label: "Emplacement", value: placement === "eyes" ? "Visage / yeux" : "Corps" }] : []),
+      ...(objectItem ? [{ label: "Objet", value: objectItem.name }] : []),
+      { label: "Résultat", value: outcome || "Effet appliqué" }
+    ],
     message: `${caster.name} lance ${spellName}.`,
-    trustedBodyHtml: `<div class="add2e-lumiere-eternelle-results">${detailsHtml}<p>${escapeHtml(ruleHtml)}</p></div>`,
+    trustedBodyHtml: `<div class="add2e-lumiere-eternelle-results">${details.length ? `<ul>${details.map(text => `<li>${escapeHtml(text)}</li>`).join("")}</ul>` : ""}<p>${escapeHtml(isDarkness ? "Ténèbres éternelles crée une obscurité totale permanente." : "Lumière éternelle est permanente ; sur une créature, la cécité ne s'applique que si la lumière couvre les organes visuels.")}</p></div>`,
     chatData: {
       speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
       rolls: saveResult?.roll ? [saveResult.roll] : [],
-      flags: {
-        add2e: {
-          chatCardType: "lumiere-eternelle",
-          version: ADD2E_ETERNAL_LIGHT_VERSION,
-          spellKey,
-          familyKind,
-          sourceItemUuid: sourceItem.uuid ?? null,
-          casterLevel,
-          spellLevel,
-          listKey,
-          environment,
-          rangeInches: rangeRule.inches,
-          rangeMeters: rangeRule.meters,
-          radiusInches: radiusRule.inches,
-          radiusMeters: radiusRule.meters,
-          permanent: true,
-          destinationMode,
-          objectItemId: objectItem?.id ?? null,
-          objectItemUuid: objectItem?.uuid ?? null,
-          targetActorUuid: targetActor?.uuid ?? null,
-          targetTokenId: targetToken?.id ?? null,
-          blinded,
-          resistance: resistanceResult,
-          saveSuccess: saveResult?.success ?? null,
-          outcome
-        }
-      }
+      flags: { add2e: {
+        chatCardType: "lumiere-eternelle", version: ADD2E_ETERNAL_LIGHT_VERSION, spellKey, familyKind,
+        sourceItemUuid: sourceItem.uuid ?? null, casterLevel, spellLevel, listKey: "clerc", environment,
+        rangeMeters: rangeRule.meters, radiusMeters: radiusRule.meters, permanent: true,
+        destination, placement, blinded, objectItemId: objectItem?.id ?? null,
+        targetActorUuid: targetActor?.uuid ?? null, targetTokenId: targetToken?.id ?? null,
+        resistance, saveSuccess: saveResult?.success ?? null, outcome
+      } }
     }
   };
 
   const preview = globalThis.add2eBuildChatCard(card);
   if (!String(preview ?? "").trim()) throw new Error(`${spellName} : carte ADD2E vide.`);
   await globalThis.add2eCreateChatCard(card);
-
-  try {
-    await globalThis.ADD2E_PLAY_SPELL_FX?.(spellKey, { casterToken, targetToken });
-  } catch (_error) {}
-
+  try { await globalThis.ADD2E_PLAY_SPELL_FX?.(spellKey, { casterToken, targetToken }); } catch (_error) {}
   return true;
 })();
