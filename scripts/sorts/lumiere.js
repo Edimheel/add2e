@@ -114,7 +114,7 @@ if (globalThis.ADD2E_LUMIERE_HOOKS_VERSION !== ADD2E_LUMIERE_VERSION) {
   });
 }
 
-const __add2eOnUseResult = await (async () => {
+return await (async () => {
   const escapeHtml = value => String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
