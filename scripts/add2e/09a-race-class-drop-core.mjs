@@ -3,16 +3,17 @@
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
+import { classProgressionRow, raceSlug } from "./17b-multiclass-core.mjs";
 import { levelForClassXp } from "./17b-multiclass-rules.mjs";
 
-export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-28-canonical-actor-hit-points-drop-v5";
+export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-08-12-canonical-first-class-progression-v6";
 globalThis.ADD2E_RACE_CLASS_DROP_VERSION = ADD2E_RACE_CLASS_DROP_VERSION;
 
 export const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 export const CARAC_SHORT = { force: "FOR", dexterite: "DEX", constitution: "CON", intelligence: "INT", sagesse: "SAG", charisme: "CHA" };
 
 function add2eDropEffectsEngine() {
-  return globalThis.Add2eEffectsEngine ?? null;
+  return globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
 }
 
 function add2eDropPickClassAlignment(actor, classData, fallback = "") {
@@ -77,14 +78,11 @@ export function add2eToDropArray(value) {
 }
 
 export function add2eRaceTagsFromDataSafe(raceData) {
-  if (typeof globalThis.add2eRaceTagsFromData === "function") return globalThis.add2eRaceTagsFromData(raceData);
   const system = raceData?.system ?? {};
-  const base = add2eNormalizeDropTag(raceData?.name ?? system.slug ?? system.label ?? system.name ?? system.nom ?? "");
+  const slug = raceSlug(raceData);
   const tags = [
-    ...add2eToDropArray(system.identityTags),
-    ...add2eToDropArray(system.raceTags),
     ...add2eToDropArray(system.tags),
-    ...(base ? [`race:${base}`, base] : [])
+    `race:${slug}`
   ];
   return [...new Set(tags.map(add2eNormalizeDropTag).filter(Boolean))];
 }
@@ -255,10 +253,12 @@ export function checkClassStatMin(actor, classItem, candidateRaceData = null, ca
   const silent = options?.silent === true;
   const ignoreLevelMax = options?.ignoreLevelMax === true;
   const classSystem = classItem?.system ?? classItem ?? {};
-  const actorSystem = actor?.system ?? {};
   const raceData = candidateRaceData ?? actor?.items?.find?.(item => String(item.type ?? "").toLowerCase() === "race") ?? null;
   const raceTags = add2eRaceTagsFromDataSafe(raceData);
-  const actorLevel = Number(actorSystem.niveau ?? 1) || 1;
+  const classLevel = Number(classSystem.niveau);
+  if (!ignoreLevelMax && (!Number.isInteger(classLevel) || classLevel < 1)) {
+    throw new Error(`Niveau canonique absent sur l’Item classe « ${classItem?.name ?? "Classe"} » pour vérifier la limite raciale.`);
+  }
   const candidateBonus = raceData?.system?.bonus_caracteristiques ?? {};
   const missing = [];
 
@@ -272,7 +272,7 @@ export function checkClassStatMin(actor, classItem, candidateRaceData = null, ca
       const rule = normalizedRules[matchedTag] ?? {};
       if (rule.allowed !== true) missing.push(`race interdite (${matchedTag})`);
       const maxLevel = Number(rule.maxLevel ?? rule.niveauMax ?? rule.max);
-      if (!ignoreLevelMax && Number.isFinite(maxLevel) && maxLevel > 0 && actorLevel > maxLevel) missing.push(`${matchedTag} limité au niveau ${maxLevel}`);
+      if (!ignoreLevelMax && Number.isFinite(maxLevel) && maxLevel > 0 && classLevel > maxLevel) missing.push(`${matchedTag} limité au niveau ${maxLevel}`);
     }
   }
 
@@ -376,20 +376,22 @@ export async function add2eApplyClassItemDataToActor(actor, classData, sheet = n
   const data = add2eItemDataCloneForDrop(classData);
   data.type = "classe";
   data.system = data.system ?? {};
-  data.system.xp = Math.max(0, Number(actor.system?.xp) || 0);
+  data.system.xp = 0;
   data.system.niveau = levelForClassXp(data.system, data.system.xp);
   const alignmentCandidate = add2eDropPickClassAlignment(actor, data, options.alignmentCandidate ?? actor?.system?.alignement ?? "");
   const [classDoc] = await actor.createEmbeddedDocuments("Item", [data], { add2eInternal: true });
   if (!classDoc) return null;
 
-  const classSystem = {
-    ...(add2eDropClone(classDoc.system ?? {}) ?? {}),
+  const classSystem = add2eDropClone(classDoc.system ?? {}) ?? {};
+  delete classSystem.niveau;
+  delete classSystem.xp;
+  Object.assign(classSystem, {
     name: classDoc.name,
     label: classDoc.system?.label || classDoc.name,
     img: classDoc.img || classDoc.system?.img || "",
     sourceItemId: classDoc.id,
     sourceItemUuid: classDoc.uuid
-  };
+  });
   const updates = {
     "system.classe": classDoc.name,
     "system.details_classe": classSystem,
@@ -398,7 +400,8 @@ export async function add2eApplyClassItemDataToActor(actor, classData, sheet = n
     "system.xp": classDoc.system.xp
   };
   if (alignmentCandidate) updates["system.alignement"] = alignmentCandidate;
-  if (classDoc.system?.progression?.[0]?.sauvegardes) updates["system.sauvegardes"] = foundry.utils.duplicate(classDoc.system.progression[0].sauvegardes);
+  const initialProgression = classProgressionRow(classDoc).row;
+  if (Array.isArray(initialProgression?.savingThrows)) updates["system.sauvegardes"] = foundry.utils.duplicate(initialProgression.savingThrows);
   await actor.update(updates, { add2eInternal: true });
 
   if (typeof sheet?.autoSetCaracAjustements === "function") await sheet.autoSetCaracAjustements();
