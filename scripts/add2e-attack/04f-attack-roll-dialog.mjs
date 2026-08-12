@@ -295,7 +295,7 @@ export function add2eBuildAttackDialogContent({
           </select>
           ${hasRearSpecial ? `<div style="${optionsStyle}">
             <div class="add2e-rear-specials"${rearHidden} style="display:flex;flex-direction:column;gap:4px;">
-              ${showBackstab ? `<label style="${checkStyle}${backstabUsable ? "" : checkDisabledStyle}" title="${backstabUsable ? `Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}` : "Capacité présente mais indisponible avec cette arme ou à cette distance"}"><input type="checkbox" id="add2e-backstab"${backstabUsable ? "" : " disabled"} style="${checkInputStyle}"><span>Attaque sournoise / Frappe dans le dos</span></label>` : ""}
+              ${showBackstab ? `<label style="${checkStyle}${backstabUsable ? "" : checkDisabledStyle}" title="${backstabUsable ? `Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}` : "Capacité présente mais indisponible avec cette arme ou à cette distance"}"><input type="checkbox" id="add2e-backstab"${backstabUsable ? "" : " disabled"} style="${checkInputStyle}"><span>Attaque sournoise</span></label>` : ""}
               ${showAssassination ? `<label style="${checkStyle}${assassinationUsable ? "" : checkDisabledStyle}" title="${assassinationUsable ? `Assassin uniquement · Dos uniquement · ${assassinationScore}% si l’attaque touche` : "Capacité présente mais indisponible avec cette arme ou à cette distance"}"><input type="checkbox" id="add2e-assassinat-confirm"${assassinationUsable ? "" : " disabled"} style="${checkInputStyle}"><span>Assassinat</span></label>` : ""}
             </div>
           </div>` : ""}
