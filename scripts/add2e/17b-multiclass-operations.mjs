@@ -85,10 +85,29 @@ function sourcePointerMatches(keys, { ids = [], uuids = [], origin = "" } = {}) 
   return [...keys.uuids].some(uuid => originValue === uuid || originValue.startsWith(`${uuid}.`));
 }
 
+function spellSyncSources(item) {
+  const resolver = globalThis.add2eSpellSyncSources;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E de provenance des sorts est indisponible.");
+  }
+  return resolver(item);
+}
+
+function spellHasIndependentOwnership(item) {
+  const resolver = globalThis.add2eSpellSyncHasIndependentOwnership;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E de propriété indépendante des sorts est indisponible.");
+  }
+  return resolver(item) === true;
+}
+
 function itemBelongsToSources(item, keys) {
+  if (String(item?.type ?? "").toLowerCase() === "sort") {
+    return spellSyncSources(item).some(source => keys.ids.has(String(source.classItemId ?? "")));
+  }
   const flags = item?.flags?.add2e ?? {};
   return sourcePointerMatches(keys, {
-    ids: [flags.autoGrantedByClassId, flags.sourceItemId],
+    ids: [flags.sourceItemId],
     uuids: [flags.sourceItemUuid]
   });
 }
@@ -151,40 +170,40 @@ async function deleteLiveEmbeddedDocuments(actor, documentName, ids, options = {
   return deleted;
 }
 
-function spellListValues(value) {
-  if (value === undefined || value === null || value === "") return [];
-  if (Array.isArray(value)) return value.flatMap(spellListValues);
-  if (typeof value === "string") return value.split(/[,;|\n]+/).map(entry => entry.trim()).filter(Boolean);
-  if (typeof value === "object") {
-    for (const key of ["spellLists", "lists", "classes", "classe", "class", "liste", "list", "value", "values", "items"]) if (value[key] !== undefined) return spellListValues(value[key]);
-  }
-  return [value];
-}
-
 function normalizeSpellList(value) {
-  const aliases = { cleric: "clerc", priest: "clerc", pretre: "clerc", paladin: "clerc", druid: "druide", wizard: "magicien", mage: "magicien", magician: "magicien", magic_user: "magicien", illusionist: "illusionniste" };
-  const key = typeof globalThis.add2eNormalizeSpellKey === "function" ? globalThis.add2eNormalizeSpellKey(value) : norm(value);
-  return aliases[key] ?? key;
+  const resolver = globalThis.add2eNormalizeSpellKey;
+  if (typeof resolver !== "function") {
+    throw new Error("Le normalisateur canonique ADD2E des listes de sorts est indisponible.");
+  }
+  return resolver(value);
 }
 
 function spellListsForClass(classDoc) {
-  const system = classDoc?.system ?? {};
-  let casting = system.spellcasting;
-  if (typeof casting === "string") {
-    try { casting = JSON.parse(casting); } catch (_error) { casting = {}; }
+  const lists = new Set();
+  const casting = classDoc?.system?.spellcasting;
+  if (casting && typeof casting === "object" && casting.enabled === true) {
+    for (const value of Array.isArray(casting.lists) ? casting.lists : []) {
+      const list = normalizeSpellList(value);
+      if (list) lists.add(list);
+    }
+    for (const entry of Array.isArray(casting.entries) ? casting.entries : []) {
+      const list = normalizeSpellList(entry?.key);
+      if (list) lists.add(list);
+    }
   }
-  const lists = [system.spellLists, system.lists, system.listeSorts, system.liste_sorts, casting?.lists, casting?.spellLists, casting?.list, casting?.classes]
-    .flatMap(spellListValues).map(normalizeSpellList).filter(Boolean);
   const slug = normalizeSpellList(classSlug(classDoc));
-  if (ARCANE_LEARNED_SPELL_LISTS.has(slug)) lists.push(slug);
-  return new Set(lists);
+  if (ARCANE_LEARNED_SPELL_LISTS.has(slug)) lists.add(slug);
+  return lists;
 }
 
 function spellListsForItem(item) {
-  const system = item?.system ?? {};
-  const flags = item?.flags?.add2e ?? {};
-  return new Set([system.spellLists, system.lists, system.classes, system.classe, system.class, system.liste, flags.learnedSpellLists, flags.knownSpellLists, flags.spellListsResolved]
-    .flatMap(spellListValues).map(normalizeSpellList).filter(Boolean));
+  const resolver = globalThis.add2eGetSpellListsFromItem;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des listes de sorts est indisponible.");
+  }
+  const lists = resolver(item);
+  if (!Array.isArray(lists)) throw new Error(`Listes canoniques invalides pour « ${item?.name ?? "sort inconnu"} ».`);
+  return new Set(lists.map(normalizeSpellList).filter(Boolean));
 }
 
 function isRegularSpellItem(item) {
@@ -223,25 +242,38 @@ function isLearnedArcaneSpellRemovedWithClass(item, purgeLists, retainedLists) {
 }
 
 async function purgeClassBoundContent(actor, classDocs, reason) {
-  if (!actor || !classDocs?.length) return { items: 0, effects: 0, arcaneLists: [] };
+  if (!actor || !classDocs?.length) return { items: 0, updatedItems: 0, effects: 0, arcaneLists: [] };
   const classKeys = sourceDocumentKeys(classDocs);
   const classIds = new Set(itemIds(classDocs).map(String));
   const { retainedLists, purgeLists } = arcaneListsToPurge(actor, classDocs);
   const itemIdsToDelete = new Set();
+  const itemUpdates = [];
 
   for (const item of actor.items ?? []) {
     if (!item?.id || classIds.has(String(item.id))) continue;
     const type = String(item.type ?? "").toLowerCase();
-    const sourceBound = itemBelongsToSources(item, classKeys);
-    if (sourceBound) {
-      const retainedSharedSpell = type === "sort"
-        && isRegularSpellItem(item)
-        && spellStillAccessibleFromRetainedClass(item, retainedLists);
-      if (!retainedSharedSpell) itemIdsToDelete.add(item.id);
+
+    if (type === "sort") {
+      const sources = spellSyncSources(item);
+      const linkedToRemovedClass = sources.some(source => classIds.has(String(source.classItemId ?? "")));
+      if (linkedToRemovedClass) {
+        const remainingSources = sources.filter(source => !classIds.has(String(source.classItemId ?? "")));
+        if (remainingSources.length || spellHasIndependentOwnership(item)) {
+          itemUpdates.push({ _id: item.id, "flags.add2e.spellSyncSources": remainingSources });
+        } else {
+          itemIdsToDelete.add(item.id);
+        }
+      }
+      if (isLearnedArcaneSpellRemovedWithClass(item, purgeLists, retainedLists)) itemIdsToDelete.add(item.id);
+      continue;
     }
-    if (type === "sort" && isLearnedArcaneSpellRemovedWithClass(item, purgeLists, retainedLists)) {
-      itemIdsToDelete.add(item.id);
-    }
+
+    if (itemBelongsToSources(item, classKeys)) itemIdsToDelete.add(item.id);
+  }
+
+  const liveUpdates = itemUpdates.filter(update => actor.items?.has?.(update._id) && !itemIdsToDelete.has(update._id));
+  if (liveUpdates.length) {
+    await actor.updateEmbeddedDocuments("Item", liveUpdates, quietMutationOptions({ add2eReason: `${reason}:detach-spell-sources` }));
   }
 
   const dependentItems = [...itemIdsToDelete]
@@ -255,7 +287,7 @@ async function purgeClassBoundContent(actor, classDocs, reason) {
 
   const effectCount = await deleteLiveEmbeddedDocuments(actor, "ActiveEffect", effectIds, { add2eReason: reason });
   const itemCount = await deleteLiveEmbeddedDocuments(actor, "Item", [...itemIdsToDelete], { add2eReason: reason });
-  return { items: itemCount, effects: effectCount, arcaneLists: [...purgeLists] };
+  return { items: itemCount, updatedItems: liveUpdates.length, effects: effectCount, arcaneLists: [...purgeLists] };
 }
 
 function normalizeProgression(classDoc, state, raceData) {
