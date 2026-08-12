@@ -1,11 +1,22 @@
 // scripts/add2e-item-sheet.mjs
-// ADD2E — Feuille lisible dédiée aux items de type "classe"
+// ADD2E — Feuille lisible dédiée aux Items de type "classe".
+// ApplicationV2 / ItemSheetV2 — compatible Foundry V13/V14/V15.
 
-export const ADD2E_ITEM_SHEET_VERSION = "2026-05-24-class-sheet-v1-namespace-itemsheet";
+import { classProgression } from "./add2e/17b-multiclass-core.mjs";
+
+export const ADD2E_ITEM_SHEET_VERSION = "2026-08-12-application-v2-class-sheet-v2";
 globalThis.ADD2E_ITEM_SHEET_VERSION = ADD2E_ITEM_SHEET_VERSION;
 globalThis.ADD2E_CLASS_SHEET_VERSION = ADD2E_ITEM_SHEET_VERSION;
 
-const Add2eBaseItemSheet = foundry.appv1.sheets.ItemSheet;
+const ADD2E_APP_API = foundry?.applications?.api ?? {};
+const ADD2E_SHEETS_API = foundry?.applications?.sheets ?? {};
+const ADD2E_HANDLEBARS_MIXIN = ADD2E_APP_API.HandlebarsApplicationMixin;
+const ADD2E_ITEM_SHEET_V2 = ADD2E_SHEETS_API.ItemSheetV2 ?? ADD2E_APP_API.DocumentSheetV2;
+
+if (!ADD2E_HANDLEBARS_MIXIN) throw new Error("[ADD2E][CLASS_SHEET] HandlebarsApplicationMixin introuvable.");
+if (!ADD2E_ITEM_SHEET_V2) throw new Error("[ADD2E][CLASS_SHEET] ItemSheetV2/DocumentSheetV2 introuvable.");
+
+const Add2eBaseItemSheet = ADD2E_HANDLEBARS_MIXIN(ADD2E_ITEM_SHEET_V2);
 
 function add2eIsEmpty(value) {
   return value === undefined || value === null || value === "";
@@ -13,93 +24,55 @@ function add2eIsEmpty(value) {
 
 function add2eMaybeJson(value) {
   if (typeof value !== "string") return value;
-
   const s = value.trim();
   if (!s || s === "[object Object]") return "";
-
   if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("{") && s.endsWith("}"))) {
-    try {
-      return JSON.parse(s);
-    } catch (_e) {
-      return value;
-    }
+    try { return JSON.parse(s); }
+    catch (_error) { return value; }
   }
-
   return value;
 }
 
 function add2eToArray(value) {
   value = add2eMaybeJson(value);
-
   if (add2eIsEmpty(value)) return [];
-
   if (Array.isArray(value)) {
     return value
       .flatMap(v => add2eToArray(v))
       .filter(v => v !== undefined && v !== null && String(v).trim() !== "");
   }
-
   if (typeof value === "string") {
     const s = value.trim();
     if (!s || s === "[object Object]") return [];
-
-    return s
-      .split(/[,;\n|]+/)
-      .map(v => v.trim())
-      .filter(Boolean);
+    return s.split(/[,;\n|]+/).map(v => v.trim()).filter(Boolean);
   }
-
   if (typeof value === "object") {
-    const keys = [
-      "allowedTags",
-      "forbiddenTags",
-      "lists",
-      "spellLists",
-      "value",
-      "values",
-      "tags",
-      "tag",
-      "list",
-      "items"
-    ];
-
-    for (const key of keys) {
-      if (key in value) return add2eToArray(value[key]);
-    }
-
+    const keys = ["allowedTags", "forbiddenTags", "lists", "spellLists", "value", "values", "tags", "tag", "list", "items"];
+    for (const key of keys) if (key in value) return add2eToArray(value[key]);
     const numericValues = Object.keys(value)
       .filter(k => /^\d+$/.test(k))
       .sort((a, b) => Number(a) - Number(b))
       .map(k => value[k]);
-
     if (numericValues.length) return add2eToArray(numericValues);
   }
-
   return [];
 }
 
 function add2eToObjectArray(value) {
   value = add2eMaybeJson(value);
-
   if (add2eIsEmpty(value)) return [];
-
   if (Array.isArray(value)) return value.filter(v => v && typeof v === "object");
-
   if (typeof value === "object") {
     if (Array.isArray(value.items)) return add2eToObjectArray(value.items);
     if (Array.isArray(value.values)) return add2eToObjectArray(value.values);
     if (Array.isArray(value.value)) return add2eToObjectArray(value.value);
-
     const numericValues = Object.keys(value)
       .filter(k => /^\d+$/.test(k))
       .sort((a, b) => Number(a) - Number(b))
       .map(k => value[k]);
-
     if (numericValues.length) return add2eToObjectArray(numericValues);
-
     return [value];
   }
-
   return [];
 }
 
@@ -116,7 +89,6 @@ function add2eNormalizeTag(tag) {
 function add2eHumanText(value) {
   const raw = String(value ?? "").trim();
   if (!raw) return "—";
-
   return raw
     .replace(/_/g, " ")
     .replace(/\b\w/g, c => c.toUpperCase())
@@ -132,10 +104,8 @@ function add2eHumanText(value) {
 function add2eHumanTag(tag) {
   const raw = String(tag ?? "").trim();
   if (!raw) return "—";
-
   const t = add2eNormalizeTag(raw);
   const p = t.split(":");
-
   const fixed = {
     "classe:clerc": "Clerc",
     "classe:druide": "Druide",
@@ -158,15 +128,12 @@ function add2eHumanTag(tag) {
     "immunite:charme_creatures_bois": "Immunité aux charmes des créatures des bois",
     "immunite:charme:creatures_bois": "Immunité aux charmes des créatures des bois"
   };
-
   if (fixed[t]) return fixed[t];
-
   if (p[0] === "bonus_save_vs" && p.length >= 3) {
     const val = Number(p[2]);
     const sign = val > 0 ? "+" : "";
     return `${sign}${Number.isFinite(val) ? val : p[2]} aux jets de sauvegarde contre ${String(p[1] ?? "").replace(/_/g, " ")}`;
   }
-
   if (p[0] === "type_arme" && p[1]) return `Type d’arme : ${String(p[1]).replace(/_/g, " ")}`;
   if (p[0] === "arme" && p[1]) return `Arme : ${String(p[1]).replace(/_/g, " ")}`;
   if (p[0] === "type_armure" && p[1]) return `Type d’armure : ${String(p[1]).replace(/_/g, " ")}`;
@@ -179,7 +146,6 @@ function add2eHumanTag(tag) {
   if (p[0] === "revenu" && p[1]) return `Revenu : ${String(p[1]).replace(/_/g, " ")}`;
   if (p[0] === "suivants" && p[1]) return `Suivants : ${String(p[1]).replace(/_/g, " ")}`;
   if (t === "bouclier") return "Bouclier";
-
   return add2eHumanText(raw);
 }
 
@@ -187,84 +153,79 @@ function add2eBadges(value) {
   return add2eToArray(value).map(t => ({ raw: String(t), label: add2eHumanTag(t) }));
 }
 
-function add2eRestrictionObject(primary, legacyAllowed, legacyShield) {
+function add2eRestrictionObject(primary) {
   const parsed = add2eMaybeJson(primary);
-
-  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-    return {
-      allowedTags: add2eToArray(parsed.allowedTags),
-      forbiddenTags: add2eToArray(parsed.forbiddenTags),
-      legacyAllowed: [],
-      legacyShield: false,
-      source: "tags"
-    };
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return { allowedTags: [], forbiddenTags: [], source: "empty" };
   }
-
-  const legacy = add2eToArray(legacyAllowed);
-
   return {
-    allowedTags: [],
-    forbiddenTags: [],
-    legacyAllowed: legacy,
-    legacyShield: legacyShield === true,
-    source: legacy.length || legacyShield === true ? "legacy" : "empty"
+    allowedTags: add2eToArray(parsed.allowedTags),
+    forbiddenTags: add2eToArray(parsed.forbiddenTags),
+    source: "tags"
   };
 }
 
-function add2eFeatureDisplay(feature, actorLevel = null) {
-  const minLevel = Number(feature.minLevel ?? feature.level ?? feature.niveau ?? 1) || 1;
-  const hasActorLevel = Number.isFinite(Number(actorLevel)) && Number(actorLevel) > 0;
-  const active = hasActorLevel ? Number(actorLevel) >= minLevel : false;
-
+function add2eFeatureDisplay(feature, classLevel = null) {
+  const rawLevel = feature?.minLevel ?? 1;
+  const minLevel = Number(rawLevel);
+  if (!Number.isInteger(minLevel) || minLevel < 1) {
+    throw new Error(`Capacité de classe « ${feature?.name ?? feature?.label ?? "inconnue"} » : minLevel canonique invalide.`);
+  }
+  const hasClassLevel = Number.isInteger(classLevel) && classLevel >= 1;
+  const active = hasClassLevel ? classLevel >= minLevel : false;
   const tags = [
     ...add2eToArray(feature.tags),
-    ...add2eToArray(feature.tag),
-    ...add2eToArray(feature.effectTags),
-    ...add2eToArray(feature.effets),
-    ...add2eToArray(feature.effects)
+    ...add2eToArray(feature.effectTags)
   ];
-
   return {
-    name: feature.name ?? feature.label ?? feature.titre ?? "Capacité",
+    name: feature.name ?? feature.label ?? "Capacité",
     minLevel,
-    description: feature.description ?? feature.desc ?? "",
+    description: feature.description ?? "",
     tags: add2eBadges(tags),
-    statusLabel: hasActorLevel ? (active ? "Disponible" : "Plus tard") : `Niveau ${minLevel}`,
-    statusClass: hasActorLevel ? (active ? "active" : "locked") : "neutral",
+    statusLabel: hasClassLevel ? (active ? "Disponible" : "Plus tard") : `Niveau ${minLevel}`,
+    statusClass: hasClassLevel ? (active ? "active" : "locked") : "neutral",
     uses: feature.uses ?? null
   };
 }
 
 function add2eProgressionRows(progression) {
   const saveLabels = ["Paralysie", "Pétrification", "Baguettes", "Souffles", "Sorts"];
-
   return add2eToObjectArray(progression)
-    .map(row => ({
-      niveau: row.niveau ?? row.level ?? "",
-      xp: row.xp ?? "",
-      thac0: row.thac0 ?? row.thaco ?? "",
-      saves: add2eToArray(row.savingThrows ?? row.sauvegardes).map((value, index) => ({ label: saveLabels[index] ?? `JS ${index + 1}`, value })),
-      spells: add2eToArray(row.spellsPerLevel ?? row.sortsParNiveau).map((value, index) => ({ level: index + 1, value }))
-    }))
-    .filter(row => row.niveau || row.xp || row.thac0 || row.saves.length || row.spells.length)
-    .sort((a, b) => Number(a.niveau || 0) - Number(b.niveau || 0));
+    .map(row => {
+      const niveau = Number(row?.niveau);
+      if (!Number.isInteger(niveau) || niveau < 1) {
+        throw new Error("Une ligne de progression de classe ne possède pas de niveau canonique valide.");
+      }
+      return {
+        niveau,
+        xp: row?.xp ?? "",
+        thac0: row?.thac0 ?? "",
+        saves: add2eToArray(row?.savingThrows).map((value, index) => ({ label: saveLabels[index] ?? `JS ${index + 1}`, value })),
+        spells: add2eToArray(row?.spellsPerLevel).map((value, index) => ({ level: index + 1, value }))
+      };
+    })
+    .sort((a, b) => a.niveau - b.niveau);
 }
 
 function add2eTitleRows(titles) {
   return add2eToObjectArray(titles)
-    .map(t => ({ minLevel: t.minLevel ?? t.niveau ?? t.level ?? "", maxLevel: t.maxLevel ?? t.niveau ?? t.level ?? "", title: t.title ?? t.titre ?? t.name ?? "" }))
+    .map(t => ({ minLevel: t?.minLevel ?? "", maxLevel: t?.maxLevel ?? "", title: t?.title ?? "" }))
     .filter(t => t.minLevel || t.maxLevel || t.title);
 }
 
 function add2eAttackRows(attacks) {
   return add2eToObjectArray(attacks)
-    .map(a => ({ minLevel: a.minLevel ?? a.niveau ?? "", maxLevel: a.maxLevel ?? a.niveau ?? "", attacks: a.attacks ?? a.value ?? a.nombre ?? "" }))
+    .map(a => ({ minLevel: a?.minLevel ?? "", maxLevel: a?.maxLevel ?? "", attacks: a?.attacks ?? "" }))
     .filter(a => a.minLevel || a.maxLevel || a.attacks);
 }
 
 function add2eSpellReqRows(reqs) {
   return add2eToObjectArray(reqs)
-    .map(r => ({ spellLevel: r.spellLevel ?? r.niveau ?? "", ability: add2eHumanText(r.requires?.ability ?? r.ability ?? ""), min: r.requires?.min ?? r.min ?? "" }))
+    .map(r => ({
+      spellLevel: r?.spellLevel ?? "",
+      ability: add2eHumanText(r?.requires?.ability ?? ""),
+      min: r?.requires?.min ?? ""
+    }))
     .filter(r => r.spellLevel || r.ability || r.min);
 }
 
@@ -276,38 +237,50 @@ function add2eUsefulPermanentTags(tags) {
   });
 }
 
-function add2eDerivedSpellcasting(system, itemName) {
+function add2eDerivedSpellcasting(system) {
   const sc = add2eMaybeJson(system.spellcasting);
   const hasObject = sc && typeof sc === "object" && !Array.isArray(sc);
-
-  const casterType = system.casterType || (hasObject ? sc.mode : "");
-  const casterAbility = system.casterAbility || (hasObject ? (sc.ability || sc.abilityKey) : "");
-  const spellLists = add2eToArray(system.spellLists || (hasObject ? sc.lists : []));
-  const derivedLists = spellLists.length ? spellLists : (casterType ? [itemName] : []);
-
+  if (!hasObject) {
+    return {
+      enabled: false,
+      enabledLabel: "Non",
+      mode: "—",
+      type: "—",
+      ability: "—",
+      startsAt: "—",
+      maxSpellLevel: "—",
+      usesSlots: false,
+      usesPreparation: false,
+      preparationSource: "—",
+      lists: []
+    };
+  }
   return {
-    enabled: hasObject ? !!sc.enabled : !!casterType,
-    enabledLabel: hasObject ? (sc.enabled ? "Oui" : "Non") : (casterType ? "Oui" : "Non"),
-    mode: add2eHumanText(hasObject ? (sc.mode || casterType || "—") : (casterType || "—")),
-    type: add2eHumanText(hasObject ? (sc.type || "—") : "—"),
-    ability: add2eHumanText(hasObject ? (sc.ability || sc.abilityKey || casterAbility || "—") : (casterAbility || "—")),
-    startsAt: hasObject ? (sc.startsAt ?? "—") : "—",
-    maxSpellLevel: hasObject ? (sc.maxSpellLevel ?? "—") : "—",
-    usesSlots: hasObject ? !!sc.usesSlots : false,
-    usesPreparation: hasObject ? !!sc.usesPreparation : false,
-    preparationSource: add2eHumanText(hasObject ? (sc.preparationSource || "—") : "—"),
-    lists: derivedLists.map(v => add2eHumanText(v))
+    enabled: sc.enabled === true,
+    enabledLabel: sc.enabled === true ? "Oui" : "Non",
+    mode: add2eHumanText(sc.mode ?? "—"),
+    type: add2eHumanText(sc.type ?? "—"),
+    ability: add2eHumanText(sc.ability ?? sc.abilityKey ?? "—"),
+    startsAt: sc.startsAt ?? "—",
+    maxSpellLevel: sc.maxSpellLevel ?? "—",
+    usesSlots: sc.usesSlots === true,
+    usesPreparation: sc.usesPreparation === true,
+    preparationSource: add2eHumanText(sc.preparationSource ?? "—"),
+    lists: add2eToArray(sc.lists).map(v => add2eHumanText(v))
   };
 }
 
 function add2eClassData(item, editable) {
-  const system = item.system ?? {};
-  const parentActor = item.parent?.documentName === "Actor" ? item.parent : null;
-  const actorLevel = parentActor ? Number(parentActor.system?.niveau) || 1 : null;
-
-  const weaponRestriction = add2eRestrictionObject(system.weaponRestriction, system.weaponsAllowed, false);
-  const armorRestriction = add2eRestrictionObject(system.armorRestriction, system.armorAllowed, system.shieldAllowed);
-  const spellcasting = add2eDerivedSpellcasting(system, item.name);
+  const system = item?.system ?? {};
+  const parentActor = item?.parent?.documentName === "Actor" ? item.parent : null;
+  const progressionState = parentActor ? classProgression(item) : null;
+  if (parentActor && !progressionState?.hasLevel) {
+    throw new Error(`Niveau canonique absent sur l’Item classe « ${item?.name ?? item?.id ?? "inconnu"} ».`);
+  }
+  const classLevel = progressionState?.hasLevel ? progressionState.level : null;
+  const weaponRestriction = add2eRestrictionObject(system.weaponRestriction);
+  const armorRestriction = add2eRestrictionObject(system.armorRestriction);
+  const spellcasting = add2eDerivedSpellcasting(system);
   const ruleNotes = add2eToArray(system.ruleNotes);
   const classFeatureNote = String(system.classFeatureNote ?? "").trim();
   const description = system.description || "";
@@ -321,7 +294,7 @@ function add2eClassData(item, editable) {
       hdPerLevel: system.hdPerLevel || "",
       hpFormula: system.hpFormula || "—",
       hpAfterLevel: system.hpAfter14 ?? system.hpAfter9 ?? "",
-      primaryAbility: add2eHumanText(system.primaryAbility || system.casterAbility || system.principale || "—"),
+      primaryAbility: add2eHumanText(system.primaryAbility || "—"),
       description,
       notes,
       ruleNotes,
@@ -335,19 +308,19 @@ function add2eClassData(item, editable) {
     restrictions: {
       weaponAllowed: add2eBadges(weaponRestriction.allowedTags),
       weaponForbidden: add2eBadges(weaponRestriction.forbiddenTags),
-      weaponLegacyAllowed: weaponRestriction.legacyAllowed.map(v => add2eHumanText(v)),
+      weaponLegacyAllowed: [],
       weaponIsEmpty: weaponRestriction.source === "empty",
       armorAllowed: add2eBadges(armorRestriction.allowedTags),
       armorForbidden: add2eBadges(armorRestriction.forbiddenTags),
-      armorLegacyAllowed: armorRestriction.legacyAllowed.map(v => add2eHumanText(v)),
-      shieldLegacyAllowed: armorRestriction.legacyShield,
+      armorLegacyAllowed: [],
+      shieldLegacyAllowed: false,
       armorIsEmpty: armorRestriction.source === "empty"
     },
     spellcasting,
     spellLists: spellcasting.lists,
     spellAccessRequirements: add2eSpellReqRows(system.spellAccessRequirements),
     classFeatures: add2eToObjectArray(system.classFeatures)
-      .map(f => add2eFeatureDisplay(f, actorLevel))
+      .map(feature => add2eFeatureDisplay(feature, classLevel))
       .sort((a, b) => a.minLevel - b.minLevel || String(a.name).localeCompare(String(b.name), "fr")),
     progressionRows: add2eProgressionRows(system.progression),
     titleRows: add2eTitleRows(system.titlesByLevel),
@@ -357,80 +330,97 @@ function add2eClassData(item, editable) {
   };
 }
 
+function add2eClassSheetRoot(sheet) {
+  const element = sheet?.element;
+  return element?.jquery ? element[0] : element ?? null;
+}
+
+function add2eActivateClassSheetTab(sheet, tab) {
+  const root = add2eClassSheetRoot(sheet);
+  if (!root) return;
+  const activeTab = String(tab || "resume");
+  sheet._add2eActiveTab = activeTab;
+  for (const link of root.querySelectorAll(".tabs a[data-tab]")) {
+    link.classList.toggle("active", String(link.dataset.tab) === activeTab);
+  }
+  for (const content of root.querySelectorAll(".content[data-tab]")) {
+    content.classList.toggle("hidden", String(content.dataset.tab) !== activeTab);
+  }
+}
+
 export class Add2eClassSheet extends Add2eBaseItemSheet {
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      classes: ["add2e", "sheet", "item", "classe"],
-      template: "systems/add2e/templates/item/classe-sheet.hbs",
-      width: 980,
-      height: 820,
-      resizable: true,
-      submitOnClose: false,
-      submitOnChange: false,
-      tabs: [{ navSelector: ".tabs", contentSelector: ".sheet-body", initial: "resume" }]
-    });
+  static DEFAULT_OPTIONS = {
+    id: "add2e-classe-{id}",
+    classes: ["add2e", "sheet", "item", "classe", "add2e-class-v2-app"],
+    tag: "div",
+    position: { width: 980, height: 820 },
+    window: { title: "ADD2E | Fiche Classe", resizable: true }
+  };
+
+  static PARTS = {
+    main: { template: "systems/add2e/templates/item/classe-sheet.hbs" }
+  };
+
+  async _prepareContext(options = {}) {
+    const context = await super._prepareContext(options);
+    const item = this.document;
+    context.document = item;
+    context.item = item;
+    context.system = item?.system ?? {};
+    context.owner = item?.isOwner ?? false;
+    context.editable = this.isEditable;
+    context.options = this.options ?? {};
+    Object.assign(context, add2eClassData(item, this.isEditable));
+    return context;
   }
 
-  getData(options = {}) {
-    const data = super.getData(options);
-    data.item = this.object;
-    data.system = this.object.system ?? {};
-    Object.assign(data, add2eClassData(this.object, data.editable));
-    return data;
+  async _preparePartContext(_partId, context, _options = {}) {
+    return context;
   }
 
-  async close(options = {}) {
-    return super.close({ ...options, submit: false });
+  async _add2eUpdateFromForm(form) {
+    if (!this.isEditable || !form || !this.document?.update) return false;
+    const flat = {};
+    for (const [key, value] of new FormData(form).entries()) flat[key] = value;
+    const update = foundry.utils.expandObject(flat);
+    if (typeof update.name === "string") {
+      update.name = update.name.trim() || this.document.name || "Classe";
+    }
+    await this.document.update(update, { add2eInternal: true, add2eReason: "class-sheet-v2-form" });
+    return true;
   }
 
-  activateListeners(html) {
-    super.activateListeners(html);
-    html.find(".tabs a").on("click", ev => {
-      ev.preventDefault();
-      const tab = ev.currentTarget.dataset.tab;
-      html.find(".tabs a").removeClass("active");
-      html.find(ev.currentTarget).addClass("active");
-      html.find(".content").addClass("hidden");
-      html.find(`.content[data-tab="${tab}"]`).removeClass("hidden");
-    });
-  }
+  async _onRender(context, options = {}) {
+    await super._onRender?.(context, options);
+    const root = add2eClassSheetRoot(this);
+    if (!root) return;
 
-  async _updateObject(_event, formData) {
-    const source = formData ?? {};
-    const flat = foundry.utils.flattenObject(source);
-    const updateData = {};
+    const activeTab = this._add2eActiveTab || "resume";
+    add2eActivateClassSheetTab(this, activeTab);
 
-    for (const [key, value] of Object.entries(flat)) {
-      if (!key || value === undefined) continue;
-      if (key === "name") {
-        const cleanName = String(value ?? "").trim();
-        updateData.name = cleanName || this.object.name || "Classe";
-        continue;
-      }
-      updateData[key] = value;
+    for (const link of root.querySelectorAll(".tabs a[data-tab]")) {
+      link.addEventListener("click", event => {
+        event.preventDefault();
+        add2eActivateClassSheetTab(this, link.dataset.tab || "resume");
+      });
     }
 
-    if (!updateData.name || String(updateData.name).trim() === "") updateData.name = this.object.name || "Classe";
-    const expanded = foundry.utils.expandObject(updateData);
-
-    function pruneUndefined(obj) {
-      if (!obj || typeof obj !== "object") return obj;
-      for (const key of Object.keys(obj)) {
-        if (obj[key] === undefined) {
-          delete obj[key];
-          continue;
-        }
-        if (obj[key] && typeof obj[key] === "object") {
-          pruneUndefined(obj[key]);
-          if (!Array.isArray(obj[key]) && Object.keys(obj[key]).length === 0) delete obj[key];
-        }
-      }
-      return obj;
+    const form = root.querySelector("form.add2e-class-readable-sheet");
+    if (form && this.isEditable) {
+      form.addEventListener("submit", event => {
+        event.preventDefault();
+        void this._add2eUpdateFromForm(form);
+      });
+      form.addEventListener("change", () => {
+        void this._add2eUpdateFromForm(form);
+      });
     }
 
-    pruneUndefined(expanded);
-    if (!expanded.name || String(expanded.name).trim() === "") expanded.name = this.object.name || "Classe";
-    await this.object.update(expanded);
+    const portrait = root.querySelector("img[data-edit='img']");
+    if (portrait && this.isEditable) {
+      portrait.dataset.action = "editImage";
+      portrait.removeAttribute("data-edit");
+    }
   }
 }
 
