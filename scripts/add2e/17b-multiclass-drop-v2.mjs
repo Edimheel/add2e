@@ -6,7 +6,7 @@ import { currentRaceOrCompatibleAlternatives, raceCompatibleForMulticlass, world
 import { showClassDropChoiceDialog } from "./17b-multiclass-dialogs.mjs";
 import { addClassAsMulticlass, applyClassAsMonoclass, applyRaceForMulticlass, replaceClassInMulticlass } from "./17b-multiclass-operations.mjs";
 
-const ADD2E_DROP_PROGRESS_VERSION = "2026-08-12-canonical-spell-ownership-v7";
+const ADD2E_DROP_PROGRESS_VERSION = "2026-08-12-canonical-spell-sources-v8";
 const DROP_PROGRESS = globalThis.ADD2E_DROP_PROGRESS instanceof Map ? globalThis.ADD2E_DROP_PROGRESS : new Map();
 globalThis.ADD2E_DROP_PROGRESS = DROP_PROGRESS;
 globalThis.ADD2E_DROP_PROGRESS_VERSION = ADD2E_DROP_PROGRESS_VERSION;
@@ -92,8 +92,7 @@ function dropProgressOpen(actor, { className = "" } = {}) {
         <section data-add2e-drop-progress="${context.id}" style="min-width:460px;padding:12px 14px;border:1px solid #6d4a1f;border-radius:9px;background:linear-gradient(180deg,#fff8e6,#ead4a2);color:#2d2011;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
             <i class="fas fa-user-gear" aria-hidden="true" style="font-size:1.5rem;color:#805514;"></i>
-            <div><strong>Mise à jour du personnage</strong><br><small>${dropProgressEscape(actor?.name ?? "Personnage")}</small></div>
-          </div>
+            <div><strong>Mise à jour du personnage</strong><br><small>${dropProgressEscape(actor?.name ?? "Personnage")}</small></div></div>
           <div data-add2e-drop-current style="font-weight:800;">Analyse de la classe déposée…</div>
           <div data-add2e-drop-detail style="margin-top:3px;font-size:.86rem;">${dropProgressEscape(context.detail)}</div>
           <div style="height:7px;margin-top:10px;overflow:hidden;border-radius:999px;background:#c9ae72;"><div data-add2e-drop-bar style="width:4%;height:100%;background:#805514;transition:width .2s ease;"></div></div>
@@ -181,14 +180,13 @@ async function ensureFirstClassSpells(actor) {
   const classDoc = docs[0];
   const lists = globalThis.add2eSpellSyncClassLists?.(classDoc) ?? [];
   if (!Array.isArray(lists) || !lists.length) return false;
-  const classKey = classSlug(classDoc);
-  const hasOwned = actor.items?.some?.(item => {
-    if (String(item?.type ?? "").toLowerCase() !== "sort") return false;
-    const flags = item?.flags?.add2e ?? {};
-    const sourceId = String(flags.autoGrantedByClassId ?? flags.sourceClassId ?? "");
-    if (sourceId && sourceId === String(classDoc.id)) return true;
-    return String(flags.classSlug ?? "") === classKey;
-  }) === true;
+  const belongsToClass = globalThis.add2eSpellSyncSpellBelongsToClass;
+  if (typeof belongsToClass !== "function") {
+    throw new Error("Le résolveur canonique ADD2E de provenance des sorts est indisponible.");
+  }
+  const hasOwned = actor.items?.some?.(item =>
+    String(item?.type ?? "").toLowerCase() === "sort" && belongsToClass(item, classDoc)
+  ) === true;
   if (hasOwned) return true;
   const sync = globalThis.add2eSyncActorSpellsFromClass;
   if (typeof sync !== "function") throw new Error("Synchroniseur automatique de sorts introuvable.");
