@@ -3,7 +3,7 @@
 // Contrat onUse : true = sort consommé ; false = sort non consommé.
 
 const __add2eDancingLightsResult = await (async () => {
-  const VERSION = "2026-08-12-canonical-dancing-lights-v3";
+  const VERSION = "2026-08-12-canonical-dancing-lights-v4";
 
   if (typeof globalThis.add2eDialogWait !== "function") {
     ui.notifications?.error?.("Lumières dansantes : l’API de fenêtre ADD2E est indisponible.");
@@ -114,7 +114,7 @@ const __add2eDancingLightsResult = await (async () => {
     actor: caster,
     title: sourceItem.name ?? "Lumières dansantes",
     icon: "fas fa-lightbulb",
-    variant: "wizard",
+    variant: "spell",
     source: {
       name: caster.name,
       img: sourceItem.img ?? caster.img,
