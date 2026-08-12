@@ -1,7 +1,7 @@
 // ADD2E — Expansion atomique des familles de sorts.
 // Compatible Foundry V13 / V14 / V15.
 
-const ADD2E_SPELL_FAMILY_VERSION = "2026-08-12-canonical-spell-sources-v17";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-08-12-coordinated-spell-sources-v18";
 const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-07-02-spell-family-source-id-v14";
 
 const SPELL_FAMILY_ACTOR_QUEUES = globalThis.ADD2E_SPELL_FAMILY_ACTOR_QUEUES instanceof Map
@@ -632,8 +632,17 @@ function spellFamilyMaterialsNeedMigration(actor, item) {
   });
 }
 
+async function waitForSpellSyncOwnershipMigration() {
+  const ownershipReady = globalThis.ADD2E_SPELL_SYNC_OWNERSHIP_READY;
+  if (!ownershipReady || typeof ownershipReady.then !== "function") {
+    throw new Error("La coordination de migration ADD2E des provenances de sorts est indisponible.");
+  }
+  await ownershipReady;
+}
+
 async function migrateExistingSpellFamilyMaterials() {
   if (!game.user?.isGM) return;
+  await waitForSpellSyncOwnershipMigration();
   for (const actor of game.actors?.filter?.(candidate => candidate.type === "personnage") ?? []) {
     const needsMigration = Array.from(actor.items ?? []).some(item =>
       String(item.type ?? "").toLowerCase() === "sort"
