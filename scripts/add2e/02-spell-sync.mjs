@@ -6,7 +6,7 @@
 
 import { classItems, classProgression, classSlug } from "./17b-multiclass-core.mjs";
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-08-12-canonical-multiclass-spell-sources-v14";
+const ADD2E_SPELL_SYNC_VERSION = "2026-08-12-coordinated-spell-source-migration-v15";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
@@ -980,12 +980,11 @@ for (const [name, fn] of Object.entries({
   catch (_error) {}
 }
 
-Hooks.once("ready", async () => {
+Hooks.once("ready", () => {
   if (!game.user?.isGM) return;
-  try {
-    await add2eMigrateAllSpellSyncOwnership();
-    await add2eWarmSpellSyncCache();
-  } catch (error) {
-    console.warn("[ADD2E][SPELL_SYNC][READY_ERROR]", error);
-  }
+  const ownershipReady = add2eMigrateAllSpellSyncOwnership();
+  globalThis.ADD2E_SPELL_SYNC_OWNERSHIP_READY = ownershipReady;
+  ownershipReady
+    .then(() => add2eWarmSpellSyncCache())
+    .catch(error => console.warn("[ADD2E][SPELL_SYNC][READY_ERROR]", error));
 });
