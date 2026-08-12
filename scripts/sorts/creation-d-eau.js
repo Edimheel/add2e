@@ -1,10 +1,11 @@
 /**
  * ADD2E — Création d’eau / Destruction d’eau
- * Compatible Foundry V13/V14/V15.
- * Version : 2026-08-07-canonical-resource-v2
+ * Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via l’API commune ADD2E.
  */
 
 const __add2eOnUseResult = await (async () => {
+  const VERSION = "2026-08-12-canonical-water-spell-v3";
+
   if (typeof globalThis.add2eDialogWait !== "function") {
     ui.notifications?.error?.("Création d’eau : l’API de fenêtre ADD2E est indisponible.");
     return false;
@@ -15,40 +16,85 @@ const __add2eOnUseResult = await (async () => {
   }
 
   const norm = value => String(value ?? "")
-    .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "_").replace(/[^a-z0-9]+/g, "_")
-    .replace(/_+/g, "_").replace(/^_+|_+$/g, "");
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "_")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
 
   function resourceEngine() {
-    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+    const engine = globalThis.ADD2E_EFFECTS;
     if (!engine || typeof engine.recoverResource !== "function") {
       throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour Création d’eau.");
     }
     return engine;
   }
 
+  function resolveMode(sourceItem) {
+    const family = sourceItem?.flags?.add2e?.spellFamily ?? {};
+    const kind = String(family.kind ?? "").trim().toLowerCase();
+    const reversibleMode = String(family.reversibleMode ?? "").trim().toLowerCase();
+    if (kind === "base") return "create";
+    if (kind === "inverse" && reversibleMode === "inverse") return "destroy";
+    if (sourceItem?.system?.isObjectPower === true) return "create";
+    return null;
+  }
+
+  function resolveCasterLevel(caster, sourceItem) {
+    if (sourceItem?.system?.isObjectPower === true) {
+      const explicit = Number(sourceItem.system?.casterLevel);
+      if (!Number.isInteger(explicit) || explicit < 1) {
+        throw new Error("Création d’eau : niveau de lanceur explicite absent du pouvoir d’objet magique.");
+      }
+      return explicit;
+    }
+    const resolver = globalThis.add2eCanActorUseSpell;
+    if (typeof resolver !== "function") {
+      throw new Error("Création d’eau : le résolveur canonique de lancement des sorts est indisponible.");
+    }
+    const access = resolver(caster, sourceItem);
+    const actorLevel = Number(access?.actorLevel);
+    if (access?.ok !== true || !Number.isInteger(actorLevel) || actorLevel < 1) {
+      throw new Error(`Création d’eau : niveau canonique du lanceur indisponible${access?.reason ? ` (${access.reason})` : ""}.`);
+    }
+    return actorLevel;
+  }
+
   const sourceItem = (typeof sort !== "undefined" && sort)
-    ?? (typeof item !== "undefined" && item)
-    ?? (typeof args !== "undefined" && args?.[0]?.item)
-    ?? null;
-  const caster = (typeof actor !== "undefined" && actor) ?? sourceItem?.parent ?? null;
-  if (!sourceItem || !caster) {
-    ui.notifications?.error?.("Création d’eau : sort ou lanceur introuvable.");
+    || (typeof item !== "undefined" && item)
+    || (typeof spell !== "undefined" && spell)
+    || (typeof args !== "undefined" && args?.[0]?.item)
+    || null;
+  if (!sourceItem || String(sourceItem.type ?? "").toLowerCase() !== "sort") {
+    ui.notifications?.error?.("Création d’eau : Item sort introuvable.");
     return false;
   }
 
-  const reversible = sourceItem.flags?.add2e?.reversibleActorEntry ?? sourceItem.system?.reversibleActorEntry ?? {};
-  const entryMode = norm(typeof reversible === "object" ? reversible.mode : reversible);
-  const sourceName = norm(sourceItem.name ?? sourceItem.system?.nom);
-  const mode = ["inverse", "inversee", "invers", "reversed"].includes(entryMode)
-    || /(?:destruction|detruction).*eau/.test(sourceName)
-    ? "destroy"
-    : "create";
+  const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
+  if (!caster) {
+    ui.notifications?.error?.("Création d’eau : lanceur introuvable.");
+    return false;
+  }
+
+  const mode = resolveMode(sourceItem);
+  if (!mode) {
+    ui.notifications?.error?.("Création d’eau / Destruction d’eau : métadonnées canoniques de famille absentes ou incohérentes.");
+    return false;
+  }
   const modeLabel = mode === "destroy" ? "Destruction d’eau" : "Création d’eau";
 
-  const level = Math.max(1, Number(caster.system?.niveau) || 1);
+  let level;
+  try {
+    level = resolveCasterLevel(caster, sourceItem);
+  } catch (error) {
+    ui.notifications?.error?.(error?.message ?? `${modeLabel} : niveau du lanceur indisponible.`);
+    return false;
+  }
+
   const maxLitres = level * 15;
-  const maxOutres = Math.max(1, Math.floor(maxLitres / 5));
+  const maxOutres = Math.floor(maxLitres / 5);
   const dialogResult = await globalThis.add2eDialogWait({
     add2eTheme: "parchment",
     add2ePrimaryAction: "cast",
@@ -64,7 +110,9 @@ const __add2eOnUseResult = await (async () => {
         label: "Lancer",
         icon: "<i class='fas fa-droplet'></i>",
         default: true,
-        callback: (_event, button) => ({ nbOutres: Number(button.form.elements.nbOutres?.value || 0) })
+        callback: (_event, button) => ({
+          nbOutres: Number(button?.form?.elements?.nbOutres?.value ?? 0)
+        })
       },
       {
         action: "cancel",
@@ -77,10 +125,10 @@ const __add2eOnUseResult = await (async () => {
   });
   if (!dialogResult) return false;
 
-  const nbOutres = Math.floor(Number(dialogResult.nbOutres) || 0);
+  const nbOutres = Math.floor(Number(dialogResult.nbOutres));
   const litres = nbOutres * 5;
   if (!Number.isFinite(nbOutres) || nbOutres <= 0 || nbOutres > maxOutres || litres > maxLitres) {
-    ui.notifications?.warn?.(`Création d’eau : quantité invalide (maximum ${maxLitres} L).`);
+    ui.notifications?.warn?.(`${modeLabel} : quantité invalide (maximum ${maxLitres} L).`);
     return false;
   }
 
@@ -88,7 +136,12 @@ const __add2eOnUseResult = await (async () => {
   let itemUpdated = null;
   if (mode === "create") {
     const itemName = "Outre d’eau (5 L)";
-    const existing = caster.items?.find(entry => entry.type === "objet" && norm(entry.name) === norm(itemName)) ?? null;
+    const existing = caster.items?.find(entry => {
+      if (String(entry?.type ?? "").toLowerCase() !== "objet") return false;
+      const tags = Array.isArray(entry.system?.tags) ? entry.system.tags.map(norm) : [];
+      return tags.includes("objet_outre_eau");
+    }) ?? null;
+
     try {
       if (existing) {
         const resource = {
@@ -100,7 +153,7 @@ const __add2eOnUseResult = await (async () => {
           item: existing,
           target: "quantity",
           get current() {
-            return Math.max(0, Number(existing.system?.quantite ?? existing.system?.quantity ?? 0) || 0);
+            return Math.max(0, Number(existing.system?.quantite) || 0);
           },
           maximum: null,
           recovery: nbOutres,
@@ -108,7 +161,7 @@ const __add2eOnUseResult = await (async () => {
             kind: "spell",
             id: String(sourceItem.id ?? ""),
             uuid: String(sourceItem.uuid ?? ""),
-            name: String(sourceItem.name ?? "Création d’eau")
+            name: String(sourceItem.name ?? modeLabel)
           },
           context: {
             consumer: "creation-d-eau",
@@ -130,7 +183,7 @@ const __add2eOnUseResult = await (async () => {
           reason: "create-water",
           consumer: "creation-d-eau"
         });
-        if (!recovered.ok) throw new Error("La pile d’outres n’a pas pu être augmentée.");
+        if (!recovered?.ok) throw new Error("La pile d’outres n’a pas pu être augmentée.");
         itemUpdated = existing;
       } else {
         const created = await caster.createEmbeddedDocuments("Item", [{
@@ -148,27 +201,39 @@ const __add2eOnUseResult = await (async () => {
             equipee: false,
             tags: ["sort:creation-d-eau", "objet:outre_eau", "eau:potable", "volume_unitaire_litres:5"]
           },
-          flags: { add2e: { createdBySpell: "Création d’eau", spellUuid: sourceItem.uuid ?? null, casterUuid: caster.uuid ?? null, volumeUnitaireLitres: 5, quantityAdded: nbOutres, litresAdded: litres, createdAt: Date.now() } }
+          flags: {
+            add2e: {
+              createdBySpell: "Création d’eau",
+              spellUuid: sourceItem.uuid ?? null,
+              casterUuid: caster.uuid ?? null,
+              volumeUnitaireLitres: 5,
+              quantityAdded: nbOutres,
+              litresAdded: litres,
+              createdAt: Date.now()
+            }
+          }
         }]);
         itemCreated = created?.[0] ?? null;
       }
-    } catch (error) {
-      console.error("[ADD2E][CREATION_D_EAU][OBJECT_FAILED]", error);
+    } catch (_error) {
       ui.notifications?.error?.("Création d’eau : impossible de créer ou de mettre à jour les outres.");
       return false;
     }
     if (!itemCreated && !itemUpdated) return false;
   }
 
-  const casterToken = canvas.tokens?.controlled?.[0] ?? caster.getActiveTokens?.()[0] ?? null;
+  const casterToken = (typeof token !== "undefined" && token?.actor?.id === caster.id)
+    ? token
+    : canvas.tokens?.controlled?.find(placeable => placeable?.actor?.id === caster.id)
+      ?? caster.getActiveTokens?.()[0]
+      ?? null;
+
   try {
     await globalThis.ADD2E_PLAY_SPELL_FX?.(mode === "destroy" ? "destruction_eau" : "aquagenese", {
       casterToken: casterToken ?? caster,
       jb2aOptions: { maxFiles: 1, scaleToObject: 1.25, opacity: 0.85 }
     });
-  } catch (error) {
-    console.warn("[ADD2E][CREATION_D_EAU][VFX][IGNORED]", error);
-  }
+  } catch (_error) {}
 
   const itemLine = itemCreated
     ? `Équipement créé : ${itemCreated.name} × ${nbOutres}.`
@@ -182,8 +247,9 @@ const __add2eOnUseResult = await (async () => {
     variant: "spell",
     source: {
       name: caster.name,
-      img: caster.img ?? sourceItem.img ?? "icons/svg/mystery-man.svg",
-      type: "Sort divin"
+      img: sourceItem.img ?? caster.img ?? "icons/svg/mystery-man.svg",
+      type: "Sort divin",
+      meta: `Niveau de lanceur ${level}`
     },
     rows: [
       { label: "Quantité", value: `${litres} L (${nbOutres} outre(s))` },
@@ -191,18 +257,28 @@ const __add2eOnUseResult = await (async () => {
       { label: "Inventaire", value: itemLine }
     ],
     chatData: {
-      speaker: ChatMessage.getSpeaker({ actor: caster })
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+      flags: {
+        add2e: {
+          chatCardType: "create-destroy-water",
+          version: VERSION,
+          mode,
+          casterLevel: level,
+          litres,
+          units: nbOutres,
+          sourceItemUuid: sourceItem.uuid ?? null
+        }
+      }
     }
   };
-  globalThis.add2eBuildChatCard(card);
+  const preview = globalThis.add2eBuildChatCard(card);
+  if (!String(preview ?? "").trim()) throw new Error(`${modeLabel} : carte de chat vide.`);
   await globalThis.add2eCreateChatCard(card);
 
-  console.log("[ADD2E][creation-d-eau.js][ONUSE_RESULT]", { mode, nbOutres, litres });
   return true;
 })();
 
 if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
-  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT]", { script: "creation-d-eau.js", result: __add2eOnUseResult });
   ui.notifications?.error?.("Création d’eau : le script onUse n’a pas retourné true/false.");
   return false;
 }
