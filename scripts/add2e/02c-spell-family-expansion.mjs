@@ -1,7 +1,7 @@
 // ADD2E — Expansion atomique des familles de sorts.
 // Compatible Foundry V13 / V14 / V15.
 
-const ADD2E_SPELL_FAMILY_VERSION = "2026-08-12-canonical-spell-metadata-v15";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-08-12-canonical-family-source-id-v16";
 const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-07-02-spell-family-source-id-v14";
 
 const SPELL_FAMILY_ACTOR_QUEUES = globalThis.ADD2E_SPELL_FAMILY_ACTOR_QUEUES instanceof Map
@@ -68,12 +68,13 @@ const stableSpellKey = data => {
 const isGeneratedFamilySpell = item => item?.flags?.add2e?.spellFamily?.generated === true;
 
 function familySourceId(item) {
-  return String(item?.id ?? item?._id ?? item?.flags?.add2e?.spellFamily?.sourceItemId ?? "").trim();
+  const sourceId = String(item?.id ?? item?._id ?? "").trim();
+  if (!sourceId) throw new Error("Un sort source de famille doit posséder un identifiant Item canonique.");
+  return sourceId;
 }
 
 function familyKeyFor(item) {
-  const sourceId = familySourceId(item);
-  return sourceId ? `source:${sourceId}` : `legacy:${stableSpellKey(item)}`;
+  return `source:${familySourceId(item)}`;
 }
 
 function familyDerivedId(kind, data, suffix = "") {
@@ -82,12 +83,10 @@ function familyDerivedId(kind, data, suffix = "") {
   return suffix ? `${kind}:${level}|${name}|${normalize(suffix)}` : `${kind}:${level}|${name}`;
 }
 
-function familyChildBelongsToSource(item, sourceId, key, legacyKey) {
-  if (!isGeneratedFamilySpell(item)) return false;
-  const family = item?.flags?.add2e?.spellFamily ?? {};
-  const childSourceId = String(family.sourceItemId ?? "").trim();
-  if (sourceId && childSourceId) return childSourceId === sourceId;
-  return !childSourceId && (family.key === key || family.key === legacyKey);
+function familyChildBelongsToSource(item, sourceId) {
+  if (!isGeneratedFamilySpell(item) || !sourceId) return false;
+  const childSourceId = String(item?.flags?.add2e?.spellFamily?.sourceItemId ?? "").trim();
+  return Boolean(childSourceId) && childSourceId === sourceId;
 }
 
 function actorQueueKey(actor) {
@@ -237,7 +236,6 @@ function expectedSpellFamily(base) {
   const name = String(source?.name ?? source?.system?.nom ?? "").trim();
   const sourceId = familySourceId(base);
   const key = familyKeyFor(base);
-  const legacyKey = stableSpellKey(source);
   const reversibleProfiles = matchingProfiles(source?.flags?.add2e?.reversible, source?.system);
   const normalMode = reversibleProfiles.map(profile => modeFor(profile, "normal")).find(Boolean);
   const normalData = applyMode(source, normalMode);
@@ -305,7 +303,7 @@ function expectedSpellFamily(base) {
     }
   }
 
-  return { key, legacyKey, sourceId, output: dedupeExpectedEntries(output) };
+  return { key, sourceId, output: dedupeExpectedEntries(output) };
 }
 
 function familyIdentity(item) {
@@ -365,7 +363,7 @@ async function ensureSpellFamilyNow(item) {
   const source = actor.items.get(sourceId);
   if (!source || String(source.type ?? "").toLowerCase() !== "sort" || isGeneratedFamilySpell(source)) return { handled: false };
 
-  const { key, legacyKey, output } = expectedSpellFamily(source);
+  const { key, output } = expectedSpellFamily(source);
   const derived = output.filter(entry => entry.id !== "base");
   if (!derived.length) return { handled: true, created: 0, updated: 0, removed: 0, baseUpdated: 0, removedParent: false };
 
@@ -376,7 +374,7 @@ async function ensureSpellFamilyNow(item) {
   const staleIds = new Set();
 
   for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type ?? "").toLowerCase() === "sort") ?? []) {
-    const related = familyChildBelongsToSource(actorSpell, sourceId, key, legacyKey);
+    const related = familyChildBelongsToSource(actorSpell, sourceId);
     if (actorSpell.id !== sourceId && !related) occupiedKeys.add(stableSpellKey(actorSpell));
     if (!related) continue;
 
@@ -552,13 +550,13 @@ function sameMaterialData(left, right) {
 
 function spellFamilyNeedsReconciliation(actor, item) {
   if (!actor?.items?.has?.(item?.id)) return false;
-  const { key, legacyKey, sourceId, output } = expectedSpellFamily(item);
+  const { key, sourceId, output } = expectedSpellFamily(item);
   const baseFamily = item?.flags?.add2e?.spellFamily ?? {};
   if (baseFamily.key !== key || String(baseFamily.sourceItemId ?? "") !== sourceId) return true;
   const expected = new Set(output.filter(entry => entry.id !== "base").map(entry => entry.id));
   const counts = new Map();
   for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type ?? "").toLowerCase() === "sort") ?? []) {
-    if (!familyChildBelongsToSource(actorSpell, sourceId, key, legacyKey)) continue;
+    if (!familyChildBelongsToSource(actorSpell, sourceId)) continue;
     const identity = familyIdentity(actorSpell);
     if (!identity || !expected.has(identity)) return true;
     if (actorSpell.flags?.add2e?.spellFamily?.key !== key) return true;
@@ -570,10 +568,10 @@ function spellFamilyNeedsReconciliation(actor, item) {
 function spellFamilyMaterialsNeedMigration(actor, item) {
   if (!actor?.items?.has?.(item?.id)) return false;
   if (spellFamilyNeedsReconciliation(actor, item)) return true;
-  const { key, legacyKey, sourceId, output } = expectedSpellFamily(item);
+  const { sourceId, output } = expectedSpellFamily(item);
   const existingByIdentity = new Map();
   for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type ?? "").toLowerCase() === "sort") ?? []) {
-    if (!familyChildBelongsToSource(actorSpell, sourceId, key, legacyKey)) continue;
+    if (!familyChildBelongsToSource(actorSpell, sourceId)) continue;
     const identity = familyIdentity(actorSpell);
     if (identity) existingByIdentity.set(identity, actorSpell);
   }
