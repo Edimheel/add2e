@@ -2,7 +2,7 @@
 // ADD2E — Dialogue d'attaque via l'API commune ADD2E.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via dialog-ui.mjs uniquement.
 
-const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-12-rear-options-diagnostics-v16";
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-08-12-rear-options-dialog-root-v17";
 
 globalThis.ADD2E_ATTACK_DIALOG_VERSION = ADD2E_ATTACK_DIALOG_VERSION;
 
@@ -258,7 +258,7 @@ export function add2eBuildAttackDialogContent({
   const checkInputStyle = "width:15px;height:15px;min-width:15px;margin:0;";
 
   return `
-    <form class="add2e-attack-form" style="${rootStyle}">
+    <div class="add2e-attack-form" style="${rootStyle}">
       <div style="${topRowStyle}">
         <div style="${cardStyle}">
           <img src="${attackerImg}" alt="" style="${portraitStyle}">
@@ -301,5 +301,5 @@ export function add2eBuildAttackDialogContent({
           </div>` : ""}
         </div>
       </div>
-    </form>`;
+    </div>`;
 }
