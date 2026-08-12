@@ -46,32 +46,27 @@ function add2eSpellFamilyDropNormalize(value) {
     .replace(/^_+|_+$/g, "");
 }
 
-function add2eSpellFamilyDropLevel(system = {}) {
-  const raw = system.niveau ?? system.niveau_sort ?? system.spellLevel ?? system.level ?? 0;
-  return Number(String(raw).match(/\d+/)?.[0] ?? 0) || 0;
+function add2eSpellFamilyDropLevel(item) {
+  const level = Number(item?.system?.niveau);
+  return Number.isInteger(level) && level >= 1 ? level : 0;
 }
 
-function add2eSpellFamilyDropLists(system = {}) {
-  const raw = [
-    system.spellLists,
-    system.lists,
-    system.classes,
-    system.classe,
-    system.class,
-    system.liste
-  ];
-
-  return new Set(raw.flatMap(value => {
-    if (Array.isArray(value)) return value;
-    if (typeof value === "string") return value.split(/[,;|\n]+/g);
-    return value === null || value === undefined ? [] : [value];
-  }).map(add2eSpellFamilyDropNormalize).filter(Boolean));
+function add2eSpellFamilyDropLists(item) {
+  const resolver = globalThis.add2eGetSpellListsFromItem;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des listes de sorts est indisponible pour le garde anti-doublon.");
+  }
+  const resolved = resolver(item);
+  if (!Array.isArray(resolved)) {
+    throw new Error(`Listes canoniques invalides pour « ${item?.name ?? "sort inconnu"} ».`);
+  }
+  return new Set(resolved.filter(Boolean));
 }
 
 function add2eActorAlreadyHasSpellFamily(actor, pendingItem) {
   const pendingName = add2eSpellFamilyDropNormalize(pendingItem?.name ?? pendingItem?.system?.nom);
-  const pendingLevel = add2eSpellFamilyDropLevel(pendingItem?.system ?? {});
-  const pendingLists = add2eSpellFamilyDropLists(pendingItem?.system ?? {});
+  const pendingLevel = add2eSpellFamilyDropLevel(pendingItem);
+  const pendingLists = add2eSpellFamilyDropLists(pendingItem);
 
   if (!pendingName) return false;
 
@@ -81,10 +76,10 @@ function add2eActorAlreadyHasSpellFamily(actor, pendingItem) {
     const family = item.flags?.add2e?.spellFamily ?? {};
     if (family.generated !== true) return false;
     if (add2eSpellFamilyDropNormalize(family.sourceItemName) !== pendingName) return false;
-    if (pendingLevel && add2eSpellFamilyDropLevel(item.system ?? {}) !== pendingLevel) return false;
+    if (pendingLevel && add2eSpellFamilyDropLevel(item) !== pendingLevel) return false;
 
     if (!pendingLists.size) return true;
-    const existingLists = add2eSpellFamilyDropLists(item.system ?? {});
+    const existingLists = add2eSpellFamilyDropLists(item);
     return [...pendingLists].some(list => existingLists.has(list));
   }) ?? false;
 }
