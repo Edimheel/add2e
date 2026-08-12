@@ -2,12 +2,23 @@
 // Les comportements sont répartis en modules fonctionnels sans modifier les sélecteurs ni l'ordre d'exécution.
 
 import "./13d-actor-sheet-listeners-core.mjs";
+import {
+  ARCANE_LISTS,
+  actorArcaneLists,
+  arcaneKind,
+  documentEntries,
+  entryFromSpell,
+  itemQuantity,
+  itemType,
+  listLabel,
+  resolveSpell,
+  spellLevel,
+  spellLists,
+  stableSpellKey
+} from "./07b-arcane-documents-core.mjs";
 
 const ADD2E_SHEET_LISTENER_RECOVERY_VERSION = "2026-07-05-sheet-tabs-force-ex-v1";
-
-const ADD2E_SCROLL_WRITING_VERSION = "2026-08-08-2z-common-dialog-v3";
-const ADD2E_SCROLL_WRITING_LISTS = new Set(["magicien", "illusionniste"]);
-let ADD2E_SCROLL_WRITING_INDEX_PROMISE = null;
+const ADD2E_SCROLL_WRITING_VERSION = "2026-08-12-canonical-arcane-core-v4";
 
 globalThis.ADD2E_SHEET_LISTENER_RECOVERY_VERSION = ADD2E_SHEET_LISTENER_RECOVERY_VERSION;
 globalThis.ADD2E_SCROLL_WRITING_VERSION = ADD2E_SCROLL_WRITING_VERSION;
@@ -76,20 +87,6 @@ function add2eInstallSheetListenerRecovery() {
   };
 }
 
-function add2eScrollWritingNorm(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/œ/g, "oe")
-    .replace(/æ/g, "ae")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
 function add2eScrollWritingEsc(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -99,244 +96,20 @@ function add2eScrollWritingEsc(value) {
     .replaceAll("'", "&#039;");
 }
 
-function add2eScrollWritingArray(value) {
-  if (value === undefined || value === null || value === "") return [];
-  if (Array.isArray(value)) return value.flatMap(add2eScrollWritingArray);
-  if (value instanceof Set) return [...value].flatMap(add2eScrollWritingArray);
-  if (typeof value === "string") {
-    return value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
-  }
-  if (typeof value === "object") {
-    for (const key of ["lists", "spellLists", "classes", "classe", "class", "items", "value", "values"]) {
-      if (value[key] !== undefined) return add2eScrollWritingArray(value[key]);
-    }
-  }
-  return [value];
-}
-
-function add2eScrollWritingListKey(value) {
-  try {
-    if (typeof globalThis.add2eNormalizeSpellKey === "function") {
-      return globalThis.add2eNormalizeSpellKey(value);
-    }
-  } catch (_error) {}
-
-  const key = add2eScrollWritingNorm(value);
-  return ({
-    wizard: "magicien",
-    mage: "magicien",
-    magician: "magicien",
-    magic_user: "magicien",
-    illusionist: "illusionniste"
-  })[key] ?? key;
-}
-
-function add2eScrollWritingItemType(item) {
-  return String(item?.type ?? "").toLowerCase();
-}
-
-function add2eScrollWritingLevel(item) {
-  return Math.max(1, Number(
-    item?.system?.niveau
-    ?? item?.system?.level
-    ?? item?.system?.niveau_sort
-    ?? item?.system?.spellLevel
-    ?? item?.level
-    ?? 1
-  ) || 1);
-}
-
-function add2eScrollWritingLists(item) {
-  try {
-    if (typeof globalThis.add2eGetSpellListsFromItem === "function") {
-      return [...new Set(
-        globalThis.add2eGetSpellListsFromItem(item)
-          .map(add2eScrollWritingListKey)
-          .filter(Boolean)
-      )];
-    }
-  } catch (_error) {}
-
-  const system = item?.system ?? {};
-  const flags = item?.flags?.add2e ?? {};
-  return [...new Set([
-    flags.knownSpellLists,
-    flags.learnedSpellLists,
-    flags.grantedSpellLists,
-    system.spellLists,
-    system.lists,
-    system.liste,
-    system.liste_sort,
-    system.listeSort,
-    system.classe,
-    system.class,
-    item?.entries?.map?.(entry => entry?.key)
-  ].flatMap(add2eScrollWritingArray).map(add2eScrollWritingListKey).filter(Boolean))];
-}
-
-function add2eScrollWritingActorLists(actor) {
-  const lists = new Set();
-
-  try {
-    for (const entry of globalThis.add2eGetSpellcastingEntries?.(actor) ?? []) {
-      const key = add2eScrollWritingListKey(entry?.key);
-      if (ADD2E_SCROLL_WRITING_LISTS.has(key)) lists.add(key);
-    }
-  } catch (_error) {}
-
-  for (const item of actor?.items ?? []) {
-    if (add2eScrollWritingItemType(item) !== "classe") continue;
-    const system = item.system ?? {};
-    for (const value of [item.name, system.slug, system.label, system.nom, system.name]) {
-      const key = add2eScrollWritingListKey(value);
-      if (ADD2E_SCROLL_WRITING_LISTS.has(key)) lists.add(key);
-    }
-  }
-
-  return [...lists];
-}
-
-function add2eScrollWritingSourceUuid(item) {
-  return String(
-    item?.flags?.core?.sourceId
-    ?? item?._stats?.compendiumSource
-    ?? item?.flags?.add2e?.sourceUuid
-    ?? item?.flags?.add2e?.dropResolvedUuid
-    ?? ""
-  ).trim();
-}
-
-function add2eScrollWritingStableKey(item, list) {
-  const configured = String(
-    item?.flags?.add2e?.stableSpellKey
-    ?? item?.flags?.add2e?.spellStableKey
-    ?? ""
-  ).trim();
-
-  if (configured) return configured;
-  return `${add2eScrollWritingListKey(list)}|${add2eScrollWritingLevel(item)}|${add2eScrollWritingNorm(item?.name)}`;
-}
-
-function add2eScrollWritingPackEntries(index) {
-  if (!index) return [];
-  if (Array.isArray(index.contents)) return index.contents;
-  if (typeof index.values === "function") return [...index.values()];
-  try { return [...index]; } catch (_error) { return []; }
-}
-
-async function add2eScrollWritingBuildIndex() {
-  if (ADD2E_SCROLL_WRITING_INDEX_PROMISE) return ADD2E_SCROLL_WRITING_INDEX_PROMISE;
-
-  ADD2E_SCROLL_WRITING_INDEX_PROMISE = (async () => {
-    const candidates = [];
-
-    for (const id of ["add2e.sorts", "world.sorts"]) {
-      const pack = game.packs?.get?.(id);
-      if (pack?.documentName !== "Item") continue;
-
-      let index;
-      try {
-        index = await pack.getIndex({
-          fields: [
-            "name",
-            "type",
-            "system.niveau",
-            "system.level",
-            "system.spellLists",
-            "system.liste",
-            "system.classe",
-            "flags.add2e.learnedSpellLists",
-            "flags.add2e.knownSpellLists"
-          ]
-        });
-      } catch (_error) {
-        index = await pack.getIndex();
-      }
-
-      for (const entry of add2eScrollWritingPackEntries(index)) {
-        if (add2eScrollWritingItemType(entry) !== "sort") continue;
-        candidates.push({
-          pack,
-          id: entry._id,
-          name: entry.name,
-          level: add2eScrollWritingLevel(entry),
-          lists: add2eScrollWritingLists(entry)
-        });
-      }
-    }
-
-    return candidates;
-  })();
-
-  return ADD2E_SCROLL_WRITING_INDEX_PROMISE;
-}
-
-async function add2eScrollWritingResolveCanonical(spell, compatibleLists) {
-  const sourceUuid = add2eScrollWritingSourceUuid(spell);
-
-  if (sourceUuid.startsWith("Compendium.") && typeof fromUuid === "function") {
-    try {
-      const document = await fromUuid(sourceUuid);
-      if (document?.documentName === "Item" && add2eScrollWritingItemType(document) === "sort") {
-        return document;
-      }
-    } catch (_error) {}
-  }
-
-  const wantedName = add2eScrollWritingNorm(spell?.name);
-  const wantedLevel = add2eScrollWritingLevel(spell);
-  const candidates = (await add2eScrollWritingBuildIndex()).filter(candidate =>
-    add2eScrollWritingNorm(candidate.name) === wantedName
-    && candidate.level === wantedLevel
-  );
-
-  const selected = candidates.find(candidate =>
-    !compatibleLists.length
-    || compatibleLists.some(list => candidate.lists.includes(list))
-  ) ?? candidates[0] ?? null;
-
-  return selected ? selected.pack.getDocument(selected.id) : null;
-}
-
-function add2eScrollWritingDocumentEntries(item) {
-  try {
-    const entries = globalThis.ADD2E_ARCANE_DOCUMENTS?.documentEntries?.(item);
-    if (Array.isArray(entries)) return entries;
-  } catch (_error) {}
-
-  const document = item?.system?.arcaneDocument ?? {};
-  const source = Array.isArray(document.spells)
-    ? document.spells
-    : document.spell
-      ? [document.spell]
-      : [];
-
-  return source;
-}
-
-function add2eScrollWritingQuantity(item) {
-  const value = item?.system?.quantite ?? item?.system?.quantity;
-  if (value === undefined || value === null || value === "") return 1;
-  return Math.max(0, Math.floor(Number(value) || 0));
-}
-
 function add2eScrollWritingIsSingleSpellScroll(item, spellKey) {
-  if (add2eScrollWritingItemType(item) !== "objet") return false;
-
-  const kind = String(
-    item?.system?.arcaneDocument?.kind
-    ?? item?.flags?.add2e?.arcaneDocumentKind
-    ?? ""
-  ).toLowerCase();
-
-  if (kind !== "spell-scroll") return false;
-
-  const entries = add2eScrollWritingDocumentEntries(item);
+  if (itemType(item) !== "objet" || arcaneKind(item) !== "spell-scroll") return false;
+  const entries = documentEntries(item);
   return entries.length === 1 && String(entries[0]?.key ?? "") === String(spellKey);
 }
 
+async function add2eScrollWritingResolveCanonical(spell, compatibleLists) {
+  const entry = entryFromSpell(spell);
+  if (!entry) return null;
+  return resolveSpell({ ...entry, lists: [...compatibleLists] });
+}
+
 async function add2eWriteKnownSpellToScroll(actor, spell) {
-  if (!actor || !spell || add2eScrollWritingItemType(spell) !== "sort") return false;
+  if (!actor || !spell || itemType(spell) !== "sort") return false;
 
   if (game.combat?.started === true) {
     ui.notifications.warn("L'écriture d'un parchemin est impossible pendant un combat.");
@@ -353,9 +126,9 @@ async function add2eWriteKnownSpellToScroll(actor, spell) {
     return false;
   }
 
-  const actorLists = add2eScrollWritingActorLists(actor);
-  const compatibleLists = add2eScrollWritingLists(spell)
-    .filter(list => ADD2E_SCROLL_WRITING_LISTS.has(list) && actorLists.includes(list));
+  const actorLists = actorArcaneLists(actor);
+  const compatibleLists = spellLists(spell)
+    .filter(list => ARCANE_LISTS.has(list) && actorLists.includes(list));
 
   if (!compatibleLists.length) {
     ui.notifications.warn(`${spell.name} n'est pas un sort connu de Magicien ou d'Illusionniste pour ${actor.name}.`);
@@ -364,7 +137,13 @@ async function add2eWriteKnownSpellToScroll(actor, spell) {
 
   const sourceDocument = await add2eScrollWritingResolveCanonical(spell, compatibleLists);
   if (!sourceDocument) {
-    ui.notifications.error(`${spell.name} est introuvable dans le compendium add2e.sorts.`);
+    ui.notifications.error(`${spell.name} est introuvable dans le compendium add2e.sorts pour son niveau et sa liste.`);
+    return false;
+  }
+
+  const canonicalLevel = spellLevel(sourceDocument);
+  if (canonicalLevel < 1) {
+    ui.notifications.error(`${sourceDocument.name} ne possède pas de niveau canonique system.niveau.`);
     return false;
   }
 
@@ -372,10 +151,7 @@ async function add2eWriteKnownSpellToScroll(actor, spell) {
     throw new Error("L’API de fenêtre ADD2E est indisponible.");
   }
 
-  const listLabel = compatibleLists
-    .map(list => list === "illusionniste" ? "Illusionniste" : "Magicien")
-    .join(" / ");
-
+  const listText = compatibleLists.map(listLabel).join(" / ");
   const confirmed = await globalThis.add2eDialogConfirm({
     add2eTheme: "wizard",
     add2ePrimaryAction: "yes",
@@ -385,7 +161,7 @@ async function add2eWriteKnownSpellToScroll(actor, spell) {
     content: `
       <div class="add2e-scroll-writing-content" style="min-width:520px;padding:8px;">
         <p><b>${add2eScrollWritingEsc(actor.name)}</b> va écrire un parchemin contenant <b>${add2eScrollWritingEsc(sourceDocument.name)}</b>.</p>
-        <p>Niveau : <b>${add2eScrollWritingLevel(sourceDocument)}</b> — liste : <b>${add2eScrollWritingEsc(listLabel)}</b>.</p>
+        <p>Niveau : <b>${canonicalLevel}</b> — liste : <b>${add2eScrollWritingEsc(listText)}</b>.</p>
         <p>Le parchemin sera ajouté à l'équipement et pourra être lancé une fois sans préparation ni composant.</p>
         <p><em>Cette version ne consomme encore ni support vierge, ni plume, ni encre magique.</em></p>
       </div>
@@ -408,12 +184,16 @@ async function add2eWriteKnownSpellToScroll(actor, spell) {
   }
 
   const primaryList = compatibleLists[0];
-  const spellKey = add2eScrollWritingStableKey(sourceDocument, primaryList);
+  const spellKey = stableSpellKey(sourceDocument, primaryList);
+  if (!spellKey) {
+    throw new Error(`Clé canonique introuvable pour le sort « ${sourceDocument.name} ».`);
+  }
+
   const entry = {
     key: spellKey,
     name: sourceDocument.name,
-    level: add2eScrollWritingLevel(sourceDocument),
-    lists: compatibleLists,
+    level: canonicalLevel,
+    lists: [...compatibleLists],
     sourceUuid: sourceDocument.uuid,
     img: sourceDocument.img || spell.img || "icons/svg/book.svg"
   };
@@ -426,7 +206,7 @@ async function add2eWriteKnownSpellToScroll(actor, spell) {
   let quantity;
 
   if (existing) {
-    quantity = add2eScrollWritingQuantity(existing) + 1;
+    quantity = itemQuantity(existing) + 1;
     await existing.update({
       "system.quantite": quantity,
       "flags.add2e.lastWrittenByActorUuid": actor.uuid,
@@ -505,7 +285,7 @@ async function add2eWriteKnownSpellToScroll(actor, spell) {
     },
     rows: [
       { label: "Sort", value: sourceDocument.name },
-      { label: "Liste", value: listLabel },
+      { label: "Liste", value: listText },
       { label: "Quantité disponible", value: quantity }
     ],
     chatData: {
@@ -520,14 +300,14 @@ async function add2eWriteKnownSpellToScroll(actor, spell) {
 }
 
 function add2eAnnotateSpellRowsForScrollWriting(data, actor) {
-  const actorLists = add2eScrollWritingActorLists(actor);
+  const actorLists = actorArcaneLists(actor);
   const combatStarted = game.combat?.started === true;
 
   for (const level of data?.add2eSpellLevels ?? []) {
     for (const group of level?.groups ?? []) {
       for (const spell of group?.sorts ?? []) {
-        const compatible = add2eScrollWritingLists(spell)
-          .filter(list => ADD2E_SCROLL_WRITING_LISTS.has(list) && actorLists.includes(list));
+        const compatible = spellLists(spell)
+          .filter(list => ARCANE_LISTS.has(list) && actorLists.includes(list));
 
         const eligible = spell?.isRegularSpell !== false
           && !spell?.isObjectPower
