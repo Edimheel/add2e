@@ -5,7 +5,6 @@ import {
   VERSION,
   SCROLL_LISTS,
   clone,
-  norm,
   esc,
   listKey,
   listLabel,
@@ -14,19 +13,17 @@ import {
   cleanEmbedded,
   arcaneData,
   arcaneKind,
-  containerList,
   itemQuantity,
   documentEntries,
   entryFromSpell,
   spellLevel,
   spellLists,
   isKnownSpell,
-  resolveSpell,
-  resolveSpellByName
+  resolveSpell
 } from "./07b-arcane-documents-core.mjs";
 import { classSlug } from "./17b-multiclass-core.mjs";
 
-const ADD2E_SCROLL_SCRIBING_VERSION = "2026-08-12-canonical-class-identity-v2";
+const ADD2E_SCROLL_SCRIBING_VERSION = "2026-08-12-canonical-scroll-identity-v3";
 const ADD2E_SCROLL_SCRIBE_CLASSES = new Set(["clerc", "druide", "magicien", "illusionniste"]);
 const ADD2E_SCROLL_MATERIALS = Object.freeze({
   papyrus: Object.freeze({ key: "papyrus", label: "Papyrus", minimumCostPoPerSheet: 2, failureModifier: 5 }),
@@ -36,51 +33,31 @@ const ADD2E_SCROLL_MATERIALS = Object.freeze({
 
 globalThis.ADD2E_SCROLL_SCRIBING_VERSION = ADD2E_SCROLL_SCRIBING_VERSION;
 
-function scrollSpellName(item) {
-  const system = item?.system ?? {};
-  const data = arcaneData(item);
-  const explicit = data.spellName ?? system.spellName ?? system.sortNom ?? system.nomSort ?? (typeof system.sort === "string" ? system.sort : (typeof system.spell === "string" ? system.spell : ""));
-  if (String(explicit ?? "").trim()) return String(explicit).trim();
-  const match = String(item?.name ?? "").trim().match(/^parchemin(?:\s+de\s+sort)?\s*[-—:]?\s*(?:de\s+|d['’])?(.+)$/iu);
-  const candidate = match?.[1]?.trim() ?? "";
-  return SCROLL_LISTS.has(listKey(candidate)) ? "" : candidate;
-}
-
 export async function hydrateScroll(item) {
-  if (!item?.parent || item.parent.documentName !== "Actor" || itemType(item) !== "objet" || !norm(item.name).startsWith("parchemin")) return false;
+  if (!item?.parent || item.parent.documentName !== "Actor" || itemType(item) !== "objet") return false;
+
   const existingData = arcaneData(item);
-  const list = containerList(item);
-  const existingEntries = documentEntries(item);
-  if (arcaneKind(item) === "spell-scroll") {
-    const needsList = list && !existingData.ownerList && !existingData.spellList;
-    if (!needsList) return false;
-    await item.update({
-      "system.arcaneDocument.ownerList": list,
-      "system.arcaneDocument.spellList": list,
-      "flags.add2e.arcaneSpellList": list
-    }, { add2eInternal: true, add2eArcaneSync: true, render: false });
-    return true;
+  if (String(existingData.kind ?? "").trim().toLowerCase() !== "spell-scroll") return false;
+
+  const configuredList = listKey(existingData.ownerList ?? existingData.spellList ?? "");
+  const list = SCROLL_LISTS.has(configuredList) ? configuredList : "";
+  const updates = {};
+
+  if (item.flags?.add2e?.arcaneDocumentKind !== "spell-scroll") {
+    updates["flags.add2e.arcaneDocumentKind"] = "spell-scroll";
   }
-  let entries = existingEntries;
-  if (!entries.length) {
-    const name = scrollSpellName(item);
-    if (name) {
-      const spell = await resolveSpellByName(name);
-      if (spell && norm(spell.name) === norm(name)) {
-        const entry = entryFromSpell(spell, list);
-        if (entry) entries = [entry];
-      }
-    }
+  if (list && existingData.ownerList !== list) {
+    updates["system.arcaneDocument.ownerList"] = list;
   }
-  await item.update({
-    "system.sousType": String(item.system?.sousType ?? "").trim() || "parchemin_de_sort",
-    "system.magique": true,
-    "system.consommable": true,
-    "system.arcaneDocument": { ...clone(existingData), schema: 1, kind: "spell-scroll", personal: false, ...(list ? { ownerList: list, spellList: list } : {}), spells: entries },
-    "flags.add2e.arcaneDocumentKind": "spell-scroll",
-    ...(list ? { "flags.add2e.arcaneSpellList": list } : {}),
-    "flags.add2e.generatedBy": VERSION
-  }, { add2eInternal: true, add2eArcaneSync: true, render: false });
+  if (list && existingData.spellList !== list) {
+    updates["system.arcaneDocument.spellList"] = list;
+  }
+  if (list && item.flags?.add2e?.arcaneSpellList !== list) {
+    updates["flags.add2e.arcaneSpellList"] = list;
+  }
+
+  if (!Object.keys(updates).length) return false;
+  await item.update(updates, { add2eInternal: true, add2eArcaneSync: true, render: false });
   return true;
 }
 
