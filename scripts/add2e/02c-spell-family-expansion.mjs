@@ -1,7 +1,7 @@
 // ADD2E — Expansion atomique des familles de sorts.
 // Compatible Foundry V13 / V14 / V15.
 
-const ADD2E_SPELL_FAMILY_VERSION = "2026-08-12-canonical-family-source-id-v16";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-08-12-canonical-spell-sources-v17";
 const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-07-02-spell-family-source-id-v14";
 
 const SPELL_FAMILY_ACTOR_QUEUES = globalThis.ADD2E_SPELL_FAMILY_ACTOR_QUEUES instanceof Map
@@ -14,6 +14,26 @@ const SPELL_FAMILY_DEDUPE_REQUESTS = globalThis.ADD2E_SPELL_FAMILY_DEDUPE_REQUES
 globalThis.ADD2E_SPELL_FAMILY_ACTOR_QUEUES = SPELL_FAMILY_ACTOR_QUEUES;
 globalThis.ADD2E_SPELL_FAMILY_EXPANSION_REQUESTS = SPELL_FAMILY_EXPANSION_REQUESTS;
 globalThis.ADD2E_SPELL_FAMILY_DEDUPE_REQUESTS = SPELL_FAMILY_DEDUPE_REQUESTS;
+
+const LEGACY_SPELL_SYNC_FLAGS = Object.freeze([
+  "autoGrantedByClass",
+  "autoGrantedByClassId",
+  "sourceClassId",
+  "classSlug",
+  "autoGrantedSpellSync",
+  "autoGrantedAtActorLevel",
+  "autoGrantedSpellLists",
+  "grantedSpellLists",
+  "spellListsResolved"
+]);
+
+const FAMILY_INHERITED_SPELL_FLAGS = Object.freeze([
+  "spellSyncSources",
+  "learnedSpellLists",
+  "knownSpellLists",
+  "manuallyLearnedSpell",
+  "lastLearnedSpellList"
+]);
 
 const clone = value => {
   if (value == null) return value;
@@ -66,6 +86,27 @@ const stableSpellKey = data => {
   return name && level > 0 && lists.length ? `${lists.join("+")}|${level}|${name}` : "";
 };
 const isGeneratedFamilySpell = item => item?.flags?.add2e?.spellFamily?.generated === true;
+
+function canonicalizeSpellSyncOwnership(data, sourceItem) {
+  const resolver = globalThis.add2eSpellSyncSources;
+  if (typeof resolver !== "function") {
+    throw new Error("Le résolveur canonique ADD2E de provenance des sorts est indisponible pour les familles de sorts.");
+  }
+  const result = clone(data);
+  result.flags ??= {};
+  result.flags.add2e ??= {};
+  const sources = resolver(sourceItem ?? result);
+  if (!Array.isArray(sources)) {
+    throw new Error(`Provenance canonique invalide pour « ${result?.name ?? "sort inconnu"} ».`);
+  }
+  if (sources.length || Array.isArray(result.flags.add2e.spellSyncSources)) {
+    result.flags.add2e.spellSyncSources = clone(sources);
+  } else {
+    delete result.flags.add2e.spellSyncSources;
+  }
+  for (const key of LEGACY_SPELL_SYNC_FLAGS) delete result.flags.add2e[key];
+  return result;
+}
 
 function familySourceId(item) {
   const sourceId = String(item?.id ?? item?._id ?? "").trim();
@@ -232,7 +273,8 @@ function dedupeExpectedEntries(output) {
 }
 
 function expectedSpellFamily(base) {
-  const source = typeof base?.toObject === "function" ? base.toObject() : clone(base);
+  const rawSource = typeof base?.toObject === "function" ? base.toObject() : clone(base);
+  const source = canonicalizeSpellSyncOwnership(rawSource, base);
   const name = String(source?.name ?? source?.system?.nom ?? "").trim();
   const sourceId = familySourceId(base);
   const key = familyKeyFor(base);
@@ -317,6 +359,7 @@ function familyIdentity(item) {
 
 function itemUpdate(item, expected) {
   const add2e = expected.data.flags?.add2e ?? {};
+  const currentAdd2e = item?.flags?.add2e ?? {};
   const update = {
     _id: item.id,
     name: expected.data.name,
@@ -325,11 +368,15 @@ function itemUpdate(item, expected) {
     "flags.add2e.spellFamily": clone(add2e.spellFamily)
   };
   if (Object.prototype.hasOwnProperty.call(item?.system ?? {}, "composants_materiels_objets")) update.system.composants_materiels_objets = forcedDeletion();
-  for (const key of [
-    "autoGrantedByClass", "autoGrantedByClassId", "autoGrantedSpellSync", "autoGrantedAtActorLevel",
-    "autoGrantedSpellLists", "grantedSpellLists", "learnedSpellLists", "knownSpellLists",
-    "manuallyLearnedSpell", "lastLearnedSpellList", "spellListsResolved"
-  ]) if (Object.prototype.hasOwnProperty.call(add2e, key)) update[`flags.add2e.${key}`] = clone(add2e[key]);
+
+  for (const key of FAMILY_INHERITED_SPELL_FLAGS) {
+    if (Object.prototype.hasOwnProperty.call(add2e, key)) update[`flags.add2e.${key}`] = clone(add2e[key]);
+    else if (Object.prototype.hasOwnProperty.call(currentAdd2e, key)) update[`flags.add2e.${key}`] = forcedDeletion();
+  }
+  for (const key of LEGACY_SPELL_SYNC_FLAGS) {
+    if (Object.prototype.hasOwnProperty.call(currentAdd2e, key)) update[`flags.add2e.${key}`] = forcedDeletion();
+  }
+
   if (add2e.reversibleActorEntry) update["flags.add2e.reversibleActorEntry"] = clone(add2e.reversibleActorEntry);
   if (add2e.variantChoice) update["flags.add2e.variantChoice"] = clone(add2e.variantChoice);
   return update;
