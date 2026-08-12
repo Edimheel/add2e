@@ -3,8 +3,9 @@
 // La feuille construit ses tuiles. Le HUD garde son rendu compact propre.
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
+import { classItems, classMatches, raceItem } from "./add2e/17b-multiclass-core.mjs";
 
-const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-08-06-canonical-racial-skill-cards-v3";
+const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-08-12-canonical-class-capability-view-v4";
 const ADD2E_CAPABILITY_ICON_ROOT = "systems/add2e/assets/icones/capacites";
 const ADD2E_RACIAL_ARTWORK_FLAG = "__ADD2E_RACIAL_CAPABILITY_ARTWORK_V1";
 
@@ -18,19 +19,29 @@ function featureName(feature) {
 }
 
 function featureMinLevel(feature) {
-  return Math.max(1, readNumber(feature?.minLevel ?? feature?.minimumLevel ?? feature?.niveauMin ?? feature?.requiredLevel ?? feature?.niveauRequis ?? feature?.levelRequired ?? feature?.level ?? feature?.niveau, 1));
+  const value = Number(feature?.minLevel);
+  if (!Number.isFinite(value) || value < 1) {
+    throw new Error(`minLevel canonique invalide pour « ${featureName(feature)} ».`);
+  }
+  return Math.floor(value);
 }
 
 function featureMaxLevel(feature) {
-  const raw = feature?.maxLevel ?? feature?.maximumLevel ?? feature?.niveauMax ?? feature?.levelMax ?? feature?.max;
-  if (raw === undefined || raw === null || raw === "") return 999;
-  return Math.max(1, readNumber(raw, 999));
+  const raw = feature?.maxLevel;
+  if (raw === undefined || raw === null || raw === "") return Number.POSITIVE_INFINITY;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 1) {
+    throw new Error(`maxLevel canonique invalide pour « ${featureName(feature)} ».`);
+  }
+  return Math.floor(value);
 }
 
-function featureClassLevel(actor, feature) {
-  const classLevel = readNumber(feature?._add2eClassLevel, NaN);
-  if (Number.isFinite(classLevel) && classLevel >= 1) return Math.floor(classLevel);
-  return Math.max(1, readNumber(actor?.system?.niveau, 1));
+function featureClassLevel(_actor, feature) {
+  const classLevel = Number(feature?._add2eClassLevel);
+  if (!Number.isFinite(classLevel) || classLevel < 1) {
+    throw new Error(`Niveau de classe canonique absent pour « ${featureName(feature)} ».`);
+  }
+  return Math.floor(classLevel);
 }
 
 function featureAvailable(actor, feature) {
@@ -39,55 +50,29 @@ function featureAvailable(actor, feature) {
 }
 
 function featureOnUse(feature) {
-  return String(feature?.on_use ?? feature?.onUse ?? feature?.script ?? feature?.macro ?? "").trim();
+  return String(feature?.on_use ?? "").trim();
 }
 
 function featureIsActive(feature) {
-  const fn = globalFn("add2eIsFeatureActivable");
-  if (fn) {
-    try { return fn(feature) === true; }
-    catch (_error) {}
-  }
   return feature?.activable === true
-    || (feature?.active === true && feature?.passive !== true)
     || String(feature?._add2eFeatureSource ?? "") === "activeClassFeatures"
     || Boolean(featureOnUse(feature));
 }
 
 function classFeatures(actor) {
   const fn = globalFn("add2eGetActorClassFeatures");
-  if (fn) {
-    try { return Array.from(fn(actor) ?? []); }
-    catch (error) { console.warn("[ADD2E][CAPACITES][CLASS_FEATURES]", error); }
+  if (!fn) throw new Error("Le résolveur canonique ADD2E des capacités de classe est indisponible.");
+  const features = fn(actor);
+  if (!Array.isArray(features)) {
+    throw new Error("Le résolveur canonique ADD2E des capacités de classe a renvoyé une valeur invalide.");
   }
-  return [];
+  return features;
 }
 
 function normalizeSkillKey(value) {
   const fn = globalFn("add2eNormalizeThiefSkillKey");
-  if (fn) {
-    try {
-      const key = String(fn(value) ?? "").trim();
-      if (key) return key;
-    } catch (_error) {}
-  }
-  const raw = slug(value);
-  return {
-    pick_pockets: "pickpocket",
-    pick_pocket: "pickpocket",
-    open_locks: "crochetage_serrures",
-    find_remove_traps: "detection_pieges",
-    move_silently: "deplacement_silencieux",
-    hide_in_shadows: "dissimulation",
-    hear_noise: "ecoute",
-    detect_noise: "ecoute",
-    climb_walls: "escalade",
-    backstab: "frappe_dans_le_dos",
-    attaque_dans_le_dos: "frappe_dans_le_dos",
-    attaque_sournoise: "frappe_dans_le_dos",
-    sneak_attack: "frappe_dans_le_dos",
-    read_languages: "lecture_langues"
-  }[raw] ?? raw;
+  if (!fn) throw new Error("Le normalisateur canonique ADD2E des compétences de voleur est indisponible.");
+  return String(fn(value) ?? "").trim();
 }
 
 function isHiddenThiefSkill(value) {
@@ -110,33 +95,20 @@ function isThiefSkillFeature(feature) {
 
 function getThiefSkills(actor) {
   const fn = globalFn("add2eGetActorThiefSkills");
-  if (fn) {
-    try {
-      const skills = Array.from(fn(actor) ?? []);
-      if (skills.length) return skills;
-    } catch (error) {
-      console.warn("[ADD2E][CAPACITES][THIEF_SKILLS]", error);
-    }
+  if (!fn) throw new Error("Le résolveur canonique ADD2E des compétences de voleur est indisponible.");
+  const skills = fn(actor);
+  if (!Array.isArray(skills)) {
+    throw new Error("Le résolveur canonique ADD2E des compétences de voleur a renvoyé une valeur invalide.");
   }
-  const fallback = globalFn("add2eGetActorThiefSkillTable");
-  if (!fallback) return [];
-  try { return Array.from(fallback(actor) ?? []); }
-  catch (error) {
-    console.warn("[ADD2E][CAPACITES][THIEF_SKILLS_FALLBACK]", error);
-    return [];
-  }
+  return skills;
 }
 
 function isThiefOrAssassin(actor) {
-  return Array.from(actor?.items ?? []).some(item => {
-    if (String(item?.type ?? "").toLowerCase() !== "classe") return false;
-    const key = slug(item?.system?.slug ?? item?.name ?? "");
-    return key.includes("voleur") || key.includes("assassin");
-  });
+  return classItems(actor).some(item => classMatches(item, "voleur") || classMatches(item, "assassin"));
 }
 
 function thiefPanelTitle(actor) {
-  return Array.from(actor?.items ?? []).some(item => slug(item?.name).includes("assassin"))
+  return classItems(actor).some(item => classMatches(item, "assassin"))
     ? "Compétences de voleur / assassin"
     : "Compétences de voleur";
 }
@@ -151,8 +123,7 @@ function signedPercent(value) {
 }
 
 function thiefRaceLabel(actor) {
-  const raceItem = Array.from(actor?.items ?? []).find(item => String(item?.type ?? "").toLowerCase() === "race");
-  return String(raceItem?.name ?? actor?.system?.details_race?.label ?? actor?.system?.race ?? "Race").trim() || "Race";
+  return String(raceItem(actor)?.name ?? "Race").trim() || "Race";
 }
 
 function thiefBonusBreakdown(actor, skill) {
