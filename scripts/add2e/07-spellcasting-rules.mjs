@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Spellcasting par Items classe
-// Version : 2026-08-12-canonical-class-progression-v8
+// Version : 2026-08-12-canonical-class-progression-v9
 // Les Items classe sont l’unique source de niveau et de listes de sorts des PJ.
 // Les profils dérivés canoniques sont l’unique source Intelligence/Sagesse.
 // Les emplacements sont lus exclusivement depuis spellcasting.preparationSource.
@@ -10,7 +10,7 @@
 
 import { classItems, classProgression, classProgressionRow, classSlug } from "./17b-multiclass-core.mjs";
 
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-12-canonical-class-progression-v8";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-12-canonical-class-progression-v9";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -67,6 +67,32 @@ function add2eSpellSlug(value) {
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/_+/g, "_")
     .replace(/^_|_$/g, "");
+}
+
+function add2eResolveSpellDistance(inches, { environment = "", kind = "range" } = {}) {
+  const value = Number(inches);
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`Distance de sort AD&D invalide : ${String(inches)}".`);
+  }
+
+  const environmentKey = add2eSpellSlug(environment);
+  if (!["interieur", "exterieur"].includes(environmentKey)) {
+    throw new Error(`Environnement de portée ADD2E invalide : ${String(environment)}.`);
+  }
+
+  const kindKey = add2eSpellSlug(kind);
+  if (!["range", "area"].includes(kindKey)) {
+    throw new Error(`Type de distance de sort ADD2E invalide : ${String(kind)}.`);
+  }
+
+  const metersPerInch = kindKey === "area" ? 3 : (environmentKey === "exterieur" ? 9 : 3);
+  return {
+    inches: value,
+    meters: value * metersPerInch,
+    metersPerInch,
+    environment: environmentKey,
+    kind: kindKey
+  };
 }
 
 function add2eSpellNumber(value, fallback = null) {
@@ -811,6 +837,7 @@ Hooks.on("updateActor", (actor, changed) => {
 
 globalThis.add2eNormalizeSpellKey = add2eNormalizeSpellKey;
 globalThis.add2eSpellLabel = add2eSpellLabel;
+globalThis.add2eResolveSpellDistance = add2eResolveSpellDistance;
 globalThis.add2eSpellClassLevel = add2eSpellClassLevel;
 globalThis.add2eGetSpellcastingEntries = add2eGetSpellcastingEntries;
 globalThis.add2eGetSpellSlotPoolsByLevel = add2eGetSpellSlotPoolsByLevel;
