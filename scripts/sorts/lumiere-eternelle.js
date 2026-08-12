@@ -1,21 +1,721 @@
-// OnUse ADD2E genere automatiquement pour Lumière éternelle
-// Compatible Foundry V13/V14/V15.
-// Retour attendu: true = sort consomme, false = sort non consomme.
+/**
+ * ADD2E — Lumière éternelle (Magicien / Illusionniste)
+ * Runtime canonique commun aux deux entrées non réversibles.
+ * Les valeurs de portée, zone, niveau et liste proviennent de l'Item lancé.
+ * Compatible Foundry V13/V14/V15 — fenêtres via l'API ADD2E commune.
+ */
 
-try {
-  const sortName = item?.name ?? "Lumière éternelle";
-  const actorName = actor?.name ?? token?.actor?.name ?? "acteur";
-  const message = "<p><strong>" + sortName + "</strong></p><p>" + actorName + " lance le sort. Les effets precis restent a appliquer selon le Manuel des joueurs AD&D 2e.</p>";
-  if (globalThis.ChatMessage?.create) {
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker ? ChatMessage.getSpeaker({ actor }) : undefined,
-      content: message
-    });
-  }
-  globalThis.ui?.notifications?.info?.(sortName + " lance.");
+const ADD2E_ARCANE_ETERNAL_LIGHT_VERSION = "2026-08-12-arcane-eternal-light-runtime-v1";
+
+function add2eArcaneEternalLightEmitGM(operation, payload) {
+  if (!game.socket) return false;
+  game.socket.emit("system.add2e", {
+    type: "ADD2E_GM_OPERATION",
+    operation,
+    payload: { ...(payload ?? {}), fromUserId: game.user.id, sentAt: Date.now() }
+  });
   return true;
-} catch (error) {
-  console.error("[ADD2E][SORT][ONUSE_AUTO]", error);
-  globalThis.ui?.notifications?.error?.("Erreur lors de l'execution du sort.");
-  return false;
 }
+
+globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_FIND_AMBIENT = payload => {
+  if (!payload) return null;
+  const scene = game.scenes?.get(payload.sceneId) ?? canvas.scene;
+  if (!scene) return null;
+  if (payload.lightId) {
+    const byId = scene.lights?.get(payload.lightId) ?? null;
+    if (byId) return byId;
+  }
+  if (payload.requestId) {
+    return scene.lights?.find(light =>
+      light.flags?.add2e?.requestId === payload.requestId
+      || light.getFlag?.("add2e", "requestId") === payload.requestId
+    ) ?? null;
+  }
+  return null;
+};
+
+globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_DELETE_AMBIENT = async payload => {
+  if (!payload || payload.type !== "ambient") return;
+  const scene = game.scenes?.get(payload.sceneId) ?? canvas.scene;
+  if (!scene) return;
+  const light = globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_FIND_AMBIENT(payload);
+  if (game.user.isGM) {
+    if (light) await light.delete();
+    return;
+  }
+  add2eArcaneEternalLightEmitGM("deleteAmbientLight", {
+    sceneId: scene.id,
+    lightId: light?.id ?? payload.lightId ?? null,
+    requestId: payload.requestId ?? null,
+    actorId: payload.actorId ?? null,
+    actorUuid: payload.actorUuid ?? null,
+    spellKey: "lumiere_eternelle",
+    x: payload.x ?? null,
+    y: payload.y ?? null
+  });
+};
+
+globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_RESTORE_TOKEN = async payload => {
+  if (!payload || payload.type !== "token") return;
+  const scene = game.scenes?.get(payload.sceneId) ?? canvas.scene;
+  const tokenDoc = scene?.tokens?.get(payload.tokenId) ?? null;
+  if (!tokenDoc) return;
+  const originalLight = payload.originalLight && typeof payload.originalLight === "object"
+    ? foundry.utils.deepClone(payload.originalLight)
+    : {};
+  if (game.user.isGM || tokenDoc.isOwner) {
+    await tokenDoc.update({ light: originalLight });
+    return;
+  }
+  add2eArcaneEternalLightEmitGM("updateToken", {
+    sceneId: scene.id,
+    tokenId: tokenDoc.id,
+    updateData: { light: originalLight }
+  });
+};
+
+if (globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_HOOKS_VERSION !== ADD2E_ARCANE_ETERNAL_LIGHT_VERSION) {
+  globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_HOOKS_VERSION = ADD2E_ARCANE_ETERNAL_LIGHT_VERSION;
+  const cleanup = async effect => {
+    if (effect?.flags?.add2e?.familyKey !== "lumiere_eternelle") return;
+    const payload = effect.flags.add2e.lightPayload ?? null;
+    if (payload?.type === "ambient") await globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_DELETE_AMBIENT(payload);
+    if (payload?.type === "token") await globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_RESTORE_TOKEN(payload);
+  };
+  Hooks.on("deleteActiveEffect", cleanup);
+  Hooks.on("updateActiveEffect", async (effect, changes) => {
+    if (changes?.disabled === true) await cleanup(effect);
+  });
+}
+
+return await (async () => {
+  const escapeHtml = value => String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  const sourceItem = (typeof sort !== "undefined" && sort?.type === "sort")
+    ? sort
+    : ((typeof item !== "undefined" && item?.type === "sort")
+      ? item
+      : ((typeof spell !== "undefined" && spell?.type === "sort")
+        ? spell
+        : ((typeof args !== "undefined" && args?.[0]?.item?.type === "sort") ? args[0].item : null)));
+  if (!sourceItem) {
+    ui.notifications.error("Lumière éternelle : Item sort canonique introuvable.");
+    return false;
+  }
+
+  const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
+  if (!caster) {
+    ui.notifications.error("Lumière éternelle : lanceur introuvable.");
+    return false;
+  }
+
+  const required = [
+    "add2eNormalizeSpellKey",
+    "add2eGetSpellListsFromItem",
+    "add2eResolveSpellDistance",
+    "add2eCanActorUseSpell",
+    "add2eDialogWait",
+    "add2eBuildChatCard",
+    "add2eCreateChatCard"
+  ];
+  const missing = required.filter(name => typeof globalThis[name] !== "function");
+  if (missing.length) {
+    ui.notifications.error(`Lumière éternelle : API ADD2E indisponible (${missing.join(", ")}).`);
+    return false;
+  }
+
+  const familyKind = String(sourceItem.flags?.add2e?.spellFamily?.kind ?? "base").trim().toLowerCase();
+  if (familyKind === "inverse") {
+    ui.notifications.error("Lumière éternelle de Magicien/Illusionniste n'est pas réversible.");
+    return false;
+  }
+
+  const spellLevel = Number(sourceItem.system?.niveau);
+  if (!Number.isInteger(spellLevel) || spellLevel < 1) {
+    ui.notifications.error("Lumière éternelle : system.niveau canonique invalide.");
+    return false;
+  }
+
+  const lists = globalThis.add2eGetSpellListsFromItem(sourceItem)
+    .map(value => globalThis.add2eNormalizeSpellKey(value))
+    .filter(Boolean);
+  const supported = [...new Set(lists.filter(value => value === "magicien" || value === "illusionniste"))];
+  if (supported.length !== 1) {
+    ui.notifications.error("Lumière éternelle : exactement une liste Magicien ou Illusionniste est requise.");
+    return false;
+  }
+  const listKey = supported[0];
+
+  let casterLevel = 0;
+  if (sourceItem.system?.isObjectPower === true) {
+    casterLevel = Number(sourceItem.system?.casterLevel);
+    if (!Number.isInteger(casterLevel) || casterLevel < 1) {
+      ui.notifications.error("Lumière éternelle : casterLevel canonique absent du pouvoir d'objet magique.");
+      return false;
+    }
+  } else {
+    const access = globalThis.add2eCanActorUseSpell(caster, sourceItem);
+    if (access?.ok !== true) {
+      ui.notifications.error(`Lumière éternelle : accès canonique refusé (${access?.reason ?? "raison inconnue"}).`);
+      return false;
+    }
+    const resolvedList = globalThis.add2eNormalizeSpellKey(access.entry?.key);
+    if (resolvedList !== listKey) {
+      ui.notifications.error(`Lumière éternelle : liste résolue incohérente (${resolvedList || "vide"}).`);
+      return false;
+    }
+    casterLevel = Number(access.actorLevel);
+    if (!Number.isInteger(casterLevel) || casterLevel < 1) {
+      ui.notifications.error("Lumière éternelle : niveau canonique du lanceur invalide.");
+      return false;
+    }
+  }
+
+  const casterToken = (typeof token !== "undefined" && token?.actor?.id === caster.id)
+    ? token
+    : canvas.tokens?.controlled?.find(placeable => placeable?.actor?.id === caster.id)
+      ?? caster.getActiveTokens?.()[0]
+      ?? null;
+  if (!casterToken || !canvas.scene) {
+    ui.notifications.warn("Lumière éternelle : le lanceur doit être présent sur une scène active.");
+    return false;
+  }
+
+  const environment = await globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "interieur",
+    add2eClasses: ["add2e-lumiere-eternelle-arcane-context"],
+    window: { title: "Lumière éternelle" },
+    content: `<form><p>Choisissez le contexte de portée.</p><p>La zone d'effet conserve ses dimensions normales.</p></form>`,
+    buttons: [
+      { action: "interieur", label: "Intérieur", icon: "<i class='fas fa-building'></i>", default: true, callback: () => "interieur" },
+      { action: "exterieur", label: "Extérieur", icon: "<i class='fas fa-tree'></i>", callback: () => "exterieur" },
+      { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+    ],
+    close: () => null
+  });
+  if (!environment) return false;
+
+  const normalizeText = value => String(value ?? "")
+    .trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[″”]/g, "\"")
+    .replace(/\s+/g, " ");
+
+  const canonicalText = (value, field) => {
+    if (typeof value === "string" || typeof value === "number") {
+      const text = String(value).trim();
+      if (text) return text;
+    }
+    if (value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, "valeur")) {
+      const text = String(value.valeur ?? "").trim();
+      if (text) return text;
+    }
+    throw new Error(`Lumière éternelle : ${field} canonique invalide.`);
+  };
+
+  const parseInches = (value, field, radius = false) => {
+    const text = canonicalText(value, field);
+    const normalized = normalizeText(text);
+    const pattern = radius
+      ? /^sphere de (\d+(?:[.,]\d+)?)\s*(?:\"|pouces?) de rayon$/
+      : /^(\d+(?:[.,]\d+)?)\s*(?:\"|pouces?)$/;
+    const match = normalized.match(pattern);
+    if (!match) throw new Error(`Lumière éternelle : ${field} non supporté (${text}).`);
+    return Number(match[1].replace(",", "."));
+  };
+
+  const metersPerUnit = scene => {
+    const unit = String(scene?.grid?.units ?? "").trim().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const factors = new Map([
+      ["m", 1], ["metre", 1], ["metres", 1], ["meter", 1], ["meters", 1],
+      ["km", 1000], ["cm", 0.01],
+      ["ft", 0.3048], ["foot", 0.3048], ["feet", 0.3048], ["pied", 0.3048], ["pieds", 0.3048],
+      ["yd", 0.9144], ["yard", 0.9144], ["yards", 0.9144]
+    ]);
+    const factor = factors.get(unit);
+    if (!(factor > 0)) throw new Error(`Lumière éternelle : unité de scène non supportée (${scene?.grid?.units || "vide"}).`);
+    return factor;
+  };
+
+  const sceneDistance = meters => {
+    const gridDistance = Number(canvas.scene?.grid?.distance);
+    const gridSize = Number(canvas.scene?.grid?.size);
+    if (!(gridDistance > 0) || !(gridSize > 0)) throw new Error("Lumière éternelle : grille Foundry invalide.");
+    const sceneUnits = Number(meters) / metersPerUnit(canvas.scene);
+    return { units: sceneUnits, pixels: (sceneUnits / gridDistance) * gridSize };
+  };
+
+  let rangeRule;
+  let radiusRule;
+  let rangePixels;
+  let radiusUnits;
+  try {
+    if (!["permanent", "permanente"].includes(normalizeText(canonicalText(sourceItem.system?.duree, "system.duree")))) {
+      throw new Error(`Lumière éternelle : durée canonique non supportée (${canonicalText(sourceItem.system?.duree, "system.duree")}).`);
+    }
+    const rangeInches = parseInches(sourceItem.system?.portee, "system.portee", false);
+    const radiusInches = parseInches(sourceItem.system?.zone_effet, "system.zone_effet", true);
+    rangeRule = globalThis.add2eResolveSpellDistance(rangeInches, { environment, kind: "range" });
+    radiusRule = globalThis.add2eResolveSpellDistance(radiusInches, { environment, kind: "area" });
+    rangePixels = sceneDistance(rangeRule.meters).pixels;
+    radiusUnits = sceneDistance(radiusRule.meters).units;
+  } catch (error) {
+    console.error("[ADD2E][LUMIERE_ETERNELLE_ARCANE][RULES]", { item: sourceItem.name, error });
+    ui.notifications.error(error.message);
+    return false;
+  }
+
+  const inRange = point => Math.hypot(
+    Number(point?.x ?? 0) - Number(casterToken.center?.x ?? 0),
+    Number(point?.y ?? 0) - Number(casterToken.center?.y ?? 0)
+  ) <= rangePixels + 0.1;
+
+  const blocked = (from, to) => {
+    try {
+      return Boolean(canvas.walls?.checkCollision && typeof Ray !== "undefined"
+        && canvas.walls.checkCollision(new Ray(from, to), { type: "sight", mode: "any" }) === true);
+    } catch (_error) {
+      return false;
+    }
+  };
+
+  const choosePoint = () => {
+    ui.notifications.info("Lumière éternelle : clique sur la scène. Échap ou clic droit annule.");
+    return new Promise(resolve => {
+      const stage = canvas.stage;
+      if (!stage?.on || !stage?.off) return resolve(null);
+      let done = false;
+      const finish = value => {
+        if (done) return;
+        done = true;
+        stage.off("pointerdown", onPointer);
+        window.removeEventListener("keydown", onKey, true);
+        resolve(value);
+      };
+      const onKey = event => {
+        if (event.key !== "Escape") return;
+        event.preventDefault?.();
+        finish(null);
+      };
+      const onPointer = event => {
+        const button = Number(event?.button ?? event?.nativeEvent?.button ?? event?.data?.originalEvent?.button ?? 0);
+        if (button === 2) return finish(null);
+        if (button !== 0) return;
+        event?.stopPropagation?.();
+        const point = event?.getLocalPosition?.(stage)
+          ?? event?.data?.getLocalPosition?.(stage)
+          ?? stage.toLocal?.(event?.global ?? event?.data?.global ?? null)
+          ?? null;
+        if (!Number.isFinite(Number(point?.x)) || !Number.isFinite(Number(point?.y))) return finish(null);
+        finish({ x: Number(point.x), y: Number(point.y) });
+      };
+      stage.on("pointerdown", onPointer);
+      window.addEventListener("keydown", onKey, true);
+    });
+  };
+
+  const chooseTarget = async () => {
+    const selected = Array.from(game.user.targets ?? []).filter(entry => !!entry?.actor);
+    if (selected.length > 1) {
+      ui.notifications.warn("Lumière éternelle : garde une seule créature ciblée.");
+      return null;
+    }
+    if (selected.length === 1) return selected[0];
+    ui.notifications.info("Lumière éternelle : cible une créature avec le ciblage Foundry. Échap annule.");
+    return new Promise(resolve => {
+      let done = false;
+      let hookId = null;
+      const finish = value => {
+        if (done) return;
+        done = true;
+        if (hookId !== null) Hooks.off("targetToken", hookId);
+        window.removeEventListener("keydown", onKey, true);
+        resolve(value);
+      };
+      const onKey = event => {
+        if (event.key !== "Escape") return;
+        event.preventDefault?.();
+        finish(null);
+      };
+      hookId = Hooks.on("targetToken", (user, target, targeted) => {
+        if (user?.id === game.user?.id && targeted === true && target?.actor) finish(target);
+      });
+      window.addEventListener("keydown", onKey, true);
+    });
+  };
+
+  const chooseObject = async bearerActor => {
+    const candidates = Array.from(bearerActor?.items ?? [])
+      .filter(entry => entry?.type !== "sort")
+      .sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? ""), "fr"));
+    if (!candidates.length) {
+      ui.notifications.warn(`Lumière éternelle : ${bearerActor?.name ?? "la cible"} ne porte aucun objet sélectionnable.`);
+      return null;
+    }
+    const options = candidates.map(entry => `<option value="${escapeHtml(entry.id)}">${escapeHtml(entry.name)}</option>`).join("");
+    const id = await globalThis.add2eDialogWait({
+      add2eTheme: "wizard",
+      add2ePrimaryAction: "select",
+      add2eClasses: ["add2e-lumiere-eternelle-arcane-object"],
+      window: { title: "Lumière éternelle — objet porté" },
+      content: `<form><p>Choisissez l'objet porté par <b>${escapeHtml(bearerActor.name)}</b>.</p><select name="itemId">${options}</select></form>`,
+      buttons: [
+        { action: "select", label: "Choisir", icon: "<i class='fas fa-hand-holding'></i>", default: true, callback: (_event, button) => button.form?.elements?.itemId?.value ?? null },
+        { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+      ],
+      close: () => null
+    });
+    return id ? (bearerActor.items?.get?.(id) ?? candidates.find(entry => entry.id === id) ?? null) : null;
+  };
+
+  const chooseCreaturePlacement = async () => globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "body",
+    add2eClasses: ["add2e-lumiere-eternelle-arcane-placement"],
+    window: { title: "Lumière éternelle — emplacement" },
+    content: `<form><p>Où placez-vous la lumière sur la créature ?</p><p>La cécité ne s'applique que si la lumière atteint les organes visuels.</p></form>`,
+    buttons: [
+      { action: "body", label: "Corps", icon: "<i class='fas fa-person'></i>", default: true, callback: () => "body" },
+      { action: "eyes", label: "Visage / yeux", icon: "<i class='fas fa-eye'></i>", callback: () => "eyes" },
+      { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+    ],
+    close: () => null
+  });
+
+  const magicResistance = targetActor => {
+    const engine = globalThis.ADD2E_EFFECTS;
+    if (!engine || typeof engine.checkResistanceDetails !== "function") {
+      throw new Error("Lumière éternelle : résolveur canonique de résistance magique indisponible.");
+    }
+    const result = engine.checkResistanceDetails(targetActor, "magie", { chat: false });
+    if (!result?.found) return { applicable: false, resisted: false, chance: 0, roll: null };
+    return { applicable: true, resisted: result.resiste === true, chance: Number(result.pct) || 0, roll: Number(result.jet) || null };
+  };
+
+  const lightConfig = {
+    dim: radiusUnits,
+    bright: radiusUnits,
+    angle: 360,
+    color: "#fffbd0",
+    alpha: 0.55,
+    coloration: 1,
+    luminosity: 0.75,
+    attenuation: 0.35,
+    animation: { type: null, speed: 5, intensity: 5, reverse: false }
+  };
+
+  const updateToken = async tokenDoc => {
+    if (game.user.isGM || tokenDoc.isOwner) {
+      await tokenDoc.update({ light: lightConfig });
+      return true;
+    }
+    return add2eArcaneEternalLightEmitGM("updateToken", {
+      sceneId: tokenDoc.parent?.id ?? canvas.scene.id,
+      tokenId: tokenDoc.id,
+      updateData: { light: lightConfig }
+    });
+  };
+
+  const createAmbient = async (point, destination) => {
+    const requestId = foundry.utils.randomID();
+    const flags = { add2e: { familyKey: "lumiere_eternelle", spellKey: "lumiere_eternelle", requestId, destination, actorId: caster.id, actorUuid: caster.uuid } };
+    const data = { x: point.x, y: point.y, rotation: 0, walls: true, vision: false, config: lightConfig, flags };
+    let lightId = null;
+    if (game.user.isGM) {
+      const created = await canvas.scene.createEmbeddedDocuments("AmbientLight", [data]);
+      lightId = created?.[0]?.id ?? null;
+      if (!lightId) return null;
+    } else {
+      const sent = add2eArcaneEternalLightEmitGM("createAmbientLight", {
+        sceneId: canvas.scene.id,
+        x: point.x,
+        y: point.y,
+        rotation: 0,
+        walls: true,
+        vision: false,
+        ...lightConfig,
+        flags
+      });
+      if (!sent) return null;
+    }
+    return { type: "ambient", sceneId: canvas.scene.id, lightId, requestId, actorId: caster.id, actorUuid: caster.uuid, x: point.x, y: point.y };
+  };
+
+  const createEffect = async (actorDoc, { destination, payload, targetActor = null, objectItem = null, blinded = false, placement = null }) => {
+    const data = {
+      name: destination === "point" || destination === "derriere" ? "Lumière éternelle : zone" : "Lumière éternelle",
+      img: sourceItem.img || "icons/svg/light.svg",
+      origin: sourceItem.uuid ?? null,
+      disabled: false,
+      transfer: false,
+      duration: { startTime: game.time?.worldTime ?? null },
+      description: blinded
+        ? "Lumière éternelle permanente ; la lumière placée sur les organes visuels aveugle la cible."
+        : "Lumière éternelle permanente jusqu'à annulation ou dissipation.",
+      flags: {
+        add2e: {
+          permanent: true,
+          familyKey: "lumiere_eternelle",
+          spellKey: "lumiere_eternelle",
+          sourceItemUuid: sourceItem.uuid ?? null,
+          casterId: caster.id,
+          casterUuid: caster.uuid,
+          casterLevel,
+          spellLevel,
+          listKey,
+          environment,
+          rangeMeters: rangeRule.meters,
+          radiusMeters: radiusRule.meters,
+          destination,
+          placement,
+          blinded,
+          targetId: targetActor?.id ?? null,
+          targetUuid: targetActor?.uuid ?? null,
+          objectItemId: objectItem?.id ?? null,
+          objectItemUuid: objectItem?.uuid ?? null,
+          objectItemName: objectItem?.name ?? null,
+          lightPayload: payload,
+          tags: [
+            "sort:lumiere_eternelle",
+            `liste:${listKey}`,
+            `niveau:${spellLevel}`,
+            "etat:lumiere_eternelle",
+            "famille:lumiere_eternelle",
+            "lumiere:eternelle",
+            "permanent",
+            `lumiere_destination:${destination}`,
+            ...(placement ? [`lumiere_emplacement:${placement}`] : []),
+            ...(blinded ? ["etat:cecite", "aveugle", "lumiere:aveuglement"] : []),
+            ...(objectItem ? [`objet:${globalThis.add2eNormalizeSpellKey(objectItem.name)}`] : []),
+            destination === "point" || destination === "derriere" ? "ambient_light" : "illumination:token"
+          ],
+          version: ADD2E_ARCANE_ETERNAL_LIGHT_VERSION
+        }
+      },
+      changes: []
+    };
+    if (game.user.isGM || actorDoc.isOwner) {
+      await actorDoc.createEmbeddedDocuments("ActiveEffect", [data]);
+      return true;
+    }
+    return add2eArcaneEternalLightEmitGM("createActiveEffect", { actorUuid: actorDoc.uuid, actorId: actorDoc.id, effectData: data });
+  };
+
+  const pointBehind = targetToken => {
+    const origin = casterToken.center;
+    const target = targetToken.center;
+    const dx = Number(target.x) - Number(origin.x);
+    const dy = Number(target.y) - Number(origin.y);
+    const length = Math.hypot(dx, dy) || 1;
+    const behindPixels = sceneDistance(0.3).pixels;
+    const halfToken = Math.max(Number(targetToken.w ?? 0), Number(targetToken.h ?? 0)) / 2;
+    const offset = halfToken + behindPixels;
+    return { x: target.x + (dx / length) * offset, y: target.y + (dy / length) * offset };
+  };
+
+  const selectedTargets = Array.from(game.user.targets ?? []).filter(entry => !!entry?.actor);
+  const destination = await globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "creature",
+    add2eClasses: ["add2e-lumiere-eternelle-arcane-destination"],
+    window: { title: "Lumière éternelle — destination" },
+    content: `<form><p>Choisissez la destination du sort.</p><p>${selectedTargets.length === 1 ? `Cible actuelle : ${escapeHtml(selectedTargets[0].name ?? selectedTargets[0].actor?.name)}.` : selectedTargets.length > 1 ? `${selectedTargets.length} cibles sont sélectionnées.` : "Aucune créature n'est ciblée."}</p></form>`,
+    buttons: [
+      { action: "creature", label: "Créature", icon: "<i class='fas fa-crosshairs'></i>", default: true, callback: () => "creature" },
+      { action: "object", label: "Objet porté", icon: "<i class='fas fa-hand-holding'></i>", callback: () => "object" },
+      { action: "point", label: "Point sur la scène", icon: "<i class='fas fa-location-dot'></i>", callback: () => "point" },
+      { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+    ],
+    close: () => null
+  });
+  if (!destination) return false;
+
+  const details = [];
+  let targetToken = null;
+  let targetActor = null;
+  let objectItem = null;
+  let destinationLabel = "";
+  let outcome = "";
+  let saveResult = null;
+  let resistance = null;
+  let blinded = false;
+  let placement = null;
+
+  if (destination === "point") {
+    const point = await choosePoint();
+    if (!point) return false;
+    if (!inRange(point)) {
+      ui.notifications.warn(`Lumière éternelle : point hors de portée (${rangeRule.inches}\").`);
+      return false;
+    }
+    if (blocked(casterToken.center, point)) {
+      ui.notifications.warn("Lumière éternelle : un obstacle bloque la ligne d'effet.");
+      return false;
+    }
+    const payload = await createAmbient(point, "point");
+    if (!payload) return false;
+    if (!await createEffect(caster, { destination: "point", payload })) return false;
+    destinationLabel = "Point choisi sur la scène";
+    outcome = "Zone de lumière éternelle créée";
+  }
+
+  if (destination === "object") {
+    if (selectedTargets.length > 1) {
+      ui.notifications.warn("Lumière éternelle : garde au plus une créature ciblée pour choisir un objet porté.");
+      return false;
+    }
+    targetToken = selectedTargets[0] ?? casterToken;
+    targetActor = targetToken?.actor ?? null;
+    if (!targetActor || !inRange(targetToken.center) || blocked(casterToken.center, targetToken.center)) {
+      ui.notifications.warn("Lumière éternelle : porteur de l'objet invalide, hors de portée ou masqué par un obstacle.");
+      return false;
+    }
+    objectItem = await chooseObject(targetActor);
+    if (!objectItem) return false;
+    const payload = {
+      type: "token",
+      sceneId: targetToken.document?.parent?.id ?? canvas.scene.id,
+      tokenId: targetToken.id,
+      actorId: targetActor.id,
+      actorUuid: targetActor.uuid,
+      objectItemId: objectItem.id,
+      objectItemUuid: objectItem.uuid ?? null,
+      objectItemName: objectItem.name,
+      originalLight: foundry.utils.deepClone(targetToken.document?.light ?? {})
+    };
+    if (!await updateToken(targetToken.document)) return false;
+    if (!await createEffect(targetActor, { destination: "object", payload, targetActor, objectItem })) return false;
+    destinationLabel = `${objectItem.name} — porté par ${targetToken.name ?? targetActor.name}`;
+    outcome = "Lumière éternelle liée à l'objet";
+  }
+
+  if (destination === "creature") {
+    targetToken = await chooseTarget();
+    if (!targetToken) return false;
+    targetActor = targetToken.actor ?? null;
+    if (!targetActor || !inRange(targetToken.center) || blocked(casterToken.center, targetToken.center)) {
+      ui.notifications.warn("Lumière éternelle : cible invalide, hors de portée ou masquée par un obstacle.");
+      return false;
+    }
+
+    placement = await chooseCreaturePlacement();
+    if (!placement) return false;
+
+    const needsDefense = targetToken.id !== casterToken.id && targetActor.id !== caster.id;
+    if (needsDefense) {
+      try {
+        resistance = magicResistance(targetActor);
+      } catch (error) {
+        ui.notifications.error(error.message);
+        return false;
+      }
+      if (resistance.applicable) details.push(`Résistance magique : ${resistance.roll}/${resistance.chance}% — ${resistance.resisted ? "réussie" : "échouée"}`);
+      if (resistance.resisted) outcome = "Résistance magique réussie — aucun effet";
+    }
+
+    if (!outcome && needsDefense) {
+      if (typeof globalThis.add2eRollSavingThrow !== "function") {
+        ui.notifications.error("Lumière éternelle : résolveur canonique des jets de sauvegarde indisponible.");
+        return false;
+      }
+      saveResult = await globalThis.add2eRollSavingThrow(targetActor, "sorts", {
+        source: "spell:lumiere_eternelle",
+        sourceItem,
+        caster,
+        targetToken,
+        createChat: false,
+        showDice: true
+      });
+      if (!saveResult?.ok) return false;
+      details.push(`Jet de protection : ${saveResult.d20}${saveResult.bonus ? `${saveResult.bonus >= 0 ? "+" : ""}${saveResult.bonus}` : ""} = ${saveResult.total} / ${saveResult.target} — ${saveResult.success ? "réussi" : "raté"}`);
+    }
+
+    if (!outcome && saveResult?.success === true) {
+      const point = pointBehind(targetToken);
+      const payload = await createAmbient(point, "derriere");
+      if (!payload) return false;
+      if (!await createEffect(caster, { destination: "derriere", payload, targetActor, placement })) return false;
+      destinationLabel = `${targetToken.name ?? targetActor.name} — 30 cm derrière`;
+      outcome = "Jet de protection réussi — lumière créée 30 cm derrière";
+    }
+
+    if (!outcome) {
+      const payload = {
+        type: "token",
+        sceneId: targetToken.document?.parent?.id ?? canvas.scene.id,
+        tokenId: targetToken.id,
+        actorId: targetActor.id,
+        actorUuid: targetActor.uuid,
+        originalLight: foundry.utils.deepClone(targetToken.document?.light ?? {})
+      };
+      if (!await updateToken(targetToken.document)) return false;
+      blinded = placement === "eyes";
+      if (!await createEffect(targetActor, { destination: "token", payload, targetActor, blinded, placement })) return false;
+      destinationLabel = targetToken.name ?? targetActor.name;
+      outcome = blinded ? "Lumière éternelle appliquée — cible aveuglée" : "Lumière éternelle appliquée à la créature";
+      if (blinded) details.push("La lumière placée sur les organes visuels aveugle la cible.");
+    }
+  }
+
+  const listLabel = listKey === "illusionniste" ? "Illusionniste" : "Magicien";
+  const card = {
+    actor: caster,
+    title: "Lumière éternelle",
+    icon: "fas fa-sun",
+    variant: "spell",
+    source: { name: caster.name, img: sourceItem.img ?? caster.img, type: `${listLabel} niveau ${casterLevel}` },
+    target: targetActor ? { name: targetToken?.name ?? targetActor.name, img: targetActor.img, type: destination === "object" ? "Porteur de l'objet" : "Cible du sort", meta: objectItem?.name ?? "" } : null,
+    rows: [
+      { label: "Liste", value: `${listLabel} — niveau de lanceur ${casterLevel}` },
+      { label: "Contexte", value: environment === "exterieur" ? "Extérieur" : "Intérieur" },
+      { label: "Portée", value: `${rangeRule.inches}\" = ${rangeRule.meters} m` },
+      { label: "Zone", value: `sphère de ${radiusRule.inches}\" de rayon = ${radiusRule.meters} m` },
+      { label: "Durée", value: "Permanente" },
+      { label: "Destination", value: destinationLabel || destination },
+      ...(placement ? [{ label: "Emplacement", value: placement === "eyes" ? "Visage / yeux" : "Corps" }] : []),
+      ...(objectItem ? [{ label: "Objet", value: objectItem.name }] : []),
+      { label: "Résultat", value: outcome || "Effet appliqué" }
+    ],
+    message: `${caster.name} lance Lumière éternelle.`,
+    trustedBodyHtml: `<div class="add2e-lumiere-eternelle-arcane-results">${details.length ? `<ul>${details.map(text => `<li>${escapeHtml(text)}</li>`).join("")}</ul>` : ""}<p>L'effet est permanent. Sur une créature, une sauvegarde réussie place la lumière 30 cm derrière ; la cécité ne s'applique que si la lumière atteint les organes visuels.</p></div>`,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+      rolls: saveResult?.roll ? [saveResult.roll] : [],
+      flags: { add2e: {
+        chatCardType: "lumiere-eternelle",
+        version: ADD2E_ARCANE_ETERNAL_LIGHT_VERSION,
+        spellKey: "lumiere_eternelle",
+        sourceItemUuid: sourceItem.uuid ?? null,
+        casterLevel,
+        spellLevel,
+        listKey,
+        environment,
+        rangeMeters: rangeRule.meters,
+        radiusMeters: radiusRule.meters,
+        permanent: true,
+        destination,
+        placement,
+        blinded,
+        targetActorUuid: targetActor?.uuid ?? null,
+        targetTokenId: targetToken?.id ?? null,
+        objectItemId: objectItem?.id ?? null,
+        resistance,
+        saveSuccess: saveResult?.success ?? null,
+        outcome
+      } }
+    }
+  };
+
+  const preview = globalThis.add2eBuildChatCard(card);
+  if (!String(preview ?? "").trim()) throw new Error("Lumière éternelle : carte ADD2E vide.");
+  await globalThis.add2eCreateChatCard(card);
+  try { await globalThis.ADD2E_PLAY_SPELL_FX?.("lumiere_eternelle", { casterToken, targetToken }); } catch (_error) {}
+  return true;
+})();
