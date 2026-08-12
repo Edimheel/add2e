@@ -1,380 +1,417 @@
-// ADD2E — onUse Illusionniste niveau 1 : Ténèbres
-// Version : 2026-05-05-illusionniste-n1-7-v1
-// Retour attendu par le moteur ADD2E : true = sort consommé, false = sort non consommé.
+/**
+ * ADD2E — Ténèbres (Illusionniste)
+ * Globe d'obscurité totale temporaire, statique, basé sur l'Item lancé.
+ * Compatible Foundry V13/V14/V15 — fenêtres via l'API ADD2E commune.
+ */
 
-const ADD2E_SORT_CONFIG = {
-  "name": "Ténèbres",
-  "slug": "tenebres",
-  "level": 1,
-  "classe": "Illusionniste",
-  "script_type": "simple_effect",
-  "description": "Ténèbres modifie une zone, un mur, un brouillard, un terrain, une lumière ou un environnement. Le script crée un suivi exploitable ; les dimensions exactes et conséquences sont gérées par le MD.",
-  "effect_rounds": "10*level",
-  "effectTags": [
-    "tenebres",
-    "obscurite"
-  ],
-  "modes": [
-    {
-      "id": "normal",
-      "label": "Ténèbres"
-    }
-  ],
-  "dice": null
+const ADD2E_ILLUSIONIST_DARKNESS_VERSION = "2026-08-12-illusionist-darkness-area-runtime-v1";
+const ADD2E_ILLUSIONIST_DARKNESS_RUNTIME = "illusionist-darkness-area";
+
+function add2eIllusionistDarknessEmitGM(operation, payload) {
+  if (!game.socket) return false;
+  game.socket.emit("system.add2e", {
+    type: "ADD2E_GM_OPERATION",
+    operation,
+    payload: { ...(payload ?? {}), fromUserId: game.user.id, sentAt: Date.now() }
+  });
+  return true;
+}
+
+globalThis.ADD2E_ILLUSIONIST_DARKNESS_FIND_AMBIENT = payload => {
+  if (!payload) return null;
+  const scene = game.scenes?.get(payload.sceneId) ?? canvas.scene;
+  if (!scene) return null;
+  if (payload.lightId) {
+    const light = scene.lights?.get(payload.lightId) ?? null;
+    if (light) return light;
+  }
+  if (payload.requestId) {
+    return scene.lights?.find(light =>
+      light.flags?.add2e?.requestId === payload.requestId
+      || light.getFlag?.("add2e", "requestId") === payload.requestId
+    ) ?? null;
+  }
+  return null;
 };
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][ILLUSIONNISTE_N1_7]";
 
-function add2eHtmlEscape(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
-}
+globalThis.ADD2E_ILLUSIONIST_DARKNESS_DELETE_AMBIENT = async payload => {
+  if (!payload || payload.type !== "ambient") return;
+  const scene = game.scenes?.get(payload.sceneId) ?? canvas.scene;
+  if (!scene) return;
+  const light = globalThis.ADD2E_ILLUSIONIST_DARKNESS_FIND_AMBIENT(payload);
+  if (game.user.isGM) {
+    if (light) await light.delete();
+    return;
+  }
+  add2eIllusionistDarknessEmitGM("deleteAmbientLight", {
+    sceneId: scene.id,
+    lightId: light?.id ?? payload.lightId ?? null,
+    requestId: payload.requestId ?? null,
+    actorId: payload.actorId ?? null,
+    actorUuid: payload.actorUuid ?? null,
+    spellKey: "tenebres",
+    x: payload.x ?? null,
+    y: payload.y ?? null
+  });
+};
 
-function add2eCasterLevel(actor) {
-  return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
-}
-
-async function add2eEvalRoll(formula) {
-  return await new Roll(formula).evaluate();
-}
-
-function add2eRoundCount(expr, level) {
-  if (typeof expr === "number") return expr;
-  if (!expr) return 0;
-  const s = String(expr);
-  if (s === "level") return level;
-  if (s === "2*level") return 2 * level;
-  if (s === "3*level") return 3 * level;
-  if (s === "4+level") return 4 + level;
-  if (s === "2+level") return 2 + level;
-  if (s === "4*level") return 4 * level;
-  if (s === "5*level") return 5 * level;
-  if (s === "10*level") return 10 * level;
-  if (s === "20*level") return 20 * level;
-  if (s === "long") return 0;
-  if (s === "short") return 1;
-  return Number(s) || 0;
-}
-
-function add2eDamageFormula(raw, level) {
-  const s = String(raw || "1d6");
-  if (s === "special" || s === "variable") return "1d20";
-  if (s === "leveld6") return `${Math.max(1, Math.min(10, level))}d6`;
-  return s;
-}
-
-function add2eGetCasterToken() {
-  return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
-}
-
-function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user.targets ?? []);
-  if (targets.length) return targets;
-  const casterToken = add2eGetCasterToken();
-  return (fallbackCaster && casterToken) ? [casterToken] : [];
-}
-
-async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? (typeof add2eGetCasterToken === "function" ? add2eGetCasterToken() : null);
-  const casterActor = actor ?? casterToken?.actor ?? null;
-  const casterName = casterActor?.name ?? casterToken?.name ?? "Illusionniste";
-  const spellName = item?.name ?? title ?? "Sort d’illusionniste";
-  const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
-  const targets = Array.from(game.user.targets ?? []);
-  const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
-  const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? options.regle ?? "";
-  const subtitle = options.subtitle ?? "Sort d’illusionniste";
-
-  const safeCaster = add2eHtmlEscape(casterName);
-  const safeSpell = add2eHtmlEscape(spellName);
-  const safeSubtitle = add2eHtmlEscape(subtitle);
-  const safeTarget = add2eHtmlEscape(targetLabel);
-  const safeOutcome = add2eHtmlEscape(outcome);
-  const safeCasterImg = add2eHtmlEscape(casterImg);
-  const safeSpellImg = add2eHtmlEscape(spellImg);
-
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
-    content: `
-      <div class="add2e-chat-card add2e-illusionniste-sort"
-           style="border:1px solid #6a8ed6;border-radius:8px;overflow:hidden;background:#eef4ff;color:#1f2f4d;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#2f4f9f;color:#fff;padding:7px 9px;">
-          <img src="${safeCasterImg}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #bfd2ff;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${safeCaster}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${safeSpell}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">${safeSubtitle}</div>
-          <img src="${safeSpellImg}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #bfd2ff;background:#fff;" />
-        </div>
-
-        <div style="padding:9px 10px 10px 10px;background:#eef4ff;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${safeTarget}</div>
-
-          <div style="border:1px solid #6a8ed6;border-radius:6px;background:#fbfdff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#234fb5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${safeOutcome}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
-          </div>
-
-          <details style="border:1px solid #6a8ed6;border-radius:5px;background:#fbfdff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#233f87;">Règle appliquée</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule || "Effet du sort appliqué selon sa description et l’arbitrage du MD."}</div>
-          </details>
-        </div>
-      </div>`
+if (globalThis.ADD2E_ILLUSIONIST_DARKNESS_HOOKS_VERSION !== ADD2E_ILLUSIONIST_DARKNESS_VERSION) {
+  globalThis.ADD2E_ILLUSIONIST_DARKNESS_HOOKS_VERSION = ADD2E_ILLUSIONIST_DARKNESS_VERSION;
+  const cleanup = async effect => {
+    const flags = effect?.flags?.add2e ?? {};
+    if (flags.runtime !== ADD2E_ILLUSIONIST_DARKNESS_RUNTIME) return;
+    const payload = flags.lightPayload ?? null;
+    if (payload?.type === "ambient") await globalThis.ADD2E_ILLUSIONIST_DARKNESS_DELETE_AMBIENT(payload);
+  };
+  Hooks.on("deleteActiveEffect", cleanup);
+  Hooks.on("updateActiveEffect", async (effect, changes) => {
+    if (changes?.disabled === true) await cleanup(effect);
   });
 }
 
-async function add2eApplyTaggedEffect(targetActor, { name, img, tags, rounds = 0, description = "", changes = [] }) {
-  if (!targetActor) return false;
+return await (async () => {
+  const spellName = "Ténèbres";
+  const spellKey = "tenebres";
+  const sourceItem = (typeof sort !== "undefined" && sort?.type === "sort")
+    ? sort
+    : ((typeof item !== "undefined" && item?.type === "sort")
+      ? item
+      : ((typeof spell !== "undefined" && spell?.type === "sort")
+        ? spell
+        : ((typeof args !== "undefined" && args?.[0]?.item?.type === "sort") ? args[0].item : null)));
+  if (!sourceItem) {
+    ui.notifications.error(`${spellName} : Item sort canonique introuvable.`);
+    return false;
+  }
 
-  const data = {
-    name,
-    img: img || item?.img || "icons/svg/aura.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes,
-    duration: {
-      rounds: rounds || undefined,
-      startRound: game.combat?.round ?? null,
-      startTime: game.time?.worldTime ?? null,
-      combat: game.combat?.id ?? null
-    },
-    description,
-    flags: { add2e: { tags: tags ?? [] } }
+  const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
+  if (!caster) {
+    ui.notifications.error(`${spellName} : lanceur introuvable.`);
+    return false;
+  }
+
+  const required = [
+    "add2eNormalizeSpellKey", "add2eGetSpellListsFromItem", "add2eResolveSpellDistance",
+    "add2eCanActorUseSpell", "add2eDialogWait", "add2eBuildChatCard", "add2eCreateChatCard"
+  ];
+  const missing = required.filter(name => typeof globalThis[name] !== "function");
+  if (missing.length) {
+    ui.notifications.error(`${spellName} : API ADD2E indisponible (${missing.join(", ")}).`);
+    return false;
+  }
+
+  const spellLevel = Number(sourceItem.system?.niveau);
+  if (!Number.isInteger(spellLevel) || spellLevel < 1) {
+    ui.notifications.error(`${spellName} : system.niveau canonique invalide.`);
+    return false;
+  }
+  const lists = globalThis.add2eGetSpellListsFromItem(sourceItem)
+    .map(value => globalThis.add2eNormalizeSpellKey(value)).filter(Boolean);
+  const uniqueLists = [...new Set(lists)];
+  if (uniqueLists.length !== 1 || uniqueLists[0] !== "illusionniste") {
+    ui.notifications.error(`${spellName} : ce runtime est réservé à la liste Illusionniste.`);
+    return false;
+  }
+
+  let casterLevel = 0;
+  if (sourceItem.system?.isObjectPower === true) {
+    casterLevel = Number(sourceItem.system?.casterLevel);
+    if (!Number.isInteger(casterLevel) || casterLevel < 1) {
+      ui.notifications.error(`${spellName} : casterLevel canonique absent du pouvoir d'objet magique.`);
+      return false;
+    }
+  } else {
+    const access = globalThis.add2eCanActorUseSpell(caster, sourceItem);
+    if (access?.ok !== true) {
+      ui.notifications.error(`${spellName} : accès canonique refusé (${access?.reason ?? "raison inconnue"}).`);
+      return false;
+    }
+    if (globalThis.add2eNormalizeSpellKey(access.entry?.key) !== "illusionniste") {
+      ui.notifications.error(`${spellName} : liste résolue incohérente.`);
+      return false;
+    }
+    casterLevel = Number(access.actorLevel);
+    if (!Number.isInteger(casterLevel) || casterLevel < 1) {
+      ui.notifications.error(`${spellName} : niveau canonique du lanceur invalide.`);
+      return false;
+    }
+  }
+
+  const casterToken = (typeof token !== "undefined" && token?.actor?.id === caster.id)
+    ? token
+    : canvas.tokens?.controlled?.find(placeable => placeable?.actor?.id === caster.id)
+      ?? caster.getActiveTokens?.()[0]
+      ?? null;
+  if (!casterToken || !canvas.scene) {
+    ui.notifications.warn(`${spellName} : le lanceur doit être présent sur une scène active.`);
+    return false;
+  }
+
+  const environment = await globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "interieur",
+    add2eClasses: ["add2e-illusionniste-tenebres-context"],
+    window: { title: spellName },
+    content: `<form><p>Choisissez le contexte de portée.</p><p>Le rayon de la zone reste celui indiqué par le sort.</p></form>`,
+    buttons: [
+      { action: "interieur", label: "Intérieur", icon: "<i class='fas fa-building'></i>", default: true, callback: () => "interieur" },
+      { action: "exterieur", label: "Extérieur", icon: "<i class='fas fa-tree'></i>", callback: () => "exterieur" },
+      { action: "cancel", label: "Annuler", icon: "<i class='fas fa-times'></i>", callback: () => null }
+    ], close: () => null
+  });
+  if (!environment) return false;
+
+  const normalizeText = value => String(value ?? "").trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[″”]/g, "\"").replace(/\s+/g, " ");
+  const canonicalText = (value, field) => {
+    if (typeof value === "string" || typeof value === "number") {
+      const text = String(value).trim();
+      if (text) return text;
+    }
+    if (value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, "valeur")) {
+      const text = String(value.valeur ?? "").trim();
+      if (text) return text;
+    }
+    throw new Error(`${spellName} : ${field} canonique invalide.`);
   };
 
+  const parseRangeInches = value => {
+    const text = canonicalText(value, "system.portee");
+    const normalized = normalizeText(text);
+    let match = normalized.match(/^(\d+(?:[.,]\d+)?)\s*(?:\"|pouces?)\/niveau$/);
+    if (match) return Number(match[1].replace(",", ".")) * casterLevel;
+    match = normalized.match(/^(\d+(?:[.,]\d+)?)\s*(?:\"|pouces?)$/);
+    if (match) return Number(match[1].replace(",", "."));
+    throw new Error(`${spellName} : portée canonique non supportée (${text}).`);
+  };
+
+  const parseRadiusMeters = value => {
+    const text = canonicalText(value, "system.zone_effet");
+    const match = normalizeText(text).match(/^sphere de (\d+(?:[.,]\d+)?)\s*(?:m|metres?) de rayon$/);
+    if (!match) throw new Error(`${spellName} : zone_effet canonique non supportée (${text}).`);
+    return Number(match[1].replace(",", "."));
+  };
+
+  const parseDuration = async value => {
+    const text = canonicalText(value, "system.duree");
+    const normalized = normalizeText(text);
+    let match = normalized.match(/^(\d+)d(\d+) rounds? \+ (\d+(?:[.,]\d+)?) rounds?\/niveau$/);
+    if (match) {
+      const count = Number(match[1]);
+      const faces = Number(match[2]);
+      const perLevel = Number(match[3].replace(",", "."));
+      if (!(count > 0) || !(faces > 0)) throw new Error(`${spellName} : formule de durée invalide (${text}).`);
+      const roll = await new Roll(`${count}d${faces}`).evaluate();
+      return { rounds: Math.round(Number(roll.total) + (perLevel * casterLevel)), roll, formula: `${count}d${faces}+${perLevel * casterLevel}` };
+    }
+    match = normalized.match(/^(\d+(?:[.,]\d+)?) rounds?\/niveau$/);
+    if (match) {
+      const perLevel = Number(match[1].replace(",", "."));
+      return { rounds: Math.round(perLevel * casterLevel), roll: null, formula: `${perLevel * casterLevel}` };
+    }
+    throw new Error(`${spellName} : durée canonique non supportée (${text}).`);
+  };
+
+  const sceneMetersPerUnit = scene => {
+    const unit = String(scene?.grid?.units ?? "").trim().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const factors = new Map([
+      ["m", 1], ["metre", 1], ["metres", 1], ["meter", 1], ["meters", 1],
+      ["km", 1000], ["cm", 0.01],
+      ["ft", 0.3048], ["foot", 0.3048], ["feet", 0.3048], ["pied", 0.3048], ["pieds", 0.3048],
+      ["yd", 0.9144], ["yard", 0.9144], ["yards", 0.9144]
+    ]);
+    const factor = factors.get(unit);
+    if (!(factor > 0)) throw new Error(`${spellName} : unité de scène non supportée (${scene?.grid?.units || "vide"}).`);
+    return factor;
+  };
+  const sceneDistance = meters => {
+    const gridDistance = Number(canvas.scene?.grid?.distance);
+    const gridSize = Number(canvas.scene?.grid?.size);
+    if (!(gridDistance > 0) || !(gridSize > 0)) throw new Error(`${spellName} : grille Foundry invalide.`);
+    const units = Number(meters) / sceneMetersPerUnit(canvas.scene);
+    return { units, pixels: (units / gridDistance) * gridSize };
+  };
+
+  let rangeRule;
+  let radiusMeters;
+  let rangePixels;
+  let radiusUnits;
+  let duration;
   try {
-    await targetActor.createEmbeddedDocuments("ActiveEffect", [data]);
-    return true;
-  } catch (e) {
-    console.warn(`${ADD2E_ONUSE_TAG}[EFFECT_CREATE_FAILED]`, {
-      sort: ADD2E_SORT_CONFIG.name,
-      target: targetActor.name,
-      error: e
-    });
+    rangeRule = globalThis.add2eResolveSpellDistance(parseRangeInches(sourceItem.system?.portee), { environment, kind: "range" });
+    radiusMeters = parseRadiusMeters(sourceItem.system?.zone_effet);
+    duration = await parseDuration(sourceItem.system?.duree);
+    rangePixels = sceneDistance(rangeRule.meters).pixels;
+    radiusUnits = sceneDistance(radiusMeters).units;
+    if (!(duration.rounds > 0)) throw new Error(`${spellName} : durée résolue invalide.`);
+  } catch (error) {
+    console.error("[ADD2E][ILLUSIONNISTE_TENEBRES][RULES]", { item: sourceItem.name, error });
+    ui.notifications.error(error.message);
     return false;
   }
-}
 
-async function add2eRemoveTaggedEffects(targetActor, removeTags = []) {
-  if (!targetActor?.effects) return 0;
-
-  const normalized = removeTags.map(t => String(t).toLowerCase());
-  const toDelete = [];
-
-  for (const ef of targetActor.effects) {
-    const tags = (ef.flags?.add2e?.tags ?? []).map(t => String(t).toLowerCase());
-    const name = String(ef.name ?? "").toLowerCase();
-
-    if (normalized.some(t => tags.includes(t) || name.includes(t.replace("etat:", "").replace("retire:", "")))) {
-      toDelete.push(ef.id);
-    }
-  }
-
-  if (!toDelete.length) return 0;
-  await targetActor.deleteEmbeddedDocuments("ActiveEffect", toDelete);
-  return toDelete.length;
-}
-
-async function add2eChooseMode(config) {
-  const modes = config.modes ?? [{ id: "normal", label: config.name }];
-  const needsNote = [
-    "note", "summon_note", "mode_note", "detection", "dispel_illusion",
-    "terrain", "movement", "utility", "meta"
-  ].includes(config.script_type);
-
-  if (modes.length <= 1 && !needsNote) return { mode: modes[0]?.id ?? "normal", note: "" };
-
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = value => {
-      if (done) return;
-      done = true;
-      resolve(value);
+  const durationData = rounds => {
+    const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+    return time?.durationData?.(rounds) ?? {
+      rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null,
+      startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null
     };
+  };
 
-    let content = `<form><p><b>${add2eHtmlEscape(config.name)}</b></p>`;
-    if (needsNote) {
-      content += `<div class="form-group"><label>Note de scène / cible / paramètres</label><textarea name="note" rows="3"></textarea></div>`;
-    }
-    content += `</form>`;
-
-    const buttons = {};
-    for (const mode of modes) {
-      buttons[mode.id] = {
-        label: mode.label,
-        callback: html => finish({
-          mode: mode.id,
-          note: html?.find?.("[name='note']")?.val?.() ?? ""
-        })
+  const choosePoint = () => {
+    ui.notifications.info(`${spellName} : clique sur la scène pour placer le centre du globe. Échap ou clic droit annule.`);
+    return new Promise(resolve => {
+      const stage = canvas.stage;
+      if (!stage?.on || !stage?.off) return resolve(null);
+      let done = false;
+      const finish = value => {
+        if (done) return;
+        done = true;
+        stage.off("pointerdown", onPointer);
+        window.removeEventListener("keydown", onKey, true);
+        resolve(value);
       };
-    }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-
-    new Dialog({
-      title: config.name,
-      content,
-      buttons,
-      default: modes[0]?.id ?? "normal",
-      close: () => finish(null)
-    }).render(true);
-  });
-}
-
-async function add2eSimpleEffect(choice, config) {
-  const targets = add2eGetTargets({ fallbackCaster: true });
-  const level = add2eCasterLevel(actor);
-  const rounds = add2eRoundCount(config.effect_rounds, level);
-  const mode = choice?.mode ?? "normal";
-  const title = mode !== "normal"
-    ? (config.modes?.find(m => m.id === mode)?.label ?? config.name)
-    : config.name;
-
-  const tags = [
-    `sort:${config.slug}`,
-    "classe:illusionniste",
-    "liste:illusionniste",
-    `niveau:${config.level}`,
-    ...(config.effectTags ?? []),
-    mode !== "normal" ? `mode:${mode}` : ""
-  ].filter(Boolean);
-
-  for (const t of targets) {
-    await add2eApplyTaggedEffect(t.actor, {
-      name: title,
-      img: item?.img,
-      tags,
-      rounds,
-      description: config.description
+      const onKey = event => {
+        if (event.key !== "Escape") return;
+        event.preventDefault?.();
+        finish(null);
+      };
+      const onPointer = event => {
+        const button = Number(event?.button ?? event?.nativeEvent?.button ?? event?.data?.originalEvent?.button ?? 0);
+        if (button === 2) return finish(null);
+        if (button !== 0) return;
+        event?.stopPropagation?.();
+        event?.data?.originalEvent?.preventDefault?.();
+        const point = event?.getLocalPosition?.(stage)
+          ?? event?.data?.getLocalPosition?.(stage)
+          ?? stage.toLocal?.(event?.global ?? event?.data?.global ?? null)
+          ?? null;
+        if (!Number.isFinite(Number(point?.x)) || !Number.isFinite(Number(point?.y))) return finish(null);
+        finish({ x: Number(point.x), y: Number(point.y) });
+      };
+      stage.on("pointerdown", onPointer);
+      window.addEventListener("keydown", onKey, true);
     });
+  };
+
+  const point = await choosePoint();
+  if (!point) return false;
+  const distancePixels = Math.hypot(point.x - casterToken.center.x, point.y - casterToken.center.y);
+  if (distancePixels > rangePixels + 0.1) {
+    ui.notifications.warn(`${spellName} : point hors de portée.`);
+    return false;
+  }
+  try {
+    if (canvas.walls?.checkCollision && typeof Ray !== "undefined"
+      && canvas.walls.checkCollision(new Ray(casterToken.center, point), { type: "sight", mode: "any" }) === true) {
+      ui.notifications.warn(`${spellName} : un obstacle bloque la ligne d'effet.`);
+      return false;
+    }
+  } catch (_error) {}
+
+  const darknessConfig = {
+    dim: radiusUnits, bright: 0, angle: 360, color: "#000000", alpha: 1,
+    coloration: 1, luminosity: -1, attenuation: 0.5,
+    animation: { type: null, speed: 5, intensity: 5, reverse: false }
+  };
+  const requestId = foundry.utils.randomID();
+  const ambientFlags = { add2e: {
+    runtime: ADD2E_ILLUSIONIST_DARKNESS_RUNTIME, spellKey, requestId,
+    actorId: caster.id, actorUuid: caster.uuid, sourceItemUuid: sourceItem.uuid ?? null,
+    interactionTags: ["obscurite:totale", "bloque:infravision", "bloque:ultravision", "annule:lumiere", "suspend:lumiere_eternelle"]
+  } };
+
+  let lightId = null;
+  if (game.user.isGM) {
+    const created = await canvas.scene.createEmbeddedDocuments("AmbientLight", [{
+      x: point.x, y: point.y, rotation: 0, walls: true, vision: true, config: darknessConfig, flags: ambientFlags
+    }]);
+    lightId = created?.[0]?.id ?? null;
+    if (!lightId) return false;
+  } else {
+    const sent = add2eIllusionistDarknessEmitGM("createAmbientLight", {
+      sceneId: canvas.scene.id, x: point.x, y: point.y, rotation: 0, walls: true, vision: true,
+      dim: darknessConfig.dim, bright: 0, angle: 360, color: darknessConfig.color, alpha: darknessConfig.alpha,
+      coloration: darknessConfig.coloration, luminosity: darknessConfig.luminosity,
+      attenuation: darknessConfig.attenuation, animation: darknessConfig.animation, flags: ambientFlags
+    });
+    if (!sent) return false;
   }
 
-  await add2eChat(title, `
-    <p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>
-    ${rounds ? `<p>Durée mécanique : <b>${rounds}</b> round(s).</p>` : ""}
-  `, null, {
-    outcome: title,
-    rule: add2eHtmlEscape(config.description)
-  });
+  const lightPayload = {
+    type: "ambient", sceneId: canvas.scene.id, lightId, requestId,
+    actorId: caster.id, actorUuid: caster.uuid, spellKey, x: point.x, y: point.y
+  };
+  const effectData = {
+    name: `${spellName} : zone`,
+    img: sourceItem.img || "icons/magic/unholy/projectile-smoke-black.webp",
+    origin: sourceItem.uuid ?? null,
+    disabled: false, transfer: false,
+    duration: durationData(duration.rounds),
+    description: "Obscurité totale : infravision et ultravision sont inefficaces dans la zone.",
+    flags: { add2e: {
+      runtime: ADD2E_ILLUSIONIST_DARKNESS_RUNTIME, spellName, spellKey,
+      sourceItemUuid: sourceItem.uuid ?? null, casterId: caster.id, casterUuid: caster.uuid,
+      casterLevel, spellLevel, listKey: "illusionniste", environment,
+      rangeMeters: rangeRule.meters, radiusMeters, durationRounds: duration.rounds, durationFormula: duration.formula,
+      lightPayload,
+      tags: [
+        `sort:${spellKey}`, "liste:illusionniste", `niveau:${spellLevel}`, "tenebres", "obscurite:totale",
+        "bloque:infravision", "bloque:ultravision", "ambient_light", "annule:lumiere", "suspend:lumiere_eternelle"
+      ],
+      version: ADD2E_ILLUSIONIST_DARKNESS_VERSION
+    } },
+    changes: []
+  };
 
-  return true;
-}
-
-async function add2eDamage(config) {
-  const targets = add2eGetTargets({ fallbackCaster: false });
-  const level = add2eCasterLevel(actor);
-  const formula = add2eDamageFormula(config.dice, level);
-  const roll = await add2eEvalRoll(formula);
-
-  await roll.toMessage({
-    speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }),
-    flavor: config.name
-  });
-
-  await add2eChat(config.name, `
-    <p>Jet indicatif : <b>${roll.total}</b> (${formula})</p>
-    ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `, null, {
-    outcome: "EFFET OFFENSIF",
-    rule: add2eHtmlEscape(config.description)
-  });
-
-  return true;
-}
-
-async function add2eDispelIllusion(config, choice) {
-  const roll = await add2eEvalRoll("1d20");
-
-  await roll.toMessage({
-    speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }),
-    flavor: `${config.name} — jet indicatif`
-  });
-
-  await add2eChat(config.name, `
-    <p>Jet indicatif : <b>${roll.total}</b></p>
-    ${choice?.note ? `<p>Illusion visée : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-  `, null, {
-    outcome: "DISSIPATION D’ILLUSION",
-    rule: "Comparer selon la puissance de l’illusion, le niveau du lanceur et les protections actives. Le MD tranche la réussite."
-  });
-
-  return true;
-}
-
-async function add2eRemoveCondition(config) {
-  const targets = add2eGetTargets({ fallbackCaster: false });
-  if (!targets.length) {
-    ui.notifications.warn(`${config.name} : cible obligatoire.`);
+  let effectCreated = false;
+  if (game.user.isGM || caster.isOwner) {
+    const created = await caster.createEmbeddedDocuments("ActiveEffect", [effectData]);
+    effectCreated = Boolean(created?.[0]);
+  } else {
+    effectCreated = add2eIllusionistDarknessEmitGM("createActiveEffect", { actorUuid: caster.uuid, actorId: caster.id, effectData });
+  }
+  if (!effectCreated) {
+    await globalThis.ADD2E_ILLUSIONIST_DARKNESS_DELETE_AMBIENT(lightPayload);
     return false;
   }
 
-  const removeTags = config.effectTags ?? [];
-  let removed = 0;
-  for (const t of targets) removed += await add2eRemoveTaggedEffects(t.actor, removeTags);
-
-  await add2eChat(config.name, `
-    <p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>
-    <p>Effets retirés automatiquement : <b>${removed}</b>.</p>
-  `, null, {
-    targetLabel: targets.map(t => t.name).join(", "),
-    outcome: "EFFET RETIRÉ",
-    rule: add2eHtmlEscape(config.description)
-  });
-
+  const card = {
+    actor: caster,
+    title: spellName,
+    icon: "fas fa-moon",
+    variant: "spell",
+    source: { name: caster.name, img: sourceItem.img ?? caster.img, type: `Illusionniste niveau ${casterLevel}` },
+    rows: [
+      { label: "Liste", value: `Illusionniste — niveau de lanceur ${casterLevel}` },
+      { label: "Contexte", value: environment === "exterieur" ? "Extérieur" : "Intérieur" },
+      { label: "Portée", value: `${rangeRule.inches}\" = ${rangeRule.meters} m` },
+      { label: "Zone", value: `sphère de ${radiusMeters} m de rayon` },
+      { label: "Durée", value: `${duration.rounds} rounds (${duration.formula})` },
+      { label: "Jet de protection", value: "Aucun" },
+      { label: "Résultat", value: "Globe d'obscurité totale créé" }
+    ],
+    message: `${caster.name} lance ${spellName}.`,
+    trustedBodyHtml: `<div class="add2e-illusionniste-tenebres-results"><p>Infravision et ultravision sont inefficaces. Le sort reprend les interactions de Ténèbres sur 5 mètres avec Lumière et Lumière éternelle.</p></div>`,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+      rolls: duration.roll ? [duration.roll] : [],
+      flags: { add2e: {
+        chatCardType: "illusionniste-tenebres", version: ADD2E_ILLUSIONIST_DARKNESS_VERSION,
+        spellKey, sourceItemUuid: sourceItem.uuid ?? null, casterLevel, spellLevel,
+        listKey: "illusionniste", environment, rangeMeters: rangeRule.meters, radiusMeters,
+        durationRounds: duration.rounds, durationFormula: duration.formula,
+        requestId, sceneId: canvas.scene.id, lightId
+      } }
+    }
+  };
+  const preview = globalThis.add2eBuildChatCard(card);
+  if (!String(preview ?? "").trim()) {
+    await globalThis.ADD2E_ILLUSIONNIST_DARKNESS_DELETE_AMBIENT(lightPayload);
+    throw new Error(`${spellName} : carte ADD2E vide.`);
+  }
+  await globalThis.add2eCreateChatCard(card);
+  try { await globalThis.ADD2E_PLAY_SPELL_FX?.(spellKey, { casterToken, targetToken: null }); } catch (_error) {}
   return true;
-}
-
-async function add2eNoteOnly(config, choice) {
-  await add2eChat(config.name, `
-    <p>${add2eHtmlEscape(config.description)}</p>
-    ${choice?.note ? `<p>Note : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-  `, null, {
-    outcome: config.name.toUpperCase(),
-    rule: add2eHtmlEscape(config.description)
-  });
-
-  return true;
-}
-
-const choice = await add2eChooseMode(ADD2E_SORT_CONFIG);
-if (!choice) {
-  ui.notifications.info(`${ADD2E_SORT_CONFIG.name} annulé.`);
-  return false;
-}
-
-console.log(`${ADD2E_ONUSE_TAG}[START]`, {
-  sort: ADD2E_SORT_CONFIG.name,
-  actor: actor?.name,
-  mode: choice.mode,
-  targets: Array.from(game.user.targets ?? []).map(t => t.name)
-});
-
-switch (ADD2E_SORT_CONFIG.script_type) {
-  case "damage_roll":
-    return await add2eDamage(ADD2E_SORT_CONFIG);
-
-  case "dispel_illusion":
-    return await add2eDispelIllusion(ADD2E_SORT_CONFIG, choice);
-
-  case "remove_condition":
-    return await add2eRemoveCondition(ADD2E_SORT_CONFIG);
-
-  case "simple_effect":
-    return await add2eSimpleEffect(choice, ADD2E_SORT_CONFIG);
-
-  case "detection":
-  case "note":
-  case "summon_note":
-  case "mode_note":
-  case "terrain":
-  case "movement":
-  case "utility":
-  case "meta":
-  default:
-    return await add2eNoteOnly(ADD2E_SORT_CONFIG, choice);
-}
+})();
