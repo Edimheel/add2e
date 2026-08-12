@@ -2,7 +2,6 @@
 // Compatible Foundry V13/V14/V15.
 
 import {
-  norm,
   esc,
   itemType,
   isSpellbook,
@@ -278,8 +277,7 @@ function installActionListener() {
 function relevantItem(item) {
   return ["sort", "classe"].includes(itemType(item))
     || isSpellbook(item)
-    || isScroll(item)
-    || norm(item?.name).startsWith("parchemin");
+    || isScroll(item);
 }
 
 async function handleActorMortality(actor, options = {}) {
