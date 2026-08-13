@@ -6,13 +6,30 @@
 
 import { classItems, classProgression, classSlug } from "./17b-multiclass-core.mjs";
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-08-12-coordinated-spell-source-migration-v15";
-globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
+const ADD2E_SPELL_SYNC_VERSION = "2026-08-13-canonical-spell-field-migration-v16";
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
   "nom", "classe", "spellLists", "niveau", "ecole", "portee", "duree",
   "zone_effet", "cible", "temps_incantation", "jet_sauvegarde", "composantes",
   "composants_materiels", "description", "onUse"
+]);
+
+const ADD2E_SPELL_SYNC_FIELD_ALIASES = Object.freeze({
+  ecole: Object.freeze(["école", "school"]),
+  portee: Object.freeze(["portée", "range"]),
+  duree: Object.freeze(["durée", "duration"]),
+  zone_effet: Object.freeze(["zoneEffet", "area", "areaOfEffect"]),
+  cible: Object.freeze(["target", "targets"]),
+  temps_incantation: Object.freeze(["tempsIncantation", "castingTime", "casting_time"]),
+  jet_sauvegarde: Object.freeze(["jetSauvegarde", "savingThrow", "saving_throw"]),
+  composantes: Object.freeze(["components"]),
+  composants_materiels: Object.freeze(["materialComponents", "material_components"]),
+  description: Object.freeze(["description_reelle"]),
+  onUse: Object.freeze(["onuse", "on_use"])
+});
+
+const ADD2E_SPELL_SYNC_FIELD_ALIAS_KEYS = Object.freeze([
+  ...new Set(Object.values(ADD2E_SPELL_SYNC_FIELD_ALIASES).flat())
 ]);
 
 const ADD2E_SPELL_SYNC_LEGACY_SYSTEM_KEYS = Object.freeze([
@@ -34,15 +51,9 @@ const ADD2E_SPELL_SYNC_LEGACY_FLAG_KEYS = Object.freeze([
   "spellListsResolved"
 ]);
 
-const ADD2E_SPELL_SYNC_PREUPDATE_LEVELS = globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS instanceof Map
-  ? globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS
-  : new Map();
-globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS = ADD2E_SPELL_SYNC_PREUPDATE_LEVELS;
-
-const ADD2E_SPELL_SYNC_RUNNING = globalThis.ADD2E_SPELL_SYNC_RUNNING instanceof Set
-  ? globalThis.ADD2E_SPELL_SYNC_RUNNING
-  : new Set();
-globalThis.ADD2E_SPELL_SYNC_RUNNING = ADD2E_SPELL_SYNC_RUNNING;
+const ADD2E_SPELL_SYNC_PREUPDATE_LEVELS = new Map();
+const ADD2E_SPELL_SYNC_RUNNING = new Set();
+let ADD2E_SPELL_SYNC_CACHE = null;
 
 const ADD2E_SPELL_SYNC_AUTO_CLASS_SLUGS = new Set(["clerc", "druide", "ranger", "paladin"]);
 
@@ -121,6 +132,68 @@ function add2eSpellSyncNumber(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
+function add2eSpellSyncHasFieldValue(value) {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
+}
+
+function add2eSpellSyncSameValue(left, right) {
+  try { return JSON.stringify(left) === JSON.stringify(right); }
+  catch (_error) { return left === right; }
+}
+
+function add2eSpellSyncCanonicalizeSystemAliases(system = {}, { owner = "", logConflicts = false } = {}) {
+  const clean = add2eSpellSyncClone(system && typeof system === "object" ? system : {}) ?? {};
+
+  for (const [canonical, aliases] of Object.entries(ADD2E_SPELL_SYNC_FIELD_ALIASES)) {
+    const canonicalPresent = add2eSpellSyncHasFieldValue(clean[canonical]);
+    let migratedValue;
+    for (const alias of aliases) {
+      if (!Object.prototype.hasOwnProperty.call(clean, alias)) continue;
+      const aliasValue = clean[alias];
+      if (!canonicalPresent && migratedValue === undefined && add2eSpellSyncHasFieldValue(aliasValue)) {
+        migratedValue = add2eSpellSyncClone(aliasValue);
+      } else if (canonicalPresent && add2eSpellSyncHasFieldValue(aliasValue) && !add2eSpellSyncSameValue(clean[canonical], aliasValue) && logConflicts) {
+        console.warn("[ADD2E][SPELL_SYNC][FIELD_ALIAS_CONFLICT]", {
+          owner,
+          canonical,
+          alias,
+          kept: clean[canonical],
+          discarded: aliasValue
+        });
+      }
+      delete clean[alias];
+    }
+    if (!canonicalPresent && migratedValue !== undefined) clean[canonical] = migratedValue;
+  }
+
+  clean.spellLists = add2eSpellSyncArray(clean.spellLists);
+  clean.composants_materiels = add2eSpellSyncArray(clean.composants_materiels);
+  return clean;
+}
+
+function add2eSpellSyncLegacySystemUpdate(item) {
+  const source = item?.system ?? {};
+  const canonical = add2eSpellSyncCanonicalizeSystemAliases(source, {
+    owner: item?.name ?? item?.id ?? "Sort",
+    logConflicts: true
+  });
+  const update = {};
+
+  for (const key of Object.keys(ADD2E_SPELL_SYNC_FIELD_ALIASES)) {
+    if (!add2eSpellSyncSameValue(source[key], canonical[key])) update[`system.${key}`] = add2eSpellSyncClone(canonical[key]);
+  }
+  for (const key of ["spellLists", "composants_materiels"]) {
+    if (!add2eSpellSyncSameValue(source[key], canonical[key])) update[`system.${key}`] = add2eSpellSyncClone(canonical[key]);
+  }
+  for (const alias of ADD2E_SPELL_SYNC_FIELD_ALIAS_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(source, alias)) update[`system.${alias}`] = add2eSpellSyncForcedDeletion();
+  }
+  return update;
+}
+
 function add2eSpellSyncIsPlaceholder(value) {
   return typeof value === "string" && /a[_\s-]*comple/i.test(value);
 }
@@ -146,7 +219,10 @@ function add2eSpellSyncValidateCanonicalData(data) {
 
 function add2eSpellSyncPrepareCompendiumData(data) {
   const clean = add2eSpellSyncCleanPlaceholders(add2eSpellSyncClone(data));
-  clean.system ??= {};
+  clean.system = add2eSpellSyncCanonicalizeSystemAliases(clean.system ?? {}, {
+    owner: clean.name ?? clean.system?.nom ?? "Sort",
+    logConflicts: true
+  });
   clean.type = "sort";
   clean.name ||= clean.system.nom || "Sort";
   clean.img ||= "icons/svg/book.svg";
@@ -157,8 +233,6 @@ function add2eSpellSyncPrepareCompendiumData(data) {
   delete clean.flags.add2e.spellSyncSources;
   for (const key of ADD2E_SPELL_SYNC_LEGACY_FLAG_KEYS) delete clean.flags.add2e[key];
 
-  if (!Array.isArray(clean.system.composants_materiels)) clean.system.composants_materiels = [];
-  if (!Array.isArray(clean.system.spellLists)) clean.system.spellLists = [];
   for (const key of ADD2E_SPELL_SYNC_LEGACY_SYSTEM_KEYS) delete clean.system[key];
 
   const level = Number(clean.system.niveau);
@@ -466,14 +540,14 @@ function add2eSpellSyncBuildCacheKey(pack) {
 }
 
 function add2eInvalidateSpellSyncCache() {
-  globalThis.ADD2E_SPELL_SYNC_CACHE = null;
+  ADD2E_SPELL_SYNC_CACHE = null;
 }
 
 async function add2eBuildSpellSyncCache({ force = false } = {}) {
   const pack = game.packs?.get?.("add2e.sorts");
   if (!pack) throw new Error("Compendium de sorts introuvable : add2e.sorts");
   const cacheKey = add2eSpellSyncBuildCacheKey(pack);
-  const existing = globalThis.ADD2E_SPELL_SYNC_CACHE;
+  const existing = ADD2E_SPELL_SYNC_CACHE;
   if (!force && existing?.cacheKey === cacheKey && Array.isArray(existing.entries) && existing.entries.length) return existing;
 
   const documents = await pack.getDocuments();
@@ -531,7 +605,7 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
     validationWarnings,
     byStableKey
   };
-  globalThis.ADD2E_SPELL_SYNC_CACHE = cache;
+  ADD2E_SPELL_SYNC_CACHE = cache;
   console.info("[ADD2E][SPELL_SYNC][CACHE_READY]", { version: ADD2E_SPELL_SYNC_VERSION, entries: entries.length, duplicateCount: duplicateKeys.length, skipped: skipped.length, validationWarnings });
   return cache;
 }
@@ -863,10 +937,15 @@ async function add2eResyncSelectedActorSpells(options = {}) {
 
 function add2eSpellSyncLegacyMigrationUpdate(actor, item) {
   if (!item?.id || String(item.type ?? "").toLowerCase() !== "sort") return null;
+
+  const systemUpdate = add2eSpellSyncLegacySystemUpdate(item);
+  const hasSystemMigration = Object.keys(systemUpdate).length > 0;
+  if (actor?.type !== "personnage") return hasSystemMigration ? { _id: item.id, ...systemUpdate } : null;
+
   const flags = item.flags?.add2e ?? {};
   const hasLegacy = ADD2E_SPELL_SYNC_LEGACY_FLAG_KEYS.some(key => Object.prototype.hasOwnProperty.call(flags, key));
   const canonicalSources = add2eSpellSyncSources(item);
-  if (!hasLegacy && Array.isArray(flags.spellSyncSources)) return null;
+  if (!hasLegacy && Array.isArray(flags.spellSyncSources) && !hasSystemMigration) return null;
 
   let sources = canonicalSources;
   if (!sources.length) {
@@ -883,7 +962,7 @@ function add2eSpellSyncLegacyMigrationUpdate(actor, item) {
     }
   }
 
-  const update = { _id: item.id, "flags.add2e.spellSyncSources": sources };
+  const update = { _id: item.id, ...systemUpdate, "flags.add2e.spellSyncSources": sources };
   for (const key of ADD2E_SPELL_SYNC_LEGACY_FLAG_KEYS) {
     if (Object.prototype.hasOwnProperty.call(flags, key)) update[`flags.add2e.${key}`] = add2eSpellSyncForcedDeletion();
   }
@@ -891,7 +970,7 @@ function add2eSpellSyncLegacyMigrationUpdate(actor, item) {
 }
 
 async function add2eMigrateActorSpellSyncOwnership(actor) {
-  if (!actor?.items || actor.type !== "personnage") return { updated: 0 };
+  if (!actor?.items) return { updated: 0 };
   const updates = Array.from(actor.items).map(item => add2eSpellSyncLegacyMigrationUpdate(actor, item)).filter(Boolean);
   if (!updates.length) return { updated: 0 };
   await actor.updateEmbeddedDocuments("Item", updates, add2eSpellSyncMutationOptions({ add2eReason: "spell-sync-source-migration" }));
@@ -902,13 +981,27 @@ async function add2eMigrateAllSpellSyncOwnership() {
   if (!game.user?.isGM) return { actors: 0, updated: 0 };
   let updated = 0;
   let actors = 0;
-  for (const actor of game.actors?.filter?.(entry => entry.type === "personnage") ?? []) {
+  for (const actor of game.actors ?? []) {
     const result = await add2eMigrateActorSpellSyncOwnership(actor);
     if (result.updated) actors += 1;
     updated += result.updated;
   }
   if (updated) console.info("[ADD2E][SPELL_SYNC][SOURCE_MIGRATION]", { actors, updated });
   return { actors, updated };
+}
+
+async function add2eMigrateStandaloneWorldSpellFields() {
+  if (!game.user?.isGM) return { updated: 0 };
+  let updated = 0;
+  for (const item of game.items ?? []) {
+    if (!item?.id || String(item.type ?? "").toLowerCase() !== "sort") continue;
+    const systemUpdate = add2eSpellSyncLegacySystemUpdate(item);
+    if (!Object.keys(systemUpdate).length) continue;
+    await item.update(systemUpdate, add2eSpellSyncMutationOptions({ add2eReason: "spell-field-alias-migration" }));
+    updated += 1;
+  }
+  if (updated) console.info("[ADD2E][SPELL_SYNC][WORLD_FIELD_MIGRATION]", { updated });
+  return { updated };
 }
 
 function add2eSpellSyncInternalUpdate(options = {}) {
@@ -982,9 +1075,10 @@ for (const [name, fn] of Object.entries({
 
 Hooks.once("ready", () => {
   if (!game.user?.isGM) return;
-  const ownershipReady = add2eMigrateAllSpellSyncOwnership();
-  globalThis.ADD2E_SPELL_SYNC_OWNERSHIP_READY = ownershipReady;
-  ownershipReady
+  Promise.all([
+    add2eMigrateAllSpellSyncOwnership(),
+    add2eMigrateStandaloneWorldSpellFields()
+  ])
     .then(() => add2eWarmSpellSyncCache())
     .catch(error => console.warn("[ADD2E][SPELL_SYNC][READY_ERROR]", error));
 });
