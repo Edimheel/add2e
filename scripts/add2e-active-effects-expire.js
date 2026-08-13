@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v21
+// Version : 2026-08-13-canonical-document-transform-v22
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -39,7 +39,7 @@ const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transfor
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v21";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-13-canonical-document-transform-v22";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -1141,7 +1141,16 @@ Hooks.on("updateActiveEffect", async (effect, changed = {}, options = {}) => {
 
 Hooks.on("deleteActiveEffect", async (effect, options = {}) => {
   if (!add2eIsResponsibleGM()) return;
-  if (!options?.add2eDocumentTransform && !options?.add2eTokenTransform) console.error("[ADD2E][DOCUMENT-TRANSFORM][UNGUARDED_DELETE]", { actor: effect?.parent?.name ?? null, effect: effect?.name ?? null, effectId: effect?.id ?? null });
+  const transform = add2eDocumentTransformData(effect) ?? add2eTokenTransformData(effect);
+  if (transform && !options?.add2eDocumentTransform && !options?.add2eTokenTransform) {
+    console.error("[ADD2E][DOCUMENT-TRANSFORM][UNGUARDED_DELETE]", {
+      actor: effect?.parent?.name ?? null,
+      effect: effect?.name ?? null,
+      effectId: effect?.id ?? null,
+      transformId: transform?.id ?? null,
+      group: transform?.group ?? null
+    });
+  }
   const actor = effect?.parent;
   const temporaryItemId = effect?.flags?.add2e?.temporaryItemId;
   if (actor?.documentName === "Actor" && temporaryItemId && actor.items?.get(temporaryItemId)) await actor.deleteEmbeddedDocuments("Item", [temporaryItemId]);
