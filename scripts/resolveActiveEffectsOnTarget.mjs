@@ -116,7 +116,7 @@ function add2eResolveIncomingContext(effect, data = {}) {
 
   const prefixes = ["sort:", "effect:", "effet:", "etat:", "status:", "condition:", "affliction:"];
   for (const tag of tags) {
-    const prefix = prefixes.find(entry => tag.startsWith(prefix = entry));
+    const prefix = prefixes.find(entry => tag.startsWith(entry));
     if (!prefix) continue;
     const key = add2eResolveEffectKey(tag.slice(prefix.length));
     if (!key) continue;
