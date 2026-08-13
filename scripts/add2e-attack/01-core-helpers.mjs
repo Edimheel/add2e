@@ -10,8 +10,6 @@
  * - Consommation automatique des armes temporaires à usage unique
  */
 
-globalThis.ADD2E_ATTACK_VERSION = "2026-05-05-attack-v25-scene-token-computed-ca";
-
 // Certaines versions de modules historiques appellent encore mergeObject comme
 // utilitaire global. Foundry l’expose désormais sous foundry.utils.
 if (typeof globalThis.mergeObject !== "function" && typeof foundry?.utils?.mergeObject === "function") {
@@ -220,9 +218,7 @@ export function plageToRollFormula(plage) {
   return table[v] || plage;
 }
 
-globalThis.getMonsterThaco = getMonsterThaco;
 globalThis.formatSortChamp = formatSortChamp;
-globalThis.plageToRollFormula = plageToRollFormula;
 globalThis.add2eGetSortField = add2eGetSortField;
 globalThis.add2eGetSortOnUsePath = add2eGetSortOnUsePath;
 globalThis.add2eGetSortMaterialComponents = add2eGetSortMaterialComponents;
