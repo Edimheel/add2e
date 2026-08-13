@@ -5,7 +5,8 @@
  * Compatible Foundry V13/V14/V15 — fenêtres via l'API ADD2E commune.
  */
 
-const ADD2E_ARCANE_ETERNAL_LIGHT_VERSION = "2026-08-12-arcane-eternal-light-runtime-v1";
+const ADD2E_ARCANE_ETERNAL_LIGHT_VERSION = "2026-08-13-arcane-eternal-light-runtime-v2";
+const ADD2E_ARCANE_ETERNAL_LIGHT_RUNTIME = "arcane-eternal-light";
 
 function add2eArcaneEternalLightEmitGM(operation, payload) {
   if (!game.socket) return false;
@@ -77,7 +78,7 @@ globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_RESTORE_TOKEN = async payload => {
 if (globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_HOOKS_VERSION !== ADD2E_ARCANE_ETERNAL_LIGHT_VERSION) {
   globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_HOOKS_VERSION = ADD2E_ARCANE_ETERNAL_LIGHT_VERSION;
   const cleanup = async effect => {
-    if (effect?.flags?.add2e?.familyKey !== "lumiere_eternelle") return;
+    if (effect?.flags?.add2e?.runtime !== ADD2E_ARCANE_ETERNAL_LIGHT_RUNTIME) return;
     const payload = effect.flags.add2e.lightPayload ?? null;
     if (payload?.type === "ambient") await globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_DELETE_AMBIENT(payload);
     if (payload?.type === "token") await globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_RESTORE_TOKEN(payload);
@@ -118,6 +119,7 @@ return await (async () => {
     "add2eNormalizeSpellKey",
     "add2eGetSpellListsFromItem",
     "add2eResolveSpellDistance",
+    "add2eSceneDistance",
     "add2eCanActorUseSpell",
     "add2eDialogWait",
     "add2eBuildChatCard",
@@ -230,26 +232,23 @@ return await (async () => {
     return Number(match[1].replace(",", "."));
   };
 
-  const metersPerUnit = scene => {
-    const unit = String(scene?.grid?.units ?? "").trim().toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const factors = new Map([
-      ["m", 1], ["metre", 1], ["metres", 1], ["meter", 1], ["meters", 1],
-      ["km", 1000], ["cm", 0.01],
-      ["ft", 0.3048], ["foot", 0.3048], ["feet", 0.3048], ["pied", 0.3048], ["pieds", 0.3048],
-      ["yd", 0.9144], ["yard", 0.9144], ["yards", 0.9144]
-    ]);
-    const factor = factors.get(unit);
-    if (!(factor > 0)) throw new Error(`Lumière éternelle : unité de scène non supportée (${scene?.grid?.units || "vide"}).`);
-    return factor;
-  };
-
-  const sceneDistance = meters => {
-    const gridDistance = Number(canvas.scene?.grid?.distance);
-    const gridSize = Number(canvas.scene?.grid?.size);
-    if (!(gridDistance > 0) || !(gridSize > 0)) throw new Error("Lumière éternelle : grille Foundry invalide.");
-    const sceneUnits = Number(meters) / metersPerUnit(canvas.scene);
-    return { units: sceneUnits, pixels: (sceneUnits / gridDistance) * gridSize };
+  const sceneDistance = (meters, usage = "area") => {
+    const value = Number(meters);
+    if (!Number.isFinite(value) || value < 0) throw new Error("Lumière éternelle : distance de scène invalide.");
+    const resolved = globalThis.add2eSceneDistance({
+      scene: canvas.scene,
+      distance: value,
+      unit: "m",
+      usage,
+      environment,
+      measure: "radius"
+    });
+    const units = Number(resolved?.radiusSceneDistance ?? resolved?.sceneDistance);
+    const pixels = Number(resolved?.radiusPixels ?? resolved?.pixels);
+    if (!Number.isFinite(units) || units < 0 || !Number.isFinite(pixels) || pixels < 0) {
+      throw new Error("Lumière éternelle : conversion canonique de distance de scène impossible.");
+    }
+    return { units, pixels };
   };
 
   let rangeRule;
@@ -264,8 +263,8 @@ return await (async () => {
     const radiusInches = parseInches(sourceItem.system?.zone_effet, "system.zone_effet", true);
     rangeRule = globalThis.add2eResolveSpellDistance(rangeInches, { environment, kind: "range" });
     radiusRule = globalThis.add2eResolveSpellDistance(radiusInches, { environment, kind: "area" });
-    rangePixels = sceneDistance(rangeRule.meters).pixels;
-    radiusUnits = sceneDistance(radiusRule.meters).units;
+    rangePixels = sceneDistance(rangeRule.meters, "range").pixels;
+    radiusUnits = sceneDistance(radiusRule.meters, "area").units;
   } catch (error) {
     console.error("[ADD2E][LUMIERE_ETERNELLE_ARCANE][RULES]", { item: sourceItem.name, error });
     ui.notifications.error(error.message);
@@ -425,7 +424,15 @@ return await (async () => {
 
   const createAmbient = async (point, destination) => {
     const requestId = foundry.utils.randomID();
-    const flags = { add2e: { familyKey: "lumiere_eternelle", spellKey: "lumiere_eternelle", requestId, destination, actorId: caster.id, actorUuid: caster.uuid } };
+    const flags = { add2e: {
+      familyKey: "lumiere_eternelle",
+      spellKey: "lumiere_eternelle",
+      runtime: ADD2E_ARCANE_ETERNAL_LIGHT_RUNTIME,
+      requestId,
+      destination,
+      actorId: caster.id,
+      actorUuid: caster.uuid
+    } };
     const data = { x: point.x, y: point.y, rotation: 0, walls: true, vision: false, config: lightConfig, flags };
     let lightId = null;
     if (game.user.isGM) {
@@ -462,6 +469,7 @@ return await (async () => {
       flags: {
         add2e: {
           permanent: true,
+          runtime: ADD2E_ARCANE_ETERNAL_LIGHT_RUNTIME,
           familyKey: "lumiere_eternelle",
           spellKey: "lumiere_eternelle",
           sourceItemUuid: sourceItem.uuid ?? null,
@@ -502,8 +510,8 @@ return await (async () => {
       changes: []
     };
     if (game.user.isGM || actorDoc.isOwner) {
-      await actorDoc.createEmbeddedDocuments("ActiveEffect", [data]);
-      return true;
+      const created = await actorDoc.createEmbeddedDocuments("ActiveEffect", [data]);
+      return Boolean(created?.[0]);
     }
     return add2eArcaneEternalLightEmitGM("createActiveEffect", { actorUuid: actorDoc.uuid, actorId: actorDoc.id, effectData: data });
   };
@@ -561,7 +569,10 @@ return await (async () => {
     }
     const payload = await createAmbient(point, "point");
     if (!payload) return false;
-    if (!await createEffect(caster, { destination: "point", payload })) return false;
+    if (!await createEffect(caster, { destination: "point", payload })) {
+      await globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_DELETE_AMBIENT(payload);
+      return false;
+    }
     destinationLabel = "Point choisi sur la scène";
     outcome = "Zone de lumière éternelle créée";
   }
@@ -591,7 +602,10 @@ return await (async () => {
       originalLight: foundry.utils.deepClone(targetToken.document?.light ?? {})
     };
     if (!await updateToken(targetToken.document)) return false;
-    if (!await createEffect(targetActor, { destination: "object", payload, targetActor, objectItem })) return false;
+    if (!await createEffect(targetActor, { destination: "object", payload, targetActor, objectItem })) {
+      await globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_RESTORE_TOKEN(payload);
+      return false;
+    }
     destinationLabel = `${objectItem.name} — porté par ${targetToken.name ?? targetActor.name}`;
     outcome = "Lumière éternelle liée à l'objet";
   }
@@ -641,7 +655,10 @@ return await (async () => {
       const point = pointBehind(targetToken);
       const payload = await createAmbient(point, "derriere");
       if (!payload) return false;
-      if (!await createEffect(caster, { destination: "derriere", payload, targetActor, placement })) return false;
+      if (!await createEffect(caster, { destination: "derriere", payload, targetActor, placement })) {
+        await globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_DELETE_AMBIENT(payload);
+        return false;
+      }
       destinationLabel = `${targetToken.name ?? targetActor.name} — 30 cm derrière`;
       outcome = "Jet de protection réussi — lumière créée 30 cm derrière";
     }
@@ -657,7 +674,10 @@ return await (async () => {
       };
       if (!await updateToken(targetToken.document)) return false;
       blinded = placement === "eyes";
-      if (!await createEffect(targetActor, { destination: "token", payload, targetActor, blinded, placement })) return false;
+      if (!await createEffect(targetActor, { destination: "token", payload, targetActor, blinded, placement })) {
+        await globalThis.ADD2E_ARCANE_ETERNAL_LIGHT_RESTORE_TOKEN(payload);
+        return false;
+      }
       destinationLabel = targetToken.name ?? targetActor.name;
       outcome = blinded ? "Lumière éternelle appliquée — cible aveuglée" : "Lumière éternelle appliquée à la créature";
       if (blinded) details.push("La lumière placée sur les organes visuels aveugle la cible.");
