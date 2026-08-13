@@ -6,7 +6,7 @@
 
 import { classItems, classProgression, classSlug } from "./17b-multiclass-core.mjs";
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-08-13-canonical-spell-field-migration-v17";
+const ADD2E_SPELL_SYNC_VERSION = "2026-08-13-module-migration-coordination-v18";
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
   "nom", "classe", "spellLists", "niveau", "ecole", "portee", "duree",
@@ -57,6 +57,7 @@ const ADD2E_SPELL_SYNC_LEGACY_FLAG_KEYS = Object.freeze([
 const ADD2E_SPELL_SYNC_PREUPDATE_LEVELS = new Map();
 const ADD2E_SPELL_SYNC_RUNNING = new Set();
 let ADD2E_SPELL_SYNC_CACHE = null;
+let ADD2E_SPELL_SYNC_OWNERSHIP_MIGRATION = null;
 
 const ADD2E_SPELL_SYNC_AUTO_CLASS_SLUGS = new Set(["clerc", "druide", "ranger", "paladin"]);
 
@@ -993,6 +994,14 @@ async function add2eMigrateAllSpellSyncOwnership() {
   return { actors, updated };
 }
 
+export function add2eWaitForSpellSyncOwnershipMigration() {
+  if (!game.user?.isGM) return Promise.resolve({ actors: 0, updated: 0 });
+  if (!ADD2E_SPELL_SYNC_OWNERSHIP_MIGRATION) {
+    ADD2E_SPELL_SYNC_OWNERSHIP_MIGRATION = add2eMigrateAllSpellSyncOwnership();
+  }
+  return ADD2E_SPELL_SYNC_OWNERSHIP_MIGRATION;
+}
+
 async function add2eMigrateStandaloneWorldSpellFields() {
   if (!game.user?.isGM) return { updated: 0 };
   let updated = 0;
@@ -1079,7 +1088,7 @@ for (const [name, fn] of Object.entries({
 Hooks.once("ready", () => {
   if (!game.user?.isGM) return;
   Promise.all([
-    add2eMigrateAllSpellSyncOwnership(),
+    add2eWaitForSpellSyncOwnershipMigration(),
     add2eMigrateStandaloneWorldSpellFields()
   ])
     .then(() => add2eWarmSpellSyncCache())
