@@ -13,6 +13,7 @@ import {
 const ACTION_GLOBALS = ["add2eAttackRoll", "add2eCastSpell", "cast_spell", "add2eExecuteClassFeatureOnUse"];
 const TOKEN_DRAG_METHODS = ["_onDragLeftStart", "_onDragLeftMove", "_onDragLeftDrop", "_onDragLeftCancel"];
 const VADE_RETRO_CONTINUATION_CONTEXTS = "__ADD2E_VADE_RETRO_CONTINUATION_CONTEXTS";
+let canonicalHudFollowInstalled = false;
 let lastHudSyncKey = "";
 let lastHudSyncAt = 0;
 
@@ -109,8 +110,8 @@ async function executeLockedAction(name, original, context, args) {
 }
 
 function installCanonicalHudFollowHooks() {
-  if (globalThis.__ADD2E_CANONICAL_HUD_FOLLOW === ADD2E_INITIATIVE_VERSION) return;
-  globalThis.__ADD2E_CANONICAL_HUD_FOLLOW = ADD2E_INITIATIVE_VERSION;
+  if (canonicalHudFollowInstalled) return;
+  canonicalHudFollowInstalled = true;
   Hooks.on("add2eInitiativeTurnChanged", (combat, details = {}) => {
     syncActionHudToCombatant(combat, { reason: details.reason ?? "canonical-turn" });
   });
