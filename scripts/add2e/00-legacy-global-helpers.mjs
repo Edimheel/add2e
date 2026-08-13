@@ -4,14 +4,10 @@
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
-const ADD2E_GLOBAL_UTILITIES_VERSION = "2026-08-13-global-utilities-v10-distance-cm";
-globalThis.ADD2E_GLOBAL_UTILITIES_VERSION = ADD2E_GLOBAL_UTILITIES_VERSION;
+const ADD2E_GLOBAL_UTILITIES_VERSION = "2026-08-13-global-utilities-v11-local-state";
 
 const ADD2E_SHEET_IMAGE_FALLBACK = "icons/svg/item-bag.svg";
-const ADD2E_SHEET_MISSING_IMAGES = globalThis.ADD2E_SHEET_MISSING_IMAGES instanceof Set
-  ? globalThis.ADD2E_SHEET_MISSING_IMAGES
-  : new Set();
-globalThis.ADD2E_SHEET_MISSING_IMAGES = ADD2E_SHEET_MISSING_IMAGES;
+const ADD2E_SHEET_MISSING_IMAGES = new Set();
 
 function add2eNormalizeUtilityKey(value) {
   return String(value ?? "")
@@ -66,16 +62,13 @@ function add2eApplySheetImageFallback(image) {
   image.src = ADD2E_SHEET_IMAGE_FALLBACK;
 }
 
-if (!globalThis.__ADD2E_SHEET_IMAGE_ERROR_CAPTURE_V5) {
-  globalThis.__ADD2E_SHEET_IMAGE_ERROR_CAPTURE_V5 = true;
-  document.addEventListener("error", event => {
-    const image = event.target;
-    if (!add2eIsCharacterSheetImage(image)) return;
-    event.preventDefault?.();
-    event.stopImmediatePropagation?.();
-    add2eApplySheetImageFallback(image);
-  }, true);
-}
+document.addEventListener("error", event => {
+  const image = event.target;
+  if (!add2eIsCharacterSheetImage(image)) return;
+  event.preventDefault?.();
+  event.stopImmediatePropagation?.();
+  add2eApplySheetImageFallback(image);
+}, true);
 
 function add2eRegisterSheetImageFallbacks(root) {
   if (!root?.find) return;
