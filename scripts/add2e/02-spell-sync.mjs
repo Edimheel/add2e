@@ -6,7 +6,7 @@
 
 import { classItems, classProgression, classSlug } from "./17b-multiclass-core.mjs";
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-08-13-canonical-spell-field-migration-v16";
+const ADD2E_SPELL_SYNC_VERSION = "2026-08-13-canonical-spell-field-migration-v17";
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
   "nom", "classe", "spellLists", "niveau", "ecole", "portee", "duree",
@@ -15,6 +15,9 @@ const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
 ]);
 
 const ADD2E_SPELL_SYNC_FIELD_ALIASES = Object.freeze({
+  classe: Object.freeze(["class"]),
+  spellLists: Object.freeze(["lists", "liste", "liste_sort", "listeSort"]),
+  niveau: Object.freeze(["level", "niveau_sort", "spellLevel"]),
   ecole: Object.freeze(["école", "school"]),
   portee: Object.freeze(["portée", "range"]),
   duree: Object.freeze(["durée", "duration"]),
@@ -22,9 +25,9 @@ const ADD2E_SPELL_SYNC_FIELD_ALIASES = Object.freeze({
   cible: Object.freeze(["target", "targets"]),
   temps_incantation: Object.freeze(["tempsIncantation", "castingTime", "casting_time"]),
   jet_sauvegarde: Object.freeze(["jetSauvegarde", "savingThrow", "saving_throw"]),
-  composantes: Object.freeze(["components"]),
+  composantes: Object.freeze(["components", "componentes", "composants"]),
   composants_materiels: Object.freeze(["materialComponents", "material_components"]),
-  description: Object.freeze(["description_reelle"]),
+  description: Object.freeze(["description_reelle", "description_texte", "description_html"]),
   onUse: Object.freeze(["onuse", "on_use"])
 });
 
@@ -589,7 +592,7 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
     entries.push(entry);
   }
 
-  entries.sort((left, right) => left.level - right.level || String(left.name).localeCompare(right.name, "fr") || left.stableKey.localeCompare(right.stableKey, "fr"));
+  entries.sort((left, right) => left.level - right.level || String(left.name).localeCompare(String(right.name), "fr") || left.stableKey.localeCompare(right.stableKey, "fr"));
   const cache = {
     cacheKey,
     builtAt: Date.now(),
