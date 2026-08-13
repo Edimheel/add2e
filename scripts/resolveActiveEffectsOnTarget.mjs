@@ -11,7 +11,7 @@
  * Retour : { annulé, résiste, details, pct, jet, bonus }
  */
 
-const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-08-13-generic-incoming-active-effects-v3";
+const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-08-13-generic-incoming-active-effects-v4";
 
 function add2eResolveEffectKey(value) {
   return String(value ?? "")
@@ -691,7 +691,7 @@ function add2eLightDarknessExistingDescriptors(scene, incomingEffect) {
 function add2eLightDarknessDirectConflict(left, right) {
   if (!left || !right || left.scene?.id !== right.scene?.id) return false;
   const distance = Math.hypot(left.point.x - right.point.x, left.point.y - right.point.y);
-  return distance <= Math.max(left.radiusPixels, right.radiusPixels) + 0.1;
+  return distance <= (left.radiusPixels + right.radiusPixels) + 0.1;
 }
 
 async function add2eLightDarknessDeleteEffect(descriptor, reason) {
