@@ -11,7 +11,7 @@
  * Retour : { annulé, résiste, details, pct, jet, bonus }
  */
 
-const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-07-10-generic-incoming-active-effects-v2";
+const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-08-13-generic-incoming-active-effects-v3";
 
 function add2eResolveEffectKey(value) {
   return String(value ?? "")
@@ -549,6 +549,215 @@ function add2eIncomingEffectShouldBypass(effect, data = {}, options = {}) {
   ));
 }
 
+const ADD2E_LIGHT_DARKNESS_FAMILY_KEYS = new Set([
+  "lumiere",
+  "lumiere_eternelle",
+  "tenebres",
+  "tenebres_sur_5_metres",
+  "tenebres_eternelles"
+]);
+
+function add2eLightDarknessResponsibleGM() {
+  if (game.user?.isGM !== true) return false;
+  const activeGMs = Array.from(game.users ?? [])
+    .filter(user => user?.isGM && user?.active)
+    .sort((left, right) => String(left.id ?? "").localeCompare(String(right.id ?? "")));
+  return activeGMs[0]?.id === game.user.id;
+}
+
+function add2eLightDarknessTags(effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  return add2eResolveToArray(flags.tags ?? flags.effectTags)
+    .map(add2eResolveEffectKey)
+    .filter(Boolean);
+}
+
+function add2eLightDarknessSpellKey(effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  const direct = add2eResolveEffectKey(flags.spellKey ?? "");
+  if (ADD2E_LIGHT_DARKNESS_FAMILY_KEYS.has(direct)) return direct;
+  const tag = add2eLightDarknessTags(effect).find(value => value.startsWith("sort:"));
+  const fromTag = add2eResolveEffectKey(tag?.slice(5) ?? "");
+  return ADD2E_LIGHT_DARKNESS_FAMILY_KEYS.has(fromTag) ? fromTag : "";
+}
+
+function add2eLightDarknessKind(effect) {
+  const key = add2eLightDarknessSpellKey(effect);
+  if (key === "lumiere") return "light";
+  if (key === "lumiere_eternelle") return "eternal-light";
+  if (key === "tenebres_eternelles") return "eternal-darkness";
+  if (key === "tenebres" || key === "tenebres_sur_5_metres") return "temporary-darkness";
+  return "";
+}
+
+function add2eLightDarknessScene(effect) {
+  const payload = effect?.flags?.add2e?.lightPayload ?? null;
+  const sceneId = String(payload?.sceneId ?? "").trim();
+  return sceneId ? game.scenes?.get(sceneId) ?? null : null;
+}
+
+function add2eLightDarknessMetersPerUnit(scene) {
+  const unit = String(scene?.grid?.units ?? "").trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const factors = new Map([
+    ["m", 1], ["metre", 1], ["metres", 1], ["meter", 1], ["meters", 1],
+    ["km", 1000], ["kilometre", 1000], ["kilometres", 1000], ["kilometer", 1000], ["kilometers", 1000],
+    ["cm", 0.01], ["centimetre", 0.01], ["centimetres", 0.01], ["centimeter", 0.01], ["centimeters", 0.01],
+    ["ft", 0.3048], ["foot", 0.3048], ["feet", 0.3048], ["pied", 0.3048], ["pieds", 0.3048],
+    ["yd", 0.9144], ["yard", 0.9144], ["yards", 0.9144]
+  ]);
+  return factors.get(unit) ?? null;
+}
+
+function add2eLightDarknessRadiusPixels(effect, scene) {
+  const radiusMeters = Number(effect?.flags?.add2e?.radiusMeters);
+  const gridDistance = Number(scene?.grid?.distance);
+  const gridSize = Number(scene?.grid?.size);
+  const metersPerUnit = add2eLightDarknessMetersPerUnit(scene);
+  if (!(radiusMeters > 0) || !(gridDistance > 0) || !(gridSize > 0) || !(metersPerUnit > 0)) return null;
+  const sceneUnits = radiusMeters / metersPerUnit;
+  return (sceneUnits / gridDistance) * gridSize;
+}
+
+function add2eLightDarknessPoint(effect, scene) {
+  const payload = effect?.flags?.add2e?.lightPayload ?? null;
+  if (!payload) return null;
+
+  const x = Number(payload.x);
+  const y = Number(payload.y);
+  if (Number.isFinite(x) && Number.isFinite(y)) return { x, y };
+
+  const tokenId = String(payload.tokenId ?? "").trim();
+  if (!tokenId) return null;
+  const tokenDoc = scene?.tokens?.get?.(tokenId) ?? null;
+  if (!tokenDoc) return null;
+  const gridSize = Number(scene?.grid?.size);
+  if (!(gridSize > 0)) return null;
+  const width = Math.max(1, Number(tokenDoc.width) || 1) * gridSize;
+  const height = Math.max(1, Number(tokenDoc.height) || 1) * gridSize;
+  const tokenX = Number(tokenDoc.x);
+  const tokenY = Number(tokenDoc.y);
+  if (!Number.isFinite(tokenX) || !Number.isFinite(tokenY)) return null;
+  return { x: tokenX + (width / 2), y: tokenY + (height / 2) };
+}
+
+function add2eLightDarknessDescriptor(effect) {
+  if (!effect || effect.disabled === true) return null;
+  const kind = add2eLightDarknessKind(effect);
+  if (!kind) return null;
+  const scene = add2eLightDarknessScene(effect);
+  if (!scene) return null;
+  const point = add2eLightDarknessPoint(effect, scene);
+  const radiusPixels = add2eLightDarknessRadiusPixels(effect, scene);
+  if (!point || !(radiusPixels > 0)) return null;
+  return {
+    effect,
+    actor: add2eResolveEffectParentActor(effect),
+    kind,
+    spellKey: add2eLightDarknessSpellKey(effect),
+    scene,
+    point,
+    radiusPixels
+  };
+}
+
+function add2eLightDarknessActors(scene) {
+  const actors = new Map();
+  for (const actor of game.actors ?? []) {
+    const key = actor?.uuid ?? actor?.id;
+    if (key) actors.set(key, actor);
+  }
+  for (const tokenDoc of scene?.tokens ?? []) {
+    const actor = tokenDoc?.actor ?? null;
+    const key = actor?.uuid ?? actor?.id;
+    if (key) actors.set(key, actor);
+  }
+  return [...actors.values()];
+}
+
+function add2eLightDarknessExistingDescriptors(scene, incomingEffect) {
+  const descriptors = [];
+  for (const actor of add2eLightDarknessActors(scene)) {
+    for (const effect of actor?.effects ?? []) {
+      if (!effect || effect.id === incomingEffect?.id && effect.parent === incomingEffect?.parent) continue;
+      const descriptor = add2eLightDarknessDescriptor(effect);
+      if (!descriptor || descriptor.scene.id !== scene.id) continue;
+      descriptors.push(descriptor);
+    }
+  }
+  return descriptors;
+}
+
+function add2eLightDarknessDirectConflict(left, right) {
+  if (!left || !right || left.scene?.id !== right.scene?.id) return false;
+  const distance = Math.hypot(left.point.x - right.point.x, left.point.y - right.point.y);
+  return distance <= Math.max(left.radiusPixels, right.radiusPixels) + 0.1;
+}
+
+async function add2eLightDarknessDeleteEffect(descriptor, reason) {
+  const effect = descriptor?.effect ?? null;
+  const actor = descriptor?.actor ?? add2eResolveEffectParentActor(effect);
+  if (!effect?.id || !actor?.deleteEmbeddedDocuments) return false;
+  if (!actor.effects?.get?.(effect.id)) return true;
+  await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id], {
+    add2eLightDarknessResolution: true,
+    add2eReason: reason
+  });
+  return !actor.effects?.get?.(effect.id);
+}
+
+async function add2eResolveLightDarknessInteraction(effect) {
+  if (!add2eLightDarknessResponsibleGM()) return { resolved: false, reason: "not-responsible-gm" };
+  const incoming = add2eLightDarknessDescriptor(effect);
+  if (!incoming) return { resolved: false, reason: "not-light-darkness-family" };
+
+  const conflicts = add2eLightDarknessExistingDescriptors(incoming.scene, effect)
+    .filter(existing => add2eLightDarknessDirectConflict(incoming, existing));
+  if (!conflicts.length) return { resolved: false, reason: "no-direct-conflict" };
+
+  if ((incoming.kind === "light" || incoming.kind === "eternal-light")
+    && conflicts.some(existing => existing.kind === "eternal-darkness")) {
+    await add2eLightDarknessDeleteEffect(incoming, "eternal-darkness-cancels-light");
+    console.info("[ADD2E][LIGHT_DARKNESS][CANCEL_NEW_LIGHT]", {
+      spellKey: incoming.spellKey,
+      effectId: effect.id,
+      sceneId: incoming.scene.id
+    });
+    return { resolved: true, deletedIncoming: true };
+  }
+
+  const deleteExisting = [];
+  if (incoming.kind === "light" || incoming.kind === "eternal-light") {
+    deleteExisting.push(...conflicts.filter(existing => existing.kind === "temporary-darkness"));
+  } else if (incoming.kind === "temporary-darkness") {
+    deleteExisting.push(...conflicts.filter(existing => existing.kind === "light"));
+  } else if (incoming.kind === "eternal-darkness") {
+    deleteExisting.push(...conflicts.filter(existing => existing.kind === "light" || existing.kind === "eternal-light"));
+  }
+
+  const unique = new Map();
+  for (const descriptor of deleteExisting) {
+    const key = `${descriptor.actor?.uuid ?? descriptor.actor?.id ?? "actor"}:${descriptor.effect?.id ?? "effect"}`;
+    unique.set(key, descriptor);
+  }
+
+  let deleted = 0;
+  for (const descriptor of unique.values()) {
+    const ok = await add2eLightDarknessDeleteEffect(descriptor, `light-darkness-conflict:${incoming.spellKey}`);
+    if (ok) deleted += 1;
+  }
+
+  if (deleted) {
+    console.info("[ADD2E][LIGHT_DARKNESS][RESOLVED]", {
+      incoming: incoming.spellKey,
+      effectId: effect.id,
+      sceneId: incoming.scene.id,
+      deleted
+    });
+  }
+  return { resolved: deleted > 0, deleted };
+}
+
 async function resolveActiveEffectsOnTarget(actor, effectType) {
   if (!actor) {
     return { annulé: false, résiste: false, details: "Aucune cible", pct: 0, jet: 0, bonus: 0 };
@@ -708,9 +917,26 @@ if (!globalThis.ADD2E_INCOMING_EFFECT_HOOK_REGISTERED) {
   });
 }
 
+if (!globalThis.ADD2E_LIGHT_DARKNESS_INTERACTION_HOOK_REGISTERED) {
+  globalThis.ADD2E_LIGHT_DARKNESS_INTERACTION_HOOK_REGISTERED = ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION;
+  Hooks.on("createActiveEffect", async effect => {
+    if (!add2eLightDarknessResponsibleGM()) return;
+    try {
+      await add2eResolveLightDarknessInteraction(effect);
+    } catch (error) {
+      console.error("[ADD2E][LIGHT_DARKNESS][RESOLUTION_FAILED]", {
+        effectId: effect?.id,
+        effectName: effect?.name,
+        error
+      });
+    }
+  });
+}
+
 window.resolveActiveEffectsOnTarget = resolveActiveEffectsOnTarget;
 globalThis.resolveActiveEffectsOnTarget = resolveActiveEffectsOnTarget;
 globalThis.add2eResolveIncomingActiveEffect = add2eResolveIncomingActiveEffect;
 globalThis.add2eResolveEffectiveAbility = add2eResolveEffectiveAbility;
 globalThis.add2eResolveContextualEffectiveAbilities = add2eResolveContextualEffectiveAbilities;
+globalThis.add2eResolveLightDarknessInteraction = add2eResolveLightDarknessInteraction;
 globalThis.ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION;
