@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Spellcasting par Items classe
-// Version : 2026-08-12-canonical-class-progression-v9
+// Version : 2026-08-13-canonical-effects-engine-v10
 // Les Items classe sont l’unique source de niveau et de listes de sorts des PJ.
 // Les profils dérivés canoniques sont l’unique source Intelligence/Sagesse.
 // Les emplacements sont lus exclusivement depuis spellcasting.preparationSource.
@@ -10,8 +10,8 @@
 
 import { classItems, classProgression, classProgressionRow, classSlug } from "./17b-multiclass-core.mjs";
 
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-08-12-canonical-class-progression-v9";
-globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
+const ADD2E_SPELL_PREPARATION_VERSION = "2026-08-13-canonical-effects-engine-v10";
+const ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
   if (!actor) return false;
@@ -113,7 +113,7 @@ function add2eSpellNumber(value, fallback = null) {
 }
 
 function add2eSpellDerived(actor, ability, consumer = "spellcasting-rules") {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine || typeof engine.resolveAbilityDerived !== "function") {
     throw new Error("Le résolveur canonique ADD2E des profils dérivés n’est pas disponible.");
   }
@@ -124,7 +124,7 @@ function add2eSpellDerived(actor, ability, consumer = "spellcasting-rules") {
 }
 
 function add2eSpellResourceEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine
     || typeof engine.resolveResource !== "function"
     || typeof engine.checkResourceAvailability !== "function"
@@ -474,7 +474,7 @@ function add2eSpellSlotBonusEligibleClass(classItem) {
 }
 
 function add2eSpellSlotRules(actor) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   const rules = [];
   if (typeof engine?.getActiveRules === "function") {
     try { rules.push(...(engine.getActiveRules(actor) ?? [])); } catch (_error) {}
@@ -519,7 +519,7 @@ function add2eSpellSlotBonusDetails(actor, entry, spellLevel) {
       entryKey: "monster",
       blocked: false,
       access: add2eSpellAccessEntryDetails(actor, entry, spellLevel),
-      version: globalThis.ADD2E_SPELL_PREPARATION_VERSION
+      version: ADD2E_SPELL_PREPARATION_VERSION
     };
   }
 
@@ -534,7 +534,7 @@ function add2eSpellSlotBonusDetails(actor, entry, spellLevel) {
       entryKey: add2eNormalizeSpellKey(entry?.key),
       blocked: true,
       access,
-      version: globalThis.ADD2E_SPELL_PREPARATION_VERSION
+      version: ADD2E_SPELL_PREPARATION_VERSION
     };
   }
   const sources = access.eligibleSources;
@@ -551,7 +551,7 @@ function add2eSpellSlotBonusDetails(actor, entry, spellLevel) {
     entryKey: add2eNormalizeSpellKey(entry?.key),
     blocked: false,
     access,
-    version: globalThis.ADD2E_SPELL_PREPARATION_VERSION
+    version: ADD2E_SPELL_PREPARATION_VERSION
   };
 }
 
