@@ -1,5 +1,4 @@
-const ADD2E_ITEM_SHEETS_VERSION = "2026-07-17-item-sheet-persistent-tabs-v3";
-globalThis.ADD2E_ITEM_SHEETS_VERSION = ADD2E_ITEM_SHEETS_VERSION;
+const ADD2E_ITEM_SHEETS_VERSION = "2026-08-13-canonical-spell-sheet-dialog-v4";
 
 const { ApplicationV2 } = foundry.applications.api;
 
@@ -90,51 +89,6 @@ function add2eToArrayForSheet(value) {
   return [];
 }
 
-function add2eIsFilledSheetValue(value) {
-  if (value === undefined || value === null) return false;
-  if (typeof value === "string") return value.trim() !== "";
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") return Object.keys(value).length > 0;
-  return true;
-}
-
-function add2eSheetGetProperty(source, path) {
-  if (!source || !path) return undefined;
-  try {
-    if (foundry?.utils?.getProperty) return foundry.utils.getProperty(source, path);
-  } catch (_err) {}
-  const parts = String(path).split(".");
-  let cur = source;
-  for (const part of parts) {
-    if (cur === undefined || cur === null) return undefined;
-    cur = cur[part];
-  }
-  return cur;
-}
-
-function add2eFormatSheetFieldValue(value) {
-  if (!add2eIsFilledSheetValue(value)) return "";
-  if (Array.isArray(value)) return value.map(v => add2eFormatSheetFieldValue(v)).filter(Boolean).join(", ");
-  if (typeof value === "object") {
-    const raw = value.raw ?? value.texte ?? value.text ?? value.label ?? value.nom ?? value.name;
-    if (add2eIsFilledSheetValue(raw)) return String(raw).trim();
-    const valeur = value.valeur ?? value.value ?? value.nombre ?? value.number ?? "";
-    const unite = value.unite ?? value.unit ?? "";
-    const joined = `${valeur ?? ""}${unite ? ` ${unite}` : ""}`.trim();
-    if (joined) return joined;
-    return Object.values(value).map(v => add2eFormatSheetFieldValue(v)).filter(Boolean).join(", ");
-  }
-  return String(value).trim();
-}
-
-function add2eFirstSheetField(system, aliases, fallback = "") {
-  for (const alias of aliases) {
-    const value = add2eSheetGetProperty(system, alias);
-    if (add2eIsFilledSheetValue(value)) return add2eFormatSheetFieldValue(value);
-  }
-  return fallback;
-}
-
 function add2eCloneSheetSystem(system) {
   try {
     if (foundry?.utils?.deepClone) return foundry.utils.deepClone(system ?? {});
@@ -145,24 +99,11 @@ function add2eCloneSheetSystem(system) {
 }
 
 function add2eBuildSortSheetSystem(system) {
-  const source = system ?? {};
-  const sheet = add2eCloneSheetSystem(source);
-  sheet.ecole = add2eFirstSheetField(source, ["ecole", "école", "school"], sheet.ecole ?? "");
-  sheet.portee = add2eFirstSheetField(source, ["portee", "portée", "range"], sheet.portee ?? "");
-  sheet.duree = add2eFirstSheetField(source, ["duree", "durée", "duration"], sheet.duree ?? "");
-  sheet.temps_incantation = add2eFirstSheetField(source, ["temps_incantation", "tempsIncantation", "castingTime", "casting_time"], sheet.temps_incantation ?? "");
-  sheet.zone_effet = add2eFirstSheetField(source, ["zone_effet", "zoneEffet", "area", "areaOfEffect"], sheet.zone_effet ?? "");
-  sheet.composantes = add2eFirstSheetField(source, ["composantes", "components", "componentes", "composants"], sheet.composantes ?? "");
-  sheet.jet_sauvegarde = add2eFirstSheetField(source, ["jet_sauvegarde", "jetSauvegarde", "savingThrow", "saving_throw"], sheet.jet_sauvegarde ?? "");
-  sheet.onUse = add2eFirstSheetField(source, ["onUse", "onuse", "on_use"], sheet.onUse ?? "");
-  sheet.description = add2eFirstSheetField(source, ["description", "description_reelle", "description_texte", "description_html"], sheet.description ?? "");
-  return sheet;
+  return add2eCloneSheetSystem(system ?? {});
 }
 
-const ADD2E_ARCANE_ITEM_SHEET_VERSION = "2026-07-13-arcane-item-sheet-v2";
+const ADD2E_ARCANE_ITEM_SHEET_VERSION = "2026-08-13-arcane-item-sheet-dialog-v3";
 const ADD2E_ARCANE_ITEM_LISTS = new Set(["magicien", "illusionniste", "clerc", "druide"]);
-
-globalThis.ADD2E_ARCANE_ITEM_SHEET_VERSION = ADD2E_ARCANE_ITEM_SHEET_VERSION;
 
 function add2eArcaneNorm(value) {
   return String(value ?? "")
@@ -264,29 +205,18 @@ function add2eArcaneIsPersonalBook(item) {
 }
 
 function add2eArcaneSpellLists(item) {
-  try {
-    if (typeof globalThis.add2eGetSpellListsFromItem === "function") {
-      return [...new Set(globalThis.add2eGetSpellListsFromItem(item).map(add2eArcaneListKey).filter(Boolean))];
-    }
-  } catch (_error) {}
-  const system = item?.system ?? {};
-  const flags = item?.flags?.add2e ?? {};
-  return [...new Set([
-    flags.knownSpellLists,
-    flags.learnedSpellLists,
-    flags.grantedSpellLists,
-    system.spellLists,
-    system.lists,
-    system.liste,
-    system.liste_sort,
-    system.listeSort,
-    system.classe,
-    system.class
-  ].flatMap(add2eArcaneArray).map(add2eArcaneListKey).filter(Boolean))];
+  if (typeof globalThis.add2eGetSpellListsFromItem !== "function") {
+    throw new Error("Le résolveur canonique des listes de sorts ADD2E est indisponible.");
+  }
+  return [...new Set(globalThis.add2eGetSpellListsFromItem(item).map(add2eArcaneListKey).filter(Boolean))];
 }
 
 function add2eArcaneSpellLevel(item) {
-  return Math.max(1, Number(item?.system?.niveau ?? item?.system?.level ?? item?.system?.niveau_sort ?? item?.system?.spellLevel ?? 1) || 1);
+  const level = Number(item?.system?.niveau);
+  if (!Number.isInteger(level) || level < 1) {
+    throw new Error(`Niveau canonique absent ou invalide pour le sort « ${item?.name ?? "inconnu"} ».`);
+  }
+  return level;
 }
 
 function add2eArcaneSourceUuid(item) {
@@ -367,24 +297,6 @@ function add2eArcaneEntryFromSpell(container, spell) {
       img: spell.img || "icons/svg/book.svg"
     }
   };
-}
-
-async function add2eArcaneDialogConfirm({ title, content, yesLabel = "Confirmer" }) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications.error("DialogV2 est introuvable.");
-    return false;
-  }
-  return await DialogV2.wait({
-    window: { title },
-    modal: true,
-    rejectClose: false,
-    content,
-    buttons: [
-      { action: "yes", label: yesLabel, icon: "fa-solid fa-check", default: true, callback: () => true },
-      { action: "no", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => false }
-    ]
-  }) === true;
 }
 
 async function add2eArcaneResolveDrop(event) {
@@ -493,12 +405,34 @@ async function add2eArcaneRemoveEntry(container, spellKey) {
   const entries = add2eArcaneDocumentEntries(container);
   const entry = entries.find(candidate => String(candidate.key) === String(spellKey));
   if (!entry) return false;
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error("L’API de fenêtre ADD2E est indisponible.");
+  }
+
   const documentLabel = add2eArcaneObjectIsBook(container) ? "livre" : "parchemin";
-  const confirmed = await add2eArcaneDialogConfirm({
-    title: `Retirer ${entry.name}`,
-    content: `<div class="add2e-dialog" style="min-width:460px;padding:8px;"><p>Retirer <b>${entry.name}</b> de <b>${container.name}</b> ?</p><p>Le ${documentLabel} restera disponible et pourra recevoir un autre sort.</p></div>`,
-    yesLabel: "Retirer l'inscription"
-  });
+  const confirmed = await globalThis.add2eDialogWait({
+    add2eTheme: "parchment",
+    add2ePrimaryAction: "remove",
+    add2eClasses: ["add2e-arcane-remove-spell"],
+    window: { title: `Retirer ${entry.name}` },
+    content: `<div><p>Retirer <b>${entry.name}</b> de <b>${container.name}</b> ?</p><p>Le ${documentLabel} restera disponible et pourra recevoir un autre sort.</p></div>`,
+    buttons: [
+      {
+        action: "remove",
+        label: "Retirer l'inscription",
+        icon: "<i class='fas fa-check'></i>",
+        default: true,
+        callback: () => true
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => false
+      }
+    ],
+    close: () => false
+  }) === true;
   if (!confirmed) return false;
   await add2eArcaneStoreEntries(container, entries.filter(candidate => String(candidate.key) !== String(spellKey)));
   return true;
@@ -887,8 +821,11 @@ class Add2eSortSheet extends Add2eItemSheetV2 {
 
     const sortsParNiveau = {};
     for (const sort of data.listeSorts) {
-      let niveau = Number(sort.system?.niveau || sort.system?.level || 1);
-      if (!niveau || isNaN(niveau)) niveau = 1;
+      const niveau = Number(sort.system?.niveau);
+      if (!Number.isInteger(niveau) || niveau < 1) {
+        console.warn("[ADD2E][ITEM_SHEET][INVALID_SPELL_LEVEL]", { item: sort?.name, niveau: sort?.system?.niveau });
+        continue;
+      }
       if (!sortsParNiveau[niveau]) sortsParNiveau[niveau] = [];
       sortsParNiveau[niveau].push(sort);
     }
