@@ -4,7 +4,7 @@
  * Compatible Foundry V13/V14/V15 — fenêtres via l'API ADD2E commune.
  */
 
-const ADD2E_ETERNAL_LIGHT_VERSION = "2026-08-12-canonical-eternal-light-runtime-v2";
+const ADD2E_ETERNAL_LIGHT_VERSION = "2026-08-13-canonical-eternal-light-runtime-v3";
 const ADD2E_ETERNAL_LIGHT_RUNTIME = "cleric-eternal-light";
 
 function add2eEternalLightEmitGM(operation, payload) {
@@ -113,7 +113,7 @@ return await (async () => {
   }
 
   const required = [
-    "add2eNormalizeSpellKey", "add2eGetSpellListsFromItem", "add2eResolveSpellDistance",
+    "add2eNormalizeSpellKey", "add2eGetSpellListsFromItem", "add2eResolveSpellDistance", "add2eSceneDistance",
     "add2eCanActorUseSpell", "add2eDialogWait", "add2eBuildChatCard", "add2eCreateChatCard"
   ];
   const missing = required.filter(name => typeof globalThis[name] !== "function");
@@ -223,28 +223,23 @@ return await (async () => {
     return Number(match[1].replace(",", "."));
   };
 
-  const sceneMetersPerUnit = scene => {
-    const unit = String(scene?.grid?.units ?? "").trim().toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const factors = new Map([
-      ["m", 1], ["metre", 1], ["metres", 1], ["meter", 1], ["meters", 1],
-      ["km", 1000], ["cm", 0.01],
-      ["ft", 0.3048], ["foot", 0.3048], ["feet", 0.3048], ["pied", 0.3048], ["pieds", 0.3048],
-      ["yd", 0.9144], ["yard", 0.9144], ["yards", 0.9144]
-    ]);
-    const factor = factors.get(unit);
-    if (!(factor > 0)) throw new Error(`${spellName} : unité de scène non supportée (${scene?.grid?.units || "vide"}).`);
-    return factor;
-  };
-  const sceneDistance = meters => {
+  const sceneDistance = (meters, usage = "area") => {
     const value = Number(meters);
-    const gridDistance = Number(canvas.scene?.grid?.distance);
-    const gridSize = Number(canvas.scene?.grid?.size);
-    if (!Number.isFinite(value) || value < 0 || !(gridDistance > 0) || !(gridSize > 0)) {
-      throw new Error(`${spellName} : configuration de distance de scène invalide.`);
+    if (!Number.isFinite(value) || value < 0) throw new Error(`${spellName} : distance de scène invalide.`);
+    const resolved = globalThis.add2eSceneDistance({
+      scene: canvas.scene,
+      distance: value,
+      unit: "m",
+      usage,
+      environment,
+      measure: "radius"
+    });
+    const units = Number(resolved?.radiusSceneDistance ?? resolved?.sceneDistance);
+    const pixels = Number(resolved?.radiusPixels ?? resolved?.pixels);
+    if (!Number.isFinite(units) || units < 0 || !Number.isFinite(pixels) || pixels < 0) {
+      throw new Error(`${spellName} : conversion canonique de distance de scène impossible.`);
     }
-    const units = value / sceneMetersPerUnit(canvas.scene);
-    return { units, pixels: (units / gridDistance) * gridSize };
+    return { units, pixels };
   };
 
   let rangeRule;
@@ -258,8 +253,8 @@ return await (async () => {
     }
     rangeRule = globalThis.add2eResolveSpellDistance(parseInches(sourceItem.system?.portee, "system.portee"), { environment, kind: "range" });
     radiusRule = globalThis.add2eResolveSpellDistance(parseInches(sourceItem.system?.zone_effet, "system.zone_effet", true), { environment, kind: "area" });
-    rangePixels = sceneDistance(rangeRule.meters).pixels;
-    radiusUnits = sceneDistance(radiusRule.meters).units;
+    rangePixels = sceneDistance(rangeRule.meters, "range").pixels;
+    radiusUnits = sceneDistance(radiusRule.meters, "area").units;
   } catch (error) {
     console.error("[ADD2E][LUMIERE_ETERNELLE_CLERC][RULES]", { item: sourceItem.name, error });
     ui.notifications.error(error.message);
