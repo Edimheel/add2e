@@ -11,7 +11,7 @@
  * Retour : { annulé, résiste, details, pct, jet, bonus }
  */
 
-const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-08-13-generic-incoming-active-effects-v4";
+const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-08-13-generic-incoming-active-effects-v5";
 
 function add2eResolveEffectKey(value) {
   return String(value ?? "")
@@ -715,20 +715,9 @@ async function add2eResolveLightDarknessInteraction(effect) {
     .filter(existing => add2eLightDarknessDirectConflict(incoming, existing));
   if (!conflicts.length) return { resolved: false, reason: "no-direct-conflict" };
 
-  if ((incoming.kind === "light" || incoming.kind === "eternal-light")
-    && conflicts.some(existing => existing.kind === "eternal-darkness")) {
-    await add2eLightDarknessDeleteEffect(incoming, "eternal-darkness-cancels-light");
-    console.info("[ADD2E][LIGHT_DARKNESS][CANCEL_NEW_LIGHT]", {
-      spellKey: incoming.spellKey,
-      effectId: effect.id,
-      sceneId: incoming.scene.id
-    });
-    return { resolved: true, deletedIncoming: true };
-  }
-
   const deleteExisting = [];
   if (incoming.kind === "light" || incoming.kind === "eternal-light") {
-    deleteExisting.push(...conflicts.filter(existing => existing.kind === "temporary-darkness"));
+    deleteExisting.push(...conflicts.filter(existing => existing.kind === "temporary-darkness" || existing.kind === "eternal-darkness"));
   } else if (incoming.kind === "temporary-darkness") {
     deleteExisting.push(...conflicts.filter(existing => existing.kind === "light"));
   } else if (incoming.kind === "eternal-darkness") {
