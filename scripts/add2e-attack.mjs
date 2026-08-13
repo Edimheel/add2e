@@ -32,61 +32,6 @@ async function add2eImportAttackModule(path, label) {
   }
 }
 
-function add2eHudDiagnosticsModules() {
-  try {
-    const modules = game?.modules;
-    let entries = [];
-
-    if (modules?.contents && Array.isArray(modules.contents)) {
-      entries = modules.contents.map(mod => [mod.id ?? mod.name ?? mod.key ?? "", mod]);
-    } else if (typeof modules?.entries === "function") {
-      entries = Array.from(modules.entries());
-    } else if (typeof modules?.values === "function") {
-      entries = Array.from(modules.values()).map(mod => [mod.id ?? mod.name ?? "", mod]);
-    } else if (modules && typeof modules === "object") {
-      entries = Object.entries(modules);
-    }
-
-    return entries
-      .map(entry => Array.isArray(entry) ? entry : [entry?.id ?? entry?.name ?? "", entry])
-      .filter(([id, mod]) => {
-        const text = `${id} ${mod?.title ?? mod?.name ?? ""}`.toLowerCase();
-        return text.includes("hud") || text.includes("argon") || text.includes("combat");
-      })
-      .map(([id, mod]) => ({ id, title: mod?.title ?? mod?.name ?? id, active: mod?.active }));
-  } catch (_err) {
-    return [];
-  }
-}
-
-function add2eInstallHudDiagnostics() {
-  if (globalThis.ADD2E_HUD_DIAGNOSTICS_INSTALLED) return;
-  globalThis.ADD2E_HUD_DIAGNOSTICS_INSTALLED = true;
-
-  // Diagnostic manuel possible depuis la console : add2eHudCheck()
-  globalThis.add2eHudCheck = function add2eHudCheck() {
-    const controlled = canvas?.tokens?.controlled ?? [];
-    return {
-      system: game.system?.id,
-      version: game.system?.version,
-      attackRoll: typeof globalThis.add2eAttackRoll,
-      castSpell: typeof globalThis.add2eCastSpell,
-      cast_spell: typeof globalThis.cast_spell,
-      attackVersion: globalThis.ADD2E_ATTACK_VERSION,
-      attackRollSplitVersion: globalThis.ADD2E_ATTACK_ROLL_SPLIT_VERSION,
-      capabilitySpecialAttackVersion: globalThis.add2eCapabilitySpecialAttack?.version ?? null,
-      controlled: controlled.map(t => ({ token: t.name, id: t.id, actor: t.actor?.name, actorType: t.actor?.type })),
-      hudModules: add2eHudDiagnosticsModules(),
-      tokenHudApp: ui?.token?.constructor?.name ?? null,
-      tokenHudRendered: ui?.token?.rendered ?? null,
-      tokenHudObject: ui?.token?.object?.name ?? null,
-      documentScriptsAdd2e: Array.from(document.scripts).map(s => s.src).filter(s => s.includes("add2e"))
-    };
-  };
-}
-
-add2eInstallHudDiagnostics();
-
 (async () => {
   // Ordre important : helpers / dégâts / règles / VFX / sorts d'abord,
   // puis résolution d'attaque. Ainsi le HUD peut récupérer les fonctions
