@@ -5,7 +5,8 @@
  * Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2 via l'API ADD2E commune.
  */
 
-const ADD2E_LUMIERE_VERSION = "2026-08-12-canonical-light-runtime-v7";
+const ADD2E_LUMIERE_VERSION = "2026-08-13-canonical-light-runtime-v8";
+const ADD2E_LUMIERE_RUNTIME = "temporary-light-darkness";
 
 function add2eLumiereEmitGMOperation(operation, payload) {
   if (!game.socket) return false;
@@ -102,7 +103,9 @@ if (globalThis.ADD2E_LUMIERE_HOOKS_VERSION !== ADD2E_LUMIERE_VERSION) {
   globalThis.ADD2E_LUMIERE_HOOKS_VERSION = ADD2E_LUMIERE_VERSION;
 
   const cleanup = async effect => {
-    const payload = effect?.flags?.add2e?.lightPayload ?? effect?.getFlag?.("add2e", "lightPayload");
+    const flags = effect?.flags?.add2e ?? {};
+    if (flags.runtime !== ADD2E_LUMIERE_RUNTIME) return;
+    const payload = flags.lightPayload ?? effect?.getFlag?.("add2e", "lightPayload");
     if (!payload) return;
     if (payload.type === "ambient") await globalThis.ADD2E_LUMIERE_DELETE_AMBIENT(payload);
     if (payload.type === "token") await globalThis.ADD2E_LUMIERE_RESTORE_TOKEN_LIGHT(payload);
@@ -142,7 +145,8 @@ return await (async () => {
 
   if (typeof globalThis.add2eNormalizeSpellKey !== "function"
     || typeof globalThis.add2eGetSpellListsFromItem !== "function"
-    || typeof globalThis.add2eResolveSpellDistance !== "function") {
+    || typeof globalThis.add2eResolveSpellDistance !== "function"
+    || typeof globalThis.add2eSceneDistance !== "function") {
     ui.notifications.error("Lumière / Ténèbres : règles canoniques de sorts ou de distance ADD2E indisponibles.");
     return false;
   }
@@ -330,38 +334,26 @@ return await (async () => {
     throw new Error(`${spellName} : durée canonique non supportée (${text}).`);
   };
 
-  const sceneMetersPerUnit = scene => {
-    const unit = String(scene?.grid?.units ?? "").trim().toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const factors = new Map([
-      ["m", 1], ["metre", 1], ["metres", 1], ["meter", 1], ["meters", 1],
-      ["km", 1000], ["kilometre", 1000], ["kilometres", 1000], ["kilometer", 1000], ["kilometers", 1000],
-      ["cm", 0.01], ["centimetre", 0.01], ["centimetres", 0.01], ["centimeter", 0.01], ["centimeters", 0.01],
-      ["ft", 0.3048], ["foot", 0.3048], ["feet", 0.3048], ["pied", 0.3048], ["pieds", 0.3048],
-      ["yd", 0.9144], ["yard", 0.9144], ["yards", 0.9144]
-    ]);
-    const factor = factors.get(unit);
-    if (!(factor > 0)) {
-      throw new Error(`${spellName} : unité de distance de scène non supportée (${scene?.grid?.units || "vide"}).`);
-    }
-    return factor;
-  };
-
-  const sceneDistanceFromMeters = (scene, meters) => {
+  const sceneDistanceFromMeters = (scene, meters, usage = "area") => {
     const distanceMeters = Number(meters);
-    const gridDistance = Number(scene?.grid?.distance);
-    const gridSize = Number(scene?.grid?.size);
     if (!Number.isFinite(distanceMeters) || distanceMeters < 0) {
       throw new Error(`${spellName} : distance canonique invalide (${String(meters)} m).`);
     }
-    if (!(gridDistance > 0) || !(gridSize > 0)) {
-      throw new Error(`${spellName} : configuration de grille Foundry invalide.`);
+    const resolved = globalThis.add2eSceneDistance({
+      scene,
+      distance: distanceMeters,
+      unit: "m",
+      usage,
+      environment,
+      measure: "radius"
+    });
+    const radiusSceneDistance = Number(resolved?.radiusSceneDistance ?? resolved?.sceneDistance);
+    const radiusPixels = Number(resolved?.radiusPixels ?? resolved?.pixels);
+    if (!Number.isFinite(radiusSceneDistance) || radiusSceneDistance < 0
+      || !Number.isFinite(radiusPixels) || radiusPixels < 0) {
+      throw new Error(`${spellName} : conversion canonique de distance de scène impossible.`);
     }
-    const sceneDistance = distanceMeters / sceneMetersPerUnit(scene);
-    return {
-      radiusSceneDistance: sceneDistance,
-      radiusPixels: (sceneDistance / gridDistance) * gridSize
-    };
+    return { radiusSceneDistance, radiusPixels };
   };
 
   let rangeRule;
@@ -374,8 +366,8 @@ return await (async () => {
     const radiusInches = parseRadiusInches(sourceItem.system?.zone_effet);
     rangeRule = globalThis.add2eResolveSpellDistance(rangeInches, { environment, kind: "range" });
     radiusRule = globalThis.add2eResolveSpellDistance(radiusInches, { environment, kind: "area" });
-    rangeScene = sceneDistanceFromMeters(canvas.scene, rangeRule.meters);
-    radiusScene = sceneDistanceFromMeters(canvas.scene, radiusRule.meters);
+    rangeScene = sceneDistanceFromMeters(canvas.scene, rangeRule.meters, "range");
+    radiusScene = sceneDistanceFromMeters(canvas.scene, radiusRule.meters, "area");
     const baseRounds = parseDurationRounds(sourceItem.system?.duree);
     durationRounds = isDarkness ? Math.floor(baseRounds / 2) : baseRounds;
     if (!(rangeScene?.radiusPixels >= 0) || !(radiusScene?.radiusSceneDistance >= 0) || durationRounds < 1) {
@@ -616,6 +608,7 @@ return await (async () => {
     const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
     const endMessage = `${spellName} de {actor} prend fin.`;
     const extra = {
+      runtime: ADD2E_LUMIERE_RUNTIME,
       spellName,
       spellKey,
       mode: isDarkness ? "tenebres" : "lumiere",
@@ -681,8 +674,8 @@ return await (async () => {
 
     if (game.user.isGM || actorDoc.isOwner) {
       if (previousIds.length) await actorDoc.deleteEmbeddedDocuments("ActiveEffect", previousIds);
-      await actorDoc.createEmbeddedDocuments("ActiveEffect", [data]);
-      return true;
+      const created = await actorDoc.createEmbeddedDocuments("ActiveEffect", [data]);
+      return Boolean(created?.[0]);
     }
 
     return add2eLumiereEmitGMOperation("createActiveEffect", {
@@ -714,6 +707,7 @@ return await (async () => {
     const requestId = foundry.utils.randomID();
     const flags = {
       add2e: {
+        runtime: ADD2E_LUMIERE_RUNTIME,
         spellName,
         spellKey,
         actorId: caster.id,
@@ -882,6 +876,7 @@ return await (async () => {
   const details = [];
   let anchorActor = caster;
   let anchorEffect = null;
+  let pendingLightPayload = null;
   let outcome = "";
   let saveResult = null;
   let resistanceResult = null;
@@ -904,6 +899,7 @@ return await (async () => {
       ui.notifications.error(`${spellName} : impossible de créer la zone.`);
       return false;
     }
+    pendingLightPayload = ambient.payload;
     anchorEffect = effectData({ destination: "point", payload: ambient.payload });
     outcome = isDarkness ? "Zone de ténèbres créée" : "Zone de lumière créée";
   } else {
@@ -963,6 +959,7 @@ return await (async () => {
         ui.notifications.error(`${spellName} : impossible de créer la zone derrière la cible.`);
         return false;
       }
+      pendingLightPayload = ambient.payload;
       anchorEffect = effectData({ targetActor, destination: "derriere", payload: ambient.payload });
       anchorActor = caster;
       outcome = "Jet de protection réussi — effet créé derrière la cible";
@@ -983,6 +980,7 @@ return await (async () => {
         ui.notifications.error(`${spellName} : impossible de modifier la lumière de la cible.`);
         return false;
       }
+      pendingLightPayload = tokenPayload;
       facePenaltyApplied = faceRequested;
       anchorActor = targetActor;
       anchorEffect = effectData({
@@ -1003,6 +1001,8 @@ return await (async () => {
   if (anchorEffect) {
     const created = await replaceSpellEffect(anchorActor, anchorEffect);
     if (!created) {
+      if (pendingLightPayload?.type === "ambient") await globalThis.ADD2E_LUMIERE_DELETE_AMBIENT(pendingLightPayload);
+      if (pendingLightPayload?.type === "token") await globalThis.ADD2E_LUMIERE_RESTORE_TOKEN_LIGHT(pendingLightPayload);
       ui.notifications.error(`${spellName} : l'effet actif n'a pas pu être créé.`);
       return false;
     }
