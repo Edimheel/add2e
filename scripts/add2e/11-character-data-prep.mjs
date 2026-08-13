@@ -2,7 +2,7 @@
 //  HOOK UNIQUE updateActor
 // =======================
 
-const ADD2E_CHARACTER_DATA_PREP_VERSION = "2026-08-10-remove-legacy-spell-mirrors-v7";
+const ADD2E_CHARACTER_DATA_PREP_VERSION = "2026-08-13-remove-parallel-roll-helpers-v8";
 globalThis.ADD2E_CHARACTER_DATA_PREP_VERSION = ADD2E_CHARACTER_DATA_PREP_VERSION;
 
 const ADD2E_CARAC_CHANGE_KEYS = Object.freeze([
@@ -138,31 +138,4 @@ async function majImageToken(actor, newImg) {
   });
 }
 
-function plageToRollFormula(plage) {
-  if (typeof plage !== "string") return plage;
-  const match = plage.match(/^(\d+)\s*-\s*(\d+)$/);
-  if (!match) return plage;
-  const min = Number(match[1]);
-  const max = Number(match[2]);
-  if (isNaN(min) || isNaN(max) || max <= min) return plage;
-  const faces = max - min + 1;
-  const bonus = min - 1;
-  return `1d${faces}` + (bonus > 0 ? `+${bonus}` : "");
-}
-
-function rollHitDice(hdString) {
-  if (!hdString) return 0;
-  const match = hdString.match(/^(\d+)d(\d+)(?:\s*\+\s*(\d+))?$/i);
-  if (!match) return 0;
-  const nb = Number(match[1]);
-  const faces = Number(match[2]);
-  const bonus = Number(match[3] || 0);
-  let total = 0;
-  for (let i = 0; i < nb; i++) total += Math.floor(Math.random() * faces) + 1;
-  total += bonus;
-  return total;
-}
-
 try { globalThis.majImageToken = majImageToken; } catch (_e) {}
-try { globalThis.plageToRollFormula = plageToRollFormula; } catch (_e) {}
-try { globalThis.rollHitDice = rollHitDice; } catch (_e) {}
