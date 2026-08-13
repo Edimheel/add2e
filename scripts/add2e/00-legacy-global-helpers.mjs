@@ -4,7 +4,7 @@
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
-const ADD2E_GLOBAL_UTILITIES_VERSION = "2026-08-10-global-utilities-v9-bigbang";
+const ADD2E_GLOBAL_UTILITIES_VERSION = "2026-08-13-global-utilities-v10-distance-cm";
 globalThis.ADD2E_GLOBAL_UTILITIES_VERSION = ADD2E_GLOBAL_UTILITIES_VERSION;
 
 const ADD2E_SHEET_IMAGE_FALLBACK = "icons/svg/item-bag.svg";
@@ -99,6 +99,7 @@ const ADD2E_DISTANCE_UNIT_METERS = Object.freeze({
   in: 0.0254,
   ft: 0.3048,
   yd: 0.9144,
+  cm: 0.01,
   m: 1,
   km: 1000,
   mi: 1609.344
@@ -136,6 +137,7 @@ function add2eSceneDistanceUnit(value, fallback = "ft") {
   if (["in", "inch", "inches", "pouce", "pouces"].includes(normalized)) return "in";
   if (["ft", "foot", "feet", "pied", "pieds"].includes(normalized)) return "ft";
   if (["yd", "yard", "yards", "verge", "verges"].includes(normalized)) return "yd";
+  if (["cm", "centimeter", "centimeters", "centimetre", "centimetres"].includes(normalized)) return "cm";
   if (["m", "meter", "meters", "metre", "metres"].includes(normalized)) return "m";
   if (["km", "kilometer", "kilometers", "kilometre", "kilometres"].includes(normalized)) return "km";
   if (["mi", "mile", "miles"].includes(normalized)) return "mi";
@@ -143,7 +145,7 @@ function add2eSceneDistanceUnit(value, fallback = "ft") {
 }
 
 function add2eSceneDistanceUnitLabel(unit) {
-  return ({ "adnd-inch": "\"", in: "po", ft: "pi", yd: "yd", m: "m", km: "km", mi: "mi" })[unit] ?? unit;
+  return ({ "adnd-inch": "\"", in: "po", ft: "pi", yd: "yd", cm: "cm", m: "m", km: "km", mi: "mi" })[unit] ?? unit;
 }
 
 function add2eTacticalInchMeters({ usage = "area", environment = "interior" } = {}) {
