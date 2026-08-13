@@ -11,7 +11,7 @@
  * Retour : { annulé, résiste, details, pct, jet, bonus }
  */
 
-const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-08-13-generic-incoming-active-effects-v5";
+const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-08-13-generic-incoming-active-effects-v6";
 
 function add2eResolveEffectKey(value) {
   return String(value ?? "")
@@ -116,7 +116,7 @@ function add2eResolveIncomingContext(effect, data = {}) {
 
   const prefixes = ["sort:", "effect:", "effet:", "etat:", "status:", "condition:", "affliction:"];
   for (const tag of tags) {
-    const prefix = prefixes.find(entry => tag.startsWith(entry));
+    const prefix = prefixes.find(entry => tag.startsWith(prefix = entry));
     if (!prefix) continue;
     const key = add2eResolveEffectKey(tag.slice(prefix.length));
     if (!key) continue;
@@ -596,27 +596,18 @@ function add2eLightDarknessScene(effect) {
   return sceneId ? game.scenes?.get(sceneId) ?? null : null;
 }
 
-function add2eLightDarknessMetersPerUnit(scene) {
-  const unit = String(scene?.grid?.units ?? "").trim().toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const factors = new Map([
-    ["m", 1], ["metre", 1], ["metres", 1], ["meter", 1], ["meters", 1],
-    ["km", 1000], ["kilometre", 1000], ["kilometres", 1000], ["kilometer", 1000], ["kilometers", 1000],
-    ["cm", 0.01], ["centimetre", 0.01], ["centimetres", 0.01], ["centimeter", 0.01], ["centimeters", 0.01],
-    ["ft", 0.3048], ["foot", 0.3048], ["feet", 0.3048], ["pied", 0.3048], ["pieds", 0.3048],
-    ["yd", 0.9144], ["yard", 0.9144], ["yards", 0.9144]
-  ]);
-  return factors.get(unit) ?? null;
-}
-
 function add2eLightDarknessRadiusPixels(effect, scene) {
   const radiusMeters = Number(effect?.flags?.add2e?.radiusMeters);
-  const gridDistance = Number(scene?.grid?.distance);
-  const gridSize = Number(scene?.grid?.size);
-  const metersPerUnit = add2eLightDarknessMetersPerUnit(scene);
-  if (!(radiusMeters > 0) || !(gridDistance > 0) || !(gridSize > 0) || !(metersPerUnit > 0)) return null;
-  const sceneUnits = radiusMeters / metersPerUnit;
-  return (sceneUnits / gridDistance) * gridSize;
+  if (!(radiusMeters > 0) || typeof globalThis.add2eSceneDistance !== "function") return null;
+  const distance = globalThis.add2eSceneDistance({
+    scene,
+    distance: radiusMeters,
+    unit: "m",
+    usage: "area",
+    measure: "radius"
+  });
+  const radiusPixels = Number(distance?.radiusPixels ?? distance?.pixels);
+  return radiusPixels > 0 ? radiusPixels : null;
 }
 
 function add2eLightDarknessPoint(effect, scene) {
