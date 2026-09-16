@@ -5,7 +5,6 @@
  */
 
 const ADD2E_PALADIN_DETECTION_MAL_VERSION = "2026-08-12-canonical-alignment-range-v3";
-globalThis.ADD2E_PALADIN_DETECTION_MAL_VERSION = ADD2E_PALADIN_DETECTION_MAL_VERSION;
 
 const paladin = (typeof actor !== "undefined" && actor) ? actor : null;
 if (!paladin) {
