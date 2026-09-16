@@ -3,6 +3,8 @@
 
 import { ADD2E_INITIATIVE_VERSION } from "./add2e-initiative-constants.mjs";
 
+let initiativeChatCardInstalled = false;
+
 function signed(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return String(value ?? "—");
@@ -159,5 +161,6 @@ export async function createInitiativeChatCard({
 }
 
 export function installInitiativeChatCard() {
-  globalThis.__ADD2E_INIT_CHAT_CARD_INSTALLED = ADD2E_INITIATIVE_VERSION;
+  if (initiativeChatCardInstalled) return;
+  initiativeChatCardInstalled = true;
 }
