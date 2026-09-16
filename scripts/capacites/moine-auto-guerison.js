@@ -5,8 +5,6 @@
  */
 const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-08-09-canonical-hit-points-v7";
 
-globalThis.ADD2E_MOINE_AUTO_GUERISON_VERSION = ADD2E_MOINE_AUTO_GUERISON_VERSION;
-
 function a2eNum(value, fallback = 0) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
@@ -73,7 +71,7 @@ async function a2eRollMonkHealFormula(formula) {
 }
 
 function a2eMonkHitPointEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (
     !engine
     || typeof engine.readHitPoints !== "function"
