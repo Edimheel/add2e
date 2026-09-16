@@ -44,7 +44,7 @@ function add2eNatureSaveBonus(engine, actor, element) {
 }
 
 function add2eGetClassNatureMechanics(actor) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine) throw new Error("Le moteur canonique ADD2E est indisponible pour l’affichage des capacités naturelles.");
   const tags = new Set(engine.getActiveTags?.(actor) ?? []);
   const natureClass = add2eClassItems(actor).find(item => add2eClassHasCanonicalTag(item, "classe:druide")) ?? null;
