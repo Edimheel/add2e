@@ -2,7 +2,6 @@
 // ADD2E — Ranger : Appel des suivants
 
 const ADD2E_RANGER_SUIVANTS_VERSION = "2026-08-07-canonical-resource-v2";
-globalThis.ADD2E_RANGER_SUIVANTS_VERSION = ADD2E_RANGER_SUIVANTS_VERSION;
 
 function a2eRangerFeatureLevel(currentActor, currentFeature) {
   const level = Number(
