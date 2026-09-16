@@ -1,5 +1,5 @@
 // scripts/add2e-attack/02-damage.mjs
-// ADD2E — Application des dégâts via Add2eEffectsEngine.
+// ADD2E — Application des dégâts via le moteur d’effets canonique.
 // Compatible Foundry V13/V14/V15.
 
 import { add2eGetCombatStatProfile } from "./03-attack-rules.mjs";
@@ -132,7 +132,7 @@ function add2eDamageSourceItem({ source = null, sourceItem = null, lanceur = nul
 }
 
 function add2eDamageRuleList(actor) {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine || !actor) return [];
   return [
     ...(engine.getActiveRules?.(actor) ?? []),
@@ -148,13 +148,13 @@ function add2eDamageRuleLevelMatches(rule) {
 }
 
 function add2eDamageRuleTagsMatch(rule, tags) {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   return typeof engine?.passiveRuleActionTagsMatch !== "function"
     || engine.passiveRuleActionTagsMatch(rule, tags);
 }
 
 function add2eDamageLooksMagical(item) {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   return !!item && typeof engine?.looksMagical === "function" && engine.looksMagical(item);
 }
 
@@ -166,7 +166,7 @@ function add2eDamageEquippedProjectile(lanceur, sourceItem, profile) {
 }
 
 function add2eBuildIncomingDamageContext({ lanceur, sourceItem, type, actionTags = [] } = {}) {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   const normalize = value => engine?.normalizeTag?.(value) ?? add2eDamageNormalize(value);
   const tags = new Set((engine?.toArray?.(actionTags) ?? actionTags ?? []).map(normalize).filter(Boolean));
   const profile = sourceItem ? add2eGetCombatStatProfile(sourceItem) : null;
@@ -299,7 +299,7 @@ async function add2eResolveGenericIncomingDamage(actor, original, options = {}) 
   for (const rule of rules) {
     if (add2eDamageNormalize(rule?.kind) !== "incoming_damage_save") continue;
     if (!add2eDamageRuleLevelMatches(rule) || !add2eDamageRuleTagsMatch(rule, context.tags)) continue;
-    const engine = globalThis.Add2eEffectsEngine;
+    const engine = globalThis.ADD2E_EFFECTS;
     if (typeof engine?.rollActionSave !== "function") continue;
     const save = await engine.rollActionSave(actor, rule.saveType ?? "sorts", Number(rule.saveBonus) || 0);
     if (!save?.canRoll) continue;
@@ -317,7 +317,7 @@ async function add2eResolveGenericIncomingDamage(actor, original, options = {}) 
 }
 
 async function add2eResolveDamage(actor, amount, type, details, context = {}) {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (typeof engine?.resolveIncomingDamage !== "function") {
     ui.notifications.error("Moteur d'effets ADD2E indisponible : dégâts non appliqués.");
     return null;
@@ -406,7 +406,7 @@ export async function add2eApplyDamage({
     return { ...resolution, amount: damage, original: originalDamage, applied: true, delegated: true, genericResolution };
   }
 
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (typeof engine?.applyHitPointDamage !== "function") {
     throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible pour appliquer les dégâts.");
   }
