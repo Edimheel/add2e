@@ -1,5 +1,5 @@
 /* ADD2E — Paladin : Imposition des mains */
-const ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = "2026-08-09-canonical-hit-points-v3";
+const ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = "2026-09-16-canonical-gm-healing-v4";
 
 function a2ePalFeatureLevel(currentActor, currentFeature) {
   const level = Number(
@@ -20,6 +20,35 @@ function a2ePalHitPointEngine() {
     throw new Error("Le propriétaire canonique ADD2E des points de vie est indisponible.");
   }
   return engine;
+}
+
+function a2ePalRequestGmHealing({ target, targetToken, actor, amount }) {
+  if (!game.socket?.emit) {
+    ui.notifications.error("Imposition des mains : relais MJ indisponible.");
+    return false;
+  }
+  const activeGM = Array.from(game.users ?? []).find(user => user?.active && user?.isGM) ?? null;
+  if (!activeGM) {
+    ui.notifications.error("Imposition des mains : aucun MJ actif ne peut appliquer les soins.");
+    return false;
+  }
+  game.socket.emit("system.add2e", {
+    type: "ADD2E_GM_OPERATION",
+    operation: "applyDamage",
+    payload: {
+      actorUuid: target.uuid ?? null,
+      actorId: target.id,
+      sceneId: canvas?.scene?.id ?? null,
+      tokenId: targetToken?.document?.id ?? targetToken?.id ?? null,
+      montant: -amount,
+      type: "soin",
+      details: `Imposition des mains : ${amount} PV de soins`,
+      casterId: actor.id ?? null,
+      casterUuid: actor.uuid ?? null,
+      fromUserId: game.user?.id ?? null
+    }
+  });
+  return true;
 }
 
 if (!actor) {
@@ -44,15 +73,25 @@ if (!Number.isFinite(max) || max <= 0) {
   return false;
 }
 
-const healing = await hpEngine.applyHitPointHealing(target, healAmount, {
-  reason: "paladin-lay-on-hands",
-  updateOptions: { render: false }
-});
-const gained = Number(healing.effective) || 0;
-const healed = Number(healing.after);
-
+let gained = Math.min(healAmount, Math.max(0, max - current));
+let healed = current + gained;
 if (gained <= 0) {
   ui.notifications.info(`${target.name} est déjà à ses PV maximum.`);
+  return false;
+}
+
+if (game.user?.isGM || target.isOwner) {
+  const healing = await hpEngine.applyHitPointHealing(target, healAmount, {
+    reason: "paladin-lay-on-hands",
+    updateOptions: { render: false }
+  });
+  gained = Number(healing.effective) || 0;
+  healed = Number(healing.after);
+  if (gained <= 0) {
+    ui.notifications.info(`${target.name} est déjà à ses PV maximum.`);
+    return false;
+  }
+} else if (!a2ePalRequestGmHealing({ target, targetToken, actor, amount: healAmount })) {
   return false;
 }
 
