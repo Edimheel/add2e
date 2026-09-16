@@ -1,11 +1,5 @@
 /* ADD2E — Paladin : Imposition des mains */
 const ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = "2026-08-09-canonical-hit-points-v3";
-globalThis.ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = ADD2E_PALADIN_IMPOSITION_MAINS_VERSION;
-
-function a2ePalNum(v, fallback = 0) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
-}
 
 function a2ePalFeatureLevel(currentActor, currentFeature) {
   const level = Number(
@@ -16,7 +10,7 @@ function a2ePalFeatureLevel(currentActor, currentFeature) {
 }
 
 function a2ePalHitPointEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (
     !engine
     || typeof engine.readHitPoints !== "function"
