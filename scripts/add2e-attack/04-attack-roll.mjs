@@ -49,14 +49,14 @@ import { resolveCanonicalThac0 } from "../add2e/17b-multiclass-core.mjs";
 const ADD2E_ATTACK_VERSION = "2026-08-12-canonical-range-fields-v11";
 const ADD2E_ATTACK_SNAPSHOT_VERSION = "2026-07-24-attack-resolution-snapshot-v1";
 const ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS = 1500;
+const ADD2E_ATTACK_ROLL_INVOKE_KEYS = new Map();
+let add2eAttackDiagSeq = 0;
 
 globalThis.ADD2E_ATTACK_VERSION = ADD2E_ATTACK_VERSION;
-globalThis.__ADD2E_ATTACK_ROLL_INVOKE_KEYS ??= new Map();
-globalThis.__ADD2E_ATTACK_DIAG_SEQ ??= 0;
 
 function add2eAttackNextDiagId(prefix = "atk") {
-  globalThis.__ADD2E_ATTACK_DIAG_SEQ = Number(globalThis.__ADD2E_ATTACK_DIAG_SEQ || 0) + 1;
-  return `${prefix}-${Date.now()}-${globalThis.__ADD2E_ATTACK_DIAG_SEQ}`;
+  add2eAttackDiagSeq += 1;
+  return `${prefix}-${Date.now()}-${add2eAttackDiagSeq}`;
 }
 
 function add2ePruneTimedMap(map, ttlMs, now = Date.now()) {
@@ -79,7 +79,7 @@ function add2eBuildAttackInvocationKey({ actor, arme, cibleToken }) {
 
 function add2eEnterAttackInvocationGuard(key, diagId = null) {
   const now = Date.now();
-  const map = globalThis.__ADD2E_ATTACK_ROLL_INVOKE_KEYS;
+  const map = ADD2E_ATTACK_ROLL_INVOKE_KEYS;
   add2ePruneTimedMap(map, ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS, now);
   if (map?.has?.(key)) {
     console.warn("[ADD2E][ATTAQUE][ROLL][SKIP_DUPLICATE_INVOCATION]", { diagId, key, user: game.user?.name });
@@ -287,7 +287,7 @@ async function add2eAttackRunActionGateOnUse({ gateResults = [], actor, cible, s
 }
 
 async function add2eResolveAttackActionGate({ actor, cible, sourceToken, targetToken, weapon, contact = false } = {}) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (typeof engine?.evaluateActionRules !== "function" || !actor || !weapon || !cible) {
     return { allowed: true, details: [] };
   }
@@ -367,7 +367,7 @@ function add2eResolveTargetArmorClass({ cible, actor, arme, isTouchAttack }) {
   let caComputedDetails = null;
 
   if (cible.type === "personnage") {
-    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+    const engine = globalThis.ADD2E_EFFECTS;
     if (typeof engine?.getMagicPassiveDefense === "function") {
       caComputedDetails = engine.getMagicPassiveDefense(cible, { source: "attack-roll", attacker: actor?.name, weapon: arme?.name });
       caComputedDetails.stored = { ca: system.ca, armorClass: system.armorClass, ca_naturel: system.ca_naturel };
@@ -403,7 +403,7 @@ function add2eResolveTargetArmorClass({ cible, actor, arme, isTouchAttack }) {
 }
 
 function add2eCombatEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine || typeof engine.createModifier !== "function" || typeof engine.resolve !== "function") {
     throw new Error("Le résolveur canonique ADD2E des modificateurs de combat n’est pas disponible.");
   }
