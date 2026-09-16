@@ -96,8 +96,9 @@ const __add2eMinorCureResult = await (async () => {
   }
 
   const tags = actorDoc => {
-    const engineTags = globalThis.Add2eEffectsEngine?.getContextTags?.(actorDoc)
-      ?? globalThis.Add2eEffectsEngine?.getActiveTags?.(actorDoc)
+    const engine = globalThis.ADD2E_EFFECTS;
+    const engineTags = engine?.getContextTags?.(actorDoc)
+      ?? engine?.getActiveTags?.(actorDoc)
       ?? [];
     return [
       ...engineTags, actorDoc?.type, actorDoc?.system?.tags,
@@ -117,7 +118,7 @@ const __add2eMinorCureResult = await (async () => {
   }
 
   function hitPointEngine() {
-    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+    const engine = globalThis.ADD2E_EFFECTS;
     if (
       !engine
       || typeof engine.readHitPoints !== "function"
