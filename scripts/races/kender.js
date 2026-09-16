@@ -87,7 +87,7 @@ window.kenderTaunt = async function(actor) {
   let durationRounds = 0;
   if (!save.success) {
     durationRounds = Number((await new Roll("1d10").evaluate()).total) || 1;
-    await targetActor.createEmbeddedDocuments("ActiveEffect", [{
+    const effectData = {
       name: "Enragé (Insulte Kender)",
       img: "icons/svg/explosion.svg",
       origin: actor.uuid,
@@ -114,7 +114,28 @@ window.kenderTaunt = async function(actor) {
         },
         core: { statusId: "enrage", overlay: true }
       }
-    }]);
+    };
+
+    if (game.user?.isGM || targetActor.isOwner) {
+      await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+    } else {
+      if (!game.socket?.emit) {
+        ui.notifications.error("Insulte kender : relais MJ indisponible pour appliquer l’effet.");
+        return false;
+      }
+      game.socket.emit("system.add2e", {
+        type: "ADD2E_GM_OPERATION",
+        operation: "createActiveEffect",
+        payload: {
+          actorId: targetActor.id,
+          actorUuid: targetActor.uuid,
+          sceneId: canvas?.scene?.id ?? null,
+          tokenId: targetToken.id ?? targetToken.document?.id ?? null,
+          effectData,
+          fromUserId: game.user?.id ?? null
+        }
+      });
+    }
   }
 
   const applied = save.resolution?.bonusResolution?.applied ?? [];
