@@ -10,7 +10,7 @@ import {
   add2eMultipleAttackHudStatus
 } from "./add2e-initiative-order.mjs";
 
-const ACTION_GLOBALS = ["add2eAttackRoll", "add2eCastSpell", "cast_spell", "add2eExecuteClassFeatureOnUse"];
+const ACTION_GLOBALS = ["add2eAttackRoll", "add2eCastSpell", "add2eExecuteClassFeatureOnUse"];
 const TOKEN_DRAG_METHODS = ["_onDragLeftStart", "_onDragLeftMove", "_onDragLeftDrop", "_onDragLeftCancel"];
 const VADE_RETRO_CONTINUATION_CONTEXTS = "__ADD2E_VADE_RETRO_CONTINUATION_CONTEXTS";
 let canonicalHudFollowInstalled = false;
