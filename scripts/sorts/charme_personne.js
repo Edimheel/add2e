@@ -57,7 +57,7 @@ return await (async () => {
     });
   }
 
-  const effectsEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const effectsEngine = globalThis.ADD2E_EFFECTS;
   const intelligence = targetActor => {
     if (typeof effectsEngine?.resolveAbilityDerived !== "function") {
       throw new Error("Charme-personne : le résolveur canonique d’Intelligence est indisponible.");
