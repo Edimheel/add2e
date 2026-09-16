@@ -671,7 +671,6 @@ Hooks.once("ready", () => {
     .catch(error => console.error("[ADD2E][SPELL_FAMILY][MATERIAL_MIGRATION_ERROR]", error));
 });
 
-globalThis.ADD2E_SPELL_FAMILY_VERSION = ADD2E_SPELL_FAMILY_VERSION;
 globalThis.add2eQueueActorSpellFamilyWork = queueActorSpellFamilyWork;
 globalThis.add2eRequestActorSpellFamilyExpansion = requestActorSpellFamilyExpansion;
 globalThis.add2eEnsureActorSpellFamily = item => {
