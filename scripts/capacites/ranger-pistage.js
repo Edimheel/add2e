@@ -2,7 +2,6 @@
 // ADD2E — Ranger : Pistage
 
 const ADD2E_RANGER_PISTAGE_VERSION = "2026-07-27-shared-chat-card-v1";
-globalThis.ADD2E_RANGER_PISTAGE_VERSION = ADD2E_RANGER_PISTAGE_VERSION;
 
 function a2eRangerFeatureLevel(currentActor, currentFeature) {
   const level = Number(
