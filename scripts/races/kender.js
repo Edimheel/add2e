@@ -85,8 +85,11 @@ window.kenderTaunt = async function(actor) {
   }
 
   let durationRounds = 0;
+  let durationRoll = null;
   if (!save.success) {
-    durationRounds = Number((await new Roll("1d10").evaluate()).total) || 1;
+    durationRoll = await new Roll("1d10").evaluate();
+    if (game.dice3d) await game.dice3d.showForRoll(durationRoll);
+    durationRounds = Number(durationRoll.total) || 1;
     const effectData = {
       name: "Enragé (Insulte Kender)",
       img: "icons/svg/explosion.svg",
@@ -171,14 +174,14 @@ window.kenderTaunt = async function(actor) {
       { label: "Total", value: save.total },
       { label: "Seuil", value: save.target },
       { label: "Modificateurs", value: modifierDetail },
-      { label: "Durée", value: save.success ? "Aucun effet" : `${durationRounds} round${durationRounds > 1 ? "s" : ""}` }
+      { label: "Durée", value: save.success ? "Aucun effet" : `${durationRounds} round${durationRounds > 1 ? "s" : ""} (1d10)` }
     ],
     message: save.success
       ? `${targetActor.name} reste de marbre face aux moqueries.`
       : `${targetActor.name} devient fou de rage et doit attaquer le Kender.`,
     chatData: {
       speaker: ChatMessage.getSpeaker({ actor }),
-      rolls: [save.roll],
+      rolls: [save.roll, durationRoll].filter(Boolean),
       flags: {
         add2e: {
           ability: "kender-taunt",
