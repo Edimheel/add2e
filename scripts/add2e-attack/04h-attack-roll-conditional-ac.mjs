@@ -79,7 +79,7 @@ function add2eAttackActiveEffectTags(actor) {
 }
 
 function add2eAttackArmorClassEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine || typeof engine.resolveArmorClass !== "function") {
     throw new Error("Le résolveur canonique ADD2E de classe d’armure n’est pas disponible.");
   }
