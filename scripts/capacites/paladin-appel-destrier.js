@@ -1,6 +1,5 @@
 /* ADD2E — Paladin : Appel du destrier */
 const ADD2E_PALADIN_APPEL_DESTRIER_VERSION = "2026-08-07-canonical-resource-v2";
-globalThis.ADD2E_PALADIN_APPEL_DESTRIER_VERSION = ADD2E_PALADIN_APPEL_DESTRIER_VERSION;
 
 function a2ePalFeatureLevel(currentActor, currentFeature) {
   const level = Number(
