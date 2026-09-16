@@ -1,27 +1,30 @@
 // Sommeil.js — ADD2E
 // Magicien niveau 1
-// Version : 2026-06-06-magicien-sommeil-time-engine-v1
+// Version : 2026-09-16-canonical-runtime-v2
 // Retour attendu : true = consommé, false = non consommé.
 
 return await (async () => {
   const TAG = "[ADD2E][SORT_ONUSE][SOMMEIL]";
+  const VERSION = "2026-09-16-canonical-runtime-v2";
 
-  function getDV(actor) {
-    if (actor?.system?.hitDice) {
-      const match = String(actor.system.hitDice).match(/^(\d+)/);
+  function getDV(actorDoc) {
+    if (actorDoc?.system?.hitDice) {
+      const match = String(actorDoc.system.hitDice).match(/^(\d+)/);
       if (match) return parseInt(match[1], 10);
     }
 
-    if (["personnage", "pj", "pnj"].includes(String(actor?.type || "").toLowerCase())) {
-      let niveau = 0;
-      if (actor?.system?.details_classe) {
-        for (const k in actor.system.details_classe) {
-          const niv = Number(actor.system.details_classe[k]?.niveau || 0);
-          if (niv > niveau) niveau = niv;
-        }
-      }
-      niveau = niveau || Number(actor?.system?.niveau || actor?.system?.level || 0);
-      if (niveau > 0) return niveau;
+    const type = String(actorDoc?.type ?? "").toLowerCase();
+    if (["personnage", "pj"].includes(type)) {
+      const levels = Array.from(actorDoc?.items ?? [])
+        .filter(itemDoc => String(itemDoc?.type ?? "").toLowerCase() === "classe")
+        .map(itemDoc => Number(itemDoc?.system?.niveau))
+        .filter(level => Number.isInteger(level) && level > 0);
+      return levels.length ? Math.max(...levels) : 0;
+    }
+
+    if (type === "pnj") {
+      const level = Number(actorDoc?.system?.niveau);
+      return Number.isInteger(level) && level > 0 ? level : 0;
     }
 
     return 0;
@@ -59,14 +62,25 @@ return await (async () => {
     return null;
   }
 
-  function casterLevel(actorDoc) {
-    return Number(
-      actorDoc?.system?.niveau ??
-      actorDoc?.system?.level ??
-      actorDoc?.system?.details?.niveau ??
-      actorDoc?.system?.details?.level ??
-      1
-    ) || 1;
+  function casterLevel(actorDoc, sourceItem) {
+    if (sourceItem?.system?.isObjectPower === true) {
+      const explicit = Number(sourceItem.system?.casterLevel);
+      if (!Number.isInteger(explicit) || explicit < 1) {
+        throw new Error("Sommeil : niveau de lanceur explicite absent du pouvoir d’objet magique.");
+      }
+      return explicit;
+    }
+
+    const resolver = globalThis.add2eCanActorUseSpell;
+    if (typeof resolver !== "function") {
+      throw new Error("Sommeil : le résolveur canonique de lancement des sorts est indisponible.");
+    }
+    const access = resolver(actorDoc, sourceItem);
+    const level = Number(access?.actorLevel);
+    if (access?.ok !== true || !Number.isInteger(level) || level < 1) {
+      throw new Error(`Sommeil : niveau canonique du lanceur indisponible${access?.reason ? ` (${access.reason})` : ""}.`);
+    }
+    return level;
   }
 
   function timeApi() {
@@ -140,22 +154,25 @@ return await (async () => {
   }
 
   function registerSleepHooks() {
-    if (game.add2eSleepHooksRegistered === "2026-06-06-magicien-sommeil-time-engine-v1") return;
-    game.add2eSleepHooksRegistered = "2026-06-06-magicien-sommeil-time-engine-v1";
+    game.add2e ??= {};
+    if (game.add2e.sleepHooksVersion === VERSION) return;
+    game.add2e.sleepHooksVersion = VERSION;
 
     const endSleepVfx = effect => {
       const tags = effect?.flags?.add2e?.tags ?? effect?.getFlag?.("add2e", "tags") ?? [];
       const list = Array.isArray(tags) ? tags : String(tags).split(/[,;|\n]+/);
-      const isSleep = String(effect?.label || effect?.name || "").toLowerCase().includes("sommeil") || list.includes("sort:sommeil") || list.includes("etat:sommeil");
+      const isSleep = String(effect?.label || effect?.name || "").toLowerCase().includes("sommeil")
+        || list.includes("sort:sommeil")
+        || list.includes("etat:sommeil");
       if (!isSleep) return;
       const tokens = effect?.parent?.getActiveTokens?.() || [];
-      for (const token of tokens) {
+      for (const tokenDoc of tokens) {
         try {
           if (typeof Sequencer !== "undefined") {
-            Sequencer.EffectManager.endEffects({ name: `sleep-effect-${token.id}`, object: token });
+            Sequencer.EffectManager.endEffects({ name: `sleep-effect-${tokenDoc.id}`, object: tokenDoc });
           }
-        } catch (e) {
-          console.warn(`${TAG}[VFX_END_FAILED]`, e);
+        } catch (error) {
+          console.warn(`${TAG}[VFX_END_FAILED]`, error);
         }
       }
     };
@@ -184,11 +201,11 @@ return await (async () => {
 
     if (game.user.isGM || targetActor.isOwner) {
       const oldIds = Array.from(targetActor.effects ?? [])
-        .filter(e => {
-          const tags = e.flags?.add2e?.tags ?? [];
+        .filter(effect => {
+          const tags = effect.flags?.add2e?.tags ?? [];
           return Array.isArray(tags) && (tags.includes("sort:sommeil") || tags.includes("etat:sommeil"));
         })
-        .map(e => e.id)
+        .map(effect => effect.id)
         .filter(Boolean);
       if (oldIds.length) await targetActor.deleteEmbeddedDocuments("ActiveEffect", oldIds);
       await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
@@ -205,7 +222,7 @@ return await (async () => {
     return true;
   }
 
-  async function playSleepVfx(t) {
+  async function playSleepVfx(targetToken) {
     if (typeof Sequence === "undefined") return;
 
     const candidates = [];
@@ -222,16 +239,16 @@ return await (async () => {
         await new Sequence()
           .effect()
           .file(file)
-          .attachTo(t)
+          .attachTo(targetToken)
           .persist(true)
-          .name(`sleep-effect-${t.id}`)
+          .name(`sleep-effect-${targetToken.id}`)
           .belowTokens(true)
           .scale(0.5)
           .opacity(0.6)
           .play();
         return;
-      } catch (e) {
-        console.warn(`${TAG}[VFX_FAILED]`, { file, error: e });
+      } catch (error) {
+        console.warn(`${TAG}[VFX_FAILED]`, { file, error });
       }
     }
   }
@@ -269,6 +286,65 @@ return await (async () => {
     };
   }
 
+  async function createResultCard({ caster, sourceItem, level, rounds, listResults, affectedTokens }) {
+    if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+      throw new Error("Sommeil : les constructeurs communs de cartes ADD2E sont indisponibles.");
+    }
+
+    const resultHtml = listResults.map(entry => `
+      <div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed #bbb;padding:2px 0;">
+        <span>${htmlEscape(entry.name)}</span>
+        <strong style="color:${entry.color};">${htmlEscape(entry.status)}</strong>
+      </div>`).join("");
+    const description = sourceItem.system?.description || "Description indisponible.";
+    const options = {
+      actor: caster,
+      title: sourceItem.name || "Sommeil",
+      icon: "fas fa-bed",
+      variant: "spell",
+      source: {
+        name: caster.name,
+        img: sourceItem.img || caster.img,
+        type: "Enchantement / Charme",
+        meta: `Niveau de lanceur ${level}`
+      },
+      rows: [
+        { label: "Durée", value: `${rounds} round(s)` },
+        { label: "Cibles affectées", value: affectedTokens.length },
+        { label: "Cibles évaluées", value: listResults.length }
+      ],
+      message: affectedTokens.length
+        ? `${affectedTokens.map(tokenDoc => tokenDoc.name).join(", ")} ${affectedTokens.length > 1 ? "sont plongés" : "est plongé"} dans un sommeil magique.`
+        : "Aucune cible n’est plongée dans le sommeil.",
+      trustedBodyHtml: `
+        <div class="add2e-sleep-results">
+          ${resultHtml || "<em>Aucune cible.</em>"}
+          <details style="margin-top:8px;">
+            <summary>Détails du sort</summary>
+            <div style="padding-top:6px;">${description}</div>
+          </details>
+        </div>`,
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: caster }),
+        flags: {
+          add2e: {
+            chatCardType: "sleep-spell",
+            spell: "sommeil",
+            sourceItemUuid: sourceItem.uuid ?? null,
+            casterLevel: level,
+            durationRounds: rounds,
+            affectedActorUuids: affectedTokens.map(tokenDoc => tokenDoc.actor?.uuid).filter(Boolean),
+            version: VERSION
+          }
+        }
+      }
+    };
+
+    const preview = globalThis.add2eBuildChatCard(options);
+    if (!String(preview ?? "").trim()) throw new Error("Sommeil : carte ADD2E vide.");
+    return globalThis.add2eCreateChatCard(options);
+  }
+
   console.log(`${TAG}[START]`);
 
   const sourceItem = getSourceItem();
@@ -283,9 +359,14 @@ return await (async () => {
     return false;
   }
 
+  const effectsEngine = globalThis.ADD2E_EFFECTS;
+  if (!effectsEngine) {
+    throw new Error("Sommeil : le moteur canonique ADD2E est indisponible.");
+  }
+
   registerSleepHooks();
 
-  const level = casterLevel(caster);
+  const level = casterLevel(caster, sourceItem);
   const rounds = sleepRounds(level);
 
   const refund = async (raison = "") => {
@@ -295,8 +376,8 @@ return await (async () => {
         const currentGlobal = await sourceItem.getFlag?.("add2e", "global_charges");
         if (currentGlobal !== undefined) await sourceItem.setFlag("add2e", "global_charges", Number(currentGlobal) + 1);
       }
-    } catch (e) {
-      console.warn(`${TAG}[REFUND_FAILED]`, e);
+    } catch (error) {
+      console.warn(`${TAG}[REFUND_FAILED]`, error);
     }
   };
 
@@ -326,10 +407,10 @@ return await (async () => {
   if (center) {
     const gridSize = canvas.grid?.size || 1;
     const maxDistPixels = 1.5 * gridSize;
-    targets = canvas.tokens.placeables.filter(t => {
-      if (!t.actor) return false;
-      const dist = Math.hypot(t.center.x - center.x, t.center.y - center.y);
-      return dist <= (maxDistPixels + (t.w / 4));
+    targets = canvas.tokens.placeables.filter(targetToken => {
+      if (!targetToken.actor) return false;
+      const dist = Math.hypot(targetToken.center.x - center.x, targetToken.center.y - center.y);
+      return dist <= (maxDistPixels + (targetToken.w / 4));
     });
   } else {
     targets = Array.from(game.user.targets ?? []);
@@ -340,11 +421,11 @@ return await (async () => {
     return false;
   }
 
-  const ordered = targets.map(t => {
-    const dv = getDV(t.actor);
-    const hdStr = t.actor?.system?.hitDice || "";
-    return { token: t, actor: t.actor, dv, cat: getDVCategorie(dv, hdStr) };
-  }).filter(o => o.dv > 0).sort((a, b) => a.dv - b.dv);
+  const ordered = targets.map(targetToken => {
+    const dv = getDV(targetToken.actor);
+    const hitDice = targetToken.actor?.system?.hitDice || "";
+    return { token: targetToken, actor: targetToken.actor, dv, cat: getDVCategorie(dv, hitDice) };
+  }).filter(entry => entry.dv > 0).sort((a, b) => a.dv - b.dv);
 
   if (!ordered.length) {
     await refund("Aucune cible valide.");
@@ -366,16 +447,15 @@ return await (async () => {
     let status = "Endormi";
     let color = "#c0392b";
 
-    const isImmune = cible.effects?.some(e => {
-      const label = String(e.label || e.name || "").toLowerCase();
-      const tags = e.flags?.add2e?.tags || [];
+    const isImmune = cible.effects?.some(effect => {
+      const label = String(effect.label || effect.name || "").toLowerCase();
+      const tags = effect.flags?.add2e?.tags || [];
       return label.includes("immunité") || label.includes("sommeil") || tags.includes("immunite:sommeil");
     });
 
-    let resistanceSommeil = null;
-    if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.checkResistanceDetails === "function") {
-      resistanceSommeil = Add2eEffectsEngine.checkResistanceDetails(cible, "sommeil", { chat: false });
-    }
+    const resistanceSommeil = typeof effectsEngine.checkResistanceDetails === "function"
+      ? effectsEngine.checkResistanceDetails(cible, "sommeil", { chat: false })
+      : null;
 
     if (resistanceSommeil?.resiste) {
       status = `Résistance raciale (${resistanceSommeil.jet}/${resistanceSommeil.pct}%)`;
@@ -397,45 +477,15 @@ return await (async () => {
     listResults.push({ name: cible.name, status, color });
   }
 
-  const rows = listResults.map(r => `
-    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #eee;font-size:0.9em;">
-      <span>${htmlEscape(r.name)}</span>
-      <span style="font-weight:bold;color:${r.color};">${htmlEscape(r.status)}</span>
-    </div>`).join("");
+  await createResultCard({ caster, sourceItem, level, rounds, listResults, affectedTokens });
 
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: caster }),
-    content: `
-    <div class="add2e-spell-card" style="border-radius:12px;box-shadow:0 4px 10px #715aab44;background:linear-gradient(135deg,#fdfbfd 0%,#f4efff 100%);border:1.5px solid #9373c7;overflow:hidden;padding:0;">
-      <div style="background:linear-gradient(90deg,#6a3c99 0%,#8e44ad 100%);padding:8px;color:white;display:flex;align-items:center;gap:10px;">
-        <img src="${htmlEscape(caster.img || 'icons/svg/mystery-man.svg')}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;">
-        <div style="line-height:1.2;flex:1;">
-          <div style="font-weight:bold;">${htmlEscape(caster.name)}</div>
-          <div style="font-size:0.8em;opacity:0.9;">lance ${htmlEscape(sourceItem.name)}</div>
-        </div>
-        <img src="${htmlEscape(sourceItem.img || 'icons/svg/sleep.svg')}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
-      </div>
-      <div style="padding:10px;">
-        <div style="background:#fff;border:1px solid #e0d4fc;border-radius:6px;padding:6px;margin-bottom:8px;">
-          <div style="text-align:center;color:#6a3c99;font-weight:bold;border-bottom:1px solid #eee;margin-bottom:4px;">Résultat</div>
-          ${rows || "<i>Aucune cible</i>"}
-          <div style="font-size:0.85em;margin-top:6px;text-align:center;color:#6a3c99;"><b>Durée des effets posés :</b> ${rounds} round(s).</div>
-        </div>
-        <details style="background:#fff;border:1px solid #e0d4fc;border-radius:6px;">
-          <summary style="cursor:pointer;color:#6a3c99;font-weight:600;padding:6px;">Détails</summary>
-          <div style="padding:8px;font-size:0.85em;">${sourceItem.system?.description || "Description..."}</div>
-        </details>
-      </div>
-    </div>`
-  });
-
-  for (const t of affectedTokens) {
-    if (!t.actor) continue;
-    const effectData = buildSleepEffect({ sourceItem, caster, targetActor: t.actor, rounds });
-    await createOrSocketEffect(t, effectData);
-    await playSleepVfx(t);
+  for (const targetToken of affectedTokens) {
+    if (!targetToken.actor) continue;
+    const effectData = buildSleepEffect({ sourceItem, caster, targetActor: targetToken.actor, rounds });
+    await createOrSocketEffect(targetToken, effectData);
+    await playSleepVfx(targetToken);
   }
 
-  console.log(`${TAG}[END]`, { affected: affectedTokens.map(t => t.name), durationRounds: rounds });
+  console.log(`${TAG}[END]`, { affected: affectedTokens.map(targetToken => targetToken.name), durationRounds: rounds });
   return true;
 })();
