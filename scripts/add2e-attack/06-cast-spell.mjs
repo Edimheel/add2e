@@ -18,7 +18,7 @@ class Add2eCastAbort extends Error {
 }
 
 function add2eCastResourceEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine
     || typeof engine.checkResourceAvailability !== "function"
     || typeof engine.consumeResource !== "function"
@@ -233,7 +233,7 @@ async function add2eResolveDivineCastingFailure(actor, sort, castMode) {
   if (castMode === "scroll" || sort?.system?.isPower === true) return { applies: false, failed: false };
   const source = add2eDivineCastingSource(actor, sort);
   if (!source) return { applies: false, failed: false };
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine || typeof engine.resolveAbilityDerived !== "function") {
     throw new Error("Le résolveur canonique ADD2E des profils dérivés n’est pas disponible.");
   }
@@ -340,7 +340,7 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
     return false;
   }
 
-  const tags = globalThis.Add2eEffectsEngine?.getActiveTags?.(actor) ?? [];
+  const tags = globalThis.ADD2E_EFFECTS?.getActiveTags?.(actor) ?? [];
   const components = add2eGetSortComponentsText(sort);
   const requiresVerbal = /(^|[,;\s])V([,;\s]|$)/i.test(components);
   const silenced = tags.some(tag => ["etat:silence", "silence:verbal", "anti_sort:verbal"].includes(String(tag)));
@@ -636,4 +636,3 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
 }
 
 globalThis.add2eCastSpell = add2eCastSpell;
-globalThis.cast_spell = add2eCastSpell;
