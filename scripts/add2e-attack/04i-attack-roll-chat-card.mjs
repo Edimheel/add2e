@@ -11,9 +11,9 @@ const LOG = "[ADD2E][ATTACK_CHAT]";
 const ACTIVE_ITEM_TYPES = new Set([
   "arme", "armure", "objet", "weapon", "armor", "equipment", "object", "magic", "objet_magique"
 ]);
-
-globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
-globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS ??= new Set();
+const ATTACK_CHAT_ROUTE_IDS = new Set();
+let attackChatSocketHandler = null;
+let attackChatSocketVersion = null;
 
 function escapeHtml(value) {
   const text = String(value ?? "");
@@ -292,7 +292,7 @@ function abilityLabel(value) {
 }
 
 function resolvedAbilityScore(actor, ability) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!actor || !ability || typeof engine?.resolveAbilityDerived !== "function") return null;
   try {
     const score = Number(engine.resolveAbilityDerived(actor, ability, {
@@ -390,11 +390,11 @@ function baseDamageFormula(snapshot) {
 function rawDamageRollDetails(snapshot, multiplier = 1) {
   let details = String(snapshot?.damage?.details ?? "").trim();
   if (!details) return "—";
-  if (multiplier > 1) details = details.replace(new RegExp(`\\s*[×x*]\\s*${multiplier}\\s*$`), "").trim();
+  if (multiplier > 1) details = details.replace(new RegExp(`\s*[×x*]\s*${multiplier}\s*$`), "").trim();
   const bonus = number(snapshot?.damage?.bonus);
   if (bonus !== 0) {
-    const sign = bonus > 0 ? "\\+" : "[-−]";
-    details = details.replace(new RegExp(`\\s*${sign}\\s*${Math.abs(bonus)}\\s*$`), "").trim();
+    const sign = bonus > 0 ? "\+" : "[-−]";
+    details = details.replace(new RegExp(`\s*${sign}\s*${Math.abs(bonus)}\s*$`), "").trim();
   }
   return details || "—";
 }
@@ -592,7 +592,7 @@ function optionsForCurrentPlayer(options) {
 async function createRoutedCard(payload = {}) {
   requireCommonChatApi();
   const messageId = String(payload.messageId ?? "");
-  if (!messageId || globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.has(messageId)) return null;
+  if (!messageId || ATTACK_CHAT_ROUTE_IDS.has(messageId)) return null;
 
   const kind = String(payload.kind ?? "");
   const currentUserId = String(game.user?.id ?? "");
@@ -619,11 +619,11 @@ async function createRoutedCard(payload = {}) {
   const preview = String(globalThis.add2eBuildChatCard(options) ?? "").trim();
   if (!preview) throw new Error(`La carte d’attaque ${kind} est vide.`);
 
-  globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.add(messageId);
+  ATTACK_CHAT_ROUTE_IDS.add(messageId);
   try {
     return await globalThis.add2eCreateChatCard(options);
   } catch (error) {
-    globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.delete(messageId);
+    ATTACK_CHAT_ROUTE_IDS.delete(messageId);
     throw error;
   }
 }
@@ -637,11 +637,10 @@ function onAttackChatSocket(data) {
 
 function registerAttackChatSocket() {
   if (!game?.socket?.on) return false;
-  const previous = globalThis.__ADD2E_ATTACK_CHAT_SOCKET_HANDLER;
-  if (previous && typeof game.socket.off === "function") game.socket.off(SOCKET, previous);
-  globalThis.__ADD2E_ATTACK_CHAT_SOCKET_HANDLER = onAttackChatSocket;
+  if (attackChatSocketHandler && typeof game.socket.off === "function") game.socket.off(SOCKET, attackChatSocketHandler);
+  attackChatSocketHandler = onAttackChatSocket;
   game.socket.on(SOCKET, onAttackChatSocket);
-  globalThis.__ADD2E_ATTACK_CHAT_SOCKET_VERSION = VERSION;
+  attackChatSocketVersion = VERSION;
   return true;
 }
 
@@ -712,7 +711,7 @@ async function routeGmCard(options, ctx) {
 
 function scheduleEffectsEngineAttackResolved(ctx) {
   setTimeout(() => {
-    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+    const engine = globalThis.ADD2E_EFFECTS;
     if (typeof engine?.handleMonkUnarmedAttackResolved !== "function") return;
     engine.handleMonkUnarmedAttackResolved(ctx).catch(error => console.error(`${LOG}[EFFECTS_ENGINE_ATTACK_RESOLVED]`, error));
   }, 0);
@@ -742,7 +741,7 @@ installAttackChatSocket();
 globalThis.add2eAttackChatDebug = function add2eAttackChatDebug() {
   return {
     version: VERSION,
-    socketVersion: globalThis.__ADD2E_ATTACK_CHAT_SOCKET_VERSION ?? null,
+    socketVersion: attackChatSocketVersion,
     commonBuilder: typeof globalThis.add2eBuildChatCard === "function",
     commonCreator: typeof globalThis.add2eCreateChatCard === "function",
     user: game.user?.name,
