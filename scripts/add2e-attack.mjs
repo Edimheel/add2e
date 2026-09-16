@@ -20,8 +20,6 @@ if (typeof globalThis.add2eCastSpell !== "function") {
   };
 }
 
-if (typeof globalThis.cast_spell !== "function") globalThis.cast_spell = globalThis.add2eCastSpell;
-
 async function add2eImportAttackModule(path, label) {
   try {
     await import(path);
