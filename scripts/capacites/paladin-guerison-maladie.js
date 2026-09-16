@@ -1,6 +1,5 @@
 /* ADD2E — Paladin : Guérison des maladies */
-const ADD2E_PALADIN_GUERISON_MALADIE_VERSION = "2026-08-07-canonical-resource-v2";
-globalThis.ADD2E_PALADIN_GUERISON_MALADIE_VERSION = ADD2E_PALADIN_GUERISON_MALADIE_VERSION;
+const ADD2E_PALADIN_GUERISON_MALADIE_VERSION = "2026-09-16-canonical-gm-relay-v3";
 
 function a2ePalFeatureLevel(currentActor, currentFeature) {
   const level = Number(
@@ -24,19 +23,45 @@ if (level === null) {
 const targetToken = Array.from(game.user.targets ?? [])[0];
 const target = targetToken?.actor ?? actor;
 
-const diseaseEffects = target.effects
+const diseaseEffects = Array.from(target.effects ?? [])
   .filter(effect => {
     const name = String(effect.name ?? "").toLowerCase();
-    const tags = effect.flags?.add2e?.tags ?? [];
+    const tags = Array.isArray(effect.flags?.add2e?.tags) ? effect.flags.add2e.tags : [];
     return name.includes("maladie") || tags.some(tag => String(tag).toLowerCase().includes("maladie"));
   })
-  .map(effect => effect.id);
+  .map(effect => effect.id)
+  .filter(Boolean);
 
 if (diseaseEffects.length) {
-  await target.deleteEmbeddedDocuments("ActiveEffect", diseaseEffects, {
-    add2eInternal: true,
-    add2eReason: "paladin-cure-disease"
-  });
+  if (game.user?.isGM || target.isOwner) {
+    await target.deleteEmbeddedDocuments("ActiveEffect", diseaseEffects, {
+      add2eInternal: true,
+      add2eReason: "paladin-cure-disease"
+    });
+  } else {
+    if (!game.socket?.emit) {
+      ui.notifications.error("Guérison des maladies : relais MJ indisponible.");
+      return false;
+    }
+    const activeGM = Array.from(game.users ?? []).find(user => user?.active && user?.isGM) ?? null;
+    if (!activeGM) {
+      ui.notifications.error("Guérison des maladies : aucun MJ actif ne peut supprimer les effets.");
+      return false;
+    }
+    game.socket.emit("system.add2e", {
+      type: "ADD2E_GM_OPERATION",
+      operation: "deleteActiveEffects",
+      payload: {
+        actorId: target.id,
+        actorUuid: target.uuid,
+        effectIds: diseaseEffects,
+        sceneId: canvas?.scene?.id ?? null,
+        tokenId: targetToken?.id ?? targetToken?.document?.id ?? null,
+        fromUserId: game.user?.id ?? null,
+        reason: "paladin-cure-disease"
+      }
+    });
+  }
 }
 
 const buildChatCard = globalThis.add2eBuildChatCard;
@@ -61,7 +86,7 @@ const cardOptions = {
     { label: "Utilisation", value: feature?.uses?.label ?? "Selon niveau / semaine" }
   ],
   trustedBodyHtml: diseaseEffects.length
-    ? "<p>Les effets de maladie marqués sur la cible ont été supprimés.</p>"
+    ? "<p>Les effets de maladie marqués sur la cible ont été supprimés ou transmis au MJ pour suppression.</p>"
     : "<p>Aucun effet de maladie marqué n’a été trouvé ; le MJ applique le résultat selon la situation.</p>",
   chatData: {
     flags: {
