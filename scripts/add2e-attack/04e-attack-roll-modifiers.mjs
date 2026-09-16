@@ -14,7 +14,7 @@ const ADD2E_ATTACK_WEAPON_TYPES = new Set(["arme", "weapon"]);
 const ADD2E_ATTACK_MAGIC_ITEM_EFFECT_FLAG = "magicItemCatalogueEffect";
 
 function add2eAttackEffectsEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine || typeof engine.createModifier !== "function" || typeof engine.resolve !== "function") {
     throw new Error("Le résolveur canonique ADD2E des modificateurs de combat n’est pas disponible.");
   }
@@ -55,7 +55,7 @@ export function add2eAttackBuildTargetTagSet(cible) {
   add2eAttackPushNormalizedTag(targetTags, cible?.system?.tags);
   add2eAttackPushNormalizedTag(targetTags, cible?.system?.effectTags);
   add2eAttackPushNormalizedTag(targetTags, cible?.flags?.add2e?.tags);
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (cible && typeof engine?.getActiveTags === "function") add2eAttackPushNormalizedTag(targetTags, engine.getActiveTags(cible) ?? []);
   return targetTags;
 }
@@ -74,7 +74,7 @@ export function add2eAttackBuildActorTagSet(actor) {
   add2eAttackPushNormalizedTag(actorTags, actor?.system?.tags);
   add2eAttackPushNormalizedTag(actorTags, actor?.system?.effectTags);
   add2eAttackPushNormalizedTag(actorTags, actor?.flags?.add2e?.tags);
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (typeof engine?.getActiveTags === "function") add2eAttackPushNormalizedTag(actorTags, engine.getActiveTags(actor) ?? []);
   return actorTags;
 }
@@ -94,7 +94,7 @@ function add2eAttackNormalizeModifierTag(rawTag) {
 
 function add2eAttackGetActiveTargetEffectTags(cible) {
   const tags = new Set();
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (cible && typeof engine?.getActiveTags === "function") add2eAttackPushNormalizedTag(tags, engine.getActiveTags(cible) ?? []);
   return tags;
 }
@@ -338,7 +338,7 @@ function add2eAttackResolutionDetails(resolution) {
 
 export async function add2eAttackResolveTargetAttackGate({ actor, cible, actionTags = [], contact = false, source = "attack-roll" } = {}) {
   if (!actor || !cible) return { allowed: true, reason: "missing-actor-or-target", gateResults: [] };
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (typeof engine?.evaluateActionRules !== "function") return { allowed: true, reason: "effects-engine-unavailable", gateResults: [] };
 
   return engine.evaluateActionRules(cible, {
@@ -355,7 +355,7 @@ export async function add2eAttackResolveTargetAttackGate({ actor, cible, actionT
 }
 
 export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible }) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!actor || !cible || typeof engine?.getActiveTags !== "function") {
     return { value: 0, details: [], attackerTags: new Set(), targetEffectTags: new Set() };
   }
