@@ -37,7 +37,7 @@ function componentSettingEnabled() {
 }
 
 function componentResourceEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine
     || typeof engine.consumeResources !== "function"
     || typeof engine.recoverResources !== "function") {
