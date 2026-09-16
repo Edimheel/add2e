@@ -83,7 +83,7 @@ function add2eEscapeHtml(value) {
 }
 
 function add2eConsumableResourceEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine || typeof engine.consumeResource !== "function") {
     throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour les consommables.");
   }
