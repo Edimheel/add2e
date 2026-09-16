@@ -4,3 +4,10 @@
 2026/08/06-17:18:16.699482 7d57ffefc0 Generated table #625@0: 1130 keys, 838690 bytes
 2026/08/06-17:18:16.699548 7d57ffefc0 Compacted 3@0 + 0@1 files => 2958451 bytes
 2026/08/06-17:18:16.705449 7d57ffefc0 compacted to: files[ 0 2 0 0 0 0 0 ]
+2026/08/22-14:43:11.282473 7d57ffefc0 Level-0 table #627: started
+2026/08/22-14:43:11.282523 7d57ffefc0 Level-0 table #627: 0 bytes OK
+2026/08/22-14:43:11.289529 7d57ffefc0 Delete type=2 #619
+2026/08/22-14:43:11.290436 7d57ffefc0 Delete type=0 #623
+2026/08/22-14:43:11.290561 7d57ffefc0 Delete type=2 #620
+2026/08/22-14:43:11.290785 7d57ffefc0 Delete type=2 #621
+2026/08/22-14:43:11.337022 7d57ffefc0 Manual compaction at level-0 from '!actors!01mhyNCxEL8kFFt1' @ 72057594037927935 : 1 .. '!actors.items!zZy6qO7E8VZpNCp5.XPMwBsj6WEBYmFnf' @ 0 : 0; will stop at (end)
