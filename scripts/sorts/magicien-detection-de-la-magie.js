@@ -1,10 +1,8 @@
-// ADD2E — Détection de la magie — Foundry V13/V14/V15, DialogV2.
-// Version : 2026-07-27-shared-chat-card-v4
+// ADD2E — Détection de la magie — Foundry V13/V14/V15 via l’API commune ADD2E.
+// Version : 2026-09-17-shared-dialog-v5
 // Retour attendu : true = sort consommé, false = sort non consommé.
 
 const __add2eDetectionMagieResult = await (async () => {
-  const DialogV2 = foundry?.applications?.api?.DialogV2 ?? globalThis.DialogV2;
-
   const caster =
     ((typeof actor !== "undefined" && actor) ? actor : null)
     ?? ((typeof item !== "undefined" && item?.parent) ? item.parent : null)
@@ -43,8 +41,8 @@ const __add2eDetectionMagieResult = await (async () => {
     return false;
   }
 
-  if (!DialogV2?.wait) {
-    ui.notifications.error("Détection de la magie : DialogV2 est indisponible.");
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    ui.notifications.error("Détection de la magie : l’API de fenêtre ADD2E est indisponible.");
     return false;
   }
 
@@ -120,12 +118,11 @@ const __add2eDetectionMagieResult = await (async () => {
     `<option value="${esc(candidate.id)}">${esc(visibleName(candidate))}</option>`
   ).join("");
 
-  const selection = await DialogV2.wait({
-    window: {
-      title: "ADD2E — Détection de la magie",
-      icon: "fa-solid fa-eye"
-    },
-    position: { width: 560 },
+  const selection = await globalThis.add2eDialogWait({
+    add2eTheme: "wizard",
+    add2ePrimaryAction: "detect",
+    add2eClasses: ["add2e-detection-magie-dialog"],
+    window: { title: "Détection de la magie" },
     content: `
       <form class="add2e-detection-magie-form">
         <div class="form-group">
@@ -152,19 +149,20 @@ const __add2eDetectionMagieResult = await (async () => {
     `,
     buttons: [
       {
-        action: "cancel",
-        label: "Annuler",
-        icon: "fa-solid fa-xmark"
-      },
-      {
         action: "detect",
         label: "Détecter",
-        icon: "fa-solid fa-magnifying-glass",
+        icon: "<i class='fas fa-magnifying-glass'></i>",
         default: true,
         callback: (_event, button) => ({
           mode: button.form?.elements?.mode?.value ?? "bag",
           itemId: button.form?.elements?.itemId?.value ?? ""
         })
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
       }
     ],
     render: (_event, dialog) => {
