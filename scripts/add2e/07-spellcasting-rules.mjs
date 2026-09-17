@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Spellcasting par Items classe
-// Version : 2026-08-13-canonical-effects-engine-v10
+// Version : 2026-09-17-canonical-memorization-delete-v11
 // Les Items classe sont l’unique source de niveau et de listes de sorts des PJ.
 // Les profils dérivés canoniques sont l’unique source Intelligence/Sagesse.
 // Les emplacements sont lus exclusivement depuis spellcasting.preparationSource.
@@ -10,7 +10,7 @@
 
 import { classItems, classProgression, classProgressionRow, classSlug } from "./17b-multiclass-core.mjs";
 
-const ADD2E_SPELL_PREPARATION_VERSION = "2026-08-13-canonical-effects-engine-v10";
+const ADD2E_SPELL_PREPARATION_VERSION = "2026-09-17-canonical-memorization-delete-v11";
 const ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -726,12 +726,10 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
           throw new Error(`Limite atteinte : ${entry?.label ?? add2eSpellLabel(key)} niveau ${level} (${projected}/${maximum}).`);
         }
       }
-      const nextByList = add2eGetMemorizedByList(sort);
-      if (next > 0) nextByList[key] = next;
-      else delete nextByList[key];
-      await sort.update({
-        "flags.add2e.memorizedByList": nextByList
-      }, {
+      const updateData = next > 0
+        ? { [`flags.add2e.memorizedByList.${key}`]: next }
+        : { [`flags.add2e.memorizedByList.-=${key}`]: null };
+      await sort.update(updateData, {
         render: false,
         diff: false,
         add2eSpellPreparation: true,
