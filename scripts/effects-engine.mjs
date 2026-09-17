@@ -159,6 +159,7 @@ function installPassiveClassFeatureContract(Engine) {
 
 function installGenericResistanceExtensions(Engine) {
   const baseGetResistanceInfo = Engine.getResistanceInfo?.bind(Engine);
+  const baseRollResistanceDetails = Engine.rollResistanceDetails?.bind(Engine);
   const baseCheckResistanceDetails = Engine.checkResistanceDetails?.bind(Engine);
 
   Object.defineProperties(Engine, {
@@ -170,6 +171,21 @@ function installGenericResistanceExtensions(Engine) {
         const manualTag = this.getActiveTags(actor).find(tag => aliases.some(alias => tag === `resistance:${alias}:manual` || tag === `resistance:${alias}:manuelle`));
         if (manualTag) return { found: false, manual: true, type: String(typeResist ?? ""), matchedType: manualTag.split(":")[1] ?? "", tag: manualTag, pct: 0 };
         return baseGetResistanceInfo?.(actor, typeResist) ?? { found: false, type: String(typeResist ?? ""), matchedType: "", tag: "", pct: 0 };
+      }
+    },
+    rollResistanceDetails: {
+      configurable: true,
+      writable: true,
+      async value(actor, typeResist, options = {}) {
+        if (this.hasImmunity(actor, typeResist)) {
+          const result = { found: true, immunise: true, resiste: true, type: String(typeResist ?? ""), matchedType: this.normalizeTag(typeResist), tag: `immunite:${this.normalizeTag(typeResist)}`, pct: 100, jet: 0, roll: null, details: `Immunité contre ${typeResist}` };
+          globalThis.add2eLastResistanceRoll = result;
+          return result;
+        }
+        if (typeof baseRollResistanceDetails !== "function") {
+          throw new Error("L’exécuteur canonique ADD2E des résistances est indisponible.");
+        }
+        return baseRollResistanceDetails(actor, typeResist, options);
       }
     },
     checkResistanceDetails: {
