@@ -42,7 +42,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       if (raw === undefined || raw === null || raw === "") return null;
       const value = Number(raw);
       if (!Number.isFinite(value) || value < 1) {
-        throw new Error(`Capacité de classe « ${feature?.name ?? "inconnue"} » avec maxLevel canonique invalide.`);
+        throw new Error(`Capacité de classe « ${feature?.name ?? system?.label ?? "inconnue"} » avec maxLevel canonique invalide.`);
       }
       return Math.floor(value);
     },
@@ -652,7 +652,6 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
           roll: null,
           details: `Aucune résistance contre ${typeResist}`
         };
-        globalThis.add2eLastResistanceRoll = result;
         return result;
       }
 
@@ -677,7 +676,6 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         details: `Résistance ${pct}% contre ${typeResist} : jet ${jet} => ${resiste ? "réussite" : "échec"}`
       };
 
-      globalThis.add2eLastResistanceRoll = result;
       if (createChat) {
         const buildChatCard = globalThis.add2eBuildChatCard;
         const createChatCard = globalThis.add2eCreateChatCard;
@@ -717,7 +715,6 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
           roll: null,
           details: `Aucune résistance contre ${typeResist}`
         };
-        globalThis.add2eLastResistanceRoll = result;
         return result;
       }
 
@@ -736,7 +733,6 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         details: `Résistance ${info.pct}% contre ${typeResist} : jet ${jet} => ${resiste ? "réussite" : "échec"}`
       };
 
-      globalThis.add2eLastResistanceRoll = result;
       if (options.chat !== false) {
         const buildChatCard = globalThis.add2eBuildChatCard;
         const createChatCard = globalThis.add2eCreateChatCard;
