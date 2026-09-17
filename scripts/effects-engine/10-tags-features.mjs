@@ -636,6 +636,71 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       return { found: false, type: String(typeResist ?? ""), matchedType: "", tag: "", pct: 0 };
     },
 
+    async rollResistanceDetails(actor, typeResist, options = {}) {
+      const info = options?.info && typeof options.info === "object"
+        ? options.info
+        : this.getResistanceInfo(actor, typeResist);
+      if (!info?.found) {
+        const result = {
+          found: false,
+          resiste: false,
+          type: String(typeResist ?? ""),
+          matchedType: "",
+          tag: "",
+          pct: 0,
+          jet: 0,
+          roll: null,
+          details: `Aucune résistance contre ${typeResist}`
+        };
+        globalThis.add2eLastResistanceRoll = result;
+        return result;
+      }
+
+      const roll = new Roll("1d100");
+      await roll.evaluate();
+      if (options.showDice !== false) {
+        try { await game.dice3d?.showForRoll?.(roll); } catch (_error) {}
+      }
+      const jet = Number(roll.total) || 0;
+      const pct = Math.max(0, Math.min(100, Number(info.pct) || 0));
+      const resiste = jet <= pct;
+      const result = {
+        found: true,
+        resiste,
+        type: String(info.type ?? typeResist ?? ""),
+        matchedType: String(info.matchedType ?? ""),
+        tag: String(info.tag ?? ""),
+        pct,
+        jet,
+        roll,
+        details: `Résistance ${pct}% contre ${typeResist} : jet ${jet} => ${resiste ? "réussite" : "échec"}`
+      };
+
+      globalThis.add2eLastResistanceRoll = result;
+      if (options.chat !== false) {
+        const buildChatCard = globalThis.add2eBuildChatCard;
+        const createChatCard = globalThis.add2eCreateChatCard;
+        if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
+          throw new Error("L’API commune de carte chat ADD2E est indisponible pour le jet de résistance.");
+        }
+        const cardOptions = {
+          actor,
+          title: "Résistance",
+          icon: "fas fa-shield-halved",
+          variant: resiste ? "success" : "failure",
+          rows: [
+            { label: "Type", value: String(typeResist ?? "Résistance") },
+            { label: "Chance", value: `${pct}%` },
+            { label: "Jet", value: String(jet) }
+          ],
+          message: resiste ? "Résistance réussie." : "Résistance échouée."
+        };
+        buildChatCard(cardOptions);
+        await createChatCard(cardOptions);
+      }
+      return result;
+    },
+
     checkResistanceDetails(actor, typeResist, options = {}) {
       const info = this.getResistanceInfo(actor, typeResist);
       if (!info.found) {
