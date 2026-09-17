@@ -99,20 +99,34 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  const casterLevel = (() => {
-    const classItem = Array.from(caster.items ?? []).find(entry =>
-      String(entry?.type ?? "").toLowerCase() === "classe"
-      && /clerc|cleric/i.test(String(entry?.name ?? entry?.system?.label ?? ""))
-    );
-    return Math.max(1, number(
-      classItem?.system?.niveau
-        ?? classItem?.system?.level
-        ?? caster?.system?.details_classe?.clerc?.niveau
-        ?? caster?.system?.niveau
-        ?? caster?.system?.level,
-      1
-    ));
-  })();
+  const resolveCasterLevel = () => {
+    if (sourceItem.system?.isObjectPower === true) {
+      const explicit = Number(sourceItem.system?.casterLevel);
+      if (!Number.isInteger(explicit) || explicit < 1) {
+        throw new Error(`${title} : niveau de lanceur explicite absent du pouvoir d’objet magique.`);
+      }
+      return explicit;
+    }
+
+    const resolver = globalThis.add2eCanActorUseSpell;
+    if (typeof resolver !== "function") {
+      throw new Error(`${title} : le résolveur canonique de lancement des sorts est indisponible.`);
+    }
+    const access = resolver(caster, sourceItem);
+    const level = Number(access?.actorLevel);
+    if (access?.ok !== true || !Number.isInteger(level) || level < 1) {
+      throw new Error(`${title} : niveau canonique du lanceur indisponible${access?.reason ? ` (${access.reason})` : ""}.`);
+    }
+    return level;
+  };
+
+  let casterLevel;
+  try {
+    casterLevel = resolveCasterLevel();
+  } catch (error) {
+    ui.notifications.error(error?.message ?? `${title} : niveau du lanceur indisponible.`);
+    return false;
+  }
 
   const tokenDocument = value => value?.document?.documentName === "Token"
     ? value.document
@@ -240,7 +254,7 @@ const __add2eOnUseResult = await (async () => {
   };
 
   const getTargetCA = actorDoc => {
-    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+    const engine = globalThis.ADD2E_EFFECTS;
     if (typeof engine?.getMagicPassiveDefense === "function") {
       const details = engine.getMagicPassiveDefense(actorDoc, {
         source: "spell-touch-attack",
