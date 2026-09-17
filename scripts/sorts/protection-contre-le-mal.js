@@ -7,8 +7,6 @@ const __add2eProtectionResult = await (async () => {
   const normalize = value => String(value ?? "").trim().toLowerCase().normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "")
     .replace(/[^a-z0-9:]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
-  const escapeHtml = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
-  const chatStyle = () => CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
   const sourceItem = typeof sort !== "undefined" && sort ? sort : typeof item !== "undefined" && item ? item : typeof spell !== "undefined" && spell ? spell : typeof args !== "undefined" && args?.[0]?.item ? args[0].item : typeof this !== "undefined" && this?.documentName === "Item" ? this : null;
   if (!sourceItem) return ui.notifications.error("Protection : sort introuvable."), false;
 
@@ -16,6 +14,9 @@ const __add2eProtectionResult = await (async () => {
   if (!caster) return ui.notifications.error("Protection : lanceur introuvable."), false;
   const casterToken = canvas.tokens?.controlled?.find(t => t?.actor?.id === caster.id) ?? (typeof token !== "undefined" && token?.actor?.id === caster.id ? token : null) ?? caster.getActiveTokens?.()[0] ?? null;
   if (!casterToken) return ui.notifications.warn("Protection : sélectionne le token du lanceur."), false;
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Protection : les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
 
   const flags = sourceItem.flags?.add2e ?? {};
   const values = [sourceItem.name, sourceItem.system?.nom, sourceItem.system?.slug, sourceItem.system?.spellKey, flags.spellKey, flags.slug, flags.reversibleActorEntry?.name, flags.reversibleActorEntry?.displayName];
@@ -55,12 +56,23 @@ const __add2eProtectionResult = await (async () => {
   const inTouch = casterToken.id === targetToken.id || (Math.max(0, targetDoc.x / grid - (sourceDoc.x / grid + (sourceDoc.width || 1)), sourceDoc.x / grid - (targetDoc.x / grid + (targetDoc.width || 1))) <= .01 && Math.max(0, targetDoc.y / grid - (sourceDoc.y / grid + (sourceDoc.height || 1)), sourceDoc.y / grid - (targetDoc.y / grid + (targetDoc.height || 1))) <= .01);
   if (!inTouch) return ui.notifications.warn(`${modeInfo.label} : la cible doit être au toucher.`), false;
 
-  const positive = value => {
-    const number = Number(value);
-    return Number.isFinite(number) && number > 0 ? Math.floor(number) : null;
+  const resolveCasterLevel = () => {
+    if (sourceItem.system?.isObjectPower === true) {
+      const explicit = Number(sourceItem.system?.casterLevel);
+      if (!Number.isInteger(explicit) || explicit < 1) throw new Error(`${modeInfo.label} : niveau de lanceur explicite absent du pouvoir d’objet magique.`);
+      return explicit;
+    }
+    const resolver = globalThis.add2eCanActorUseSpell;
+    if (typeof resolver !== "function") throw new Error(`${modeInfo.label} : le résolveur canonique de lancement des sorts est indisponible.`);
+    const access = resolver(caster, sourceItem);
+    const level = Number(access?.actorLevel);
+    if (access?.ok !== true || !Number.isInteger(level) || level < 1) throw new Error(`${modeInfo.label} : niveau canonique du lanceur indisponible${access?.reason ? ` (${access.reason})` : ""}.`);
+    return level;
   };
-  const cleric = Array.from(caster.items ?? []).find(entry => entry?.type === "classe" && [entry.name, entry.system?.label, entry.system?.nom, entry.system?.slug].map(normalize).some(key => key === "clerc" || key.includes("clerc")));
-  const level = [cleric?.system?.niveau, cleric?.system?.level, caster.system?.details_classe?.clerc?.niveau, caster.system?.details_classe?.clerc?.level, caster.system?.classes?.clerc?.niveau, caster.system?.classes?.clerc?.level, caster.system?.multiclass?.clerc?.niveau, caster.system?.multiclass?.clerc?.level, caster.system?.niveaux?.clerc, caster.flags?.add2e?.multiclass?.clerc?.niveau, caster.flags?.add2e?.multiclass?.clerc?.level, caster.system?.niveau, caster.system?.level, caster.system?.details?.niveau, caster.system?.details?.level].map(positive).find(Number.isFinite) ?? 1;
+  let level;
+  try { level = resolveCasterLevel(); }
+  catch (error) { ui.notifications.error(error?.message ?? `${modeInfo.label} : niveau du lanceur indisponible.`); return false; }
+
   const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
   const rounds = time?.toRounds?.("level*3", "round", { level }) ?? level * 3;
   const endMessage = isGood ? "La protection contre le bien de {actor} prend fin." : "La protection contre le mal de {actor} prend fin.";
@@ -89,8 +101,9 @@ const __add2eProtectionResult = await (async () => {
     try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name, object: tokenDoc }); } catch (_error) {}
     try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name }); } catch (_error) {}
   };
-  if (globalThis.ADD2E_PROTECTION_WARD_HOOKS_VERSION !== ADD2E_PROTECTION_VFX_VERSION) {
-    globalThis.ADD2E_PROTECTION_WARD_HOOKS_VERSION = ADD2E_PROTECTION_VFX_VERSION;
+  game.add2e ??= {};
+  if (game.add2e.protectionWardHooksVersion !== ADD2E_PROTECTION_VFX_VERSION) {
+    game.add2e.protectionWardHooksVersion = ADD2E_PROTECTION_VFX_VERSION;
     const clearWard = effect => {
       if (!isProtection(effect)) return;
       for (const activeToken of effect.parent?.getActiveTokens?.() ?? []) stopVfx(activeToken);
@@ -116,8 +129,28 @@ const __add2eProtectionResult = await (async () => {
     }
   } catch (_error) {}
 
-  const card = `<div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,#fffaf0,#fff7df);border:1.5px solid #e2bc63;overflow:hidden;padding:0;font-family:var(--font-primary);"><div style="background:linear-gradient(90deg,#6f4b12,#b88924);padding:8px 12px;color:#fff;display:flex;align-items:center;gap:10px;border-bottom:2px solid #8a611d;"><img src="${escapeHtml(caster.img || "icons/svg/mystery-man.svg")}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;"><div style="line-height:1.2;flex:1;"><div style="font-weight:bold;font-size:1.05em;">${escapeHtml(caster.name)}</div><div style="font-size:.85em;opacity:.95;">lance <b>${escapeHtml(modeInfo.label)}</b></div></div><img src="${escapeHtml(sourceItem.img || "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp")}" style="width:32px;height:32px;border-radius:4px;background:#fff;object-fit:cover;"></div><div style="padding:10px;color:#6f4b12;"><div style="margin-bottom:7px;font-size:.95em;"><b>Cible :</b> ${escapeHtml(targetToken.name ?? targetToken.actor.name)}</div><div style="text-align:center;border:1px solid #e2bc63;border-radius:7px;padding:8px;background:#fffdf7;"><b>${escapeHtml(modeInfo.label.toUpperCase())}</b><br>Durée : <b>${rounds} rounds</b></div><div style="display:flex;gap:6px;margin-top:7px;"><span style="flex:1;text-align:center;border:1px solid #e2bc63;border-radius:5px;padding:5px;background:#fff;"><b>Attaques ${escapeHtml(modeInfo.alignmentLabel)}</b><br><b>–2</b></span><span style="flex:1;text-align:center;border:1px solid #e2bc63;border-radius:5px;padding:5px;background:#fff;"><b>Jets de protection</b><br><b>+2</b></span></div><div style="margin-top:7px;padding:7px 8px;border-left:4px solid #b88924;background:#fff9e9;border-radius:4px;font-size:.88em;line-height:1.35;">${escapeHtml(modeInfo.barrierText)}</div></div></div>`;
-  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }), content: card, ...chatStyle() });
+  const cardOptions = {
+    actor: caster,
+    title: modeInfo.label,
+    icon: "fas fa-shield-halved",
+    variant: "spell",
+    source: { name: caster.name, img: sourceItem.img || caster.img, type: "Sort divin", meta: `Niveau de lanceur ${level}` },
+    target: { name: targetToken.name ?? targetToken.actor.name, img: targetToken.actor.img, type: "Cible protégée", meta: "Toucher" },
+    rows: [
+      { label: "Durée", value: `${rounds} rounds` },
+      { label: `Attaques ${modeInfo.alignmentLabel}`, value: "−2" },
+      { label: "Jets de protection", value: "+2" },
+      { label: "Barrière", value: modeInfo.barrierText }
+    ],
+    message: `${targetToken.name ?? targetToken.actor.name} bénéficie de ${modeInfo.label}.`,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+      flags: { add2e: { chatCardType: "protection-alignment", version: ADD2E_PROTECTION_VFX_VERSION, spellKey: modeInfo.spellKey, sourceItemUuid: sourceItem.uuid ?? null, casterLevel: level, durationRounds: rounds, targetActorUuid: targetToken.actor.uuid ?? null } }
+    }
+  };
+  const preview = globalThis.add2eBuildChatCard(cardOptions);
+  if (!String(preview ?? "").trim()) throw new Error("Protection : carte ADD2E vide.");
+  await globalThis.add2eCreateChatCard(cardOptions);
   return true;
 })();
 
