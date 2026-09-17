@@ -11,7 +11,9 @@
  * Retour : { annulé, résiste, details, pct, jet, bonus }
  */
 
-const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-08-13-generic-incoming-active-effects-v6";
+const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-09-17-canonical-effects-chat-v7";
+let add2eIncomingEffectHookRegistered = false;
+let add2eLightDarknessInteractionHookRegistered = false;
 
 function add2eResolveEffectKey(value) {
   return String(value ?? "")
@@ -31,6 +33,17 @@ function add2eResolveEscapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+async function add2eResolveCreateChatCard(options = {}) {
+  const build = globalThis.add2eBuildChatCard;
+  const create = globalThis.add2eCreateChatCard;
+  if (typeof build !== "function" || typeof create !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
+  const preview = build(options);
+  if (!String(preview ?? "").trim()) throw new Error("Carte ADD2E vide.");
+  return create(options);
 }
 
 function add2eResolveToArray(value) {
@@ -75,7 +88,7 @@ function add2eResolvePatternsMatch(keys, patterns, excludedPatterns = []) {
 }
 
 function add2eResolveIncomingContext(effect, data = {}) {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   const normalize = value => engine?.normalizeTag?.(value) ?? add2eResolveEffectKey(value);
   const tags = new Set();
   const keys = new Set();
@@ -134,7 +147,7 @@ function add2eResolveIncomingContext(effect, data = {}) {
 }
 
 function add2eResolveRuleList(actor) {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine || !actor) return [];
   return [
     ...(engine.getActiveRules?.(actor) ?? []),
@@ -157,7 +170,7 @@ function add2eResolveRuleContextMatches(rule, context) {
     rule?.excludePatterns ?? rule?.excludedEffectPatterns ?? rule?.notEffectPatterns
   )) return false;
 
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (typeof engine?.passiveRuleActionTagsMatch === "function") {
     return engine.passiveRuleActionTagsMatch(rule, context.tags);
   }
@@ -286,7 +299,7 @@ function add2eResolveEffectiveAbility(actor, ability, context = {}) {
   const key = add2eResolveAbilityKey(ability);
   const normalizedContext = add2eResolveAbilityContext(context);
   const base = add2eResolveActorAbilityValue(actor, key);
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   const candidates = [];
 
   for (const rule of add2eResolveRuleList(actor)) {
@@ -355,25 +368,40 @@ function add2eResolvePostEffectiveAbilities(actor, context, results = {}) {
     const label = result.ability.charAt(0).toUpperCase() + result.ability.slice(1);
     return `${label} effective : ${result.effective}${Number.isFinite(result.base) ? ` (valeur réelle ${result.base})` : ""}`;
   }).join(" — ");
-  Promise.resolve().then(() => ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<div class="add2e-chat-card" style="border:1px solid #4c5f9e;border-radius:8px;padding:8px;">
-      <div style="font-weight:900;color:#4c5f9e;">${add2eResolveEscapeHtml(applied[0]?.label || "Défense contextuelle")}</div>
-      <div><b>${add2eResolveEscapeHtml(actor.name)}</b> — ${add2eResolveEscapeHtml(context?.name ?? "Effet")}</div>
-      <div>${add2eResolveEscapeHtml(details)}</div>
-    </div>`,
-    flags: {
-      add2e: {
-        effectiveAbilityResolution: true,
-        version: ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION,
-        abilities: add2eSerializeEffectiveAbilities(results)
+
+  const options = {
+    actor,
+    title: applied[0]?.label || "Défense contextuelle",
+    icon: "fas fa-shield-halved",
+    variant: "ability",
+    source: {
+      name: actor.name,
+      img: actor.img,
+      type: "Défense contextuelle"
+    },
+    rows: [
+      { label: "Effet", value: context?.name ?? "Effet" },
+      { label: "Résolution", value: details }
+    ],
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      flags: {
+        add2e: {
+          effectiveAbilityResolution: true,
+          version: ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION,
+          abilities: add2eSerializeEffectiveAbilities(results)
+        }
       }
     }
-  })).catch(error => console.warn("[ADD2E][EFFECTIVE_ABILITY][CHAT_ERROR]", error));
+  };
+
+  Promise.resolve()
+    .then(() => add2eResolveCreateChatCard(options))
+    .catch(error => console.warn("[ADD2E][EFFECTIVE_ABILITY][CHAT_ERROR]", error));
 }
 
 function add2eInstallEffectiveAbilityContract() {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!engine) return false;
   Object.defineProperties(engine, {
     getEffectiveAbility: {
@@ -395,7 +423,7 @@ function add2eInstallEffectiveAbilityContract() {
 }
 
 function add2eResolveLegacyImmunity(actor, context) {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   if (!actor || !engine) return null;
   const activeTags = engine.getActiveTags?.(actor) ?? [];
 
@@ -428,7 +456,7 @@ function add2eResolveLegacyImmunity(actor, context) {
 }
 
 function add2eResolvePercent(rule, actor) {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   const value = typeof engine?.getPassiveRuleNumber === "function"
     ? engine.getPassiveRuleNumber(rule, {
         actor,
@@ -507,28 +535,38 @@ function add2eResolvePostIncomingResult(actor, result) {
   const detail = result.kind === "resistance"
     ? `Résistance ${result.pct}% — jet ${result.roll} : effet ${blockedText}.`
     : `L’effet est annulé par ${result.label ?? "une immunité active"}.`;
-  const border = result.blocked ? "#2f8f46" : "#b36b2e";
-
-  Promise.resolve().then(() => ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<div class="add2e-chat-card" style="border:1px solid ${border};border-radius:8px;padding:8px;">
-      <div style="font-weight:900;color:${border};">${add2eResolveEscapeHtml(result.label ?? "Défense passive")}</div>
-      <div><b>${add2eResolveEscapeHtml(actor.name)}</b> — ${add2eResolveEscapeHtml(effectName)}</div>
-      <div>${add2eResolveEscapeHtml(detail)}</div>
-    </div>`,
-    flags: {
-      add2e: {
-        incomingEffectResolution: true,
-        version: ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION,
-        blocked: result.blocked,
-        kind: result.kind,
-        pct: result.pct,
-        roll: result.roll
+  const options = {
+    actor,
+    title: result.label ?? "Défense passive",
+    icon: "fas fa-shield",
+    variant: result.blocked ? "success" : "failure",
+    source: {
+      name: actor.name,
+      img: actor.img,
+      type: "Défense passive"
+    },
+    rows: [
+      { label: "Effet", value: effectName },
+      { label: "Résolution", value: detail }
+    ],
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      flags: {
+        add2e: {
+          incomingEffectResolution: true,
+          version: ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION,
+          blocked: result.blocked,
+          kind: result.kind,
+          pct: result.pct,
+          roll: result.roll
+        }
       }
     }
-  })).catch(error => {
-    console.warn("[ADD2E][INCOMING_EFFECT][CHAT_ERROR]", error);
-  });
+  };
+
+  Promise.resolve()
+    .then(() => add2eResolveCreateChatCard(options))
+    .catch(error => console.warn("[ADD2E][INCOMING_EFFECT][CHAT_ERROR]", error));
 }
 
 function add2eResolveEffectParentActor(effect) {
@@ -743,7 +781,7 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
     return { annulé: false, résiste: false, details: "Aucune cible", pct: 0, jet: 0, bonus: 0 };
   }
 
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   const type = String(effectType ?? "").trim() || "effet";
   const key = add2eResolveEffectKey(type);
   if (!engine?.getActiveTags) {
@@ -822,18 +860,26 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
       bonus: 0,
       effectiveAbilities
     };
-    if (typeof ChatMessage !== "undefined") {
-      const color = result.résiste ? "#2f8f46" : "#b33a2e";
-      const label = result.résiste ? "RÉSISTANCE RÉUSSIE" : "RÉSISTANCE ÉCHOUÉE";
-      await ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor }),
-        content: `<div class="add2e-chat-card" style="border:1px solid ${color};border-radius:8px;padding:8px;">
-          <div style="font-weight:900;color:${color};">${label}</div>
-          <div><b>${add2eResolveEscapeHtml(actor.name)}</b> contre <b>${add2eResolveEscapeHtml(type)}</b></div>
-          <div>Résistance : <b>${result.pct}%</b> — jet <b>${result.jet}</b></div>
-        </div>`
-      });
-    }
+    const options = {
+      actor,
+      title: result.résiste ? "Résistance réussie" : "Résistance échouée",
+      icon: "fas fa-shield-halved",
+      variant: result.résiste ? "success" : "failure",
+      source: {
+        name: actor.name,
+        img: actor.img,
+        type: "Résistance"
+      },
+      rows: [
+        { label: "Effet", value: type },
+        { label: "Résistance", value: `${result.pct}%` },
+        { label: "Jet", value: String(result.jet) }
+      ],
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor })
+      }
+    };
+    await add2eResolveCreateChatCard(options);
     return result;
   }
 
@@ -867,8 +913,8 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
 
 add2eInstallEffectiveAbilityContract();
 
-if (!globalThis.ADD2E_INCOMING_EFFECT_HOOK_REGISTERED) {
-  globalThis.ADD2E_INCOMING_EFFECT_HOOK_REGISTERED = true;
+if (!add2eIncomingEffectHookRegistered) {
+  add2eIncomingEffectHookRegistered = true;
   Hooks.on("preCreateActiveEffect", (effect, data, options, userId) => {
     if (userId && game.user?.id && userId !== game.user.id) return true;
     if (add2eIncomingEffectShouldBypass(effect, data, options)) return true;
@@ -897,8 +943,8 @@ if (!globalThis.ADD2E_INCOMING_EFFECT_HOOK_REGISTERED) {
   });
 }
 
-if (!globalThis.ADD2E_LIGHT_DARKNESS_INTERACTION_HOOK_REGISTERED) {
-  globalThis.ADD2E_LIGHT_DARKNESS_INTERACTION_HOOK_REGISTERED = ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION;
+if (!add2eLightDarknessInteractionHookRegistered) {
+  add2eLightDarknessInteractionHookRegistered = true;
   Hooks.on("createActiveEffect", async effect => {
     if (!add2eLightDarknessResponsibleGM()) return;
     try {
