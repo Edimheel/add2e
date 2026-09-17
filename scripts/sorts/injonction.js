@@ -177,7 +177,7 @@ const __add2eOnUseResult = await (async () => {
     return match ? Number(match[0].replace(",", ".")) : NaN;
   };
 
-  const effectsEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const effectsEngine = globalThis.ADD2E_EFFECTS;
   if (!effectsEngine || typeof effectsEngine.resolveAbility !== "function") {
     ui.notifications.error("Injonction : le résolveur canonique des caractéristiques est indisponible.");
     return false;
