@@ -838,7 +838,7 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
   }
 
   const resistance = typeof engine.rollResistanceDetails === "function"
-    ? await engine.rollResistanceDetails(actor, type, { chat: false, showDice: true })
+    ? await engine.rollResistanceDetails(actor, type, { chat: false, showDice: false })
     : { found: false, manual: false, resiste: false, pct: 0, jet: 0, roll: null, details: "" };
   if (resistance.immunise) {
     return {
