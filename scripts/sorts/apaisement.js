@@ -1,7 +1,7 @@
 /**
  * ADD2E — Apaisement / Épouvante
  * Clerc niveau 1
- * Version : 2026-07-24-apaisement-canonical-save-v6
+ * Version : 2026-09-17-canonical-touch-attack-v7
  * Compatible Foundry V13/V14/V15.
  *
  * Contrat onUse : true = sort consommé, false = sort non consommé.
@@ -238,54 +238,27 @@ const __add2eOnUseResult = await (async () => {
     return { deleted: 0, blocked: true };
   };
 
-  const getThac0 = actorDoc => {
-    const classItems = Array.from(actorDoc?.items ?? []).filter(entry => String(entry?.type ?? "").toLowerCase() === "classe");
-    const candidates = [];
-    for (const classItem of classItems) {
-      const level = Math.max(1, number(classItem?.system?.niveau ?? classItem?.system?.level, 1));
-      const progression = Array.isArray(classItem?.system?.progression) ? classItem.system.progression : [];
-      const row = progression.find(entry => Number(entry?.niveau ?? entry?.level) === level)
-        ?? progression[Math.max(0, Math.min(progression.length - 1, level - 1))]
-        ?? null;
-      const thac0 = number(row?.thac0, null);
-      if (Number.isFinite(thac0)) candidates.push(thac0);
-    }
-    return candidates.length ? Math.min(...candidates) : number(actorDoc?.system?.thac0, 20);
-  };
-
-  const getTargetCA = actorDoc => {
-    const engine = globalThis.ADD2E_EFFECTS;
-    if (typeof engine?.getMagicPassiveDefense === "function") {
-      const details = engine.getMagicPassiveDefense(actorDoc, {
-        source: "spell-touch-attack",
-        attacker: caster?.name,
-        weapon: sourceItem?.name ?? title
-      });
-      const total = number(details?.caTotal, null);
-      if (Number.isFinite(total)) return total;
-    }
-    return number(actorDoc?.system?.armorClass ?? actorDoc?.system?.ca_total ?? actorDoc?.system?.ca, 10);
-  };
-
-  const rollTouchAttack = async () => {
-    const thac0 = getThac0(caster);
-    const ca = getTargetCA(targetActor);
-    const threshold = thac0 - ca;
-    const roll = await new Roll("1d20").evaluate();
-    try { await game.dice3d?.showForRoll?.(roll); } catch (_error) {}
-    const d20 = Number(roll.total) || 0;
-    return {
-      roll,
-      d20,
-      thac0,
-      ca,
-      threshold,
-      success: d20 === 20 || (d20 !== 1 && d20 >= threshold)
-    };
-  };
-
   const targetIsConsentingCharacter = mode === "apaisement" && targetActor.type === "personnage";
-  const touch = targetIsConsentingCharacter ? null : await rollTouchAttack();
+  let touch = null;
+  if (!targetIsConsentingCharacter) {
+    if (typeof globalThis.add2eResolveTouchAttack !== "function") {
+      ui.notifications.error(`${title} : résolveur canonique des jets de toucher indisponible.`);
+      return false;
+    }
+    try {
+      const resolved = await globalThis.add2eResolveTouchAttack({
+        actor: caster,
+        targetActor,
+        sourceItem,
+        showDice: false
+      });
+      touch = { ...resolved, ca: resolved.armorClass };
+    } catch (error) {
+      console.error(`[ADD2E][${mode.toUpperCase()}][TOUCH_ATTACK]`, error);
+      ui.notifications.error(error?.message ?? `${title} : résolution du jet de toucher impossible.`);
+      return false;
+    }
+  }
 
   const postCard = async ({ outcome, variant, rows = [], rolls = [], extraFlags = {} }) => {
     const options = {
@@ -332,7 +305,7 @@ const __add2eOnUseResult = await (async () => {
         { label: "Calcul", value: `THAC0 ${touch.thac0} - CA ${touch.ca}` }
       ],
       rolls: [touch.roll],
-      extraFlags: { touchSuccess: false }
+      extraFlags: { touchSuccess: false, touchResolverVersion: touch.version }
     });
     return true;
   }
@@ -375,7 +348,7 @@ const __add2eOnUseResult = await (async () => {
           }
         }],
         createChat: false,
-        showDice: true
+        showDice: false
       });
       if (!renewedSave?.ok) {
         ui.notifications.warn(`Apaisement : sauvegarde contre les sortilèges introuvable pour ${targetActor.name}.`);
@@ -463,6 +436,7 @@ const __add2eOnUseResult = await (async () => {
       rolls: [touch?.roll, renewedSave?.roll],
       extraFlags: {
         canonicalSaveModifier: true,
+        touchResolverVersion: touch?.version ?? null,
         renewedSaveSuccess: renewedSave?.success ?? null,
         durationRounds: rounds
       }
@@ -551,6 +525,7 @@ const __add2eOnUseResult = await (async () => {
     ],
     rolls: [touch?.roll],
     extraFlags: {
+      touchResolverVersion: touch?.version ?? null,
       forcedFlee: true,
       fleeMoved: flee.moved === true,
       fleeRequested: flee.requested === true,
