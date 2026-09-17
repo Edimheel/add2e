@@ -43,7 +43,7 @@ const __add2eOnUseResult = await (async () => {
   }
 
   function resourceEngine() {
-    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+    const engine = globalThis.ADD2E_EFFECTS;
     if (!engine || typeof engine.recoverResource !== "function") {
       throw new Error("Le domaine canonique ADD2E resource n’est pas disponible pour Pierre Magique.");
     }
@@ -167,8 +167,7 @@ const __add2eOnUseResult = await (async () => {
     const list = tags();
     const flags = {
       add2e: {
-        ...timeFlags({ sourceItem, caster, qty }),
-        createdBySpell: "Pierre Magique",
+        ...timeFlags({ sourceItem, caster, qty }),n        createdBySpell: "Pierre Magique",
         spellUuid: sourceItem?.uuid ?? null,
         casterUuid: caster?.uuid ?? null,
         tags: list
