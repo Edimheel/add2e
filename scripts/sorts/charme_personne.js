@@ -1,5 +1,5 @@
 // Charme-personne — ADD2E
-// Version : 2026-08-08-2z-single-dice-v12
+// Version : 2026-09-17-canonical-resistance-roll-v13
 // Compatible Foundry V13/V14/V15.
 
 return await (async () => {
@@ -58,6 +58,9 @@ return await (async () => {
   }
 
   const effectsEngine = globalThis.ADD2E_EFFECTS;
+  if (typeof effectsEngine?.rollResistanceDetails !== "function") {
+    throw new Error("Charme-personne : l’exécuteur canonique des résistances ADD2E est indisponible.");
+  }
   const intelligence = targetActor => {
     if (typeof effectsEngine?.resolveAbilityDerived !== "function") {
       throw new Error("Charme-personne : le résolveur canonique d’Intelligence est indisponible.");
@@ -189,9 +192,11 @@ return await (async () => {
       : "Aucun";
   };
   const createCard = async ({ targetActor, resistance, save = null, outcome, periodicSave = null }) => {
-    const resistanceText = resistance?.found
-      ? `${Number(resistance.pct) || 0}% · d100 ${Number(resistance.jet) || 0} · ${resistance.resiste ? "réussie" : "échouée"}`
-      : "Aucune";
+    const resistanceText = resistance?.immunise
+      ? "Immunité"
+      : resistance?.found
+        ? `${Number(resistance.pct) || 0}% · d100 ${Number(resistance.jet) || 0} · ${resistance.resiste ? "réussie" : "échouée"}`
+        : "Aucune";
     const rows = [
       { label: "Cible", value: targetActor.name },
       { label: "Résistance raciale", value: resistanceText }
@@ -213,6 +218,10 @@ return await (async () => {
     }
 
     const outcomeData = {
+      immune: {
+        variant: "success",
+        message: `${targetActor.name} est immunisé contre le charme.`
+      },
       racial: {
         variant: "success",
         message: `${targetActor.name} résiste au charme grâce à sa résistance raciale.`
@@ -250,7 +259,7 @@ return await (async () => {
       message: outcomeData.message,
       chatData: {
         speaker: ChatMessage.getSpeaker({ actor: caster }),
-        rolls: save?.roll ? [save.roll] : [],
+        rolls: [resistance?.roll, save?.roll].filter(Boolean),
         flags: {
           add2e: {
             spell: "charme_personne",
@@ -258,6 +267,7 @@ return await (async () => {
             targetActorUuid: targetActor.uuid,
             outcome,
             resistanceFound: resistance?.found === true,
+            resistanceImmunity: resistance?.immunise === true,
             resistancePercent: resistance?.pct ?? null,
             resistanceRoll: resistance?.jet ?? null,
             resistanceSuccess: resistance?.resiste === true,
@@ -281,7 +291,10 @@ return await (async () => {
   const prepared = [];
   for (const targetToken of targets) {
     const targetActor = targetToken.actor;
-    const resistance = effectsEngine?.checkResistanceDetails?.(targetActor, "charme", { chat: false }) ?? null;
+    const resistance = await effectsEngine.rollResistanceDetails(targetActor, "charme", {
+      chat: false,
+      showDice: false
+    });
     if (resistance?.resiste) {
       prepared.push({ targetToken, targetActor, resistance, save: null });
       continue;
@@ -308,6 +321,10 @@ return await (async () => {
 
   for (const entry of prepared) {
     const { targetToken, targetActor, resistance, save } = entry;
+    if (resistance?.immunise) {
+      await createCard({ targetActor, resistance, outcome: "immune" });
+      continue;
+    }
     if (resistance?.resiste) {
       await createCard({ targetActor, resistance, outcome: "racial" });
       continue;
