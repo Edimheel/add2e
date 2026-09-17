@@ -37,6 +37,7 @@ async function add2eImportAttackModule(path, label) {
   await add2eImportAttackModule("./add2e-attack/01-core-helpers.mjs", "01-core-helpers");
   await add2eImportAttackModule("./add2e-attack/02-damage.mjs", "02-damage");
   await add2eImportAttackModule("./add2e-attack/03-attack-rules.mjs", "03-attack-rules");
+  await add2eImportAttackModule("./add2e-attack/04j-touch-attack.mjs", "04j-touch-attack");
   await add2eImportAttackModule("./add2e-attack/05-jb2a-vfx.mjs", "05-jb2a-vfx");
   await add2eImportAttackModule("./add2e-attack/06-cast-spell.mjs", "06-cast-spell");
   await add2eImportAttackModule("./add2e-attack/04a-attack-roll-bootstrap.mjs", "04a-attack-roll-bootstrap");
