@@ -42,7 +42,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       if (raw === undefined || raw === null || raw === "") return null;
       const value = Number(raw);
       if (!Number.isFinite(value) || value < 1) {
-        throw new Error(`Capacité de classe « ${feature?.name ?? system?.label ?? "inconnue"} » avec maxLevel canonique invalide.`);
+        throw new Error(`Capacité de classe « ${feature?.name ?? "inconnue"} » avec maxLevel canonique invalide.`);
       }
       return Math.floor(value);
     },
