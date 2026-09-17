@@ -1,11 +1,11 @@
 // Sommeil.js — ADD2E
 // Magicien niveau 1
-// Version : 2026-09-16-canonical-runtime-v2
+// Version : 2026-09-17-canonical-resistance-roll-v3
 // Retour attendu : true = consommé, false = non consommé.
 
 return await (async () => {
   const TAG = "[ADD2E][SORT_ONUSE][SOMMEIL]";
-  const VERSION = "2026-09-16-canonical-runtime-v2";
+  const VERSION = "2026-09-17-canonical-resistance-roll-v3";
 
   function getDV(actorDoc) {
     if (actorDoc?.system?.hitDice) {
@@ -363,6 +363,9 @@ return await (async () => {
   if (!effectsEngine) {
     throw new Error("Sommeil : le moteur canonique ADD2E est indisponible.");
   }
+  if (typeof effectsEngine.rollResistanceDetails !== "function") {
+    throw new Error("Sommeil : l’exécuteur canonique des résistances ADD2E est indisponible.");
+  }
 
   registerSleepHooks();
 
@@ -453,11 +456,15 @@ return await (async () => {
       return label.includes("immunité") || label.includes("sommeil") || tags.includes("immunite:sommeil");
     });
 
-    const resistanceSommeil = typeof effectsEngine.checkResistanceDetails === "function"
-      ? effectsEngine.checkResistanceDetails(cible, "sommeil", { chat: false })
-      : null;
+    const resistanceSommeil = await effectsEngine.rollResistanceDetails(cible, "sommeil", {
+      chat: false,
+      showDice: true
+    });
 
-    if (resistanceSommeil?.resiste) {
+    if (resistanceSommeil?.immunise) {
+      status = "Immunisé";
+      color = "#7f8c8d";
+    } else if (resistanceSommeil?.resiste) {
       status = `Résistance raciale (${resistanceSommeil.jet}/${resistanceSommeil.pct}%)`;
       color = "#1f8f3a";
     } else if (cat === "HIGH") {
