@@ -658,7 +658,8 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
 
       const roll = new Roll("1d100");
       await roll.evaluate();
-      if (options.showDice !== false) {
+      const createChat = options.chat !== false;
+      if (!createChat && options.showDice !== false) {
         try { await game.dice3d?.showForRoll?.(roll); } catch (_error) {}
       }
       const jet = Number(roll.total) || 0;
@@ -677,7 +678,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       };
 
       globalThis.add2eLastResistanceRoll = result;
-      if (options.chat !== false) {
+      if (createChat) {
         const buildChatCard = globalThis.add2eBuildChatCard;
         const createChatCard = globalThis.add2eCreateChatCard;
         if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
@@ -693,7 +694,8 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
             { label: "Chance", value: `${pct}%` },
             { label: "Jet", value: String(jet) }
           ],
-          message: resiste ? "Résistance réussie." : "Résistance échouée."
+          message: resiste ? "Résistance réussie." : "Résistance échouée.",
+          chatData: { rolls: [roll] }
         };
         buildChatCard(cardOptions);
         await createChatCard(cardOptions);
@@ -712,13 +714,15 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
           tag: "",
           pct: 0,
           jet: 0,
+          roll: null,
           details: `Aucune résistance contre ${typeResist}`
         };
         globalThis.add2eLastResistanceRoll = result;
         return result;
       }
 
-      const jet = Math.ceil(Math.random() * 100);
+      const roll = new Roll("1d100").evaluateSync({ strict: true });
+      const jet = Number(roll.total) || 0;
       const resiste = jet <= info.pct;
       const result = {
         found: true,
@@ -728,16 +732,18 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         tag: info.tag,
         pct: info.pct,
         jet,
+        roll,
         details: `Résistance ${info.pct}% contre ${typeResist} : jet ${jet} => ${resiste ? "réussite" : "échec"}`
       };
 
       globalThis.add2eLastResistanceRoll = result;
       if (options.chat !== false) {
+        const buildChatCard = globalThis.add2eBuildChatCard;
         const createChatCard = globalThis.add2eCreateChatCard;
-        if (typeof createChatCard !== "function") {
+        if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
           throw new Error("L’API commune de carte chat ADD2E est indisponible pour le jet de résistance.");
         }
-        void createChatCard({
+        const cardOptions = {
           actor,
           title: "Résistance",
           icon: "fas fa-shield-halved",
@@ -747,8 +753,11 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
             { label: "Chance", value: `${info.pct}%` },
             { label: "Jet", value: String(jet) }
           ],
-          message: resiste ? "Résistance réussie." : "Résistance échouée."
-        }).catch(error => console.error("[ADD2E][RESISTANCE][CHAT_ERROR]", error));
+          message: resiste ? "Résistance réussie." : "Résistance échouée.",
+          chatData: { rolls: [roll] }
+        };
+        buildChatCard(cardOptions);
+        void createChatCard(cardOptions).catch(error => console.error("[ADD2E][RESISTANCE][CHAT_ERROR]", error));
       }
       return result;
     },
