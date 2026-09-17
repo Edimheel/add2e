@@ -17,6 +17,9 @@ const ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION = "2026-06-22-level-pipeline-v2";
 globalThis.ADD2E_ABILITY_HUD_PRESENTATION_VERSION = ADD2E_ABILITY_HUD_PRESENTATION_VERSION;
 globalThis.ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION = ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION;
 
+let add2eAbilityHudObserver = null;
+let add2eLegacyActorUpdateGuardsInstalled = false;
+
 const ADD2E_ABILITY_PRESENTATION = Object.freeze({
   force: Object.freeze({ key: "force", label: "Force", shortLabel: "FOR", icon: "fas fa-dumbbell" }),
   dexterite: Object.freeze({ key: "dexterite", label: "Dextérité", shortLabel: "DEX", icon: "fas fa-running" }),
@@ -53,7 +56,7 @@ function add2eAbilityNormalize(value) {
 }
 
 function add2eAbilityEngine() {
-  return globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  return globalThis.ADD2E_EFFECTS ?? null;
 }
 
 function add2eAbilityDefinition(value) {
@@ -197,7 +200,7 @@ function add2eInstallAbilityHudPresentation() {
     document.head.appendChild(style);
   }
 
-  if (!globalThis.__add2eAbilityHudObserver) {
+  if (!add2eAbilityHudObserver) {
     let scheduled = false;
     const schedule = () => {
       if (scheduled) return;
@@ -211,7 +214,7 @@ function add2eInstallAbilityHudPresentation() {
       if (mutations.some(mutation => mutation.target?.closest?.("#add2e-action-hud") || [...mutation.addedNodes].some(node => node?.id === "add2e-action-hud" || node?.querySelector?.("#add2e-action-hud")))) schedule();
     });
     observer.observe(document.body, { childList: true, subtree: true });
-    globalThis.__add2eAbilityHudObserver = observer;
+    add2eAbilityHudObserver = observer;
   }
 
   add2eRefreshAbilityHud();
@@ -262,8 +265,8 @@ function add2eLegacyFilterMoveXpRecalc(actor, changes, options) {
 }
 
 function add2eLegacyInstallActorUpdateGuards() {
-  if (globalThis.__ADD2E_LEGACY_ACTOR_UPDATE_GUARDS__) return;
-  globalThis.__ADD2E_LEGACY_ACTOR_UPDATE_GUARDS__ = true;
+  if (add2eLegacyActorUpdateGuardsInstalled) return;
+  add2eLegacyActorUpdateGuardsInstalled = true;
 
   Hooks.on("preUpdateActor", (actor, changes = {}, options = {}) => {
     if (actor?.type !== "personnage") return;
