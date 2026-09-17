@@ -824,17 +824,6 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
       bonus: 0,
       effectiveAbilities
     };
-    globalThis.add2eLastResistanceRoll = {
-      found: true,
-      immunise: true,
-      resiste: true,
-      type,
-      matchedType: key,
-      tag: tags.find(tag => tag === `immunite:${key}` || tag === `protection:${key}`) ?? `immunite:${key}`,
-      pct: 100,
-      jet: 0,
-      details: result.details
-    };
     return result;
   }
 
