@@ -77,20 +77,24 @@ return await (async () => {
   }
 
   const casterLevel = () => {
-    const details = caster?.system?.details_classe ?? {};
-    const byClass = number(details.magicien?.niveau ?? details.mage?.niveau ?? details.illusionniste?.niveau, 0);
-    if (byClass > 0) return byClass;
-    const classItem = caster?.items?.find?.(entry =>
-      String(entry.type).toLowerCase() === "classe" && /magicien|mage|illusionniste/i.test(entry.name ?? "")
-    );
-    return Math.max(1, number(
-      classItem?.system?.niveau
-        ?? classItem?.system?.level
-        ?? caster?.system?.niveau
-        ?? caster?.system?.level
-        ?? caster?.system?.details?.niveau,
-      1
-    ));
+    if (sourceItem.system?.isObjectPower === true) {
+      const explicit = Number(sourceItem.system?.casterLevel);
+      if (!Number.isInteger(explicit) || explicit < 1) {
+        throw new Error(`${SPELL.name} : niveau de lanceur explicite absent du pouvoir d’objet magique.`);
+      }
+      return explicit;
+    }
+
+    const resolver = globalThis.add2eCanActorUseSpell;
+    if (typeof resolver !== "function") {
+      throw new Error(`${SPELL.name} : le résolveur canonique de lancement des sorts est indisponible.`);
+    }
+    const access = resolver(caster, sourceItem);
+    const level = Number(access?.actorLevel);
+    if (access?.ok !== true || !Number.isInteger(level) || level < 1) {
+      throw new Error(`${SPELL.name} : niveau canonique du lanceur indisponible${access?.reason ? ` (${access.reason})` : ""}.`);
+    }
+    return level;
   };
 
   const metersPerGridCell = () => {
@@ -410,7 +414,13 @@ return await (async () => {
     await globalThis.add2eCreateChatCard(options);
   };
 
-  const durationRounds = Math.max(1, casterLevel());
+  let durationRounds;
+  try {
+    durationRounds = Math.max(1, casterLevel());
+  } catch (error) {
+    await refund(error?.message ?? `${SPELL.name} : niveau du lanceur indisponible.`);
+    return false;
+  }
   const placement = await waitForConePlacement();
   if (!placement) {
     await refund(`${SPELL.name} : lancement annulé.`);
