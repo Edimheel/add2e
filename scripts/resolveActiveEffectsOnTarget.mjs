@@ -11,7 +11,7 @@
  * Retour : { annulé, résiste, details, pct, jet, bonus }
  */
 
-const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-09-17-canonical-effects-chat-v7";
+const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-09-17-canonical-resistance-roll-v8";
 let add2eIncomingEffectHookRegistered = false;
 let add2eLightDarknessInteractionHookRegistered = false;
 
@@ -837,8 +837,9 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
     return result;
   }
 
-  const resistance = engine.checkResistanceDetails?.(actor, type, { chat: false })
-    ?? { found: false, manual: false, resiste: false, pct: 0, jet: 0, details: "" };
+  const resistance = typeof engine.rollResistanceDetails === "function"
+    ? await engine.rollResistanceDetails(actor, type, { chat: false, showDice: true })
+    : { found: false, manual: false, resiste: false, pct: 0, jet: 0, roll: null, details: "" };
   if (resistance.immunise) {
     return {
       annulé: true,
@@ -876,7 +877,8 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
         { label: "Jet", value: String(result.jet) }
       ],
       chatData: {
-        speaker: ChatMessage.getSpeaker({ actor })
+        speaker: ChatMessage.getSpeaker({ actor }),
+        rolls: resistance.roll ? [resistance.roll] : []
       }
     };
     await add2eResolveCreateChatCard(options);
