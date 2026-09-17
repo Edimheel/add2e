@@ -284,6 +284,10 @@ async function add2eHandleSpellPreparationButton(button, event = null, actorOver
     if (!sort) return ui.notifications.warn("Sort introuvable sur l’acteur après rafraîchissement de la feuille.");
     if (api.isObjectPower(sort)) return ui.notifications.warn("Ce pouvoir d’objet magique ne se prépare pas comme un sort.");
 
+    const isPlus = button.classList.contains("a2e-spell-entry-plus") || button.classList.contains("sort-memorize-plus");
+    const isMinus = button.classList.contains("a2e-spell-entry-minus") || button.classList.contains("sort-memorize-minus");
+    if (!isPlus && !isMinus) return;
+
     const check = api.canUse(actor, sort);
     const entry = entryKey
       ? api.entries(actor).find(candidate => api.normalizeKey(candidate.key) === entryKey)
@@ -292,16 +296,13 @@ async function add2eHandleSpellPreparationButton(button, event = null, actorOver
 
     const spellLevel = Number(sort.system?.niveau) || 0;
     if (spellLevel < 1) throw new Error(`${sort.name} : system.niveau canonique absent ou invalide.`);
-    if (!check?.ok) return ui.notifications.warn(add2eSpellPrepAccessMessage(check, entry, spellLevel));
+    if (isPlus && !check?.ok) return ui.notifications.warn(add2eSpellPrepAccessMessage(check, entry, spellLevel));
 
     const limit = Math.max(0, Number(api.slots(actor, entry, spellLevel)) || 0);
-    if (limit <= 0) return ui.notifications.warn(`Aucun emplacement ${entry.label} de niveau ${spellLevel} disponible.`);
+    if (isPlus && limit <= 0) return ui.notifications.warn(`Aucun emplacement ${entry.label} de niveau ${spellLevel} disponible.`);
 
     const current = Math.max(0, Number(api.current(sort, entry)) || 0);
     const totalBefore = Math.max(0, Number(api.total(actor, entry, spellLevel)) || 0);
-    const isPlus = button.classList.contains("a2e-spell-entry-plus") || button.classList.contains("sort-memorize-plus");
-    const isMinus = button.classList.contains("a2e-spell-entry-minus") || button.classList.contains("sort-memorize-minus");
-    if (!isPlus && !isMinus) return;
 
     if (isPlus && totalBefore >= limit) {
       await add2eSpellPrepShowLimitDialog(entry, spellLevel, totalBefore, limit);
