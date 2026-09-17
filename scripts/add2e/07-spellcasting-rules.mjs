@@ -699,7 +699,7 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
     get current() {
       return add2eSpellStoredMemorization(sort, key);
     },
-    maximum,
+    maximum: null,
     cost: Math.max(0, Number(options.cost ?? 1) || 0),
     recovery: Math.max(0, Number(options.recovery ?? 0) || 0),
     recoveryPeriod: monster ? "manual" : "preparation",
@@ -713,6 +713,7 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
       spellList: key,
       spellLevel: level,
       entry,
+      preparationMaximum: maximum,
       consumer: options.consumer ?? "spellcasting-rules"
     },
     write: async nextValue => {
@@ -721,7 +722,7 @@ function add2eSpellMemorizationResource(sort, entry, options = {}) {
       if (!monster && actor && Number.isFinite(maximum)) {
         const currentTotal = add2eCountPreparedForEntryLevel(actor, entry, level);
         const projected = Math.max(0, currentTotal - liveCurrent + next);
-        if (projected > maximum) {
+        if (projected > maximum && projected > currentTotal) {
           throw new Error(`Limite atteinte : ${entry?.label ?? add2eSpellLabel(key)} niveau ${level} (${projected}/${maximum}).`);
         }
       }
