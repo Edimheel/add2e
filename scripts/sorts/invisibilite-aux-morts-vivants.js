@@ -1,27 +1,14 @@
 /**
  * ADD2E — Invisibilité aux Morts-Vivants
  * Clerc niveau 1
- * Version : 2026-06-02-invisibilite-morts-vivants-time-engine-v1
+ * Version : 2026-09-17-shared-chat-card-v2
  *
  * Contrat onUse : true = consommé ; false = non consommé.
  */
 
-console.log("%c[ADD2E][INVIS_MV] 2026-06-02-invisibilite-morts-vivants-time-engine-v1", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][INVIS_MV] 2026-09-17-shared-chat-card-v2", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
-  const esc = value => String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
-  function chatStyleData() {
-    return CONST.CHAT_MESSAGE_STYLES
-      ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
-      : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
-  }
-
   function sourceItemFromContext() {
     if (typeof sort !== "undefined" && sort) return sort;
     if (typeof item !== "undefined" && item) return item;
@@ -176,36 +163,46 @@ const __add2eOnUseResult = await (async () => {
   }
 
   async function createChat({ caster, sourceItem, targetToken }) {
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: caster }),
-      content: `
-        <div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,#fffaf0 0%,#fff7df 100%);border:1.5px solid #e2bc63;overflow:hidden;padding:0;font-family:var(--font-primary);">
-          <div style="background:linear-gradient(90deg,#6f4b12 0%,#b88924 100%);padding:8px 12px;color:white;display:flex;align-items:center;gap:10px;border-bottom:2px solid #8a611d;">
-            <img src="${esc(caster?.img || "icons/svg/mystery-man.svg")}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
-            <div style="line-height:1.2;flex:1;">
-              <div style="font-weight:bold;font-size:1.05em;">${esc(caster?.name ?? "Lanceur")}</div>
-              <div style="font-size:0.85em;opacity:0.95;">lance <b>${esc(sourceItem?.name ?? "Invisibilité aux Morts-Vivants")}</b></div>
-            </div>
-            <div style="text-align:right;font-size:0.78em;opacity:0.95;">Sort divin</div>
-            <img src="${esc(sourceItem?.img || "systems/add2e/assets/icones/sorts/invisibilite-aux-morts-vivants.webp")}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
-          </div>
-          <div style="padding:10px;">
-            <div style="margin-bottom:6px;font-size:0.95em;color:#6f4b12;"><b>Cible :</b> ${esc(targetToken?.name ?? targetToken?.actor?.name ?? "—")}</div>
-            <div style="border:1px solid #e2bc63;background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:#6f4b12;">
-              <div style="font-weight:bold;color:#2f8f46;">INVISIBILITÉ AUX MORTS-VIVANTS APPLIQUÉE</div>
-              <div>Durée : <b>6 rounds</b>.</div>
-              <div>Les morts-vivants d’esprit faible ne détectent plus la cible tant que l’effet persiste.</div>
-            </div>
-            <details style="margin-top:8px;background:white;border:1px solid #e2bc63;border-radius:6px;">
-              <summary style="cursor:pointer;color:#6f4b12;font-weight:600;padding:6px;">Règle appliquée</summary>
-              <div style="padding:8px;font-size:0.85em;line-height:1.45;color:#6f4b12;">
-                Rend la cible indétectable aux morts-vivants d’esprit faible. Les morts-vivants plus puissants peuvent bénéficier d’un jet de protection lors de l’interaction.
-              </div>
-            </details>
-          </div>
-        </div>`,
-      ...chatStyleData()
-    });
+    if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+      throw new Error("Invisibilité aux morts-vivants : les constructeurs communs de cartes ADD2E sont indisponibles.");
+    }
+    const options = {
+      actor: caster,
+      title: sourceItem?.name ?? "Invisibilité aux Morts-Vivants",
+      icon: "fas fa-eye-slash",
+      variant: "spell",
+      source: {
+        name: caster?.name ?? "Lanceur",
+        img: sourceItem?.img || caster?.img,
+        type: "Sort divin"
+      },
+      target: {
+        name: targetToken?.name ?? targetToken?.actor?.name ?? "Cible",
+        img: targetToken?.actor?.img,
+        type: "Créature touchée"
+      },
+      rows: [
+        { label: "Durée", value: "6 rounds" },
+        { label: "Effet", value: "Indétectable aux morts-vivants d’esprit faible" }
+      ],
+      message: `${targetToken?.name ?? targetToken?.actor?.name ?? "La cible"} devient indétectable aux morts-vivants d’esprit faible tant que l’effet persiste.`,
+      trustedBodyHtml: "<p>Les morts-vivants plus puissants peuvent bénéficier d’un jet de protection lors de l’interaction.</p>",
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: caster, token: targetToken }),
+        flags: {
+          add2e: {
+            chatCardType: "undead-invisibility",
+            sourceItemUuid: sourceItem?.uuid ?? null,
+            targetActorUuid: targetToken?.actor?.uuid ?? null,
+            durationRounds: 6,
+            version: "2026-09-17-shared-chat-card-v2"
+          }
+        }
+      }
+    };
+    const preview = globalThis.add2eBuildChatCard(options);
+    if (!String(preview ?? "").trim()) throw new Error("Invisibilité aux morts-vivants : carte ADD2E vide.");
+    return globalThis.add2eCreateChatCard(options);
   }
 
   const sourceItem = sourceItemFromContext();
