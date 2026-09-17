@@ -1,11 +1,11 @@
 // Sommeil.js — ADD2E
 // Magicien niveau 1
-// Version : 2026-09-17-canonical-resistance-roll-v3
+// Version : 2026-09-17-canonical-resistance-roll-v4
 // Retour attendu : true = consommé, false = non consommé.
 
 return await (async () => {
   const TAG = "[ADD2E][SORT_ONUSE][SOMMEIL]";
-  const VERSION = "2026-09-17-canonical-resistance-roll-v3";
+  const VERSION = "2026-09-17-canonical-resistance-roll-v4";
 
   function getDV(actorDoc) {
     if (actorDoc?.system?.hitDice) {
@@ -184,7 +184,8 @@ return await (async () => {
   }
 
   function emitGmOperation(operation, payload) {
-    game.socket?.emit?.("system.add2e", {
+    if (!game.socket?.emit) return false;
+    game.socket.emit("system.add2e", {
       type: "ADD2E_GM_OPERATION",
       operation,
       payload: {
@@ -193,6 +194,7 @@ return await (async () => {
         sentAt: Date.now()
       }
     });
+    return true;
   }
 
   async function createOrSocketEffect(targetToken, effectData) {
@@ -208,18 +210,17 @@ return await (async () => {
         .map(effect => effect.id)
         .filter(Boolean);
       if (oldIds.length) await targetActor.deleteEmbeddedDocuments("ActiveEffect", oldIds);
-      await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
-      return true;
+      const created = await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+      return Array.isArray(created) ? created.length > 0 : Boolean(created);
     }
 
-    emitGmOperation("createActiveEffect", {
+    return emitGmOperation("createActiveEffect", {
       actorId: targetActor.id,
       actorUuid: targetActor.uuid,
       sceneId: canvas.scene?.id,
       tokenId: targetToken.id,
       effectData
     });
-    return true;
   }
 
   async function playSleepVfx(targetToken) {
@@ -442,6 +443,7 @@ return await (async () => {
 
   const maxByCat = { "1": n1, "2": n2, "3": n3, "4": n4, "4+": 1, HIGH: 0 };
   const count = { "1": 0, "2": 0, "3": 0, "4": 0, "4+": 0, HIGH: 0 };
+  const pendingTargets = [];
   const affectedTokens = [];
   const listResults = [];
 
@@ -449,12 +451,6 @@ return await (async () => {
     const { token: targetToken, actor: cible, cat, dv } = entry;
     let status = "Endormi";
     let color = "#c0392b";
-
-    const isImmune = cible.effects?.some(effect => {
-      const label = String(effect.label || effect.name || "").toLowerCase();
-      const tags = effect.flags?.add2e?.tags || [];
-      return label.includes("immunité") || label.includes("sommeil") || tags.includes("immunite:sommeil");
-    });
 
     const resistanceSommeil = await effectsEngine.rollResistanceDetails(cible, "sommeil", {
       chat: false,
@@ -470,28 +466,32 @@ return await (async () => {
     } else if (cat === "HIGH") {
       status = `Trop puissant (${dv} DV)`;
       color = "#7f8c8d";
-    } else if (isImmune) {
-      status = "Immunisé";
-      color = "#7f8c8d";
     } else if (count[cat] >= maxByCat[cat]) {
       status = "Épargné (quota)";
       color = "#2980b9";
     } else {
       count[cat]++;
-      affectedTokens.push(targetToken);
     }
 
-    listResults.push({ name: cible.name, status, color });
+    const resultEntry = { name: cible.name, status, color };
+    listResults.push(resultEntry);
+    if (status === "Endormi") pendingTargets.push({ targetToken, resultEntry });
+  }
+
+  for (const { targetToken, resultEntry } of pendingTargets) {
+    if (!targetToken.actor) continue;
+    const effectData = buildSleepEffect({ sourceItem, caster, targetActor: targetToken.actor, rounds });
+    const applied = await createOrSocketEffect(targetToken, effectData);
+    if (!applied) {
+      resultEntry.status = "Effet bloqué";
+      resultEntry.color = "#7f8c8d";
+      continue;
+    }
+    affectedTokens.push(targetToken);
+    await playSleepVfx(targetToken);
   }
 
   await createResultCard({ caster, sourceItem, level, rounds, listResults, affectedTokens });
-
-  for (const targetToken of affectedTokens) {
-    if (!targetToken.actor) continue;
-    const effectData = buildSleepEffect({ sourceItem, caster, targetActor: targetToken.actor, rounds });
-    await createOrSocketEffect(targetToken, effectData);
-    await playSleepVfx(targetToken);
-  }
 
   console.log(`${TAG}[END]`, { affected: affectedTokens.map(targetToken => targetToken.name), durationRounds: rounds });
   return true;
