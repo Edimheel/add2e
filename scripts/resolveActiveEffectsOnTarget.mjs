@@ -11,7 +11,7 @@
  * Retour : { annulé, résiste, details, pct, jet, bonus }
  */
 
-const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-09-17-canonical-resistance-roll-v8";
+const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-09-17-canonical-resistance-roll-v9";
 let add2eIncomingEffectHookRegistered = false;
 let add2eLightDarknessInteractionHookRegistered = false;
 
@@ -468,15 +468,12 @@ function add2eResolvePercent(rule, actor) {
 }
 
 function add2eResolveD100() {
-  const random = typeof CONFIG?.Dice?.randomUniform === "function"
-    ? CONFIG.Dice.randomUniform()
-    : Math.random();
-  return Math.max(1, Math.min(100, Math.floor(Number(random) * 100) + 1));
+  return new Roll("1d100").evaluateSync({ strict: true });
 }
 
 function add2eResolveIncomingActiveEffect(actor, context) {
   if (!actor || !context) {
-    return { blocked: false, kind: "none", pct: 0, roll: 0, rule: null, effectiveAbilities: {}, context };
+    return { blocked: false, kind: "none", pct: 0, roll: 0, rollObject: null, rule: null, effectiveAbilities: {}, context };
   }
 
   const rules = add2eResolveRuleList(actor);
@@ -490,6 +487,7 @@ function add2eResolveIncomingActiveEffect(actor, context) {
       kind: "immunity",
       pct: 100,
       roll: 0,
+      rollObject: null,
       rule,
       label: String(rule?.label ?? rule?.source?.featureName ?? rule?.source?.effectName ?? "Immunité"),
       effectiveAbilities,
@@ -498,7 +496,7 @@ function add2eResolveIncomingActiveEffect(actor, context) {
   }
 
   const legacy = add2eResolveLegacyImmunity(actor, context);
-  if (legacy) return { ...legacy, effectiveAbilities, context };
+  if (legacy) return { ...legacy, rollObject: null, effectiveAbilities, context };
 
   const candidates = [];
   for (const rule of rules) {
@@ -510,17 +508,19 @@ function add2eResolveIncomingActiveEffect(actor, context) {
   }
 
   if (!candidates.length) {
-    return { blocked: false, kind: "none", pct: 0, roll: 0, rule: null, effectiveAbilities, context };
+    return { blocked: false, kind: "none", pct: 0, roll: 0, rollObject: null, rule: null, effectiveAbilities, context };
   }
 
   const selected = candidates.sort((left, right) => right.pct - left.pct)[0];
-  const roll = add2eResolveD100();
+  const rollObject = add2eResolveD100();
+  const roll = Number(rollObject?.total) || 0;
   const blocked = roll <= selected.pct;
   return {
     blocked,
     kind: "resistance",
     pct: selected.pct,
     roll,
+    rollObject,
     rule: selected.rule,
     label: String(selected.rule?.label ?? selected.rule?.source?.featureName ?? selected.rule?.source?.effectName ?? "Résistance"),
     effectiveAbilities,
@@ -551,6 +551,7 @@ function add2eResolvePostIncomingResult(actor, result) {
     ],
     chatData: {
       speaker: ChatMessage.getSpeaker({ actor }),
+      rolls: result.rollObject ? [result.rollObject] : [],
       flags: {
         add2e: {
           incomingEffectResolution: true,
