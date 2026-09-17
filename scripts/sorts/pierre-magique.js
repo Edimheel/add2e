@@ -167,7 +167,8 @@ const __add2eOnUseResult = await (async () => {
     const list = tags();
     const flags = {
       add2e: {
-        ...timeFlags({ sourceItem, caster, qty }),n        createdBySpell: "Pierre Magique",
+        ...timeFlags({ sourceItem, caster, qty }),
+        createdBySpell: "Pierre Magique",
         spellUuid: sourceItem?.uuid ?? null,
         casterUuid: caster?.uuid ?? null,
         tags: list
