@@ -1,12 +1,12 @@
 /**
  * ADD2E — Amitié
  * Magicien niveau 1 — sauvegarde, zone et réaction sociale canoniques.
- * Compatible Foundry V13/V14/V15 — aucune fenêtre legacy.
+ * Compatible Foundry V13/V14/V15 — aucune fenêtre legacy ni MeasuredTemplate.
  * Contrat onUse : true = sort consommé ; false = sort non consommé.
  */
 
 const __add2eOnUseResult = await (async () => {
-  const VERSION = "2026-07-26-canonical-reaction-v3";
+  const VERSION = "2026-09-17-canonical-canvas-zone-v4";
   const TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][AMITIE]";
   const CONFIG = Object.freeze({
     name: "Amitié",
@@ -49,7 +49,7 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  const effectsEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const effectsEngine = globalThis.ADD2E_EFFECTS;
   if (!effectsEngine || typeof effectsEngine.resolveAbilityDerived !== "function" || typeof effectsEngine.createModifier !== "function") {
     ui.notifications.error("Amitié : le moteur canonique des effets est indisponible.");
     return false;
@@ -74,13 +74,33 @@ const __add2eOnUseResult = await (async () => {
     ?? `amitie_${Date.now()}`;
   const spellImg = sourceItem.img || CONFIG.img || CONFIG.fallbackImg;
 
-  const casterLevel = Math.max(1, Math.trunc(number(
-    globalThis.add2eSpellClassLevel?.(caster, { sourceItem })
-      ?? Array.from(caster.items ?? []).find(entry => String(entry?.type ?? "").toLowerCase() === "classe" && /magicien/i.test(String(entry?.name ?? "")))?.system?.niveau
-      ?? caster.system?.niveau
-      ?? caster.system?.level,
-    1
-  )));
+  const resolveCasterLevel = () => {
+    if (sourceItem?.system?.isObjectPower === true) {
+      const explicit = Number(sourceItem.system?.casterLevel);
+      if (!Number.isInteger(explicit) || explicit < 1) {
+        throw new Error("Amitié : niveau de lanceur explicite absent du pouvoir d’objet magique.");
+      }
+      return explicit;
+    }
+    if (typeof globalThis.add2eCanActorUseSpell !== "function") {
+      throw new Error("Amitié : le résolveur canonique de lancement des sorts est indisponible.");
+    }
+    const access = globalThis.add2eCanActorUseSpell(caster, sourceItem);
+    const level = Number(access?.actorLevel);
+    if (access?.ok !== true || !Number.isInteger(level) || level < 1) {
+      throw new Error(`Amitié : niveau canonique du lanceur indisponible${access?.reason ? ` (${access.reason})` : ""}.`);
+    }
+    return level;
+  };
+
+  let casterLevel;
+  try {
+    casterLevel = resolveCasterLevel();
+  } catch (error) {
+    ui.notifications.error(error?.message ?? "Amitié : niveau du lanceur indisponible.");
+    return false;
+  }
+
   const durationRounds = casterLevel;
   const casterToken = suppliedToken
     ?? canvas.tokens?.controlled?.find(entry => entry.actor?.id === caster.id)
@@ -150,186 +170,135 @@ const __add2eOnUseResult = await (async () => {
     };
   };
 
+  const canvasElement = () => canvas?.app?.canvas ?? canvas?.app?.view ?? null;
   const canvasPosition = event => {
-    try {
-      const point = event?.data?.getLocalPosition?.(canvas.stage)
-        ?? event?.getLocalPosition?.(canvas.stage)
-        ?? null;
-      if (point) return { x: number(point.x), y: number(point.y) };
-    } catch (_error) {}
-    const original = event?.data?.originalEvent ?? event?.nativeEvent ?? event;
-    const rect = canvas.app?.view?.getBoundingClientRect?.();
-    if (!original || !rect) return null;
-    return {
-      x: ((original.clientX - rect.left) / rect.width) * canvas.dimensions.width,
-      y: ((original.clientY - rect.top) / rect.height) * canvas.dimensions.height
-    };
+    if (typeof canvas?.canvasCoordinatesFromClient !== "function") {
+      throw new Error("Amitié : conversion canonique des coordonnées canvas indisponible.");
+    }
+    return canvas.canvasCoordinatesFromClient({ x: event.clientX, y: event.clientY });
+  };
+  const placementDiameterClientPixels = (center, diameterCanvasPixels) => {
+    if (typeof canvas?.clientCoordinatesFromCanvas !== "function") return null;
+    const clientCenter = canvas.clientCoordinatesFromCanvas(center);
+    const clientEdge = canvas.clientCoordinatesFromCanvas({
+      x: center.x + diameterCanvasPixels / 2,
+      y: center.y
+    });
+    const radius = Math.hypot(clientEdge.x - clientCenter.x, clientEdge.y - clientCenter.y);
+    return Number.isFinite(radius) && radius > 0 ? radius * 2 : null;
   };
 
   const emitGmOperation = (operation, payload) => {
-    game.socket.emit("system.add2e", {
+    game.socket?.emit?.("system.add2e", {
       type: "ADD2E_GM_OPERATION",
       operation,
       payload
     });
   };
 
-  const buildTemplateData = (center, requestId) => {
-    const area = sceneArea();
-    return {
-      t: "circle",
-      user: game.user.id,
-      x: number(center.x),
-      y: number(center.y),
-      distance: number(area.sceneDistance),
-      direction: 0,
-      fillColor: "#b36bff",
-      borderColor: "#fff2a8",
-      flags: {
-        add2e: {
-          spell: CONFIG.slug,
-          spellName: CONFIG.name,
-          templateRequestId: requestId,
-          areaMeasure: CONFIG.areaMeasure,
-          areaDiameterInches,
-          areaUnit: CONFIG.areaUnit,
-          areaUsage: CONFIG.areaUsage,
-          areaDiameterMeters: number(area.diameterMeters),
-          areaDiameterSceneDistance: number(area.diameterSceneDistance),
-          areaDiameterSceneUnit: area.sceneUnit,
-          areaDiameterGridCells: number(area.diameterGridCells),
-          areaRadiusMeters: number(area.radiusMeters),
-          areaRadiusSceneDistance: number(area.radiusSceneDistance),
-          areaRadiusGridCells: number(area.radiusGridCells),
-          casterId: caster.id,
-          casterUuid: caster.uuid,
-          sourceItemId: sourceItem.id,
-          sourceItemUuid: sourceItem.uuid
-        }
-      }
-    };
-  };
-
-  const createPreview = async (center, requestId) => {
-    const TemplateDocument = CONFIG.MeasuredTemplate?.documentClass ?? globalThis.CONFIG?.MeasuredTemplate?.documentClass;
-    const TemplateObject = CONFIG.MeasuredTemplate?.objectClass ?? globalThis.CONFIG?.MeasuredTemplate?.objectClass;
-    if (!TemplateDocument || !TemplateObject || !canvas.templates) return null;
-    const document = new TemplateDocument(buildTemplateData(center, requestId), { parent: canvas.scene });
-    const template = new TemplateObject(document);
-    const layer = canvas.templates.preview ?? canvas.templates;
-    await template.draw();
-    layer.addChild(template);
-    template.refresh?.();
-    return template;
-  };
-
-  const persistTemplate = async (templateData, preview, requestId) => {
-    try {
-      const created = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [clone(templateData)]);
-      preview?.destroy?.({ children: true });
-      return { templateId: created?.[0]?.id ?? null, via: "direct" };
-    } catch (error) {
-      console.warn(`${TAG}[TEMPLATE_RELAY]`, error);
-      emitGmOperation("createMeasuredTemplate", {
-        sceneId: canvas.scene?.id ?? null,
-        templateData,
-        templateRequestId: requestId,
-        spell: CONFIG.slug,
-        spellName: CONFIG.name
-      });
-      setTimeout(() => preview?.destroy?.({ children: true }), 1500);
-      return { templateId: null, via: "gm-relay" };
-    }
-  };
-
   const chooseZone = async requestId => {
-    if (!canvas.ready || !canvas.stage || !canvas.templates || !canvas.scene) {
+    if (!canvas?.ready || !canvas?.scene) {
       ui.notifications.warn("Amitié : scène ou canevas indisponible.");
       return null;
     }
+    const view = canvasElement();
+    if (!view) throw new Error("Amitié : élément canvas introuvable.");
+
+    const area = sceneArea();
+    const radiusPixels = number(area.radiusPixels ?? area.pixels);
+    if (!(radiusPixels > 0)) throw new Error("Amitié : rayon de zone canonique invalide.");
+    const diameterCanvasPixels = radiusPixels * 2;
     const initial = casterToken
       ? tokenCenter(casterToken)
       : { x: canvas.dimensions.width / 2, y: canvas.dimensions.height / 2 };
-    const preview = await createPreview(initial, requestId);
-    const view = canvas.app?.view;
-    const previousCursor = view?.style?.cursor ?? "";
-    if (view?.style) view.style.cursor = "crosshair";
-    canvas.templates.activate?.();
-    ui.notifications.info("Amitié : cliquez sur la scène pour placer la zone, clic droit pour annuler.");
+
+    const marker = document.createElement("div");
+    marker.dataset.add2eFriendshipPlacement = "1";
+    Object.assign(marker.style, {
+      position: "fixed",
+      zIndex: "100000",
+      pointerEvents: "none",
+      boxSizing: "border-box",
+      border: "2px solid rgba(255, 242, 168, 0.98)",
+      borderRadius: "50%",
+      background: "rgba(179, 107, 255, 0.18)",
+      boxShadow: "0 0 0 1px rgba(179,107,255,.9) inset",
+      display: "none"
+    });
+    document.body.appendChild(marker);
+
+    const previousCursor = view.style.cursor;
+    view.style.cursor = "crosshair";
+    ui.notifications.info("Amitié : cliquez sur la scène pour placer la zone, clic droit ou Échap pour annuler.");
 
     return new Promise(resolve => {
       let finished = false;
       let current = { ...initial };
-      const cleanup = () => {
-        canvas.stage.off("mousemove", onMove);
-        canvas.stage.off("mousedown", onConfirm);
-        canvas.stage.off("rightdown", onCancel);
-        if (view?.style) view.style.cursor = previousCursor;
-      };
-      const refresh = position => {
-        if (!position) return;
-        current = { x: number(position.x), y: number(position.y) };
-        preview?.document?.updateSource?.(current);
-        preview?.refresh?.();
-      };
-      const finish = async position => {
+
+      const cleanup = result => {
         if (finished) return;
         finished = true;
-        cleanup();
-        if (!position) {
-          preview?.destroy?.({ children: true });
-          resolve(null);
-          return;
+        view.removeEventListener("pointermove", onMove, true);
+        view.removeEventListener("pointerdown", onPointerDown, true);
+        view.removeEventListener("contextmenu", onContextMenu, true);
+        window.removeEventListener("keydown", onKeyDown, true);
+        view.style.cursor = previousCursor;
+        marker.remove();
+        resolve(result);
+      };
+
+      const refresh = eventOrPoint => {
+        const position = eventOrPoint?.clientX !== undefined ? canvasPosition(eventOrPoint) : eventOrPoint;
+        if (!position) return null;
+        current = { x: number(position.x), y: number(position.y) };
+        const diameter = placementDiameterClientPixels(current, diameterCanvasPixels);
+        if (diameter && typeof canvas?.clientCoordinatesFromCanvas === "function") {
+          const clientCenter = canvas.clientCoordinatesFromCanvas(current);
+          marker.style.width = `${diameter}px`;
+          marker.style.height = `${diameter}px`;
+          marker.style.left = `${clientCenter.x - diameter / 2}px`;
+          marker.style.top = `${clientCenter.y - diameter / 2}px`;
+          marker.style.display = "block";
         }
-        const templateData = buildTemplateData(position, requestId);
-        const persisted = await persistTemplate(templateData, preview, requestId);
-        resolve({
+        return current;
+      };
+
+      function onMove(event) {
+        refresh(event);
+      }
+      function onPointerDown(event) {
+        if (event.button !== 0 && event.button !== 2) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        if (event.button === 2) return cleanup(null);
+        const position = refresh(event);
+        cleanup(position ? {
           x: position.x,
           y: position.y,
           sceneId: canvas.scene.id,
           templateRequestId: requestId,
-          templateId: persisted.templateId,
-          templateVia: persisted.via
-        });
-      };
-      const onMove = event => {
-        event?.stopPropagation?.();
-        refresh(canvasPosition(event));
-      };
-      const onConfirm = event => {
-        event?.stopPropagation?.();
-        event?.data?.originalEvent?.preventDefault?.();
-        refresh(canvasPosition(event) ?? current);
-        void finish(current);
-      };
-      const onCancel = event => {
-        event?.stopPropagation?.();
-        event?.data?.originalEvent?.preventDefault?.();
-        void finish(null);
-      };
-      canvas.stage.on("mousemove", onMove);
-      canvas.stage.once("mousedown", onConfirm);
-      canvas.stage.once("rightdown", onCancel);
-      refresh(initial);
-    });
-  };
+          templateId: null,
+          templateVia: "native-canvas-preview"
+        } : null);
+      }
+      function onContextMenu(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        cleanup(null);
+      }
+      function onKeyDown(event) {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        event.stopPropagation();
+        cleanup(null);
+      }
 
-  const deleteTemplate = async zone => {
-    if (!zone?.templateRequestId) return;
-    const ids = Array.from(canvas.scene?.templates ?? [])
-      .filter(template => template.id === zone.templateId || template.flags?.add2e?.templateRequestId === zone.templateRequestId)
-      .map(template => template.id)
-      .filter(Boolean);
-    if (game.user.isGM && ids.length) {
-      await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", ids);
-      return;
-    }
-    emitGmOperation("deleteMeasuredTemplates", {
-      sceneId: zone.sceneId,
-      templateId: zone.templateId,
-      templateRequestId: zone.templateRequestId,
-      spell: CONFIG.slug,
-      reason: "targets-resolved"
+      refresh(initial);
+      view.addEventListener("pointermove", onMove, true);
+      view.addEventListener("pointerdown", onPointerDown, true);
+      view.addEventListener("contextmenu", onContextMenu, true);
+      window.addEventListener("keydown", onKeyDown, true);
     });
   };
 
@@ -432,7 +401,7 @@ const __add2eOnUseResult = await (async () => {
             saveTarget: saveResult.target ?? null,
             durationRounds,
             templateRequestId: zone.templateRequestId,
-            templateId: zone.templateId,
+            templateId: null,
             templateSceneId: zone.sceneId,
             sourceItemId: sourceItem.id,
             sourceItemUuid: sourceItem.uuid,
@@ -510,74 +479,66 @@ const __add2eOnUseResult = await (async () => {
   if (!zone) return false;
 
   const results = [];
-  try {
-    for (const targetToken of targetsInZone(zone)) {
-      results.push(await resolveTarget(targetToken, zone));
-    }
+  for (const targetToken of targetsInZone(zone)) {
+    results.push(await resolveTarget(targetToken, zone));
+  }
 
-    const area = sceneArea();
-    const rows = [
-      { label: "Zone", value: `${areaDiameterInches}\" AD&D de diamètre` },
-      { label: "Durée", value: `${durationRounds} round${durationRounds > 1 ? "s" : ""}` },
-      ...results.map(result => ({
-        label: result.targetToken?.name ?? result.targetToken?.actor?.name ?? "Créature",
-        value: result.modifier
-          ? `${result.label} (${signed(result.modifier)})`
-          : result.label
-      })),
-      { label: "Réaction contextuelle", value: "Cibler une créature puis utiliser le bouton Réaction de la ligne Charisme." }
-    ];
-    if (!results.length) rows.splice(2, 0, { label: "Créatures affectées", value: "Aucune" });
+  const area = sceneArea();
+  const rows = [
+    { label: "Zone", value: `${areaDiameterInches}\" AD&D de diamètre` },
+    { label: "Durée", value: `${durationRounds} round${durationRounds > 1 ? "s" : ""}` },
+    ...results.map(result => ({
+      label: result.targetToken?.name ?? result.targetToken?.actor?.name ?? "Créature",
+      value: result.modifier
+        ? `${result.label} (${signed(result.modifier)})`
+        : result.label
+    })),
+    { label: "Réaction contextuelle", value: "Cibler une créature puis utiliser le bouton Réaction de la ligne Charisme." }
+  ];
+  if (!results.length) rows.splice(2, 0, { label: "Créatures affectées", value: "Aucune" });
 
-    const card = {
-      actor: caster,
-      title: sourceItem.name || CONFIG.name,
-      icon: "fas fa-face-smile",
-      variant: results.some(result => result.status === "affected") ? "success" : "neutral",
-      source: {
-        name: caster.name,
-        img: casterToken?.document?.texture?.src ?? caster.img,
-        type: `Magicien niveau ${casterLevel}`
-      },
-      rows,
-      chatData: {
-        speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
-        rolls: results.flatMap(result => result.rolls ?? []),
-        flags: {
-          add2e: {
-            chatCardType: "spell-amitie-reaction",
-            charismaConsumerVersion: VERSION,
-            spellKey: CONFIG.slug,
-            sourceItemUuid: sourceItem.uuid,
-            casterUuid: caster.uuid,
-            casterLevel,
-            durationRounds,
-            areaDiameterInches,
-            areaDiameterMeters: number(area.diameterMeters),
-            templateRequestId: zone.templateRequestId,
-            templateId: zone.templateId,
-            results: results.map(result => ({
-              targetActorUuid: result.targetToken?.actor?.uuid ?? null,
-              targetTokenId: result.targetToken?.id ?? null,
-              status: result.status,
-              modifier: result.modifier,
-              saveSuccess: result.save?.success ?? null,
-              saveTotal: result.save?.total ?? null,
-              saveTarget: result.save?.target ?? null
-            }))
-          }
+  const card = {
+    actor: caster,
+    title: sourceItem.name || CONFIG.name,
+    icon: "fas fa-face-smile",
+    variant: results.some(result => result.status === "affected") ? "success" : "neutral",
+    source: {
+      name: caster.name,
+      img: casterToken?.document?.texture?.src ?? caster.img,
+      type: `Magicien niveau ${casterLevel}`
+    },
+    rows,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+      rolls: results.flatMap(result => result.rolls ?? []),
+      flags: {
+        add2e: {
+          chatCardType: "spell-amitie-reaction",
+          charismaConsumerVersion: VERSION,
+          spellKey: CONFIG.slug,
+          sourceItemUuid: sourceItem.uuid,
+          casterUuid: caster.uuid,
+          casterLevel,
+          durationRounds,
+          areaDiameterInches,
+          areaDiameterMeters: number(area.diameterMeters),
+          templateRequestId: zone.templateRequestId,
+          templateId: null,
+          results: results.map(result => ({
+            targetActorUuid: result.targetToken?.actor?.uuid ?? null,
+            targetTokenId: result.targetToken?.id ?? null,
+            status: result.status,
+            modifier: result.modifier,
+            saveSuccess: result.save?.success ?? null,
+            saveTotal: result.save?.total ?? null,
+            saveTarget: result.save?.target ?? null
+          }))
         }
       }
-    };
-    globalThis.add2eBuildChatCard(card);
-    await globalThis.add2eCreateChatCard(card);
-  } finally {
-    try {
-      await deleteTemplate(zone);
-    } finally {
-      canvas.tokens?.activate?.();
     }
-  }
+  };
+  globalThis.add2eBuildChatCard(card);
+  await globalThis.add2eCreateChatCard(card);
 
   console.log(`${TAG}[DONE]`, {
     actor: caster.name,
