@@ -1,11 +1,11 @@
 // Sommeil.js — ADD2E
 // Magicien niveau 1
-// Version : 2026-09-17-canonical-resistance-roll-v4
+// Version : 2026-09-17-native-canvas-placement-v5
 // Retour attendu : true = consommé, false = non consommé.
 
 return await (async () => {
   const TAG = "[ADD2E][SORT_ONUSE][SOMMEIL]";
-  const VERSION = "2026-09-17-canonical-resistance-roll-v4";
+  const VERSION = "2026-09-17-native-canvas-placement-v5";
 
   function getDV(actorDoc) {
     if (actorDoc?.system?.hitDice) {
@@ -346,6 +346,121 @@ return await (async () => {
     return globalThis.add2eCreateChatCard(options);
   }
 
+  function sleepCanvasElement() {
+    return canvas?.app?.canvas ?? canvas?.app?.view ?? null;
+  }
+
+  function sleepCanvasPointFromClient(event) {
+    if (typeof canvas?.canvasCoordinatesFromClient !== "function") {
+      throw new Error("Sommeil : conversion canonique des coordonnées canvas indisponible.");
+    }
+    return canvas.canvasCoordinatesFromClient({ x: event.clientX, y: event.clientY });
+  }
+
+  function sleepPlacementDiameterClientPx(center, diameterCanvasPx) {
+    if (typeof canvas?.clientCoordinatesFromCanvas !== "function") return null;
+    const clientCenter = canvas.clientCoordinatesFromCanvas(center);
+    const clientEdge = canvas.clientCoordinatesFromCanvas({
+      x: center.x + (diameterCanvasPx / 2),
+      y: center.y
+    });
+    const radius = Math.hypot(clientEdge.x - clientCenter.x, clientEdge.y - clientCenter.y);
+    return Number.isFinite(radius) && radius > 0 ? radius * 2 : null;
+  }
+
+  async function chooseSleepCenter() {
+    if (!canvas?.ready || !canvas?.scene) {
+      throw new Error("Sommeil : aucun canvas de scène actif pour placer la zone.");
+    }
+    const view = sleepCanvasElement();
+    if (!view) throw new Error("Sommeil : élément canvas introuvable.");
+
+    const gridSize = Number(canvas.dimensions?.size ?? canvas.grid?.size);
+    if (!Number.isFinite(gridSize) || gridSize <= 0) {
+      throw new Error("Sommeil : taille de grille canonique indisponible.");
+    }
+
+    const diameterCanvasPx = gridSize * 3;
+    const marker = document.createElement("div");
+    marker.dataset.add2eSleepPlacement = "1";
+    Object.assign(marker.style, {
+      position: "fixed",
+      zIndex: "100000",
+      pointerEvents: "none",
+      boxSizing: "border-box",
+      border: "2px solid rgba(98, 72, 160, 0.95)",
+      borderRadius: "50%",
+      background: "rgba(98, 72, 160, 0.14)",
+      boxShadow: "0 0 0 1px rgba(255,255,255,0.55) inset",
+      display: "none"
+    });
+    document.body.appendChild(marker);
+
+    const previousCursor = view.style.cursor;
+    view.style.cursor = "crosshair";
+    ui.notifications.info("Sommeil : place le centre de la zone, clic gauche pour valider, clic droit ou Échap pour annuler.");
+
+    return new Promise(resolve => {
+      let finished = false;
+
+      const cleanup = result => {
+        if (finished) return;
+        finished = true;
+        view.removeEventListener("pointermove", onMove, true);
+        view.removeEventListener("pointerdown", onPointerDown, true);
+        view.removeEventListener("contextmenu", onContextMenu, true);
+        window.removeEventListener("keydown", onKeyDown, true);
+        view.style.cursor = previousCursor;
+        marker.remove();
+        resolve(result);
+      };
+
+      const updateMarker = event => {
+        const point = sleepCanvasPointFromClient(event);
+        const diameter = sleepPlacementDiameterClientPx(point, diameterCanvasPx);
+        if (!diameter) return point;
+        const clientCenter = canvas.clientCoordinatesFromCanvas(point);
+        marker.style.width = `${diameter}px`;
+        marker.style.height = `${diameter}px`;
+        marker.style.left = `${clientCenter.x - diameter / 2}px`;
+        marker.style.top = `${clientCenter.y - diameter / 2}px`;
+        marker.style.display = "block";
+        return point;
+      };
+
+      function onMove(event) {
+        updateMarker(event);
+      }
+
+      function onPointerDown(event) {
+        if (event.button !== 0 && event.button !== 2) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        if (event.button === 2) return cleanup(null);
+        cleanup(updateMarker(event));
+      }
+
+      function onContextMenu(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        cleanup(null);
+      }
+
+      function onKeyDown(event) {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        event.stopPropagation();
+        cleanup(null);
+      }
+
+      view.addEventListener("pointermove", onMove, true);
+      view.addEventListener("pointerdown", onPointerDown, true);
+      view.addEventListener("contextmenu", onContextMenu, true);
+      window.addEventListener("keydown", onKeyDown, true);
+    });
+  }
+
   console.log(`${TAG}[START]`);
 
   const sourceItem = getSourceItem();
@@ -385,43 +500,30 @@ return await (async () => {
     }
   };
 
-  const wg = globalThis.warpgate;
-  const hasWarpGate = !!(game.modules.get("warpgate")?.active && wg?.crosshairs?.show);
-  let center = null;
-
-  if (hasWarpGate) {
-    const cross = await wg.crosshairs.show({
-      size: 3,
-      icon: sourceItem.img || "icons/svg/sleep.svg",
-      label: "Sommeil (3\" diam.)",
-      drawIcon: true,
-      drawOutline: true,
-      interval: 1
-    });
-
-    if (!cross || cross.cancelled) {
-      await refund("Annulé.");
-      return false;
-    }
-
-    center = { x: cross.x, y: cross.y };
+  let center;
+  try {
+    center = await chooseSleepCenter();
+  } catch (error) {
+    console.error(`${TAG}[PLACEMENT_ERROR]`, error);
+    await refund(error?.message || "Placement de la zone de Sommeil impossible.");
+    return false;
   }
 
-  let targets = [];
-  if (center) {
-    const gridSize = canvas.grid?.size || 1;
-    const maxDistPixels = 1.5 * gridSize;
-    targets = canvas.tokens.placeables.filter(targetToken => {
-      if (!targetToken.actor) return false;
-      const dist = Math.hypot(targetToken.center.x - center.x, targetToken.center.y - center.y);
-      return dist <= (maxDistPixels + (targetToken.w / 4));
-    });
-  } else {
-    targets = Array.from(game.user.targets ?? []);
+  if (!center) {
+    await refund("Annulé.");
+    return false;
   }
+
+  const gridSize = Number(canvas.dimensions?.size ?? canvas.grid?.size);
+  const maxDistPixels = 1.5 * gridSize;
+  const targets = canvas.tokens.placeables.filter(targetToken => {
+    if (!targetToken.actor) return false;
+    const dist = Math.hypot(targetToken.center.x - center.x, targetToken.center.y - center.y);
+    return dist <= (maxDistPixels + (targetToken.w / 4));
+  });
 
   if (!targets.length) {
-    await refund("Personne dans la zone ou aucune cible sélectionnée.");
+    await refund("Personne dans la zone.");
     return false;
   }
 
