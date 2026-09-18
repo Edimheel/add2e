@@ -6,11 +6,13 @@
 // du moteur de butin et les fonctions partagées de monnaie/quantité.
 // ============================================================================
 
-import { add2eIsDeadLootMonster } from "./25-loot.mjs";
+import {
+  add2eIsDeadLootMonster,
+  add2eIsRecoverableLootItem
+} from "./25-loot.mjs";
 import {
   add2eTradeGetMoney,
-  add2eTradeHasMoney,
-  add2eTradeItemQuantity
+  add2eTradeHasMoney
 } from "./24-player-trades.mjs";
 
 export const ADD2E_LOOT_TOKEN_MARKER_VERSION = "2026-07-12-loot-token-overlay-suppression-v3";
@@ -22,11 +24,6 @@ const ADD2E_LOOT_OVERLAY_SUPPRESSION_FLAG = "lootOverlaySuppression";
 const ADD2E_LOOT_TOKEN_MARKER_TEXTURES = new Set([
   ADD2E_LOOT_TOKEN_CHEST_IMG,
   ADD2E_LOOT_TOKEN_OLD_CHEST_IMG
-]);
-const ADD2E_LOOT_TOKEN_ITEM_TYPES = new Set([
-  "arme", "weapon", "armure", "armor", "objet", "item",
-  "equipement", "equipment", "consommable", "consumable",
-  "loot", "conteneur", "container"
 ]);
 
 const add2eLootTokenPending = new Map();
@@ -51,20 +48,9 @@ function add2eLootTokenFlag(tokenDocument) {
   }
 }
 
-function add2eLootTokenIsRecoverableItem(item) {
-  if (!item || !ADD2E_LOOT_TOKEN_ITEM_TYPES.has(String(item.type ?? "").toLowerCase())) return false;
-
-  const system = item.system ?? {};
-  const flags = item.flags?.add2e ?? {};
-  if (flags.naturalAttack === true || flags.isNaturalAttack === true) return false;
-  if (system.naturalAttack === true || system.isNaturalAttack === true || system.naturelle === true) return false;
-
-  return add2eTradeItemQuantity(item) > 0;
-}
-
 export function add2eLootTokenHasContent(actor) {
   if (!actor) return false;
-  if (Array.from(actor.items ?? []).some(add2eLootTokenIsRecoverableItem)) return true;
+  if (Array.from(actor.items ?? []).some(add2eIsRecoverableLootItem)) return true;
   return add2eTradeHasMoney(add2eTradeGetMoney(actor));
 }
 
