@@ -879,8 +879,7 @@
           "ecoute": 5,
           "escalade": 5,
           "lecture_langues": -5
-        },
-        "onUse": "scripts/kender.js"
+        }
       },
       "effects": [],
       "folder": null,
