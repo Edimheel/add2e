@@ -390,11 +390,11 @@ function baseDamageFormula(snapshot) {
 function rawDamageRollDetails(snapshot, multiplier = 1) {
   let details = String(snapshot?.damage?.details ?? "").trim();
   if (!details) return "—";
-  if (multiplier > 1) details = details.replace(new RegExp(`\s*[×x*]\s*${multiplier}\s*$`), "").trim();
+  if (multiplier > 1) details = details.replace(new RegExp(String.raw`\s*[×x*]\s*${multiplier}\s*$`), "").trim();
   const bonus = number(snapshot?.damage?.bonus);
   if (bonus !== 0) {
-    const sign = bonus > 0 ? "\+" : "[-−]";
-    details = details.replace(new RegExp(`\s*${sign}\s*${Math.abs(bonus)}\s*$`), "").trim();
+    const sign = bonus > 0 ? String.raw`\+` : "[-−]";
+    details = details.replace(new RegExp(String.raw`\s*${sign}\s*${Math.abs(bonus)}\s*$`), "").trim();
   }
   return details || "—";
 }
