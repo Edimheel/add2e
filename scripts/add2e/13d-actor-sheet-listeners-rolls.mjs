@@ -2,7 +2,7 @@
 // Aucun calcul métier de caractéristique ou de sauvegarde ne vit dans ce module.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-08-09-canonical-roll-consumer-v10";
+export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-09-18-racial-capability-bridge-v11";
 
 export async function add2eEvaluateRollSafe(formula) {
   const roll = new Roll(String(formula || "0"));
@@ -195,6 +195,56 @@ export async function add2eRollSaveCard(actor, saveType, context = {}) {
   return add2eCreateSavingThrowCard(result, context);
 }
 
+function add2eNormalizeRacialCapabilityId(engine, value) {
+  if (typeof engine?.normalizeTag === "function") return String(engine.normalizeTag(value) ?? "");
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+export async function add2eUseRacialCapabilityFromElement(actor, element, event = null) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+
+  if (!actor) return ui.notifications.warn("Aucun acteur pour cette capacité raciale.");
+  const capabilityId = String(element?.dataset?.racialCapabilityId ?? "").trim();
+  if (!capabilityId) return ui.notifications.warn("Capacité raciale introuvable.");
+
+  const engine = add2eSheetRollEffectsEngine();
+  if (typeof engine.getRacialActions !== "function") {
+    throw new Error("Le moteur canonique des capacités raciales ADD2E n’est pas disponible.");
+  }
+
+  const wanted = add2eNormalizeRacialCapabilityId(engine, capabilityId);
+  const action = engine.getRacialActions(actor)
+    .find(entry => add2eNormalizeRacialCapabilityId(engine, entry?.id) === wanted) ?? null;
+  if (!action) return ui.notifications.warn("Cette capacité raciale n’est pas disponible pour cet acteur.");
+
+  if (String(action.actionType ?? "") === "vision-toggle") {
+    if (typeof engine.setRacialVision !== "function") {
+      throw new Error("Le contrôleur canonique de vision raciale ADD2E n’est pas disponible.");
+    }
+    return engine.setRacialVision(actor, action.enabled !== true, {
+      reason: "racial-capability-ui"
+    });
+  }
+
+  if (action.canRoll !== true) {
+    return ui.notifications.warn("Cette capacité raciale n’est pas activable.");
+  }
+  if (typeof globalThis.add2eRollRacialCapability !== "function") {
+    throw new Error("Le lanceur canonique des capacités raciales ADD2E n’est pas disponible.");
+  }
+  return globalThis.add2eRollRacialCapability(actor, capabilityId, {
+    source: "actor-sheet-racial-capability",
+    consumer: "actor-sheet-roll-presentation"
+  });
+}
+
 function add2eHudRollActor() {
   const hudState = globalThis.add2eHudFixDebug?.();
   return canvas?.tokens?.controlled?.[0]?.actor
@@ -208,6 +258,7 @@ export function add2eInstallHudSheetRollBridge() {
   globalThis.ADD2E_SHEET_ROLL_DELEGATION_VERSION = ADD2E_SHEET_ROLL_DELEGATION_VERSION;
   globalThis.add2eRollCharacteristicCard = add2eRollCharacteristicCard;
   globalThis.add2eRollSaveCard = add2eRollSaveCard;
+  globalThis.add2eUseRacialCapabilityFromElement = add2eUseRacialCapabilityFromElement;
 
   if (globalThis.__add2eHudSheetRollBridgeV1) return engine;
   globalThis.__add2eHudSheetRollBridgeV1 = true;
