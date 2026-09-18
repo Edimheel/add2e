@@ -17,8 +17,6 @@ export const initiativeState = {
   localSyncTimer: null
 };
 
-globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
-
 export function configureInitiative() {
   if (initiativeState.configured) return;
   initiativeState.configured = true;
@@ -28,7 +26,7 @@ export function configureInitiative() {
 
 export function hasProperty(obj, path) {
   return globalThis.foundry?.utils?.hasProperty
-    ? globalThis.foundry.utils.hasProperty(obj, path)
+    ? foundry.utils.hasProperty(obj, path)
     : path in (obj ?? {});
 }
 
