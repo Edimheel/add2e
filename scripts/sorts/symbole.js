@@ -162,7 +162,7 @@ function add2eSymboleTargets() {
 }
 
 function add2eSymboleRequireApis() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const engine = globalThis.ADD2E_EFFECTS ?? null;
   if (!engine || typeof engine.rollActionSave !== "function" || typeof engine.readHitPoints !== "function" || typeof engine.createModifier !== "function") {
     throw new Error("Les propriétaires canoniques ADD2E des sauvegardes, points de vie ou modificateurs sont indisponibles.");
   }
