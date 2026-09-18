@@ -25,7 +25,7 @@ function add2eExceptionalStrengthValues(currentValue = 0) {
 }
 
 function add2eSheetAllowedAlignments(actor) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const engine = globalThis.ADD2E_EFFECTS ?? null;
   if (!engine || typeof engine.getActorAllowedAlignments !== "function") {
     throw new Error("Le résolveur canonique ADD2E des alignements de classe est indisponible.");
   }
