@@ -68,7 +68,7 @@ globalThis.ADD2E_MOVEMENT_EFFECT_CONTEXT_VERSION = ADD2E_MOVEMENT_EFFECT_CONTEXT
 globalThis.ADD2E_MOVEMENT_LOT_2G_VERSION = ADD2E_MOVEMENT_LOT_2G_VERSION;
 
 function movementEngine() {
-  return globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  return globalThis.ADD2E_EFFECTS ?? null;
 }
 
 function canonicalMovementKey(value) {
