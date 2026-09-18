@@ -3,7 +3,7 @@
 // La mécanique est matérialisée par un ActiveEffect et des modificateurs du moteur canonique.
 
 return await (async () => {
-  const VERSION = "2026-07-30-flight-canonical-movement-v1";
+  const VERSION = "2026-09-18-flight-canonical-caster-level-v2";
   const TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][VOL]";
   const SPELL = Object.freeze({
     name: "Vol",
@@ -69,32 +69,28 @@ return await (async () => {
   }
 
   function actorClassLevel(actorDocument) {
-    const explicitCasterLevel = number(
-      castDocument?.system?.casterLevel
-      ?? castDocument?.system?.niveauLanceur
-      ?? castDocument?.system?.niveau_lanceur
-      ?? castDocument?.flags?.add2e?.casterLevel,
-      NaN
-    );
-    if (Number.isFinite(explicitCasterLevel) && explicitCasterLevel > 0) return Math.floor(explicitCasterLevel);
+    const objectPower = castDocument?.system?.isObjectPower === true
+      || castDocument?.system?.isPower === true
+      || String((typeof args !== "undefined" && args?.[0]?.castMode) ?? "") === "power";
 
-    const details = actorDocument?.system?.details_classe ?? {};
-    const byDetails = number(
-      details?.magicien?.niveau
-      ?? details?.mage?.niveau
-      ?? details?.illusionniste?.niveau,
-      NaN
-    );
-    if (Number.isFinite(byDetails) && byDetails > 0) return Math.floor(byDetails);
+    if (objectPower) {
+      const explicit = Number(castDocument?.system?.casterLevel);
+      if (!Number.isInteger(explicit) || explicit < 1) {
+        throw new Error(`${SPELL.name} : niveau de lanceur explicite absent du pouvoir d’objet magique.`);
+      }
+      return explicit;
+    }
 
-    const classItem = Array.from(actorDocument?.items ?? []).find(candidate => {
-      if (String(candidate?.type ?? "").toLowerCase() !== "classe") return false;
-      return /magicien|mage|illusionniste/i.test(String(candidate?.name ?? ""));
-    });
-    const byItem = number(classItem?.system?.niveau ?? classItem?.system?.level, NaN);
-    if (Number.isFinite(byItem) && byItem > 0) return Math.floor(byItem);
-
-    return Math.max(1, Math.floor(number(actorDocument?.system?.niveau ?? actorDocument?.system?.level, 1)));
+    const resolver = globalThis.add2eCanActorUseSpell;
+    if (typeof resolver !== "function") {
+      throw new Error(`${SPELL.name} : le résolveur canonique de lancement des sorts est indisponible.`);
+    }
+    const access = resolver(actorDocument, sourceSpell);
+    const level = Number(access?.actorLevel);
+    if (access?.ok !== true || !Number.isInteger(level) || level < 1) {
+      throw new Error(`${SPELL.name} : niveau canonique du lanceur indisponible${access?.reason ? ` (${access.reason})` : ""}.`);
+    }
+    return level;
   }
 
   function magicPowerContext(actorDocument) {
