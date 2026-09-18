@@ -64,7 +64,7 @@ function num(value, fallback = 0) {
 }
 
 function hitPointEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const engine = globalThis.ADD2E_EFFECTS ?? null;
   if (
     !engine
     || typeof engine.readHitPoints !== "function"
