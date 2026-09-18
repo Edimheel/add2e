@@ -19,9 +19,11 @@ import {
   add2eTradeTransferMoney
 } from "./24-player-trades.mjs";
 import {
+  add2eFindLootAppForElement,
   add2eIsDeadLootMonster,
   add2eIsLootChest,
   add2eIsLootSource,
+  add2eLootHasContent,
   add2eOpenLoot
 } from "./25-loot.mjs";
 import { esc } from "./22a-vendor-core.mjs";
@@ -40,6 +42,7 @@ const ADD2E_LOOT_MARKER_TEXTURES = new Set([ADD2E_LOOT_CHEST_IMG, ADD2E_LOOT_OLD
 const add2eLootPartialProcessed = new Set();
 const add2eLootPartialHandled = new Set();
 const add2eLootAccessRunning = new Set();
+let add2eLootInteractionObserver = null;
 
 function add2eLootInteractionInt(value, minimum = 0) {
   const number = Math.floor(Number(value));
@@ -81,9 +84,7 @@ function add2eLootInteractionMoney(raw = {}) {
 }
 
 function add2eLootInteractionHasContent(actor) {
-  const markerApi = game.add2e?.lootTokenMarker;
-  if (typeof markerApi?.hasContent === "function") return markerApi.hasContent(actor) === true;
-  return add2eTradeHasMoney(add2eTradeGetMoney(actor));
+  return add2eLootHasContent(actor);
 }
 
 function add2eLootInteractionTokenDocument(token) {
@@ -233,20 +234,30 @@ function add2eLootInteractionSyncSceneAccess() {
 }
 
 async function add2eLootInteractionChat({ source, target, money }) {
+  const build = globalThis.add2eBuildChatCard;
+  const create = globalThis.add2eCreateChatCard;
+  if (typeof build !== "function" || typeof create !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
+
   const parts = ADD2E_TRADE_COINS
     .map(coin => money[coin] > 0 ? `${money[coin]} ${ADD2E_TRADE_COIN_LABELS[coin]}` : "")
     .filter(Boolean)
     .join(", ");
 
-  const content = `<div class="add2e-card add2e-loot-card">
-    <div class="add2e-loot-chat-title"><i class="fas fa-coins"></i> Monnaie récupérée</div>
-    <p><b>${esc(target.name)}</b> récupère <b>${esc(parts)}</b> sur <b>${esc(source.name)}</b>.</p>
-  </div>`;
-
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker?.({ actor: target }) ?? {},
-    content
-  });
+  const options = {
+    actor: target,
+    title: "Monnaie récupérée",
+    icon: "fas fa-coins",
+    source: { name: target?.name ?? "Personnage", img: target?.img ?? "icons/svg/mystery-man.svg", type: "Receveur" },
+    target: { name: source?.name ?? "Butin", img: source?.img ?? ADD2E_LOOT_CHEST_IMG, type: "Source" },
+    variant: "success",
+    message: `${target.name} récupère ${parts} sur ${source.name}.`,
+    presentation: "player",
+    chatData: { speaker: ChatMessage.getSpeaker?.({ actor: target }) ?? {} }
+  };
+  if (!build(options)) throw new Error("La carte de monnaie ADD2E n'a pas pu être construite.");
+  return create(options);
 }
 
 async function add2eLootInteractionExecutePartial(payload = {}) {
@@ -326,20 +337,6 @@ function add2eLootInteractionHandleSocket(payload = {}) {
   if (payload.type === ADD2E_LOOT_PARTIAL_RESULT) return add2eLootInteractionHandleResult(payload);
 }
 
-function add2eLootInteractionAppElement(app) {
-  const element = app?.element;
-  return element?.jquery ? element[0] : element ?? null;
-}
-
-function add2eLootInteractionFindApp(shell) {
-  for (const app of globalThis.__ADD2E_LOOT_APPS?.values?.() ?? []) {
-    const element = add2eLootInteractionAppElement(app);
-    if (!element) continue;
-    if (element === shell || element.contains?.(shell) || shell.contains?.(element)) return app;
-  }
-  return null;
-}
-
 function add2eLootInteractionEnsureStyles() {
   if (!document?.head || document.getElementById(ADD2E_LOOT_STYLE_ID)) return;
   const style = document.createElement("style");
@@ -367,7 +364,7 @@ function add2eLootInteractionEnhanceShell(shell) {
   if (!shell?.querySelector || shell.dataset.add2ePartialMoney === "true") return;
   shell.dataset.add2ePartialMoney = "true";
 
-  const app = add2eLootInteractionFindApp(shell);
+  const app = add2eFindLootAppForElement(shell);
   const source = app?.source ?? null;
   const looter = app?.looter ?? null;
   if (!source || !looter) return;
@@ -435,7 +432,7 @@ function add2eLootInteractionHandlePartialClick(event) {
   event.stopImmediatePropagation?.();
 
   const shell = button.closest(".add2e-loot-shell");
-  const app = add2eLootInteractionFindApp(shell);
+  const app = add2eFindLootAppForElement(shell);
   if (!app?.source || !app?.looter) return ui.notifications?.warn?.("Sélectionne un personnage receveur.");
 
   const money = {};
@@ -532,7 +529,7 @@ function add2eLootInteractionWrapChestCreation() {
 }
 
 function add2eLootInteractionInstallObserver() {
-  globalThis.__ADD2E_LOOT_INTERACTION_OBSERVER?.disconnect?.();
+  add2eLootInteractionObserver?.disconnect?.();
   const observer = new MutationObserver(records => {
     for (const record of records) {
       for (const node of record.addedNodes ?? []) {
@@ -542,7 +539,7 @@ function add2eLootInteractionInstallObserver() {
   });
   observer.observe(document.body, { childList: true, subtree: true });
   add2eLootInteractionEnhanceAll(document);
-  globalThis.__ADD2E_LOOT_INTERACTION_OBSERVER = observer;
+  add2eLootInteractionObserver = observer;
 }
 
 Hooks.once("ready", () => {
