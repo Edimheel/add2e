@@ -11,7 +11,7 @@ export async function add2eEvaluateRollSafe(formula) {
 }
 
 function add2eSheetRollEffectsEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const engine = globalThis.ADD2E_EFFECTS ?? null;
   if (!engine) throw new Error("Le moteur d’effets canonique ADD2E n’est pas disponible.");
   return engine;
 }
