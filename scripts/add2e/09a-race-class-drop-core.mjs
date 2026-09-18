@@ -13,7 +13,7 @@ export const CARACS = ["force", "dexterite", "constitution", "intelligence", "sa
 export const CARAC_SHORT = { force: "FOR", dexterite: "DEX", constitution: "CON", intelligence: "INT", sagesse: "SAG", charisme: "CHA" };
 
 function add2eDropEffectsEngine() {
-  return globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  return globalThis.ADD2E_EFFECTS ?? null;
 }
 
 function add2eDropPickClassAlignment(actor, classData, fallback = "") {
@@ -93,7 +93,7 @@ export function add2eRaceMatchesClassRules(raceData, classData) {
   if (!rules || typeof rules !== "object" || !Object.keys(rules).length) return true;
   const tags = add2eRaceTagsFromDataSafe(raceData).map(add2eNormalizeDropTag);
   const normalized = {};
-  for (const [tag, rule] of Object.entries(rules)) normalized[add2eNormalizeDropTag(tag)] = rule;
+  for (const [tag, rule] of Object.entries(races)) normalized[add2eNormalizeDropTag(tag)] = rule;
   const matched = tags.find(tag => Object.prototype.hasOwnProperty.call(normalized, tag));
   return matched ? normalized[matched]?.allowed === true : false;
 }
