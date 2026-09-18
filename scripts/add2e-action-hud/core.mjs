@@ -189,7 +189,7 @@ function objectMagicPowerRows(actor) {
 }
 
 function racialEngine() {
-  const engine = globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS;
   return typeof engine?.getRacialActions === "function" ? engine : null;
 }
 function racialCapabilities(actor) {
