@@ -1,6 +1,7 @@
 // ADD2E — onUse Magicien : Rayon d’affaiblissement
-// Version : 2026-05-28-magicien-attaque-n2-rayon-affaiblissement-v1
+// Version : 2026-09-18-common-ui-chat-v2
 // Contrat : return true = sort consommé ; return false = sort non consommé.
+// Compatible Foundry V13/V14/V15.
 
 return await (async () => {
   const TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][RAYON_AFFAIBLISSEMENT]";
@@ -17,6 +18,13 @@ return await (async () => {
     imgFallback: "systems/add2e/assets/icones/sorts/rayon-d-affaiblissement.webp",
     description: "Avec ce sort, le magicien peut affaiblir un ennemi en réduisant sa force, et donc sa capacité de combat, de 25 % ou plus. Pour chaque niveau du lanceur de sort au-dessus du 3e, le pourcentage augmente de 2 % ; donc un magicien de niveau 4 réduira la force d’un adversaire de 27 %. La portée et la durée du sort dépendent aussi du niveau du magicien. Par exemple, si une créature est touchée par un rayon d’affaiblissement, elle perd le pourcentage approprié de dégâts qu’elle peut infliger par une attaque physique. Le MD déterminera les autres réductions à appliquer. Si la créature visée réussit son jet de protection, le sort n’a aucun effet."
   };
+
+  if (typeof globalThis.add2eDialogWait !== "function") {
+    throw new Error(`${SPELL.name} : l’API de fenêtre ADD2E est indisponible.`);
+  }
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error(`${SPELL.name} : les constructeurs communs de cartes ADD2E sont indisponibles.`);
+  }
 
   const esc = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
   const n = (value, fallback = 0) => { const out = Number(value); return Number.isFinite(out) ? out : fallback; };
@@ -84,35 +92,43 @@ return await (async () => {
     return targets[0];
   }
 
-  async function askSaveResult({ targetToken, level, reductionPercent, durationRounds }) {
-    const DialogV2 = foundry?.applications?.api?.DialogV2;
-    if (!DialogV2?.wait) {
-      ui.notifications.error(`${SPELL.name} : DialogV2 indisponible.`);
-      return null;
-    }
-
+  async function askSaveResult({ targetToken, reductionPercent, durationRounds }) {
     const content = `
-      <form class="add2e-dialog-v2" style="min-width:380px;max-width:480px;font-family:var(--font-primary);color:#2d2144;">
-        <section style="border:1px solid #8e63c7;border-radius:8px;background:#f6f0ff;padding:9px;margin-bottom:8px;">
-          <div style="font-weight:900;color:#6c31b5;text-transform:uppercase;text-align:center;">${esc(SPELL.name)}</div>
-          <p style="margin:.4em 0 0;font-size:13px;text-align:center;">${esc(targetToken.name)} effectue un jet de protection contre les sorts.</p>
-        </section>
-        <section style="border:1px solid #8e63c7;border-radius:8px;background:#fffaff;padding:8px;font-size:13px;line-height:1.35;">
-          <p><b>Affaiblissement en cas d’échec :</b> ${reductionPercent}%.</p>
-          <p><b>Durée :</b> ${durationRounds} round${durationRounds > 1 ? "s" : ""}.</p>
-        </section>
+      <form class="add2e-rayon-affaiblissement-form">
+        <p><b>Cible :</b> ${esc(targetToken.name)}</p>
+        <p>La cible effectue un jet de protection contre les sorts.</p>
+        <p><b>Affaiblissement en cas d’échec :</b> ${reductionPercent}%.</p>
+        <p><b>Durée :</b> ${durationRounds} round${durationRounds > 1 ? "s" : ""}.</p>
       </form>`;
 
-    return await DialogV2.wait({
-      window: { title: SPELL.name, icon: "fas fa-bolt" },
+    return globalThis.add2eDialogWait({
+      add2eTheme: "wizard",
+      add2ePrimaryAction: "saved",
+      add2eClasses: ["add2e-rayon-affaiblissement-dialog"],
+      window: { title: SPELL.name },
       content,
-      modal: true,
-      rejectClose: false,
       buttons: [
-        { action: "failed", label: "Jet raté", icon: "fas fa-skull", callback: () => "failed" },
-        { action: "saved", label: "Jet réussi", icon: "fas fa-shield-halved", default: true, callback: () => "saved" },
-        { action: "cancel", label: "Annuler", icon: "fas fa-times", callback: () => null }
-      ]
+        {
+          action: "failed",
+          label: "Jet raté",
+          icon: "<i class='fas fa-skull'></i>",
+          callback: () => "failed"
+        },
+        {
+          action: "saved",
+          label: "Jet réussi",
+          icon: "<i class='fas fa-shield-halved'></i>",
+          default: true,
+          callback: () => "saved"
+        },
+        {
+          action: "cancel",
+          label: "Annuler",
+          icon: "<i class='fas fa-times'></i>",
+          callback: () => null
+        }
+      ],
+      close: () => null
     });
   }
 
@@ -147,39 +163,56 @@ return await (async () => {
     return true;
   }
 
-  async function createChat({ caster, sourceItem, sourceToken, targetToken, saveResult, reductionPercent, durationRounds, distance, range }) {
-    const casterName = caster?.name ?? sourceToken?.name ?? "Magicien";
-    const casterImg = sourceToken?.document?.texture?.src ?? caster?.img ?? "icons/svg/mystery-man.svg";
-    const spellImg = sourceItem?.img || SPELL.imgFallback || "icons/svg/lightning.svg";
-    const outcome = saveResult === "failed" ? `Affaiblissement de ${reductionPercent}%` : "Jet de protection réussi";
-
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: caster, token: sourceToken }),
-      content: `
-        <div class="add2e-chat-card add2e-magicien-sort add2e-sort-rayon-affaiblissement" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-          <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-            <img src="${esc(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
-            <div style="flex:1;line-height:1.05;"><div style="font-weight:800;font-size:14px;">${esc(casterName)}</div><div style="font-size:12px;font-weight:700;">lance ${esc(SPELL.name)}</div></div>
-            <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Magicien niv. 2</div>
-            <img src="${esc(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
-          </div>
-          <div style="padding:9px 10px 10px;background:#f6f0ff;">
-            <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;text-align:center;">
-              <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${esc(outcome)}</div>
-              <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Cible :</b> ${esc(targetToken.name)}</p>
-              ${saveResult === "failed" ? `<p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Durée :</b> ${durationRounds} round${durationRounds > 1 ? "s" : ""}.</p>` : ""}
-            </div>
-            <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;margin-top:7px;">
-              <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Détails du sort</summary>
-              <div style="margin-top:5px;font-size:12px;line-height:1.35;">
-                <p><b>École :</b> ${esc(SPELL.school)} — <b>Portée :</b> ${esc(SPELL.rangeText)} (${distance.toFixed(1)} m / ${range.toFixed(1)} m) — <b>Zone :</b> ${esc(SPELL.areaText)}.</p>
-                <p><b>Composantes :</b> ${esc(SPELL.componentsText)} — <b>Incantation :</b> ${esc(SPELL.castingTimeText)} — <b>Jet de sauvegarde :</b> ${esc(SPELL.saveText)}.</p>
-                <p>${esc(SPELL.description)}</p>
-              </div>
-            </details>
-          </div>
-        </div>`
-    });
+  async function createChat({ caster, sourceItem, sourceToken, targetToken, saveResult, reductionPercent, durationRounds, distance, range, level }) {
+    const failed = saveResult === "failed";
+    const card = {
+      actor: caster,
+      title: SPELL.name,
+      icon: "fas fa-bolt",
+      variant: failed ? "failure" : "success",
+      source: {
+        name: caster?.name ?? sourceToken?.name ?? "Magicien",
+        img: sourceToken?.document?.texture?.src ?? caster?.img ?? sourceItem?.img ?? SPELL.imgFallback,
+        type: "Sort profane",
+        meta: `Niveau de lanceur ${level}`
+      },
+      target: {
+        name: targetToken.name ?? targetToken.actor?.name ?? "Cible",
+        img: targetToken.actor?.img,
+        type: "Créature ciblée",
+        meta: `${distance.toFixed(1)} m / ${range.toFixed(1)} m`
+      },
+      rows: [
+        { label: "Jet de protection", value: failed ? "Raté" : "Réussi" },
+        { label: "Affaiblissement", value: failed ? `${reductionPercent}%` : "Aucun" },
+        ...(failed ? [{ label: "Durée", value: `${durationRounds} round${durationRounds > 1 ? "s" : ""}` }] : [])
+      ],
+      message: failed
+        ? `${targetToken.name ?? targetToken.actor?.name ?? "La cible"} subit un affaiblissement de ${reductionPercent}%.`
+        : `${targetToken.name ?? targetToken.actor?.name ?? "La cible"} réussit son jet de protection : le sort est annulé.`,
+      trustedBodyHtml: `
+        <p><b>École :</b> ${esc(SPELL.school)} — <b>Portée :</b> ${esc(SPELL.rangeText)} — <b>Zone :</b> ${esc(SPELL.areaText)}.</p>
+        <p><b>Composantes :</b> ${esc(SPELL.componentsText)} — <b>Incantation :</b> ${esc(SPELL.castingTimeText)} — <b>Jet de sauvegarde :</b> ${esc(SPELL.saveText)}.</p>
+        <p>${esc(SPELL.description)}</p>`,
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: caster, token: sourceToken }),
+        flags: {
+          add2e: {
+            chatCardType: "ray-of-enfeeblement",
+            sourceItemUuid: sourceItem?.uuid ?? null,
+            targetActorUuid: targetToken.actor?.uuid ?? null,
+            casterLevel: level,
+            reductionPercent: failed ? reductionPercent : 0,
+            durationRounds: failed ? durationRounds : 0,
+            saveResult,
+            version: "2026-09-18-common-ui-chat-v2"
+          }
+        }
+      }
+    };
+    const preview = globalThis.add2eBuildChatCard(card);
+    if (!String(preview ?? "").trim()) throw new Error(`${SPELL.name} : carte ADD2E vide.`);
+    return globalThis.add2eCreateChatCard(card);
   }
 
   const sourceItem = sourceItemFromContext();
@@ -208,11 +241,11 @@ return await (async () => {
 
   const reductionPercent = 25 + Math.max(0, level - 3) * 2;
   const durationRounds = Math.max(1, level);
-  const saveResult = await askSaveResult({ targetToken, level, reductionPercent, durationRounds });
+  const saveResult = await askSaveResult({ targetToken, reductionPercent, durationRounds });
   if (!saveResult) return false;
 
   if (saveResult === "failed") await createWeaknessEffect(targetToken.actor, sourceItem, level, reductionPercent, durationRounds);
-  await createChat({ caster, sourceItem, sourceToken, targetToken, saveResult, reductionPercent, durationRounds, distance: dist, range });
+  await createChat({ caster, sourceItem, sourceToken, targetToken, saveResult, reductionPercent, durationRounds, distance: dist, range, level });
 
   console.log(`${TAG}[DONE]`, { caster: caster.name, target: targetToken.name, level, reductionPercent, durationRounds, saveResult });
   return true;
