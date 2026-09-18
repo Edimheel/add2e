@@ -17,7 +17,7 @@ import {
   add2eTradeTransferItem,
   add2eTradeTransferMoney
 } from "./24-player-trades.mjs";
-import { alertBox, dialog, esc } from "./22a-vendor-core.mjs";
+import { esc } from "./22a-vendor-core.mjs";
 import {
   add2eVitalDesiredStatus,
   add2eVitalEffectKind,
@@ -51,10 +51,9 @@ const add2eLootProcessedRequests = new Set();
 const add2eLootHandledResults = new Set();
 const add2eLootSourceLocks = new Set();
 const add2eLootDeletionLocks = new Set();
-
-function add2eLootDialogV2() {
-  return foundry?.applications?.api?.DialogV2 ?? null;
-}
+const add2eLootApps = new Map();
+const add2eLootOpenLocks = new Map();
+let add2eLootTokenClickPatched = false;
 
 function add2eLootInt(value, minimum = 0) {
   const number = Math.floor(Number(value));
@@ -276,22 +275,31 @@ function add2eLootResultMessage(source, target, result) {
 }
 
 async function add2eLootCreateChatMessage({ source, target, result }) {
+  const build = globalThis.add2eBuildChatCard;
+  const create = globalThis.add2eCreateChatCard;
+  if (typeof build !== "function" || typeof create !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
+
   const itemRows = (result.items ?? []).map(item => `
     <li><img src="${esc(item.img || "icons/svg/item-bag.svg")}" alt="" width="24" height="24"> <b>${add2eLootInt(item.quantity, 1)} × ${esc(item.name)}</b></li>`).join("");
   const money = add2eLootHasMoney(result.money)
     ? `<div class="add2e-loot-chat-money"><i class="fas fa-coins"></i> ${esc(add2eLootMoneyLabel(result.money))}</div>`
     : "";
-  const content = `
-    <div class="add2e-card add2e-loot-card">
-      <div class="add2e-loot-chat-title"><i class="fas fa-box-open"></i> Butin récupéré</div>
-      <p><b>${esc(target.name)}</b> fouille <b>${esc(source.name)}</b>.</p>
-      ${itemRows ? `<ul class="add2e-loot-chat-items">${itemRows}</ul>` : ""}
-      ${money}
-    </div>`;
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker?.({ actor: target }) ?? {},
-    content
-  });
+  const options = {
+    actor: target,
+    title: "Butin récupéré",
+    icon: "fas fa-box-open",
+    source: { name: target?.name ?? "Personnage", img: target?.img ?? "icons/svg/mystery-man.svg", type: "Receveur" },
+    target: { name: source?.name ?? "Butin", img: source?.img ?? ADD2E_LOOT_MARKER_IMG, type: "Source" },
+    variant: "success",
+    message: `${target.name} fouille ${source.name}.`,
+    trustedBodyHtml: `${itemRows ? `<ul class="add2e-loot-chat-items">${itemRows}</ul>` : ""}${money}`,
+    presentation: "player",
+    chatData: { speaker: ChatMessage.getSpeaker?.({ actor: target }) ?? {} }
+  };
+  if (!build(options)) throw new Error("La carte de butin ADD2E n'a pas pu être construite.");
+  return create(options);
 }
 
 async function add2eLootExecuteRequest(payload = {}) {
@@ -346,7 +354,18 @@ async function add2eLootExecuteRequest(payload = {}) {
 }
 
 function add2eLootRegistry() {
-  return globalThis.__ADD2E_LOOT_APPS ??= new Map();
+  return add2eLootApps;
+}
+
+export function add2eFindLootAppForElement(element) {
+  const root = element?.jquery ? element[0] : element ?? null;
+  if (!root) return null;
+  for (const app of add2eLootApps.values()) {
+    const appElement = app?.element?.jquery ? app.element[0] : app?.element ?? null;
+    if (!appElement) continue;
+    if (appElement === root || appElement.contains?.(root) || root.contains?.(appElement)) return app;
+  }
+  return null;
 }
 
 async function add2eLootCloseAppsForSource({ actorId = "", actorUuid = "", sourceKey = "" } = {}) {
@@ -563,8 +582,8 @@ function add2eLootStyles() {
     .add2e-loot-drop{margin:0 0 10px;padding:14px;border:2px dashed #46786a;border-radius:10px;background:rgba(231,247,228,.72);text-align:center;color:#315e52;font-weight:900}
     .add2e-loot-drop[data-drop-busy="true"]{cursor:wait;opacity:.62;pointer-events:none}
     .add2e-loot-locked{padding:22px;border:2px solid #704028;border-radius:10px;background:#ead2b7;color:#5b281d;text-align:center;font-weight:900}.add2e-loot-footer{display:flex;justify-content:flex-end;gap:8px;padding-top:2px}
-    .add2e-loot-card{border:2px solid #276354!important;background:linear-gradient(180deg,#e5f2e8,#bfd9ca)!important;color:#18352c!important}.add2e-loot-chat-title{margin:-4px -4px 8px;padding:7px 9px;border-radius:6px;background:linear-gradient(180deg,#3a7c6b,#245348);color:#fff2c9;font-weight:900}.add2e-loot-chat-title i{color:#f0ca58}.add2e-loot-chat-items{list-style:none;margin:6px 0;padding:0}.add2e-loot-chat-items li{display:flex;align-items:center;gap:6px;padding:3px 0}.add2e-loot-chat-items img{border:1px solid #4f776b;border-radius:4px}.add2e-loot-chat-money{margin-top:6px;padding:6px 8px;border:1px solid #927020;border-radius:7px;background:#efd57f;color:#45330b;font-weight:900}
-    .add2e-loot-create{padding:10px;border:2px solid #28594d;border-radius:10px;background:linear-gradient(180deg,#e1efe1,#bdd7c8);color:#19352d}.add2e-loot-create label{display:grid;gap:4px;margin-bottom:9px;font-weight:900}.add2e-loot-create-actions{display:flex;justify-content:flex-end;gap:7px}
+    .add2e-loot-chat-items{list-style:none;margin:6px 0;padding:0}.add2e-loot-chat-items li{display:flex;align-items:center;gap:6px;padding:3px 0}.add2e-loot-chat-items img{border:1px solid #4f776b;border-radius:4px}.add2e-loot-chat-money{margin-top:6px;padding:6px 8px;border:1px solid #927020;border-radius:7px;background:#efd57f;color:#45330b;font-weight:900}
+    .add2e-loot-create{display:grid;gap:9px;color:var(--a2e-dialog-text)}.add2e-loot-create label{display:grid;gap:4px;font-weight:900}.add2e-loot-create label.add2e-loot-create-lock{grid-template-columns:auto 1fr;align-items:center}
     .actors-sidebar .directory-footer,.actors-directory .directory-footer,[data-tab="actors"] .directory-footer{position:sticky;bottom:0;z-index:20;background:var(--sidebar-background,rgba(20,20,20,.96));padding-top:4px}
     .add2e-create-loot-chest{display:flex!important;align-items:center;justify-content:center;gap:7px;width:100%;min-height:34px;position:relative;z-index:21}
     .add2e-create-loot-chest img{width:26px;height:26px;object-fit:cover;border:1px solid rgba(255,255,255,.42);border-radius:5px;flex:0 0 26px}
@@ -775,7 +794,17 @@ class Add2eLootApp extends Add2eApplicationV2 {
   }
 
   async _request(action, extra = {}) {
-    if (!this.looter) return alertBox("Aucun receveur", "Sélectionne un personnage présent sur la scène.");
+    if (!this.looter) {
+      if (typeof globalThis.add2eDialogWait !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
+      return globalThis.add2eDialogWait({
+        add2eTheme: "danger",
+        add2ePrimaryAction: "ok",
+        add2eClasses: ["add2e-loot-alert"],
+        window: { title: "Aucun receveur" },
+        content: `<p>Sélectionne un personnage présent sur la scène.</p>`,
+        buttons: [{ action: "ok", label: "Compris", default: true }]
+      });
+    }
     if (this.pendingRequestId) return ui.notifications?.warn?.("Une récupération est déjà en cours.");
 
     const requestId = add2eLootRandomId("loot-request");
@@ -834,11 +863,16 @@ class Add2eLootApp extends Add2eApplicationV2 {
     if (action === "remove-item" && game.user?.isGM && add2eIsLootChest(this.source)) {
       const item = add2eLootEmbeddedItem(this.source, button.dataset.itemId);
       if (!item) return ui.notifications?.warn?.("Cet objet n'existe plus dans le coffre.");
-      const confirmed = await dialog({
-        title: "Retirer du coffre",
+      if (typeof globalThis.add2eDialogConfirm !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
+      const confirmed = await globalThis.add2eDialogConfirm({
+        add2eTheme: "danger",
+        add2ePrimaryAction: "yes",
+        add2eClasses: ["add2e-loot-confirm"],
+        window: { title: "Retirer du coffre" },
         content: `<p>Retirer <b>${esc(item.name)}</b> du coffre ?</p>`,
-        yes: "Retirer",
-        no: "Annuler"
+        yes: { label: "Retirer" },
+        no: { label: "Annuler" },
+        modal: true
       });
       if (!confirmed) return;
       await this.source.deleteEmbeddedDocuments("Item", [item.id], { add2eReason: "loot-chest-remove-item" });
@@ -860,11 +894,16 @@ class Add2eLootApp extends Add2eApplicationV2 {
 
     if (action === "take-money") return this._request("money");
     if (action === "take-all") {
-      const confirmed = await dialog({
-        title: "Tout récupérer",
+      if (typeof globalThis.add2eDialogConfirm !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
+      const confirmed = await globalThis.add2eDialogConfirm({
+        add2eTheme: "success",
+        add2ePrimaryAction: "yes",
+        add2eClasses: ["add2e-loot-confirm"],
+        window: { title: "Tout récupérer" },
         content: `<p>Transférer tout le contenu de <b>${esc(this.source?.name ?? "ce butin")}</b> vers <b>${esc(this.looter?.name ?? "le personnage")}</b> ?</p>`,
-        yes: "Tout récupérer",
-        no: "Annuler"
+        yes: { label: "Tout récupérer" },
+        no: { label: "Annuler" },
+        modal: true
       });
       if (confirmed) return this._request("all");
     }
@@ -889,11 +928,27 @@ class Add2eLootApp extends Add2eApplicationV2 {
       if (!item && data.pack && data.id) item = await game.packs?.get?.(data.pack)?.getDocument?.(data.id);
       if (!item && data.type === "Item" && data.id) item = game.items?.get?.(data.id) ?? null;
       if (item?.documentName !== "Item" && item?.constructor?.metadata?.name !== "Item") {
-        await alertBox("Dépôt impossible", "Glisse une arme, une armure ou un objet ADD2E.");
+        if (typeof globalThis.add2eDialogWait !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
+        await globalThis.add2eDialogWait({
+          add2eTheme: "danger",
+          add2ePrimaryAction: "ok",
+          add2eClasses: ["add2e-loot-alert"],
+          window: { title: "Dépôt impossible" },
+          content: `<p>Glisse une arme, une armure ou un objet ADD2E.</p>`,
+          buttons: [{ action: "ok", label: "Compris", default: true }]
+        });
         return false;
       }
       if (!add2eIsRecoverableLootItem(item)) {
-        await alertBox("Objet incompatible", `${item.name ?? "Cet élément"} ne peut pas être placé dans un coffre de butin.`);
+        if (typeof globalThis.add2eDialogWait !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
+        await globalThis.add2eDialogWait({
+          add2eTheme: "danger",
+          add2ePrimaryAction: "ok",
+          add2eClasses: ["add2e-loot-alert"],
+          window: { title: "Objet incompatible" },
+          content: `<p>${esc(item.name ?? "Cet élément")} ne peut pas être placé dans un coffre de butin.</p>`,
+          buttons: [{ action: "ok", label: "Compris", default: true }]
+        });
         return false;
       }
 
@@ -952,8 +1007,28 @@ export async function add2eCreateLootChest({ name = "Coffre", locked = false } =
 
 export async function add2eOpenLoot({ source = null, token = null, looter = null } = {}) {
   source = source ?? token?.actor ?? null;
-  if (!source || !add2eIsLootSource(source)) return alertBox("Butin indisponible", "Cette source ne peut pas être fouillée.");
-  if (!game.user?.isGM && add2eLootIsLocked(source)) return alertBox("Coffre verrouillé", "Ce coffre est verrouillé.");
+  if (!source || !add2eIsLootSource(source)) {
+    if (typeof globalThis.add2eDialogWait !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
+    return globalThis.add2eDialogWait({
+      add2eTheme: "danger",
+      add2ePrimaryAction: "ok",
+      add2eClasses: ["add2e-loot-alert"],
+      window: { title: "Butin indisponible" },
+      content: `<p>Cette source ne peut pas être fouillée.</p>`,
+      buttons: [{ action: "ok", label: "Compris", default: true }]
+    });
+  }
+  if (!game.user?.isGM && add2eLootIsLocked(source)) {
+    if (typeof globalThis.add2eDialogWait !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
+    return globalThis.add2eDialogWait({
+      add2eTheme: "danger",
+      add2ePrimaryAction: "ok",
+      add2eClasses: ["add2e-loot-alert"],
+      window: { title: "Coffre verrouillé" },
+      content: `<p>Ce coffre est verrouillé.</p>`,
+      buttons: [{ action: "ok", label: "Compris", default: true }]
+    });
+  }
 
   const sourceKey = add2eLootSourceKey(source, token?.document ?? token ?? null);
   const registryKey = `${game.user?.id}:${sourceKey}`;
@@ -965,7 +1040,17 @@ export async function add2eOpenLoot({ source = null, token = null, looter = null
   }
 
   looter = looter ?? add2eLootDefaultLooter();
-  if (!looter && !game.user?.isGM) return alertBox("Aucun personnage", "Assigne un personnage à ton utilisateur ou sélectionne son token.");
+  if (!looter && !game.user?.isGM) {
+    if (typeof globalThis.add2eDialogWait !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
+    return globalThis.add2eDialogWait({
+      add2eTheme: "danger",
+      add2ePrimaryAction: "ok",
+      add2eClasses: ["add2e-loot-alert"],
+      window: { title: "Aucun personnage" },
+      content: `<p>Assigne un personnage à ton utilisateur ou sélectionne son token.</p>`,
+      buttons: [{ action: "ok", label: "Compris", default: true }]
+    });
+  }
 
   if (current?.rendered) {
     current.source = source;
@@ -982,42 +1067,48 @@ export async function add2eOpenLoot({ source = null, token = null, looter = null
   return app;
 }
 
-function add2eOpenCreateChestDialog() {
+async function add2eOpenCreateChestDialog() {
   if (!game.user?.isGM) return;
-  const DialogV2 = add2eLootDialogV2();
-  if (!DialogV2) return ui.notifications?.error?.("DialogV2 est introuvable.");
+  if (typeof globalThis.add2eDialogWait !== "function") throw new Error("L’API de fenêtre ADD2E est indisponible.");
   add2eLootEnsureStyles();
 
-  const uid = add2eLootRandomId("create-chest");
-  const content = `<div class="add2e-loot-create" data-add2e-create-chest="${uid}">
-    <label>Nom du coffre<input type="text" name="chest-name" value="Coffre" maxlength="80"></label>
-    <label style="display:flex;grid-template-columns:auto 1fr;align-items:center"><input type="checkbox" name="chest-locked"> Créer le coffre verrouillé</label>
-    <p>Le coffre sera créé dans le dossier <b>${esc(ADD2E_LOOT_FOLDER)}</b>. Glisse ensuite son acteur sur la scène.</p>
-    <div class="add2e-loot-create-actions"><button type="button" class="add2e-loot-button gold" data-create-chest><i class="fas fa-box"></i> Créer</button></div>
-  </div>`;
-
-  const dialogApp = new DialogV2({
+  const result = await globalThis.add2eDialogWait({
+    add2eTheme: "success",
+    add2ePrimaryAction: "create",
+    add2eClasses: ["add2e-loot-create-window"],
     window: { title: "Créer un coffre ADD2E" },
-    classes: ["add2e-loot-create-window"],
-    position: { width: 420, height: "auto" },
-    content,
-    buttons: [{ action: "close", label: "Fermer", default: true }]
+    content: `<form class="add2e-loot-create">
+      <label>Nom du coffre<input type="text" name="chest-name" value="Coffre" maxlength="80" autofocus></label>
+      <label class="add2e-loot-create-lock"><input type="checkbox" name="chest-locked"> <span>Créer le coffre verrouillé</span></label>
+      <p>Le coffre sera créé dans le dossier <b>${esc(ADD2E_LOOT_FOLDER)}</b>. Glisse ensuite son acteur sur la scène.</p>
+    </form>`,
+    buttons: [
+      {
+        action: "create",
+        label: "Créer",
+        icon: "<i class='fas fa-box'></i>",
+        default: true,
+        callback: (_event, button) => ({
+          name: button.form?.elements?.["chest-name"]?.value ?? "Coffre",
+          locked: button.form?.elements?.["chest-locked"]?.checked === true
+        })
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "<i class='fas fa-times'></i>",
+        callback: () => null
+      }
+    ],
+    close: () => null
   });
-  dialogApp.render({ force: true });
+  if (!result) return null;
 
-  setTimeout(() => {
-    const root = document.querySelector(`[data-add2e-create-chest="${uid}"]`);
-    root?.querySelector?.("[data-create-chest]")?.addEventListener("click", async () => {
-      const name = root.querySelector('[name="chest-name"]')?.value ?? "Coffre";
-      const locked = root.querySelector('[name="chest-locked"]')?.checked === true;
-      const actor = await add2eCreateLootChest({ name, locked });
-      if (!actor) return;
-      ui.notifications?.info?.(`${actor.name} créé dans ${ADD2E_LOOT_FOLDER}.`);
-      await dialogApp.close();
-      await add2eOpenLoot({ source: actor, looter: add2eLootDefaultLooter() });
-    });
-    root?.querySelector?.('[name="chest-name"]')?.focus?.();
-  }, 0);
+  const actor = await add2eCreateLootChest(result);
+  if (!actor) return null;
+  ui.notifications?.info?.(`${actor.name} créé dans ${ADD2E_LOOT_FOLDER}.`);
+  await add2eOpenLoot({ source: actor, looter: add2eLootDefaultLooter() });
+  return actor;
 }
 
 function add2eLootMarkerImage() {
@@ -1091,10 +1182,9 @@ function add2eLootDirectoryButton() {
 function add2eLootOpenLock(actor) {
   const key = `${game.user?.id}:${actor?.uuid ?? actor?.id}`;
   const now = Date.now();
-  const locks = globalThis.__ADD2E_LOOT_OPEN_LOCK ??= new Map();
-  const previous = Number(locks.get(key) ?? 0);
+  const previous = Number(add2eLootOpenLocks.get(key) ?? 0);
   if (now - previous < 700) return false;
-  locks.set(key, now);
+  add2eLootOpenLocks.set(key, now);
   return true;
 }
 
@@ -1126,8 +1216,8 @@ function add2eLootBindTokens() {
 }
 
 function add2eLootPatchTokenClick() {
-  if (globalThis.__ADD2E_LOOT_TOKEN_CLICK_V2) return;
-  globalThis.__ADD2E_LOOT_TOKEN_CLICK_V2 = true;
+  if (add2eLootTokenClickPatched) return;
+  add2eLootTokenClickPatched = true;
   const TokenClass = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? globalThis.Token;
   const prototype = TokenClass?.prototype;
   if (prototype && typeof prototype._onClickLeft === "function") {
