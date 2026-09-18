@@ -10,6 +10,8 @@ const register = (Engine, methods) => Object.defineProperties(
 );
 
 const ADD2E_RACIAL_CONTEXT_CACHE = new WeakMap();
+let add2eRacialStrictInvalidationHooksInstalled = false;
+let add2eRacialStrictEffectsSheetDataBridgeInstalled = false;
 
 function clone(value) {
   if (value === undefined) return undefined;
@@ -656,8 +658,8 @@ function installStrictRacialProfileAuthority(Engine) {
       });
     }
 
-    if (typeof Hooks !== "undefined" && !globalThis.ADD2E_RACIAL_STRICT_INVALIDATION_HOOKS_INSTALLED) {
-      globalThis.ADD2E_RACIAL_STRICT_INVALIDATION_HOOKS_INSTALLED = true;
+    if (typeof Hooks !== "undefined" && !add2eRacialStrictInvalidationHooksInstalled) {
+      add2eRacialStrictInvalidationHooksInstalled = true;
       const invalidate = item => {
         if (String(item?.type ?? "").toLowerCase() !== "race") return;
         Engine.invalidateRacialContext(item.parent);
@@ -678,8 +680,8 @@ function installStrictRacialProfileAuthority(Engine) {
 }
 
 function installStrictRacialEffectsSheetDataBridge() {
-  if (globalThis.ADD2E_RACIAL_STRICT_EFFECTS_SHEET_DATA_BRIDGE_INSTALLED || typeof Hooks === "undefined") return;
-  globalThis.ADD2E_RACIAL_STRICT_EFFECTS_SHEET_DATA_BRIDGE_INSTALLED = true;
+  if (add2eRacialStrictEffectsSheetDataBridgeInstalled || typeof Hooks === "undefined") return;
+  add2eRacialStrictEffectsSheetDataBridgeInstalled = true;
   Hooks.once("ready", () => {
     const proto = globalThis.Add2eActorSheet?.prototype;
     const base = proto?.getData;
