@@ -34,6 +34,7 @@ const ADD2E_LOOT_CHEST_IMG = "icons/containers/chest/chest-reinforced-brown.webp
 const ADD2E_LOOT_MARKER_IMG = "icons/containers/chest/chest-reinforced-steel-pink.webp";
 const ADD2E_LOOT_STYLE_ID = "add2e-loot-style";
 const ADD2E_LOOT_REQUEST_TIMEOUT = 15000;
+const ADD2E_LOOT_NATURAL_ATTACK_TAG = "type_arme:naturelle";
 const ADD2E_LOOT_APP_ACTIONS = new Set([
   "toggle-lock", "save-money", "remove-item",
   "take-item", "take-money", "take-all"
@@ -106,18 +107,22 @@ function add2eLootEmbeddedItem(actor, itemId) {
   return Array.from(collection).find(item => String(item?.id ?? item?._id ?? "") === wantedId) ?? null;
 }
 
-function add2eLootIsPhysicalItem(item) {
+function add2eLootHasCanonicalTag(item, tag) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return [system.tags, system.effectTags, flags.tags, flags.effectTags]
+    .some(values => Array.isArray(values) && values.includes(tag));
+}
+
+export function add2eIsRecoverableLootItem(item) {
   if (!item || !ADD2E_LOOT_ITEM_TYPES.has(String(item.type ?? "").toLowerCase())) return false;
-  const system = item.system ?? {};
-  const flags = item.flags?.add2e ?? {};
-  if (flags.naturalAttack === true || flags.isNaturalAttack === true) return false;
-  if (system.naturalAttack === true || system.isNaturalAttack === true || system.naturelle === true) return false;
+  if (add2eLootHasCanonicalTag(item, ADD2E_LOOT_NATURAL_ATTACK_TAG)) return false;
   return add2eLootItemQuantity(item) > 0;
 }
 
 function add2eLootItems(actor) {
   return Array.from(actor?.items ?? [])
-    .filter(add2eLootIsPhysicalItem)
+    .filter(add2eIsRecoverableLootItem)
     .sort((left, right) => String(left.name ?? "").localeCompare(String(right.name ?? ""), "fr"));
 }
 
@@ -155,7 +160,7 @@ function add2eLootReadMoney(root) {
 
 async function add2eLootTransferItemLocal({ source, target, itemId, amount }) {
   const item = add2eLootEmbeddedItem(source, itemId);
-  if (!item || !add2eLootIsPhysicalItem(item)) throw new Error("Objet de butin introuvable ou déjà récupéré.");
+  if (!item || !add2eIsRecoverableLootItem(item)) throw new Error("Objet de butin introuvable ou déjà récupéré.");
   const available = add2eLootItemQuantity(item);
   const quantity = add2eLootInt(amount, 1);
   if (quantity < 1 || quantity > available) throw new Error(`${item.name} : quantité disponible ${available}.`);
@@ -887,7 +892,7 @@ class Add2eLootApp extends Add2eApplicationV2 {
         await alertBox("Dépôt impossible", "Glisse une arme, une armure ou un objet ADD2E.");
         return false;
       }
-      if (!add2eLootIsPhysicalItem(item)) {
+      if (!add2eIsRecoverableLootItem(item)) {
         await alertBox("Objet incompatible", `${item.name ?? "Cet élément"} ne peut pas être placé dans un coffre de butin.`);
         return false;
       }
