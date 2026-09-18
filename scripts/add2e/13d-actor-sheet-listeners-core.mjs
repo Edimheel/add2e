@@ -63,7 +63,7 @@ function add2eListenerAppliedRacialAdjustment(actor, carac, naturalValue) {
 }
 
 function add2eConstitutionEngine() {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const engine = globalThis.ADD2E_EFFECTS ?? null;
   if (!engine || typeof engine.resolveAbilityDerived !== "function" || typeof engine.resolve !== "function") {
     throw new Error("Le moteur canonique ADD2E de Constitution n’est pas disponible.");
   }
@@ -71,7 +71,7 @@ function add2eConstitutionEngine() {
 }
 
 function add2eConstitutionNormalize(value) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const engine = globalThis.ADD2E_EFFECTS ?? null;
   if (typeof engine?.normalizeTag === "function") {
     return String(engine.normalizeTag(value) ?? "")
       .replace(/[^a-z0-9]+/g, "_")
