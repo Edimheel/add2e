@@ -26,7 +26,7 @@ export function configureInitiative() {
 
 export function hasProperty(obj, path) {
   return globalThis.foundry?.utils?.hasProperty
-    ? foundry.utils.hasProperty(obj, path)
+    ? globalThis.foundry.utils.hasProperty(obj, path)
     : path in (obj ?? {});
 }
 
