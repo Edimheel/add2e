@@ -179,7 +179,6 @@ function installGenericResistanceExtensions(Engine) {
       async value(actor, typeResist, options = {}) {
         if (this.hasImmunity(actor, typeResist)) {
           const result = { found: true, immunise: true, resiste: true, type: String(typeResist ?? ""), matchedType: this.normalizeTag(typeResist), tag: `immunite:${this.normalizeTag(typeResist)}`, pct: 100, jet: 0, roll: null, details: `Immunité contre ${typeResist}` };
-          globalThis.add2eLastResistanceRoll = result;
           return result;
         }
         if (typeof baseRollResistanceDetails !== "function") {
@@ -194,7 +193,6 @@ function installGenericResistanceExtensions(Engine) {
       value(actor, typeResist, options = {}) {
         if (this.hasImmunity(actor, typeResist)) {
           const result = { found: true, immunise: true, resiste: true, type: String(typeResist ?? ""), matchedType: this.normalizeTag(typeResist), tag: `immunite:${this.normalizeTag(typeResist)}`, pct: 100, jet: 0, details: `Immunité contre ${typeResist}` };
-          globalThis.add2eLastResistanceRoll = result;
           return result;
         }
         return baseCheckResistanceDetails?.(actor, typeResist, options) ?? { found: false, resiste: false, type: String(typeResist ?? ""), matchedType: "", tag: "", pct: 0, jet: 0 };
@@ -642,7 +640,6 @@ installGenericResistanceExtensions(Add2eEffectsEngine);
 installSingleReadActionRules(Add2eEffectsEngine);
 installGateOnUseOutcomeContract(Add2eEffectsEngine);
 
-globalThis.Add2eEffectsEngine = Add2eEffectsEngine;
 globalThis.ADD2E_CAPABILITY_TRANSFORMATIONS_VERSION = "2026-07-30-canonical-transformation-movement-v4";
 globalThis.add2eGetActiveCapabilityTransformation = add2eGetActiveCapabilityTransformation;
 globalThis.add2eGetCapabilityTransformationCombatProfile = add2eGetCapabilityTransformationCombatProfile;
