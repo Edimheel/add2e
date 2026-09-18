@@ -343,7 +343,7 @@ async function enableRacialVision(engine, actor, vision, state, { reason = "raci
 }
 
 async function add2eRollRacialCapability(actor, capabilityId, context = {}) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  const engine = globalThis.ADD2E_EFFECTS ?? null;
   if (!actor || typeof engine?.rollRacialCapability !== "function") {
     ui.notifications?.warn?.("Capacité raciale indisponible.");
     return null;
@@ -689,7 +689,7 @@ function installStrictRacialEffectsSheetDataBridge() {
     const wrapped = async function add2eGetDataWithStrictRacialEffects(...args) {
       const data = await base.apply(this, args);
       const actor = this.actor ?? data?.actor;
-      const engine = globalThis.Add2eEffectsEngine;
+      const engine = globalThis.ADD2E_EFFECTS ?? null;
       const virtual = engine?.getRacialVirtualEffects?.(actor) ?? [];
       const active = Array.isArray(data.activeEffectsList) ? data.activeEffectsList : [];
       const seen = new Set(active.map(effect => String(effect?.id ?? "")));
