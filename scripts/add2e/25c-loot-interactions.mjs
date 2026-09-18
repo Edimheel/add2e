@@ -26,7 +26,6 @@ import {
   add2eLootHasContent,
   add2eOpenLoot
 } from "./25-loot.mjs";
-import { esc } from "./22a-vendor-core.mjs";
 
 export const ADD2E_LOOT_INTERACTIONS_VERSION = "2026-07-12-loot-interactions-v3";
 
