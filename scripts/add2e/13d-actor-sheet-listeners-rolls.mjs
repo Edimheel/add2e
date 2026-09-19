@@ -2,7 +2,7 @@
 // Aucun calcul métier de caractéristique ou de sauvegarde ne vit dans ce module.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-09-18-racial-capability-bridge-v11";
+export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-09-19-racial-action-dispatch-v12";
 
 export async function add2eEvaluateRollSafe(formula) {
   const roll = new Roll(String(formula || "0"));
@@ -206,6 +206,41 @@ function add2eNormalizeRacialCapabilityId(engine, value) {
     .replace(/^_+|_+$/g, "");
 }
 
+async function add2eRacialCapabilityActorFromElement(element) {
+  const actorUuid = String(element?.dataset?.actorUuid ?? "").trim();
+  if (actorUuid && typeof fromUuid === "function") {
+    try {
+      const document = await fromUuid(actorUuid);
+      if (document?.documentName === "Actor") return document;
+      if (document?.actor) return document.actor;
+    } catch (error) {
+      console.warn("[ADD2E][RACIAL_CAPABILITY][ACTOR_UUID]", { actorUuid, error });
+    }
+  }
+  const actorId = String(element?.dataset?.actorId ?? "").trim();
+  return actorId ? game.actors?.get?.(actorId) ?? null : null;
+}
+
+function add2eInstallRacialCapabilitySheetBridge() {
+  if (globalThis.__add2eRacialCapabilitySheetBridgeV1 || typeof document === "undefined") return;
+  globalThis.__add2eRacialCapabilitySheetBridgeV1 = true;
+  document.addEventListener("click", async event => {
+    const button = event.target?.closest?.(".add2e-racial-capability-use");
+    if (!button || button.closest?.("#add2e-action-hud")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+    try {
+      const actor = await add2eRacialCapabilityActorFromElement(button);
+      if (!actor) return ui.notifications.warn("Acteur introuvable pour cette capacité raciale.");
+      await add2eUseRacialCapabilityFromElement(actor, button, null);
+    } catch (error) {
+      console.error("[ADD2E][RACIAL_CAPABILITY][SHEET_ACTION]", error);
+      ui.notifications.error(error?.message || "Erreur pendant l’utilisation de la capacité raciale.");
+    }
+  }, true);
+}
+
 export async function add2eUseRacialCapabilityFromElement(actor, element, event = null) {
   event?.preventDefault?.();
   event?.stopPropagation?.();
@@ -230,6 +265,13 @@ export async function add2eUseRacialCapabilityFromElement(actor, element, event 
     }
     return engine.setRacialVision(actor, action.enabled !== true, {
       reason: "racial-capability-ui"
+    });
+  }
+
+  if (typeof globalThis.add2eUseRacialCapability === "function") {
+    return globalThis.add2eUseRacialCapability(actor, capabilityId, {
+      source: "actor-sheet-racial-capability",
+      consumer: "actor-sheet-roll-presentation"
     });
   }
 
@@ -259,6 +301,7 @@ export function add2eInstallHudSheetRollBridge() {
   globalThis.add2eRollCharacteristicCard = add2eRollCharacteristicCard;
   globalThis.add2eRollSaveCard = add2eRollSaveCard;
   globalThis.add2eUseRacialCapabilityFromElement = add2eUseRacialCapabilityFromElement;
+  add2eInstallRacialCapabilitySheetBridge();
 
   if (globalThis.__add2eHudSheetRollBridgeV1) return engine;
   globalThis.__add2eHudSheetRollBridgeV1 = true;
