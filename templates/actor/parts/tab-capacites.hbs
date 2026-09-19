@@ -78,12 +78,13 @@
           {{#each activeRacialCapabilities as |capability|}}
             <div class="a2e-panel" style="box-shadow:none;">
               <h3 style="display:flex;align-items:center;gap:8px;">
-                {{#if capability.canRoll}}
+                {{#if capability.activable}}
                   <button type="button"
-                          class="a2e-action-icon add2e-racial-capability-roll"
+                          class="a2e-action-icon add2e-racial-capability-roll add2e-racial-capability-use"
                           data-actor-id="{{../actor.id}}"
+                          data-actor-uuid="{{../actor.uuid}}"
                           data-racial-capability-id="{{capability.id}}"
-                          title="Tester {{capability.label}}"
+                          title="Utiliser {{capability.label}}"
                           style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;">
                     <i class="fas {{capability.iconClass}}"></i>
                   </button>
