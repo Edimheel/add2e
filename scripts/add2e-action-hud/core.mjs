@@ -227,16 +227,20 @@ function racialIcon(capability) {
 }
 function racialCapabilityRow(capability) {
   const isVisionToggle = capability?.actionType === "vision-toggle";
+  const isTargetSaveEffect = capability?.actionType === "target-save-effect";
+  const activable = capability?.activable === true;
   const conditions = (!isVisionToggle || capability?.enabled !== true) ? racialRequirements(capability) : [];
   const state = isVisionToggle
     ? (capability?.enabled ? "Active" : "Inactive")
-    : (capability?.canRoll ? `Jet ${capability.formula} : réussite ≤ ${capability.successAt}` : "Capacité narrative");
+    : (isTargetSaveEffect
+      ? (capability?.rollLabel || "Action ciblée")
+      : (capability?.canRoll ? `Jet ${capability.formula} : réussite ≤ ${capability.successAt}` : "Capacité narrative"));
   const conditionLabel = conditions.length ? `<span>Conditions : ${esc(conditions.join(", "))}</span>` : "";
   const title = isVisionToggle
     ? `${capability?.enabled ? "Désactiver" : "Activer"} ${capability.label}`
-    : (capability?.canRoll ? `Lancer ${capability.label}` : capability.label);
+    : (activable ? `Utiliser ${capability.label}` : capability.label);
   const icon = isVisionToggle && capability?.enabled ? "fa-eye-slash" : racialIcon(capability);
-  const control = (isVisionToggle || capability?.canRoll)
+  const control = activable
     ? `<button type="button" class="img-act capability-icon" data-action="use-racial-capability" data-racial-capability-id="${esc(capability.id)}" title="${esc(title)}"><i class="fas ${icon}"></i></button>`
     : '<span aria-hidden="true"></span>';
   return `<div class="row capability-row">${control}<div><div class="title">${esc(capability.label)}</div><div class="meta"><span>Capacité raciale</span><span>${esc(state)}</span>${conditionLabel}</div><div class="capability-description">${esc(capability.description)}</div></div></div>`;
