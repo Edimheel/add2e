@@ -16,6 +16,7 @@
     "scripts/add2e/dialog-ui.mjs",
     "scripts/add2e-active-effects-expire.js",
     "scripts/effects-engine.mjs",
+    "scripts/add2e/racial-capability-actions.mjs",
     "scripts/add2e-attack.mjs",
     "scripts/add2e-action-hud.mjs",
     "scripts/add2e/chat-card.mjs",
